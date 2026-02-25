@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+export const runtime = 'edge';
 import { notFound, redirect } from 'next/navigation'
 import ListingForm from '@/components/property/ListingForm'
 import { ChevronLeft, Edit3 } from 'lucide-react'

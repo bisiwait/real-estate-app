@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+export const runtime = 'edge';
 import { NextResponse } from 'next/server'
 
 export async function POST() {

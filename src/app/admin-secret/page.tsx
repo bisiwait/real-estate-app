@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+export const runtime = 'edge';
 import { isAdmin } from '@/lib/admin'
 import { createClient } from '@/lib/supabase/server'
 import {

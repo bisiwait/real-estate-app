@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+export const runtime = 'edge';
 import { notFound } from 'next/navigation'
 import PropertyGallery from '@/components/property/PropertyGallery'
 import InquiryForm from '@/components/property/InquiryForm'

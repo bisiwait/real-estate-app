@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+export const runtime = 'edge';
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import CreditSection from '@/components/dashboard/CreditSection'
