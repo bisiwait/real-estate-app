@@ -37,6 +37,13 @@ const PRICE_RANGES = [
     { label: '5万B以上', value: '50000-999999' }
 ]
 
+const SALE_PRICE_RANGES = [
+    { label: '300万B以下', value: '0-3000000' },
+    { label: '300万〜600万B', value: '3000000-6000000' },
+    { label: '600万〜1000万B', value: '6000000-10000000' },
+    { label: '1000万B以上', value: '10000000-999999999' }
+]
+
 const COMMON_TAGS = ['バスタブあり', '洗濯機室内', '日本語対応スタッフ', 'ペット可', '高層階（オーシャンビュー期待）']
 const SRIRACHA_TAGS = [
     '法人契約可（Corporate Contract）',
@@ -152,11 +159,14 @@ function PropertiesList() {
             // Area match
             const matchesArea = !selectedArea || property.area_name === selectedArea
 
-            // Price match
+            // Price match (Update to support separate rent/sale prices)
             let matchesPrice = true
             if (selectedPrice) {
                 const [min, max] = selectedPrice.split('-').map(Number)
-                matchesPrice = property.price >= min && property.price <= max
+                const currentPrice = listingType === 'rent' ? property.rent_price : property.sale_price
+                // Fallback to old price column if new ones are null (though migration should have handled this)
+                const effectivePrice = currentPrice ?? property.price
+                matchesPrice = effectivePrice >= min && effectivePrice <= max
             }
 
             // Tags match (logical AND)
@@ -171,8 +181,8 @@ function PropertiesList() {
                 property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 property.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-            // Listing Type match
-            const matchesType = property.listing_type === listingType
+            // Listing Type match (Update to support dual listing)
+            const matchesType = listingType === 'rent' ? property.is_for_rent : property.is_for_sale
 
             return matchesCity && matchesArea && matchesPrice && matchesTags && matchesSearch && matchesBathtub && matchesPets && matchesType
 
@@ -251,7 +261,7 @@ function PropertiesList() {
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4">価格帯 (Budget)</h3>
                 <div className="grid grid-cols-1 gap-2">
-                    {PRICE_RANGES.map(range => (
+                    {(listingType === 'rent' ? PRICE_RANGES : SALE_PRICE_RANGES).map(range => (
                         <button
                             key={range.value}
                             onClick={() => updateFilters({ price: selectedPrice === range.value ? null : range.value })}

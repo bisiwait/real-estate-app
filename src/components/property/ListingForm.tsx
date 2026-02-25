@@ -64,9 +64,11 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     const [formData, setFormData] = useState({
         title: initialData?.title || '',
         description: initialData?.description || '',
-        price: initialData?.price?.toString() || '',
+        is_for_rent: initialData?.is_for_rent ?? (initialData?.listing_type === 'rent' || !initialData),
+        is_for_sale: initialData?.is_for_sale ?? (initialData?.listing_type === 'sell'),
+        rent_price: initialData?.rent_price?.toString() || (initialData?.listing_type === 'rent' ? initialData.price?.toString() : ''),
+        sale_price: initialData?.sale_price?.toString() || (initialData?.listing_type === 'sell' ? initialData.price?.toString() : ''),
         area_id: initialData?.area_id || '',
-        listing_type: initialData?.listing_type || 'rent',
         tags: initialData?.tags || [] as string[],
         // Japanese specific fields
         has_bathtub: initialData?.has_bathtub || false,
@@ -183,15 +185,21 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 // let's use a temporary ID or insert without images first.
                 // Best pattern: Insert with placeholder/empty images, then upload, then update.
 
+                if (!formData.is_for_rent && !formData.is_for_sale) {
+                    throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
+                }
+
                 const { data: newProperty, error: insertError } = await supabase
                     .from('properties')
                     .insert({
                         user_id: user.id,
                         title: formData.title,
                         description: formData.description,
-                        price: parseFloat(formData.price),
+                        is_for_rent: formData.is_for_rent,
+                        is_for_sale: formData.is_for_sale,
+                        rent_price: formData.is_for_rent ? parseFloat(formData.rent_price) : null,
+                        sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
                         area_id: formData.area_id,
-                        listing_type: formData.listing_type,
                         images: [], // Placeholder
                         tags: formData.tags,
                         status: 'pending',
@@ -234,15 +242,20 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 throw new Error('少なくとも1枚の画像をアップロードしてください。')
             }
 
+            if (!formData.is_for_rent && !formData.is_for_sale) {
+                throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
+            }
+
             // Step 3: Update property with final image list
             const { error: updateError } = await supabase
                 .from('properties')
                 .update({
                     title: formData.title,
                     description: formData.description,
-                    price: parseFloat(formData.price),
-                    area_id: formData.area_id,
-                    listing_type: formData.listing_type,
+                    is_for_rent: formData.is_for_rent,
+                    is_for_sale: formData.is_for_sale,
+                    rent_price: formData.is_for_rent ? parseFloat(formData.rent_price) : null,
+                    sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
                     images: finalImages,
                     tags: formData.tags,
                     updated_at: new Date().toISOString(),
@@ -315,20 +328,26 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     基本情報
                 </h3>
 
-                <div className="flex bg-slate-50 p-1.5 rounded-2xl w-fit mb-8 border border-slate-100">
+                <div className="flex flex-wrap gap-4 mb-8">
                     <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, listing_type: 'rent' })}
-                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${formData.listing_type === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                        onClick={() => setFormData({ ...formData, is_for_rent: !formData.is_for_rent })}
+                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all border-2 ${formData.is_for_rent ? 'bg-navy-primary border-navy-primary text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-navy-primary/30'}`}
                     >
-                        賃貸 (Rent)
+                        <div className="flex items-center space-x-2">
+                            {formData.is_for_rent && <CheckCircle2 className="w-4 h-4" />}
+                            <span>賃貸 (Rent)</span>
+                        </div>
                     </button>
                     <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, listing_type: 'sell' })}
-                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${formData.listing_type === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                        onClick={() => setFormData({ ...formData, is_for_sale: !formData.is_for_sale })}
+                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all border-2 ${formData.is_for_sale ? 'bg-navy-primary border-navy-primary text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-navy-primary/30'}`}
                     >
-                        売買 (Sell)
+                        <div className="flex items-center space-x-2">
+                            {formData.is_for_sale && <CheckCircle2 className="w-4 h-4" />}
+                            <span>売買 (Sell)</span>
+                        </div>
                     </button>
                 </div>
 
@@ -349,21 +368,33 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
-                                {formData.listing_type === 'sell' ? '販売価格' : '賃料 / 月'} (THB) <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                required
-                                type="number"
-                                value={formData.price}
-                                onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                placeholder="25000"
-                                onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('価格を入力してください')}
-                                onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-                            />
-
+                        <div className="space-y-6">
+                            {formData.is_for_rent && (
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">賃料 / 月 (THB) <span className="text-red-500">*</span></label>
+                                    <input
+                                        required={formData.is_for_rent}
+                                        type="number"
+                                        value={formData.rent_price}
+                                        onChange={e => setFormData({ ...formData, rent_price: e.target.value })}
+                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
+                                        placeholder="25000"
+                                    />
+                                </div>
+                            )}
+                            {formData.is_for_sale && (
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">販売価格 (THB) <span className="text-red-500">*</span></label>
+                                    <input
+                                        required={formData.is_for_sale}
+                                        type="number"
+                                        value={formData.sale_price}
+                                        onChange={e => setFormData({ ...formData, sale_price: e.target.value })}
+                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
+                                        placeholder="5000000"
+                                    />
+                                </div>
+                            )}
                         </div>
                         <div>
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">エリア <span className="text-red-500">*</span></label>

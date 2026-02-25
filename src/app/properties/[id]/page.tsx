@@ -111,11 +111,23 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                     </div>
                                     <h1 className="text-3xl md:text-4xl font-black text-navy-secondary leading-[1.2]">{property.title}</h1>
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-sm font-bold text-slate-400 mb-1">{property.listing_type === 'sell' ? '販売価格' : '賃料 / 月'}</div>
-                                    <div className="text-4xl font-black text-navy-primary">
-                                        {property.price?.toLocaleString()} <span className="text-lg font-normal">THB</span>
-                                    </div>
+                                <div className="text-right space-y-4">
+                                    {property.is_for_rent && (
+                                        <div>
+                                            <div className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest leading-none">賃貸 / 月</div>
+                                            <div className="text-3xl font-black text-navy-primary leading-none">
+                                                {property.rent_price?.toLocaleString()} <span className="text-sm font-normal">THB</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {property.is_for_sale && (
+                                        <div>
+                                            <div className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest leading-none">販売価格</div>
+                                            <div className="text-3xl font-black text-navy-primary leading-none">
+                                                {property.sale_price?.toLocaleString()} <span className="text-sm font-normal">THB</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

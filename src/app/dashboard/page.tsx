@@ -16,6 +16,7 @@ import {
     Building2,
     Mail
 } from 'lucide-react'
+import ListingTypeToggle from '@/components/dashboard/ListingTypeToggle'
 
 export default async function DashboardPage({
     searchParams,
@@ -229,18 +230,37 @@ export default async function DashboardPage({
                                                                 <span className="text-xs text-slate-400 font-medium">#{property.id.slice(0, 8)}</span>
                                                             </div>
                                                             <h4 className="text-lg font-bold text-navy-secondary mb-1">{property.title}</h4>
-                                                            <p className="text-sm text-slate-500 font-medium flex items-center">
-                                                                {property.area?.name || 'Unknown Area'} • {property.price?.toLocaleString()} THB
-                                                            </p>
+                                                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm font-medium">
+                                                                <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
+                                                                <div className="flex items-center space-x-3">
+                                                                    {property.is_for_rent && (
+                                                                        <span className="text-navy-primary">
+                                                                            <span className="text-[10px] font-bold opacity-50 mr-1">RENT:</span>
+                                                                            {property.rent_price?.toLocaleString()} THB
+                                                                        </span>
+                                                                    )}
+                                                                    {property.is_for_sale && (
+                                                                        <span className="text-navy-primary">
+                                                                            <span className="text-[10px] font-bold opacity-50 mr-1">SALE:</span>
+                                                                            {property.sale_price?.toLocaleString()} THB
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center space-x-2">
+                                                    <div className="flex flex-col md:flex-row items-center gap-2">
+                                                        <ListingTypeToggle
+                                                            propertyId={property.id}
+                                                            isForRent={property.is_for_rent}
+                                                            isForSale={property.is_for_sale}
+                                                        />
                                                         <Link
                                                             href={`/properties/${property.id}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center space-x-1 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-white hover:shadow-md transition-all border border-transparent hover:border-slate-100"
+                                                            className="flex items-center space-x-1 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-white hover:shadow-md transition-all border border-transparent hover:border-100"
                                                         >
                                                             <span>詳細を見る</span>
                                                             <ChevronRight className="w-4 h-4" />

@@ -15,7 +15,10 @@ interface PropertyCardProps {
         allows_pets?: boolean
         sqm?: number
         bedrooms?: number
-        listing_type?: string
+        is_for_rent?: boolean
+        is_for_sale?: boolean
+        rent_price?: number
+        sale_price?: number
     }
 }
 
@@ -52,8 +55,24 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                         </div>
                     </div>
                     <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-50">
-                        <div className="text-xl font-black text-navy-primary">
-                            {property.price.toLocaleString()} <span className="text-xs font-normal text-slate-500">THB{property.listing_type === 'sell' ? '' : ' / 月'}</span>
+                        <div className="flex flex-col space-y-1">
+                            {property.is_for_rent && (
+                                <div className="text-lg font-black text-navy-primary leading-none">
+                                    <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Rent:</span>
+                                    {property.rent_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB / 月</span>
+                                </div>
+                            )}
+                            {property.is_for_sale && (
+                                <div className="text-lg font-black text-navy-primary leading-none">
+                                    <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Sale:</span>
+                                    {property.sale_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB</span>
+                                </div>
+                            )}
+                            {!property.is_for_rent && !property.is_for_sale && (
+                                <div className="text-lg font-black text-navy-primary">
+                                    {property.price?.toLocaleString()} <span className="text-xs font-normal text-slate-500">THB</span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex space-x-2">
                             {property.has_bathtub && (
