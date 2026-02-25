@@ -19,6 +19,7 @@ interface PropertyCardProps {
         is_for_sale?: boolean
         rent_price?: number
         sale_price?: number
+        ownership_type?: string
     }
 }
 
@@ -63,9 +64,16 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                                 </div>
                             )}
                             {property.is_for_sale && (
-                                <div className="text-lg font-black text-navy-primary leading-none">
-                                    <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Sale:</span>
-                                    {property.sale_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB</span>
+                                <div className="space-y-1">
+                                    <div className="text-lg font-black text-navy-primary leading-none">
+                                        <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Sale:</span>
+                                        {property.sale_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB</span>
+                                    </div>
+                                    {property.ownership_type && (
+                                        <div className="text-[9px] font-bold text-navy-primary bg-navy-primary/5 w-fit px-1.5 py-0.5 rounded border border-navy-primary/10">
+                                            {property.ownership_type}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             {!property.is_for_rent && !property.is_for_sale && (

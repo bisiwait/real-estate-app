@@ -91,7 +91,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         bedrooms: initialData?.bedrooms?.toString() || '0',
         bathrooms: initialData?.bathrooms?.toString() || '0',
         year_built: initialData?.year_built || '',
-        total_floors: initialData?.total_floors?.toString() || ''
+        total_floors: initialData?.total_floors?.toString() || '',
+        ownership_type: initialData?.ownership_type || ''
     })
 
 
@@ -189,6 +190,10 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
                 }
 
+                if (formData.is_for_sale && !formData.ownership_type) {
+                    throw new Error('売買物件の場合は「所有権タイプ（Quota）」を選択してください。')
+                }
+
                 const { data: newProperty, error: insertError } = await supabase
                     .from('properties')
                     .insert({
@@ -224,7 +229,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         bedrooms: parseInt(formData.bedrooms),
                         bathrooms: parseInt(formData.bathrooms),
                         year_built: formData.year_built,
-                        total_floors: formData.total_floors ? parseInt(formData.total_floors) : null
+                        total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
+                        ownership_type: formData.is_for_sale ? formData.ownership_type : null
                     })
 
                     .select()
@@ -244,6 +250,10 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
 
             if (!formData.is_for_rent && !formData.is_for_sale) {
                 throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
+            }
+
+            if (formData.is_for_sale && !formData.ownership_type) {
+                throw new Error('売買物件の場合は「所有権タイプ（Quota）」を選択してください。')
             }
 
             // Step 3: Update property with final image list
@@ -279,7 +289,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     bedrooms: parseInt(formData.bedrooms),
                     bathrooms: parseInt(formData.bathrooms),
                     year_built: formData.year_built,
-                    total_floors: formData.total_floors ? parseInt(formData.total_floors) : null
+                    total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
+                    ownership_type: formData.is_for_sale ? formData.ownership_type : null
                 })
 
                 .eq('id', propertyId)
@@ -383,16 +394,32 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                 </div>
                             )}
                             {formData.is_for_sale && (
-                                <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">販売価格 (THB) <span className="text-red-500">*</span></label>
-                                    <input
-                                        required={formData.is_for_sale}
-                                        type="number"
-                                        value={formData.sale_price}
-                                        onChange={e => setFormData({ ...formData, sale_price: e.target.value })}
-                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                        placeholder="5000000"
-                                    />
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">販売価格 (THB) <span className="text-red-500">*</span></label>
+                                        <input
+                                            required={formData.is_for_sale}
+                                            type="number"
+                                            value={formData.sale_price}
+                                            onChange={e => setFormData({ ...formData, sale_price: e.target.value })}
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
+                                            placeholder="5000000"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">所有権タイプ (Quota) <span className="text-red-500">*</span></label>
+                                        <select
+                                            required={formData.is_for_sale}
+                                            value={formData.ownership_type}
+                                            onChange={e => setFormData({ ...formData, ownership_type: e.target.value })}
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none"
+                                        >
+                                            <option value="">選択してください</option>
+                                            <option value="Foreigner Quota">Foreigner Quota（外国人名義）</option>
+                                            <option value="Thai Quota">Thai Quota（タイ人名義）</option>
+                                            <option value="Company Name">Company Name（会社名義）</option>
+                                        </select>
+                                    </div>
                                 </div>
                             )}
                         </div>

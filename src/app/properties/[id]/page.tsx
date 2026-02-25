@@ -180,6 +180,15 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                         {property.total_floors ? `${property.total_floors}階` : '--'}
                                     </p>
                                 </div>
+                                {property.is_for_sale && property.ownership_type && (
+                                    <div className="bg-navy-primary/5 p-4 rounded-2xl border border-navy-primary/10">
+                                        <p className="text-[10px] font-black text-navy-primary uppercase tracking-widest mb-1.5">所有権 (Quota)</p>
+                                        <p className="text-sm font-black text-navy-primary flex items-center">
+                                            <TagIcon className="w-4 h-4 mr-2" />
+                                            {property.ownership_type}
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">掲載日</p>
                                     <p className="text-sm font-bold text-navy-secondary flex items-center">
