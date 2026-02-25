@@ -1,0 +1,14 @@
+name = "real-estate"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL = "your-project-url.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "your-anon-key"
+
+# Optional: Add other production environment variables here
+
+[pages_build_config]
+build_command = "npm run build"
+build_output_directory = ".next"
