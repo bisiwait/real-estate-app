@@ -1,7 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 export const runtime = 'edge';
 import { notFound } from 'next/navigation'
-import PropertyGallery from '@/components/property/PropertyGallery'
+import dynamic from 'next/dynamic'
+
+const PropertyGallery = dynamic(() => import('@/components/property/PropertyGallery'), {
+    loading: () => <div className="w-full aspect-[16/9] md:aspect-[3/2] lg:h-[550px] bg-slate-100 animate-pulse rounded-3xl" />,
+    ssr: false
+})
+
 import InquiryForm from '@/components/property/InquiryForm'
 import {
     MapPin,

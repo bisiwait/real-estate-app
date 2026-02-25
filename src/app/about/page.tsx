@@ -1,6 +1,11 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
+
+const FadeIn = dynamic(() => import('@/components/animations/FadeIn'), {
+    ssr: true // Animations can often run on client only but we can pre-render the structure
+})
+
 import {
     CheckCircle2,
     ShieldCheck,
@@ -30,11 +35,7 @@ export default function AboutPage() {
             <section className="relative py-20 md:py-32 bg-slate-50">
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
                 <div className="container mx-auto px-4 relative z-10 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                    >
+                    <FadeIn>
                         <span className="inline-block px-4 py-1.5 bg-navy-primary/10 text-navy-primary text-xs font-black uppercase tracking-[0.2em] rounded-full mb-6">
                             About Chonburi Connect
                         </span>
@@ -55,7 +56,7 @@ export default function AboutPage() {
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                         </div>
-                    </motion.div>
+                    </FadeIn>
                 </div>
             </section>
 
@@ -63,7 +64,7 @@ export default function AboutPage() {
             <section className="py-24 border-b border-slate-50">
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        <motion.div {...fadeIn}>
+                        <FadeIn>
                             <h2 className="text-sm font-black text-navy-primary uppercase tracking-widest mb-4">For Users</h2>
                             <h3 className="text-3xl md:text-4xl font-black text-navy-secondary mb-8">
                                 「タイだから仕方ない」を、<br />過去のものに。
@@ -103,12 +104,8 @@ export default function AboutPage() {
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
-                        <motion.div
-                            {...fadeIn}
-                            transition={{ delay: 0.2 }}
-                            className="relative"
-                        >
+                        </FadeIn>
+                        <FadeIn delay={0.2}>
                             <div className="aspect-square rounded-[3rem] bg-slate-100 overflow-hidden shadow-2xl rotate-3">
                                 <img
                                     src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1000"
@@ -125,7 +122,7 @@ export default function AboutPage() {
                                     全掲載物件は、プラットフォーム独自の基準で定期的に情報が確認されています。
                                 </p>
                             </div>
-                        </motion.div>
+                        </FadeIn>
                     </div>
                 </div>
             </section>
@@ -135,10 +132,7 @@ export default function AboutPage() {
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-white/5 skew-x-[-15deg] transform translate-x-1/2 overflow-hidden pointer-events-none"></div>
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        <motion.div
-                            {...fadeIn}
-                            className="order-2 lg:order-1"
-                        >
+                        <FadeIn>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/5">
                                     <Users className="w-10 h-10 mb-4 text-white" />
@@ -161,11 +155,8 @@ export default function AboutPage() {
                                     <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">Instant listing</p>
                                 </div>
                             </div>
-                        </motion.div>
-                        <motion.div
-                            {...fadeIn}
-                            className="order-1 lg:order-2"
-                        >
+                        </FadeIn>
+                        <FadeIn>
                             <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">For Agents</h2>
                             <h3 className="text-3xl md:text-4xl font-black mb-8 leading-tight">
                                 質の高い顧客と、<br />スマートに繋がる。
@@ -200,7 +191,7 @@ export default function AboutPage() {
                                 <span>掲載主として登録する</span>
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
-                        </motion.div>
+                        </FadeIn>
                     </div>
                 </div>
             </section>
@@ -208,7 +199,7 @@ export default function AboutPage() {
             {/* Mission Section */}
             <section className="py-24 bg-white">
                 <div className="container mx-auto px-4 max-w-4xl text-center">
-                    <motion.div {...fadeIn}>
+                    <FadeIn>
                         <div className="w-20 h-20 bg-navy-primary/5 rounded-full flex items-center justify-center mx-auto mb-10">
                             <Globe className="w-10 h-10 text-navy-primary" />
                         </div>
@@ -222,7 +213,7 @@ export default function AboutPage() {
                             借りる人・買う人・貸す人の三者が、互いに信頼し合える環境を創出します。<br className="hidden md:block" />
                             Chonburi Connect は、チョンブリ県から、新しい不動産のスタンダードを作ります。
                         </p>
-                    </motion.div>
+                    </FadeIn>
                 </div>
             </section>
 

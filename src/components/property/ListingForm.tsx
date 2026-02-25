@@ -14,7 +14,13 @@ import {
     ChevronRight
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import ImageUploader from './ImageUploader'
+import dynamic from 'next/dynamic'
+
+const ImageUploader = dynamic(() => import('./ImageUploader'), {
+    loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
+    ssr: false
+})
+
 import { getErrorMessage } from '@/lib/utils/errors'
 
 interface Area {

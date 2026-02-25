@@ -1,0 +1,12 @@
+brain/
+.gemini/
+.github/
+supabase/
+DEPLOYMENT.md
+README.md
+task.md
+implementation_plan.md
+walkthrough.md
+node_modules/
+.next/
+out/
