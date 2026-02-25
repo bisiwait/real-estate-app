@@ -1,10 +1,11 @@
--- Add ownership_type column to properties table
-ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS ownership_type TEXT;
+-- Add latitude and longitude columns to properties table
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS latitude FLOAT8;
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS longitude FLOAT8;
 
 -- Drop the view first to avoid column name/order conflicts
 DROP VIEW IF EXISTS public.active_listings;
 
--- Update the active_listings view to include the new column
+-- Update the active_listings view to include the new columns
 CREATE VIEW public.active_listings AS
 SELECT 
     p.*, 

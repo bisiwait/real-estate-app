@@ -362,34 +362,34 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                             </div>
                         </div>
 
-                        {/* Map Integration */}
-                        <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 overflow-hidden">
-                            <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center">
+                        {/* Map Integration (Link Version) */}
+                        <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 overflow-hidden text-center">
+                            <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center justify-center">
                                 <MapPin className="w-5 h-5 mr-3 text-navy-primary" />
-                                周辺地図
+                                周周辺地図
                             </h3>
-                            <div className="relative rounded-2xl overflow-hidden h-80 bg-slate-100 border border-slate-100 shadow-inner group">
-                                <iframe
-                                    width="100%"
-                                    height="100%"
-                                    frameBorder="0"
-                                    style={{ border: 0 }}
-                                    src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}&q=${property.area?.name},Pattaya,Thailand`}
-                                    allowFullScreen
-                                    className="grayscale hover:grayscale-0 transition-all duration-700"
-                                ></iframe>
-                                {!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-100/60 backdrop-blur-md z-10">
-                                        <div className="text-center px-6">
-                                            <MapPin className="w-10 h-10 text-slate-300 mx-auto mb-4" />
-                                            <p className="text-xs font-bold text-slate-500">Google Maps API キーが設定されていません</p>
-                                            <p className="text-[10px] text-slate-400 mt-1">詳細な位置は管理画面で API キーを設定すると表示されます</p>
-                                        </div>
-                                    </div>
-                                )}
+
+                            <div className="bg-slate-50 rounded-2xl p-10 border border-slate-100 space-y-6">
+                                <div className="w-20 h-20 bg-navy-primary/10 rounded-full flex items-center justify-center mx-auto">
+                                    <MapPin className="w-10 h-10 text-navy-primary" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="text-xl font-black text-navy-secondary">地図で場所を確認する</h4>
+                                    <p className="text-xs font-bold text-slate-400">正確な位置情報をGoogleマップアプリまたはブラウザで表示します</p>
+                                </div>
+                                <a
+                                    href={`https://www.google.com/maps/search/?api=1&query=${property.latitude || 12.9236},${property.longitude || 100.8824}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center space-x-3 bg-navy-primary hover:bg-navy-secondary text-white px-8 py-4 rounded-2xl font-black text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 group"
+                                >
+                                    <span>Googleマップで開く</span>
+                                    <Maximize2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                </a>
                             </div>
-                            <p className="text-[10px] text-slate-400 mt-4 text-center">
-                                ※正確な位置情報は、お問い合わせ後に担当者より共有させていただきます。
+
+                            <p className="text-[10px] text-slate-400 mt-6 max-w-sm mx-auto">
+                                ※正確な位置情報は、お問い合わせ後に担当者より直接共有させていただくことも可能です。
                             </p>
                         </div>
                     </div>

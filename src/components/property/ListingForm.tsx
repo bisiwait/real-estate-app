@@ -21,6 +21,11 @@ const ImageUploader = dynamic(() => import('./ImageUploader'), {
     ssr: false
 })
 
+const CoordinatePicker = dynamic(() => import('./CoordinatePicker'), {
+    loading: () => <div className="bg-slate-50 rounded-2xl h-64 animate-pulse border border-slate-100" />,
+    ssr: false
+})
+
 import { getErrorMessage } from '@/lib/utils/errors'
 
 interface Area {
@@ -92,7 +97,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         bathrooms: initialData?.bathrooms?.toString() || '0',
         year_built: initialData?.year_built || '',
         total_floors: initialData?.total_floors?.toString() || '',
-        ownership_type: initialData?.ownership_type || ''
+        ownership_type: initialData?.ownership_type || '',
+        latitude: initialData?.latitude || 0,
+        longitude: initialData?.longitude || 0
     })
 
 
@@ -230,7 +237,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         bathrooms: parseInt(formData.bathrooms),
                         year_built: formData.year_built,
                         total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                        ownership_type: formData.is_for_sale ? formData.ownership_type : null
+                        ownership_type: formData.is_for_sale ? formData.ownership_type : null,
+                        latitude: formData.latitude,
+                        longitude: formData.longitude
                     })
 
                     .select()
@@ -290,7 +299,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     bathrooms: parseInt(formData.bathrooms),
                     year_built: formData.year_built,
                     total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                    ownership_type: formData.is_for_sale ? formData.ownership_type : null
+                    ownership_type: formData.is_for_sale ? formData.ownership_type : null,
+                    latitude: formData.latitude,
+                    longitude: formData.longitude
                 })
 
                 .eq('id', propertyId)
@@ -668,6 +679,18 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     </div>
                 </div>
 
+
+                <div className="pt-8 border-t border-slate-50">
+                    <h4 className="text-sm font-black text-navy-secondary uppercase tracking-widest mb-6 flex items-center">
+                        <MapPin className="w-5 h-5 mr-3 text-navy-primary" />
+                        正確な位置情報 (Googleマップ連携)
+                    </h4>
+                    <CoordinatePicker
+                        lat={formData.latitude}
+                        lng={formData.longitude}
+                        onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+                    />
+                </div>
 
                 <div className="pt-8 border-t border-slate-50">
                     <h4 className="text-sm font-black text-navy-secondary uppercase tracking-widest mb-4 flex items-center">
