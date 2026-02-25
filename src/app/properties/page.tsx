@@ -365,56 +365,59 @@ function PropertiesList() {
                 </div>
             </div>
 
-            {/* Rent / Sell / All Tabs */}
-            <div className="container mx-auto px-4 mt-8">
-                <div className="flex bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl w-fit border border-slate-100 shadow-sm">
-                    <button
-                        onClick={() => updateFilters({ type: 'all' })}
-                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${listingType === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
-                    >
-                        すべて (All)
-                    </button>
-                    <button
-                        onClick={() => updateFilters({ type: 'rent' })}
-                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${listingType === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
-                    >
-                        賃貸 (Rent)
-                    </button>
-                    <button
-                        onClick={() => updateFilters({ type: 'sell' })}
-                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${listingType === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
-                    >
-                        売買 (Sell)
-                    </button>
-                </div>
-            </div>
-
             {/* Main Content */}
-            <div className="container mx-auto px-4 -mt-12 pb-20">
+            <div className="container mx-auto px-4 -mt-10 pb-20 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
+                    {/* Sidebar / Top area for Mobile */}
+                    <div className="lg:col-span-4 mb-8">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                            {/* Tabs */}
+                            <div className="flex bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-fit border border-slate-200 shadow-sm">
+                                <button
+                                    onClick={() => updateFilters({ type: 'all' })}
+                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                                >
+                                    すべて
+                                </button>
+                                <button
+                                    onClick={() => updateFilters({ type: 'rent' })}
+                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                                >
+                                    賃貸
+                                </button>
+                                <button
+                                    onClick={() => updateFilters({ type: 'sell' })}
+                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                                >
+                                    売買
+                                </button>
+                            </div>
+
+                            {/* Mobile search bar (Integrated) */}
+                            <div className="lg:hidden">
+                                <MobileSearchBar
+                                    searchQuery={searchQuery}
+                                    onSearchChange={(val: string) => updateFilters({ q: val })}
+                                    onFilterClick={() => setIsFilterDrawerOpen(true)}
+                                    activeFiltersCount={[
+                                        selectedArea,
+                                        selectedPrice,
+                                        bathtubFilter,
+                                        petsFilter,
+                                        selectedTags.length > 0
+                                    ].filter(Boolean).length}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     {/* PC Filters Sidebar */}
-                    <aside className="hidden lg:block">
+                    <aside className="hidden lg:block lg:col-span-1">
                         <div className="bg-white rounded-3xl shadow-xl p-8 sticky top-28 border border-white/50 backdrop-blur-sm">
                             <FilterContent />
                         </div>
                     </aside>
-
-                    {/* Mobile Filter Trigger & Search */}
-                    <div className="lg:hidden mb-12">
-                        <MobileSearchBar
-                            searchQuery={searchQuery}
-                            onSearchChange={(val: string) => updateFilters({ q: val })}
-                            onFilterClick={() => setIsFilterDrawerOpen(true)}
-                            activeFiltersCount={[
-                                selectedArea,
-                                selectedPrice,
-                                bathtubFilter,
-                                petsFilter,
-                                selectedTags.length > 0
-                            ].filter(Boolean).length}
-                        />
-                    </div>
 
                     {/* Results Grid */}
                     <div className="lg:col-span-3">
