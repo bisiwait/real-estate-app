@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
+import MobileSearchBar from '@/components/property/MobileSearchBar'
 import { createClient } from '@/lib/supabase/client'
 import { Search, Filter, X, ChevronRight, SlidersHorizontal, Loader2, MapPin, Bath, Dog } from 'lucide-react'
 
@@ -328,22 +329,20 @@ function PropertiesList() {
                         </div>
                     </aside>
 
-                    {/* Mobile Filter Trigger */}
-                    <div className="lg:hidden">
-                        <button
-                            onClick={() => setIsFilterDrawerOpen(true)}
-                            className="w-full bg-white px-6 py-4 rounded-2xl shadow-lg border border-slate-100 flex items-center justify-between font-bold text-navy-primary"
-                        >
-                            <div className="flex items-center">
-                                <SlidersHorizontal className="w-5 h-5 mr-3" />
-                                <span>条件を絞り込む</span>
-                            </div>
-                            {(selectedArea || selectedPrice || selectedTags.length > 0) && (
-                                <span className="w-6 h-6 bg-navy-primary text-white text-[10px] rounded-full flex items-center justify-center">
-                                    !
-                                </span>
-                            )}
-                        </button>
+                    {/* Mobile Filter Trigger & Search */}
+                    <div className="lg:hidden mb-12">
+                        <MobileSearchBar
+                            searchQuery={searchQuery}
+                            onSearchChange={(val: string) => updateFilters({ q: val })}
+                            onFilterClick={() => setIsFilterDrawerOpen(true)}
+                            activeFiltersCount={[
+                                selectedArea,
+                                selectedPrice,
+                                bathtubFilter,
+                                petsFilter,
+                                selectedTags.length > 0
+                            ].filter(Boolean).length}
+                        />
                     </div>
 
                     {/* Results Grid */}
