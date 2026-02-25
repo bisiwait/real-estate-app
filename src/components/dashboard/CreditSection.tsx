@@ -31,7 +31,7 @@ export default function CreditSection({ initialCredits }: CreditSectionProps) {
 
     return (
         <div className="bg-navy-primary text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+            <div className="absolute -right-4 -bottom-4 opacity-10 transition-transform duration-500">
                 <CreditCard className="w-32 h-32" />
             </div>
             <div className="flex justify-between items-start mb-1 relative z-10">

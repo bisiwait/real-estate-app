@@ -43,7 +43,7 @@ export default function DashboardActions({ propertyId, propertyTitle }: Dashboar
         <div className="flex items-center space-x-2">
             <button
                 onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
-                className="p-2.5 rounded-xl bg-slate-50 text-navy-primary hover:bg-navy-primary hover:text-white transition-all shadow-sm hover:shadow-md border border-slate-100"
+                className="p-2.5 rounded-xl bg-slate-50 text-navy-primary hover:bg-navy-primary hover:text-white transition-all border border-slate-100"
                 title="編集する"
             >
                 <Edit3 className="w-5 h-5" />
@@ -52,7 +52,7 @@ export default function DashboardActions({ propertyId, propertyTitle }: Dashboar
             <button
                 onClick={handleDelete}
                 disabled={loading}
-                className="p-2.5 rounded-xl bg-slate-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm hover:shadow-md border border-slate-100 disabled:opacity-50"
+                className="p-2.5 rounded-xl bg-slate-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-slate-100 disabled:opacity-50"
                 title="削除する"
             >
                 {loading ? (

@@ -260,7 +260,7 @@ export default async function DashboardPage({
                                                             href={`/properties/${property.id}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center space-x-1 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-white hover:shadow-md transition-all border border-transparent hover:border-100"
+                                                            className="flex items-center space-x-1 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-white transition-all border border-transparent hover:border-slate-100"
                                                         >
                                                             <span>詳細を見る</span>
                                                             <ChevronRight className="w-4 h-4" />

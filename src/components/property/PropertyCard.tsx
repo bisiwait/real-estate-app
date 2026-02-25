@@ -31,7 +31,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                     <img
                         src={property.images[0]}
                         alt={property.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover transition-transform duration-500"
                     />
                     <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                         {property.tags.slice(0, 2).map((tag) => (
