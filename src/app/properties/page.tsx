@@ -62,6 +62,7 @@ function PropertiesList() {
     const selectedPrice = searchParams.get('price') || ''
     const selectedTags = searchParams.get('tags')?.split(',').filter(Boolean) || []
     const searchQuery = searchParams.get('q') || ''
+    const listingType = searchParams.get('type') || 'rent'
     const bathtubFilter = searchParams.get('bathtub') === 'true'
     const petsFilter = searchParams.get('pets') === 'true'
 
@@ -170,7 +171,10 @@ function PropertiesList() {
                 property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 property.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-            return matchesCity && matchesArea && matchesPrice && matchesTags && matchesSearch && matchesBathtub && matchesPets
+            // Listing Type match
+            const matchesType = property.listing_type === listingType
+
+            return matchesCity && matchesArea && matchesPrice && matchesTags && matchesSearch && matchesBathtub && matchesPets && matchesType
 
         })
     }, [allProperties, selectedCity, selectedArea, selectedPrice, selectedTags, searchQuery])
@@ -315,6 +319,24 @@ function PropertiesList() {
                             {filteredProperties.length} 件の物件が見つかりました
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Rent / Sell Tabs */}
+            <div className="container mx-auto px-4 mt-8">
+                <div className="flex bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl w-fit border border-slate-100 shadow-sm">
+                    <button
+                        onClick={() => updateFilters({ type: 'rent' })}
+                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${listingType === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                    >
+                        賃貸 (Rent)
+                    </button>
+                    <button
+                        onClick={() => updateFilters({ type: 'sell' })}
+                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${listingType === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                    >
+                        売買 (Sell)
+                    </button>
                 </div>
             </div>
 

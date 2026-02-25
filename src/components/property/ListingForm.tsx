@@ -315,6 +315,23 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     基本情報
                 </h3>
 
+                <div className="flex bg-slate-50 p-1.5 rounded-2xl w-fit mb-8 border border-slate-100">
+                    <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, listing_type: 'rent' })}
+                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${formData.listing_type === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                    >
+                        賃貸 (Rent)
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, listing_type: 'sell' })}
+                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all ${formData.listing_type === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                    >
+                        売買 (Sell)
+                    </button>
+                </div>
+
                 <div className="grid grid-cols-1 gap-6">
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイトル <span className="text-red-500">*</span></label>
@@ -333,7 +350,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">価格 (THB / 月) <span className="text-red-500">*</span></label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                {formData.listing_type === 'sell' ? '販売価格' : '賃料 / 月'} (THB) <span className="text-red-500">*</span>
+                            </label>
                             <input
                                 required
                                 type="number"

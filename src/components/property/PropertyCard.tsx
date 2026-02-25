@@ -15,6 +15,7 @@ interface PropertyCardProps {
         allows_pets?: boolean
         sqm?: number
         bedrooms?: number
+        listing_type?: string
     }
 }
 
@@ -52,7 +53,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                     </div>
                     <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-50">
                         <div className="text-xl font-black text-navy-primary">
-                            {property.price.toLocaleString()} <span className="text-xs font-normal text-slate-500">THB / 月</span>
+                            {property.price.toLocaleString()} <span className="text-xs font-normal text-slate-500">THB{property.listing_type === 'sell' ? '' : ' / 月'}</span>
                         </div>
                         <div className="flex space-x-2">
                             {property.has_bathtub && (

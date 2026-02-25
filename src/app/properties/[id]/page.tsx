@@ -112,7 +112,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                     <h1 className="text-3xl md:text-4xl font-black text-navy-secondary leading-[1.2]">{property.title}</h1>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-sm font-bold text-slate-400 mb-1">賃料 / 月</div>
+                                    <div className="text-sm font-bold text-slate-400 mb-1">{property.listing_type === 'sell' ? '販売価格' : '賃料 / 月'}</div>
                                     <div className="text-4xl font-black text-navy-primary">
                                         {property.price?.toLocaleString()} <span className="text-lg font-normal">THB</span>
                                     </div>
