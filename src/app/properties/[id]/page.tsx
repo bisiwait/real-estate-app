@@ -4,8 +4,7 @@ import { notFound } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
 const PropertyGallery = dynamic(() => import('@/components/property/PropertyGallery'), {
-    loading: () => <div className="w-full aspect-[16/9] md:aspect-[3/2] lg:h-[550px] bg-slate-100 animate-pulse rounded-3xl" />,
-    ssr: false
+    loading: () => <div className="w-full aspect-[16/9] md:aspect-[3/2] lg:h-[550px] bg-slate-100 animate-pulse rounded-3xl" />
 })
 
 import InquiryForm from '@/components/property/InquiryForm'
