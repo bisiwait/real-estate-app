@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-// export const runtime = 'edge';
+export const runtime = 'edge';
 import { notFound } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
