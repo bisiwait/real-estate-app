@@ -1,3 +1,4 @@
+// Triggering new build for Cloudflare Pages (Enabling Edge Runtime)
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
