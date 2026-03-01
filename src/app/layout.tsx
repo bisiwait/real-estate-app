@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+import Breadcrumb from "@/components/layout/Breadcrumb";
 import Link from "next/link";
 
 const geistSans = Geist({
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}>
         <Header />
         <main className="min-h-[calc(100vh-80px)]">
+          <Breadcrumb />
           {children}
         </main>
         <footer className="bg-navy-secondary text-white py-16">
@@ -41,6 +43,10 @@ export default function RootLayout({
               <nav className="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-4">
                 <Link href="/about" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">当サイトについて</Link>
                 <Link href="/properties" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">物件を探す</Link>
+                <Link href="/lp/post-property" className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center">
+                  物件を掲載する
+                  <span className="ml-2 px-1.5 py-0.5 bg-navy-primary/20 text-[9px] text-navy-primary font-black uppercase tracking-widest rounded shadow-sm border border-navy-primary/30">Partner</span>
+                </Link>
                 <Link href="/contact" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">お問い合わせ</Link>
               </nav>
             </div>

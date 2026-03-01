@@ -5,41 +5,62 @@ import { Check, Zap, Shield, Crown } from 'lucide-react'
 
 const PACKAGES = [
     {
-        id: 'lite',
-        name: 'ライトプラン',
-        price: 500,
-        credits: 10,
-        description: 'まずは試してみたい方に最適',
+        id: 'free',
+        name: 'フリープラン',
+        price: 0,
+        priceText: '無料',
+        credits: '3',
+        description: '新規登録時の基本プラン',
         color: 'slate',
         icon: Zap,
-        popular: false
+        popular: false,
+        features: [
+            '3クレジット付与',
+            '無期限で利用可能',
+            '基本機能へのアクセス'
+        ]
     },
     {
         id: 'standard',
         name: 'スタンダードプラン',
-        price: 3500,
-        credits: 100,
-        description: '最も人気のあるパッケージ',
+        price: 1500,
+        priceText: '1,500 THB / 月',
+        credits: '100',
+        description: '本格的に物件を掲載したい方に',
         color: 'navy',
         icon: Shield,
-        popular: true
+        popular: true,
+        features: [
+            '100クレジット付与',
+            '無期限で利用可能',
+            '優先的なサポート'
+        ]
     },
     {
-        id: 'pro',
-        name: 'プロプラン',
-        price: 20000,
-        credits: 1000,
-        description: '大規模な導入をご検討の方に',
+        id: 'premium',
+        name: 'プレミアムプラン',
+        price: 4000,
+        priceText: '4,000 THB / 月',
+        credits: '無制限',
+        description: '最大限の露出と効果を求める方に',
         color: 'emerald',
         icon: Crown,
-        popular: false
+        popular: false,
+        features: [
+            '無制限クレジット',
+            '検索結果の上位表示',
+            '専任サポート'
+        ]
     }
 ]
 
 export default function PricingPage() {
     const [loading, setLoading] = useState<string | null>(null)
+    const [selectedPlan, setSelectedPlan] = useState<string>('free')
 
     const handlePurchase = async (pkgId: string) => {
+        if (pkgId === 'free') return // フリープランは購入処理不要
+
         setLoading(pkgId)
         // Here we will call our API to create a Stripe Checkout Session
         try {
@@ -65,77 +86,74 @@ export default function PricingPage() {
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <h1 className="text-4xl font-black text-navy-secondary mb-4">掲載プランの選択</h1>
                     <p className="text-slate-600">
-                        物件を掲載するための「掲載枠（クレジット）」を事前に購入していただくパッケージ制を採用しています。
-                        1クレジットにつき1つの物件を公開できます。
+                        お客様のニーズに合わせた3つのプランをご用意しています。<br />
+                        まずはフリープランからお試しいただけます。
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {PACKAGES.map((pkg) => (
                         <div
                             key={pkg.id}
-                            className={`relative bg-white rounded-3xl p-8 shadow-xl transition-all hover:-translate-y-2 border-2 ${pkg.popular ? 'border-navy-primary' : 'border-transparent'}`}
+                            onClick={() => setSelectedPlan(pkg.id)}
+                            className={`relative bg-white rounded-3xl p-8 shadow-xl transition-all cursor-pointer border-4 duration-300 ${selectedPlan === pkg.id ? 'border-navy-primary transform md:-translate-y-4' : 'border-transparent hover:-translate-y-2'}`}
                         >
                             {pkg.popular && (
-                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-navy-primary text-white text-[10px] font-black px-4 py-1.5 rounded-full tracking-widest uppercase">
-                                    MOST POPULAR
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-navy-primary text-white text-[10px] font-black px-6 py-1.5 rounded-full tracking-widest uppercase shadow-md">
+                                    おすすめ
                                 </div>
                             )}
 
                             <div className="flex items-center justify-between mb-8">
-                                <div className={`p-3 rounded-2xl ${pkg.id === 'standard' ? 'bg-navy-primary/10 text-navy-primary' : 'bg-slate-100 text-slate-500'}`}>
+                                <div className={`p-4 rounded-2xl ${pkg.popular ? 'bg-navy-primary/10 text-navy-primary' : 'bg-slate-50 text-slate-500'}`}>
                                     <pkg.icon className="w-8 h-8" />
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-3xl font-black text-navy-secondary">¥{pkg.price.toLocaleString()}</div>
-                                    <div className="text-xs font-bold text-slate-400">税込</div>
+                                    <div className="text-2xl md:text-3xl font-black text-navy-secondary">{pkg.priceText}</div>
                                 </div>
                             </div>
 
-                            <h3 className="text-xl font-bold text-navy-secondary mb-2">{pkg.name}</h3>
-                            <p className="text-sm text-slate-500 mb-8 h-10">{pkg.description}</p>
+                            <h3 className="text-xl font-black text-navy-secondary mb-3">{pkg.name}</h3>
+                            <p className="text-sm font-medium text-slate-500 mb-8 h-10">{pkg.description}</p>
 
                             <div className="space-y-4 mb-10">
-                                <div className="flex items-center text-navy-secondary">
-                                    <div className="bg-emerald-100 text-emerald-600 p-1 rounded-full mr-3">
-                                        <Check className="w-3 h-3" />
+                                {pkg.features.map((feature, idx) => (
+                                    <div key={idx} className="flex items-center text-slate-700">
+                                        <div className="bg-emerald-100/50 text-emerald-600 p-1.5 rounded-full mr-4 flex-shrink-0">
+                                            <Check className="w-3.5 h-3.5" />
+                                        </div>
+                                        <span className="text-sm font-bold">{feature}</span>
                                     </div>
-                                    <span className="text-sm font-bold">{pkg.credits} 掲載クレジット付与</span>
-                                </div>
-                                <div className="flex items-center text-slate-600">
-                                    <div className="bg-emerald-100 text-emerald-600 p-1 rounded-full mr-3">
-                                        <Check className="w-3 h-3" />
-                                    </div>
-                                    <span className="text-sm font-medium">1件あたり {Math.round(pkg.price / pkg.credits)}円</span>
-                                </div>
-                                <div className="flex items-center text-slate-600">
-                                    <div className="bg-emerald-100 text-emerald-600 p-1 rounded-full mr-3">
-                                        <Check className="w-3 h-3" />
-                                    </div>
-                                    <span className="text-sm font-medium">無期限で利用可能</span>
-                                </div>
+                                ))}
                             </div>
 
                             <button
-                                onClick={() => handlePurchase(pkg.id)}
-                                disabled={loading !== null}
-                                className={`w-full py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 ${pkg.popular ? 'bg-navy-primary text-white hover:bg-navy-secondary' : 'bg-slate-100 text-navy-secondary hover:bg-slate-200'}`}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    handlePurchase(pkg.id)
+                                }}
+                                disabled={loading !== null || pkg.id === 'free'}
+                                className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center space-x-2 
+                                    ${pkg.id === 'free'
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        : selectedPlan === pkg.id
+                                            ? 'bg-navy-primary text-white hover:bg-navy-secondary shadow-lg hover:shadow-xl'
+                                            : 'bg-slate-100 text-navy-secondary hover:bg-slate-200'
+                                    }`}
                             >
                                 {loading === pkg.id ? (
                                     <div className="w-5 h-5 border-2 border-navy-primary/30 border-t-navy-primary rounded-full animate-spin"></div>
                                 ) : (
-                                    <span>このプランを選択する</span>
+                                    <span>{pkg.id === 'free' ? '現在のプラン' : 'このプランで始める'}</span>
                                 )}
                             </button>
                         </div>
                     ))}
                 </div>
 
-                <div className="mt-20 text-center text-slate-400 text-sm max-w-2xl mx-auto">
-                    <p>
-                        ※1クレジットにつき1つの物件を掲載（公開）できます。一度消費されたクレジットは返金できません。<br />
-                        ※掲載期限は各物件の投稿から30日間です。期間を延長する場合は再度クレジットが必要になります。
-                    </p>
+                <div className="mt-20 text-center text-slate-400 text-xs md:text-sm max-w-3xl mx-auto space-y-2 font-medium">
+                    <p>※1クレジットにつき1つの物件を掲載（公開）できます。</p>
+                    <p>※スタンダード・プレミアムプランのご利用料金は、月額での継続課金となります。</p>
                 </div>
             </div>
         </div>

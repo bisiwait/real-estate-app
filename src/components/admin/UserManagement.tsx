@@ -71,6 +71,27 @@ export default function AdminUserManagement() {
         }
     }
 
+    const handlePlanChange = async (userId: string, newPlan: string) => {
+        setLoading(true)
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ plan: newPlan })
+                .eq('id', userId)
+
+            if (!error) {
+                await fetchUsers()
+            } else {
+                throw error
+            }
+        } catch (err: any) {
+            console.error('Plan update error:', err)
+            alert(getErrorMessage(err))
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
             <div className="bg-slate-50 border-b border-slate-100 p-8 flex items-center justify-between">
@@ -86,6 +107,7 @@ export default function AdminUserManagement() {
                     <thead>
                         <tr className="bg-slate-50/50 border-b border-slate-100">
                             <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">エージェント</th>
+                            <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">プラン</th>
                             <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">現在のクレジット</th>
                             <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">管理操作</th>
                         </tr>
@@ -116,12 +138,26 @@ export default function AdminUserManagement() {
                                             </div>
                                             <div>
                                                 <p className="text-sm font-black text-navy-secondary flex items-center">
-                                                    {user.full_name || 'Anonymous Agent'}
+                                                    {user.full_name || user.email || 'Anonymous Agent'}
                                                     {user.is_admin && <ShieldCheck className="w-3 h-3 ml-2 text-amber-500" />}
                                                 </p>
                                                 <p className="text-xs text-slate-400">{user.email}</p>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className="px-8 py-6 text-center">
+                                        <select
+                                            value={user.plan || 'free'}
+                                            onChange={(e) => handlePlanChange(user.id, e.target.value)}
+                                            className={`text-xs font-black px-3 py-1.5 rounded-lg border outline-none
+                                                ${user.plan === 'premium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                                    user.plan === 'standard' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' :
+                                                        'bg-slate-50 text-slate-600 border-slate-200'}`}
+                                        >
+                                            <option value="free">Free</option>
+                                            <option value="standard">Standard</option>
+                                            <option value="premium">Premium</option>
+                                        </select>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center space-x-2">
@@ -172,7 +208,7 @@ export default function AdminUserManagement() {
                                                 }}
                                                 className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-50 text-navy-primary rounded-xl text-xs font-black hover:bg-navy-primary hover:text-white transition-all shadow-sm border border-transparent hover:border-navy-primary/20"
                                             >
-                                                <span>クレジットを管理</span>
+                                                <span>クレジット管理</span>
                                                 <ChevronRight className="w-3 h-3" />
                                             </button>
                                         )}

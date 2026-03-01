@@ -54,7 +54,12 @@ export default async function proxy(request: NextRequest) {
         }
     )
 
+    const start = Date.now()
     await supabase.auth.getUser()
+    const duration = Date.now() - start
+    if (duration > 500) {
+        console.warn(`Middleware auth check took ${duration}ms for ${request.nextUrl.pathname}`)
+    }
 
     return response
 }

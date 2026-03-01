@@ -6,9 +6,10 @@ import Link from 'next/link'
 
 interface CreditSectionProps {
     initialCredits: number
+    plan?: string
 }
 
-export default function CreditSection({ initialCredits }: CreditSectionProps) {
+export default function CreditSection({ initialCredits, plan = 'free' }: CreditSectionProps) {
     const [credits, setCredits] = useState(initialCredits)
     const [loading, setLoading] = useState(false)
 
@@ -35,7 +36,15 @@ export default function CreditSection({ initialCredits }: CreditSectionProps) {
                 <CreditCard className="w-32 h-32" />
             </div>
             <div className="flex justify-between items-start mb-1 relative z-10">
-                <p className="text-sm font-medium text-white/60">現在の保有クレジット</p>
+                <div className="flex flex-col items-start gap-1.5">
+                    <p className="text-sm font-medium text-white/60">現在の保有クレジット</p>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${plan === 'premium' ? 'bg-amber-500 text-white shadow-sm' :
+                            plan === 'standard' ? 'bg-indigo-500 text-white shadow-sm' :
+                                'bg-slate-500 text-white shadow-sm'
+                        } uppercase tracking-wider`}>
+                        {plan === 'premium' ? 'プレミア' : plan === 'standard' ? 'スタンダード' : 'フリー'}プラン
+                    </span>
+                </div>
                 <button
                     onClick={handleSync}
                     disabled={loading}

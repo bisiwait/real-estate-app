@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 
@@ -17,6 +17,12 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
     const [previews, setPreviews] = useState<string[]>(initialImages)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+
+    // Sync previews when initialImages prop changes (e.g., from AI import)
+    useEffect(() => {
+        const filePreviews = previews.filter(p => p.startsWith('blob:'))
+        setPreviews([...initialImages, ...filePreviews])
+    }, [initialImages])
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const remainingSlots = maxImages - previews.length

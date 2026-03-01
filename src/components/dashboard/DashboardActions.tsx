@@ -16,7 +16,7 @@ export default function DashboardActions({ propertyId, propertyTitle }: Dashboar
     const supabase = createClient()
 
     const handleDelete = async () => {
-        const confirmed = window.confirm(`「${propertyTitle}」を削除してもよろしいですか？この操作は取り消せません。`)
+        const confirmed = window.confirm(`「${propertyTitle}」を削除しますか？この処理をすると戻せません。`)
 
         if (!confirmed) return
 

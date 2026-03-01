@@ -20,6 +20,8 @@ interface PropertyCardProps {
         rent_price?: number
         sale_price?: number
         ownership_type?: string
+        is_presale?: boolean
+        status?: string
     }
 }
 
@@ -35,7 +37,22 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                         className="w-full h-full object-cover transition-transform duration-500"
                     />
                     <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                        {property.tags.slice(0, 2).map((tag) => (
+                        {property.status === 'contracted' && (
+                            <span className="bg-purple-600 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
+                                成約済
+                            </span>
+                        )}
+                        {property.status === 'under_negotiation' && (
+                            <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
+                                商談中
+                            </span>
+                        )}
+                        {property.is_presale && (
+                            <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-sm tracking-wider">
+                                プレセール
+                            </span>
+                        )}
+                        {property.tags.slice(0, property.is_presale ? 1 : 2).map((tag) => (
                             <span key={tag} className="bg-white/90 backdrop-blur-sm text-navy-primary text-[10px] font-bold px-2 py-1 rounded-md shadow-sm">
                                 {tag}
                             </span>

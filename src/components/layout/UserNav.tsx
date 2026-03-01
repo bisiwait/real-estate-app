@@ -106,7 +106,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
             <div className={cn("flex items-center", isMobile ? "flex-col space-y-2" : "space-x-3")}>
                 <div className="flex flex-col items-end">
                     <span className="text-sm font-bold text-navy-primary truncate max-w-[150px]">
-                        {userData.fullName || 'Anonymous'}
+                        {userData.fullName || user?.email || 'Anonymous'}
                     </span>
                 </div>
                 {userData.credits !== null && (

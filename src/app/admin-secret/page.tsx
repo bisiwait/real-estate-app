@@ -11,12 +11,14 @@ import {
     CheckCircle,
     Clock,
     AlertTriangle,
-    ShieldCheck
+    ShieldCheck,
+    Sparkles
 } from 'lucide-react'
 import Link from 'next/link'
 
 import AdminPropertyManagement from '@/components/admin/PropertyManagement'
 import AdminUserManagement from '@/components/admin/UserManagement'
+import AdminProjectManagement from '@/components/admin/ProjectManagement'
 
 export default async function AdminSecretDashboard() {
     const isUserAdmin = await isAdmin()
@@ -42,12 +44,19 @@ export default async function AdminSecretDashboard() {
     return (
         <div className="bg-slate-50 min-h-screen pb-20 pt-24">
             <div className="container mx-auto px-4">
-                {/* Minimal Identification */}
-                <div className="flex items-center space-x-2 mb-8">
-                    <div className="bg-amber-500 text-navy-secondary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest leading-none">
-                        Secret Mode
+                {/* Minimal Identification & Actions */}
+                <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
+                    <div className="flex items-center space-x-2">
+                        <div className="bg-amber-500 text-navy-secondary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest leading-none">
+                            Secret Mode
+                        </div>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Admin Access Only</span>
                     </div>
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Admin Access Only</span>
+
+                    <Link href="/list-property" className="flex items-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                        <Sparkles className="w-4 h-4 text-amber-300" />
+                        <span>AIで物件を取り込む</span>
+                    </Link>
                 </div>
 
                 {/* Summary Grid */}
@@ -103,6 +112,7 @@ export default async function AdminSecretDashboard() {
 
                 {/* Main Management Section */}
                 <div className="grid grid-cols-1 gap-12">
+                    <AdminProjectManagement />
                     <AdminPropertyManagement />
                     <AdminUserManagement />
                 </div>

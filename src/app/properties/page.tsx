@@ -5,7 +5,8 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import MobileSearchBar from '@/components/property/MobileSearchBar'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Filter, X, ChevronRight, SlidersHorizontal, Loader2, MapPin, Bath, Dog } from 'lucide-react'
+import { Search, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog } from 'lucide-react'
+import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 
 
 const CITIES = [
@@ -15,10 +16,11 @@ const CITIES = [
 
 const AREAS_BY_CITY: Record<string, { label: string, value: string }[]> = {
     Pattaya: [
-        { label: 'ジョムティエン', value: 'Jomtien' },
+        { label: 'ナクルア・ウォンアマット', value: 'North Pattaya / Wongamat' },
         { label: 'セントラルパタヤ', value: 'Central Pattaya' },
-        { label: 'プラトゥムナック', value: 'Pratumnak' },
-        { label: 'ナクルア', value: 'Naklua' },
+        { label: 'サウスパタヤ', value: 'South Pattaya' },
+        { label: 'プラタムナック', value: 'Pratumnak' },
+        { label: 'ジョムティエン', value: 'Jomtien' },
         { label: 'イーストパタヤ', value: 'East Pattaya' }
     ],
     Sriracha: [
@@ -30,19 +32,8 @@ const AREAS_BY_CITY: Record<string, { label: string, value: string }[]> = {
     ]
 }
 
-const PRICE_RANGES = [
-    { label: '1.5万B以下', value: '0-15000' },
-    { label: '1.5万〜3万B', value: '15000-30000' },
-    { label: '3万〜5万B', value: '30000-50000' },
-    { label: '5万B以上', value: '50000-999999' }
-]
-
-const SALE_PRICE_RANGES = [
-    { label: '300万B以下', value: '0-3000000' },
-    { label: '300万〜600万B', value: '3000000-6000000' },
-    { label: '600万〜1000万B', value: '6000000-10000000' },
-    { label: '1000万B以上', value: '10000000-999999999' }
-]
+const PRICE_RANGES = { min: 0, max: 80000, step: 5000 }
+const SALE_PRICE_RANGES = { min: 0, max: 30000000, step: 1000000 }
 
 const COMMON_TAGS = ['バスタブあり', '洗濯機室内', '日本語対応スタッフ', 'ペット可', '高層階（オーシャンビュー期待）']
 const SRIRACHA_TAGS = [
@@ -62,7 +53,6 @@ function PropertiesList() {
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
     const [dbProperties, setDbProperties] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [priceDisplayType, setPriceDisplayType] = useState<'rent' | 'sell'>('rent')
 
     // Local state derived from URL
     const selectedCity = searchParams.get('region') || 'Pattaya'
@@ -73,7 +63,13 @@ function PropertiesList() {
     const listingType = searchParams.get('type') || 'all'
     const bathtubFilter = searchParams.get('bathtub') === 'true'
     const petsFilter = searchParams.get('pets') === 'true'
+    const selectedPropertyType = searchParams.get('property_type') || ''
 
+    const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
+
+    useEffect(() => {
+        setLocalSearchQuery(searchQuery)
+    }, [searchQuery])
 
     useEffect(() => {
         async function fetchProperties() {
@@ -83,7 +79,7 @@ function PropertiesList() {
                 const { data, error } = await supabase
                     .from('properties')
                     .select('*, area:areas(name, region:regions(name))')
-                    .eq('status', 'published')
+                    .in('status', ['published', 'under_negotiation', 'contracted'])
                     .eq('is_approved', true)
                     .order('created_at', { ascending: false })
 
@@ -92,8 +88,15 @@ function PropertiesList() {
                 }
 
                 if (data) {
+                    // Sort 'contracted' properties to the bottom, keep others sorted by created_at desc
+                    const sortedData = [...data].sort((a, b) => {
+                        if (a.status === 'contracted' && b.status !== 'contracted') return 1;
+                        if (a.status !== 'contracted' && b.status === 'contracted') return -1;
+                        return 0; // Preserve the original created_at descending order
+                    });
+
                     // Map nested area.name to flat area_name for the PropertyCard
-                    const formatted = data.map(p => ({
+                    const formatted = sortedData.map(p => ({
                         ...p,
                         city_name: p.area?.region?.name || 'Pattaya',
                         area_name: p.area?.name || 'Unknown'
@@ -107,31 +110,11 @@ function PropertiesList() {
             }
         }
         fetchProperties()
+        fetchProperties()
     }, [])
 
-    useEffect(() => {
-        if (listingType === 'rent') setPriceDisplayType('rent')
-        if (listingType === 'sell') setPriceDisplayType('sell')
-    }, [listingType])
-
-    // Merge with Mock Data for demonstration if DB is empty
-    const allProperties = useMemo(() => {
-        const { MOCK_PROPERTIES } = require('@/lib/mock-data')
-
-        // Add city_name to mock properties based on their area_name if not present
-        const formattedMock = MOCK_PROPERTIES.map((p: any) => {
-            let city = 'Pattaya';
-            if (AREAS_BY_CITY.Sriracha.some(a => a.value === p.area_name)) {
-                city = 'Sriracha';
-            }
-            return {
-                ...p,
-                city_name: city
-            };
-        });
-
-        return [...dbProperties, ...formattedMock]
-    }, [dbProperties])
+    // Use database properties directly
+    const allProperties = dbProperties
 
     // Sync filters to URL
     const updateFilters = (updates: Record<string, string | string[] | null>) => {
@@ -164,21 +147,28 @@ function PropertiesList() {
             // Area match
             const matchesArea = !selectedArea || property.area_name === selectedArea
 
+            // Property Type match
+            const matchesPropertyType = !selectedPropertyType || property.property_type === selectedPropertyType
+
             // Price match (Update to support separate rent/sale prices and 'all' type)
             let matchesPrice = true
             if (selectedPrice) {
                 const [min, max] = selectedPrice.split('-').map(Number)
+                const isMaxLimitRent = max >= PRICE_RANGES.max;
+                const isMaxLimitSale = max >= SALE_PRICE_RANGES.max;
+
                 if (listingType === 'all') {
                     // In 'all' mode, matches if either rent or sale price is in range
                     const rPrice = property.rent_price ?? property.price
                     const sPrice = property.sale_price ?? property.price
-                    const rentMatch = property.is_for_rent && rPrice >= min && rPrice <= max
-                    const saleMatch = property.is_for_sale && sPrice >= min && sPrice <= max
+                    const rentMatch = property.is_for_rent && rPrice >= min && (isMaxLimitRent ? true : rPrice <= max)
+                    const saleMatch = property.is_for_sale && sPrice >= min && (isMaxLimitSale ? true : sPrice <= max)
                     matchesPrice = rentMatch || saleMatch
                 } else {
                     const currentPrice = listingType === 'rent' ? property.rent_price : property.sale_price
                     const effectivePrice = currentPrice ?? property.price
-                    matchesPrice = effectivePrice >= min && effectivePrice <= max
+                    const isMaxLimit = listingType === 'rent' ? isMaxLimitRent : isMaxLimitSale;
+                    matchesPrice = effectivePrice >= min && (isMaxLimit ? true : effectivePrice <= max)
                 }
             }
 
@@ -197,12 +187,14 @@ function PropertiesList() {
             // Listing Type match (Update to support 'all' and dual listing)
             const matchesType = listingType === 'all'
                 ? true
-                : (listingType === 'rent' ? property.is_for_rent : property.is_for_sale)
+                : listingType === 'presale'
+                    ? property.is_presale
+                    : (listingType === 'rent' ? (property.is_for_rent && !property.is_presale) : (property.is_for_sale && !property.is_presale))
 
-            return matchesCity && matchesArea && matchesPrice && matchesTags && matchesSearch && matchesBathtub && matchesPets && matchesType
+            return matchesCity && matchesArea && matchesPropertyType && matchesPrice && matchesTags && matchesSearch && matchesBathtub && matchesPets && matchesType
 
         })
-    }, [allProperties, selectedCity, selectedArea, selectedPrice, selectedTags, searchQuery])
+    }, [allProperties, selectedCity, selectedArea, selectedPropertyType, selectedPrice, selectedTags, searchQuery])
 
     const toggleTag = (tag: string) => {
         const newTags = selectedTags.includes(tag)
@@ -211,7 +203,7 @@ function PropertiesList() {
         updateFilters({ tags: newTags })
     }
 
-    const FilterContent = () => (
+    const filterContentNode = (
         <div className="space-y-8">
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
@@ -223,8 +215,11 @@ function PropertiesList() {
                         type="text"
                         placeholder="物件名、設備など..."
                         className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
-                        value={searchQuery}
-                        onChange={(e) => updateFilters({ q: e.target.value })}
+                        value={localSearchQuery}
+                        onChange={(e) => {
+                            setLocalSearchQuery(e.target.value)
+                            updateFilters({ q: e.target.value })
+                        }}
                     />
                 </div>
             </div>
@@ -274,37 +269,60 @@ function PropertiesList() {
             </div>
 
             <div>
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest leading-none">価格帯 (Budget)</h3>
-                    {listingType === 'all' && (
-                        <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                            <button
-                                onClick={() => setPriceDisplayType('rent')}
-                                className={`px-2 py-1 rounded-md text-[9px] font-black transition-all ${priceDisplayType === 'rent' ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-400'}`}
-                            >
-                                賃料
-                            </button>
-                            <button
-                                onClick={() => setPriceDisplayType('sell')}
-                                className={`px-2 py-1 rounded-md text-[9px] font-black transition-all ${priceDisplayType === 'sell' ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-400'}`}
-                            >
-                                価格
-                            </button>
-                        </div>
-                    )}
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                    {(priceDisplayType === 'rent' ? PRICE_RANGES : SALE_PRICE_RANGES).map(range => (
-                        <button
-                            key={range.value}
-                            onClick={() => updateFilters({ price: selectedPrice === range.value ? null : range.value })}
-                            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all border ${selectedPrice === range.value ? 'bg-navy-primary border-navy-primary text-white font-bold' : 'bg-white border-slate-100 text-slate-600 hover:border-navy-primary'}`}
-                        >
-                            {range.label}
-                        </button>
-                    ))}
+                <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
+                    <Filter className="w-3 h-3 mr-2" />
+                    物件タイプ (Property Type)
+                </h3>
+                <div className="space-y-1">
+                    <button
+                        onClick={() => updateFilters({ property_type: null })}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${!selectedPropertyType ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        <span>すべてのタイプ</span>
+                        {!selectedPropertyType && <ChevronRight className="w-4 h-4" />}
+                    </button>
+                    <button
+                        onClick={() => updateFilters({ property_type: 'Condo' })}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedPropertyType === 'Condo' ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        <span>コンドミニアム</span>
+                        {selectedPropertyType === 'Condo' && <ChevronRight className="w-4 h-4" />}
+                    </button>
+                    <button
+                        onClick={() => updateFilters({ property_type: 'House' })}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedPropertyType === 'House' ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        <span>一軒家ヴィラ</span>
+                        {selectedPropertyType === 'House' && <ChevronRight className="w-4 h-4" />}
+                    </button>
                 </div>
             </div>
+
+            {listingType !== 'all' && (
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest leading-none">価格帯 (Budget)</h3>
+                    </div>
+                    <div className="px-2">
+                        <PriceRangeSlider
+                            key={listingType} // Re-mount when switching types to reset correctly if needed
+                            min={listingType === 'rent' ? PRICE_RANGES.min : SALE_PRICE_RANGES.min}
+                            max={listingType === 'rent' ? PRICE_RANGES.max : SALE_PRICE_RANGES.max}
+                            step={listingType === 'rent' ? PRICE_RANGES.step : SALE_PRICE_RANGES.step}
+                            initialMin={selectedPrice ? Number(selectedPrice.split('-')[0]) : undefined}
+                            initialMax={selectedPrice ? Number(selectedPrice.split('-')[1]) : undefined}
+                            onChange={(min, max) => {
+                                updateFilters({ price: `${min}-${max}` })
+                            }}
+                            formatValue={(val) => {
+                                if (val === 0) return '0 ฿';
+                                if (val >= 1000000) return `${val / 10000}万 ฿`;
+                                return `${val.toLocaleString()} ฿`;
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
 
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4">こだわり設備 (Japanese Spec)</h3>
@@ -327,10 +345,10 @@ function PropertiesList() {
             </div>
 
             {
-                (selectedArea || selectedPrice || selectedTags.length > 0 || searchQuery || bathtubFilter || petsFilter) && (
+                (selectedArea || selectedPropertyType || selectedPrice || selectedTags.length > 0 || searchQuery || bathtubFilter || petsFilter) && (
                     <button
                         onClick={() => {
-                            updateFilters({ area: null, price: null, tags: null, q: null, bathtub: null, pets: null })
+                            updateFilters({ area: null, property_type: null, price: null, tags: null, q: null, bathtub: null, pets: null })
                         }}
 
                         className="w-full py-3 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors border border-dashed border-slate-200 rounded-xl"
@@ -375,22 +393,28 @@ function PropertiesList() {
                             {/* Tabs */}
                             <div className="flex bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-fit border border-slate-200 shadow-sm">
                                 <button
-                                    onClick={() => updateFilters({ type: 'all' })}
+                                    onClick={() => updateFilters({ type: 'all', price: null })}
                                     className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
                                 >
                                     すべて
                                 </button>
                                 <button
-                                    onClick={() => updateFilters({ type: 'rent' })}
+                                    onClick={() => updateFilters({ type: 'rent', price: null })}
                                     className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
                                 >
                                     賃貸
                                 </button>
                                 <button
-                                    onClick={() => updateFilters({ type: 'sell' })}
+                                    onClick={() => updateFilters({ type: 'sell', price: null })}
                                     className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
                                 >
                                     売買
+                                </button>
+                                <button
+                                    onClick={() => updateFilters({ type: 'presale', price: null })}
+                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'presale' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-amber-500'}`}
+                                >
+                                    プレセール
                                 </button>
                             </div>
 
@@ -402,6 +426,7 @@ function PropertiesList() {
                                     onFilterClick={() => setIsFilterDrawerOpen(true)}
                                     activeFiltersCount={[
                                         selectedArea,
+                                        selectedPropertyType,
                                         selectedPrice,
                                         bathtubFilter,
                                         petsFilter,
@@ -415,7 +440,7 @@ function PropertiesList() {
                     {/* PC Filters Sidebar */}
                     <aside className="hidden lg:block lg:col-span-1">
                         <div className="bg-white rounded-3xl shadow-xl p-8 sticky top-28 border border-white/50 backdrop-blur-sm">
-                            <FilterContent />
+                            {filterContentNode}
                         </div>
                     </aside>
 
@@ -441,7 +466,7 @@ function PropertiesList() {
                                 <h3 className="text-xl font-bold text-navy-secondary mb-2">該当する物件が見つかりませんでした</h3>
                                 <p className="text-slate-500 mb-8">別の条件でお試しいただくか、条件をリセットしてください。</p>
                                 <button
-                                    onClick={() => updateFilters({ region: null, price: null, tags: null, q: null })}
+                                    onClick={() => updateFilters({ region: null, property_type: null, price: null, tags: null, q: null })}
                                     className="bg-navy-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-navy-secondary transition-all"
                                 >
                                     条件をリセットする
@@ -470,7 +495,7 @@ function PropertiesList() {
                             </button>
                         </div>
 
-                        <FilterContent />
+                        {filterContentNode}
 
                         <div className="mt-12">
                             <button

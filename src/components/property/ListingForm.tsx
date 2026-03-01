@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import Select from 'react-select'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -31,7 +32,22 @@ import { getErrorMessage } from '@/lib/utils/errors'
 interface Area {
     id: string
     name: string
-    region: { name: string }
+    region?: { name: string }
+}
+
+interface Project {
+    id: string
+    name: string
+    area_id: string
+    address?: string
+    facilities?: string[]
+    description?: string
+    image_url?: string
+    property_type?: string
+    year_built?: string
+    total_floors?: number | string
+    latitude?: number
+    longitude?: number
 }
 
 interface ListingFormProps {
@@ -42,10 +58,31 @@ interface ListingFormProps {
 export default function ListingForm({ initialData, mode = 'create' }: ListingFormProps) {
     const [loading, setLoading] = useState(false)
     const [areas, setAreas] = useState<Area[]>([])
+    const [projects, setProjects] = useState<Project[]>([])
+    const [isAdmin, setIsAdmin] = useState(false)
+    const [showNewProjectForm, setShowNewProjectForm] = useState(false)
+    const [projectForm, setProjectForm] = useState({
+        name: '',
+        area_id: '',
+        address: '',
+        image_url: '',
+        property_type: 'Condo',
+        year_built: '',
+        total_floors: '',
+        latitude: 12.9236,
+        longitude: 100.8824
+    })
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || [])
+
+    // AI Import states
+    const [importUrl, setImportUrl] = useState('')
+    const [isImporting, setIsImporting] = useState(false)
+    const [importError, setImportError] = useState<string | null>(null)
+    const [submitStatus, setSubmitStatus] = useState<'pending' | 'draft'>('pending')
+
     const router = useRouter()
     const supabase = createClient()
 
@@ -53,17 +90,19 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     const JA_TAGS = [
         'バスタブあり',
         'ウォシュレット完備',
-        '洗濯機室内',
-        '日本語対応スタッフ',
-        '日本語テレビ対応',
+        '洗濯機',
+        'テレビ',
+        '冷蔵庫',
+        'WiFi',
         'ペット可',
         'EV充電器あり',
-        '高層階（オーシャンビュー期待）',
-        '駅近',
+        '高層階',
         '築浅',
         '格安',
         '高級物件',
-        'バルコニー広い'
+        'バルコニー広い',
+        'オーシャンビュー',
+        'シティービュー'
     ]
 
     const [formData, setFormData] = useState({
@@ -74,6 +113,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         rent_price: initialData?.rent_price?.toString() || (initialData?.listing_type === 'rent' ? initialData.price?.toString() : ''),
         sale_price: initialData?.sale_price?.toString() || (initialData?.listing_type === 'sell' ? initialData.price?.toString() : ''),
         area_id: initialData?.area_id || '',
+        project_id: initialData?.project_id || '',
+        building_name: initialData?.building_name || '',
+        project_name: initialData?.project_name || '',
         tags: initialData?.tags || [] as string[],
         // Japanese specific fields
         has_bathtub: initialData?.has_bathtub || false,
@@ -89,6 +131,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         has_japanese_tv: initialData?.has_japanese_tv || false,
         has_ev_charger: initialData?.has_ev_charger || false,
         admin_memo: initialData?.admin_memo || '',
+        status: initialData?.status || 'published',
         // Core specs
         property_type: initialData?.property_type || 'Condo',
         sqm: initialData?.sqm?.toString() || '',
@@ -97,25 +140,62 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         bathrooms: initialData?.bathrooms?.toString() || '0',
         year_built: initialData?.year_built || '',
         total_floors: initialData?.total_floors?.toString() || '',
-        ownership_type: initialData?.ownership_type || '',
-        latitude: initialData?.latitude || 0,
-        longitude: initialData?.longitude || 0
+        ownership_type: initialData?.ownership_type || ''
     })
 
-
     useEffect(() => {
-        async function fetchAreas() {
-            const { data, error } = await supabase
-                .from('areas')
-                .select('id, name, region:regions(name)')
-
-            if (error) console.error('Error fetching areas:', error)
-            if (data) {
-                console.log('Fetched areas count:', data.length)
-                setAreas(data as any)
+        async function checkAdmin() {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('is_admin')
+                    .eq('id', user.id)
+                    .single()
+                setIsAdmin(data?.is_admin || false)
             }
         }
-        fetchAreas()
+        checkAdmin()
+    }, [supabase])
+
+    useEffect(() => {
+        const fetchInitialData = async () => {
+            const [areasRes, projectsRes] = await Promise.all([
+                supabase.from('areas').select('id, name, region:regions(name)').order('name'),
+                supabase.from('projects').select('*').order('name')
+            ])
+
+            if (areasRes.data) {
+                // Ensure the mapping matches the interface
+                const mappedAreas = areasRes.data.map((item: any) => ({
+                    id: item.id,
+                    name: item.name,
+                    region: item.region || { name: '' }
+                }))
+
+                // Sort areas: Pattaya first, then Sriracha, then alphabetical inside
+                mappedAreas.sort((a: Area, b: Area) => {
+                    const regionA = a.region?.name || ''
+                    const regionB = b.region?.name || ''
+
+                    if (regionA === 'Pattaya' && regionB !== 'Pattaya') return -1
+                    if (regionA !== 'Pattaya' && regionB === 'Pattaya') return 1
+
+                    if (regionA === 'Sriracha' && regionB !== 'Sriracha') return -1
+                    if (regionA !== 'Sriracha' && regionB === 'Sriracha') return 1
+
+                    // Fallback to alphabetical region, then area name
+                    if (regionA !== regionB) return regionA.localeCompare(regionB)
+                    return a.name.localeCompare(b.name)
+                })
+
+                setAreas(mappedAreas)
+            }
+            if (projectsRes.data) {
+                setProjects(projectsRes.data)
+            }
+        }
+        fetchInitialData()
     }, [supabase])
 
     const toggleTag = (tag: string) => {
@@ -129,7 +209,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             const nextData = { ...prev, tags: nextTags }
 
             if (tag === 'ペット可') nextData.allows_pets = !isSelected
-            if (tag === '日本語テレビ対応') nextData.has_japanese_tv = !isSelected
             if (tag === 'EV充電器あり') nextData.has_ev_charger = !isSelected
             if (tag === 'バスタブあり') nextData.has_bathtub = !isSelected
             if (tag === 'ウォシュレット完備') nextData.has_washlet = !isSelected
@@ -146,25 +225,19 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
             const filePath = `${propertyId}/${fileName}`
 
-            // Debug log
-            console.log(`Uploading: ${filePath}`)
-
+            console.log(`Uploading image: ${file.name} to ${filePath}...`);
             const { error: uploadError, data } = await supabase.storage
                 .from('property-images')
                 .upload(filePath, file)
 
             if (uploadError) {
-                console.error('Supabase storage error:', uploadError)
-
-                // If it's a "Bucket not found" error, provide a helpful message
+                console.error(`Upload failed for ${file.name}:`, uploadError);
                 if (uploadError.message.includes('bucket not found') || (uploadError as any).status === 404) {
-                    throw new Error('Supabase Storageに "property-images" バケットが見つかりません。SQLスクリプトを実行してバケットを作成してください。')
+                    throw new Error('Supabase Storageに "property-images" バケットが見つかりません。')
                 }
-
                 throw new Error(`画像のアップロードに失敗しました (${file.name}): ${uploadError.message}`)
             }
 
-            // Get Public URL
             const { data: { publicUrl } } = supabase.storage
                 .from('property-images')
                 .getPublicUrl(filePath)
@@ -175,30 +248,177 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         return uploadedUrls
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleImport = async () => {
+        if (!importUrl) return
+        setIsImporting(true)
+        setImportError(null)
+        try {
+            const res = await fetch('/api/extract', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: importUrl })
+            })
+
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'インポートに失敗しました')
+
+            let matchedProjectId = ''
+            let matchedAreaId = ''
+            let matchedBuildingName = ''
+            let needsNewProject = false
+            let matchedNewAreaId = ''
+
+            if (data.building_name) {
+                // Try to find existing project
+                const p = projects.find(p => p.name.toLowerCase().includes(data.building_name.toLowerCase()) || data.building_name.toLowerCase().includes(p.name.toLowerCase()))
+
+                if (p) {
+                    matchedProjectId = p.id
+                    matchedAreaId = p.area_id
+                    matchedBuildingName = p.name
+                    setShowNewProjectForm(false)
+                } else {
+                    needsNewProject = true
+                    matchedProjectId = 'new'
+                    matchedBuildingName = data.building_name
+
+                    // Try to guess area
+                    if (data.area) {
+                        const a = areas.find(a => a.name.toLowerCase().includes(data.area.toLowerCase()) || data.area.toLowerCase().includes(a.name.toLowerCase()) || (a.region?.name && a.region.name.toLowerCase().includes(data.area.toLowerCase())))
+                        if (a) matchedNewAreaId = a.id
+                    }
+
+                    setShowNewProjectForm(true)
+                    setProjectForm(pf => ({
+                        ...pf,
+                        name: data.building_name,
+                        area_id: matchedNewAreaId
+                    }))
+                }
+            }
+
+            setFormData(prev => {
+                const updated = {
+                    ...prev,
+                    title: data.title || prev.title,
+                    description: data.description ? (prev.description ? prev.description + '\n\n' + data.description : data.description) : prev.description,
+                    rent_price: data.price ? data.price.toString() : prev.rent_price,
+                    sqm: data.sqm ? data.sqm.toString() : prev.sqm,
+                    floor: data.floor ? data.floor.toString() : prev.floor,
+                    is_for_rent: !!data.price || prev.is_for_rent,
+                }
+
+                if (matchedProjectId) {
+                    updated.project_id = matchedProjectId
+                    updated.area_id = matchedProjectId === 'new' ? matchedNewAreaId : matchedAreaId
+                    updated.building_name = matchedBuildingName
+                    updated.project_name = matchedBuildingName
+                    if (!data.title) updated.title = matchedBuildingName
+                }
+
+                // Add layout info to description if found
+                if (data.layout) {
+                    updated.description = `【間取り】${data.layout}\n` + updated.description
+                }
+
+                return updated
+            })
+
+            if (data.amenities && Array.isArray(data.amenities)) {
+                const newTags = new Set(formData.tags)
+                data.amenities.forEach((am: string) => {
+                    // Simple matching for known tags
+                    JA_TAGS.forEach(t => {
+                        if (am.includes(t) || t.includes(am) || (am.toLowerCase().includes('pet') && t === 'ペット可')) {
+                            newTags.add(t)
+                        }
+                    })
+                })
+                setFormData(prev => ({
+                    ...prev,
+                    tags: Array.from(newTags),
+                    allows_pets: newTags.has('ペット可'),
+                    has_bathtub: newTags.has('バスタブあり'),
+                    has_washlet: newTags.has('ウォシュレット完備'),
+                    has_ev_charger: newTags.has('EV充電器あり'),
+                    has_japanese_tv: newTags.has('テレビ')
+                }))
+            }
+            if (data.image_urls && Array.isArray(data.image_urls) && data.image_urls.length > 0) {
+                setExistingImages(prev => {
+                    const newUrls = data.image_urls.filter((url: string) => !prev.includes(url))
+                    return [...newUrls, ...prev]
+                })
+            } else if (data.main_image_url) {
+                setExistingImages(prev => {
+                    if (!prev.includes(data.main_image_url)) {
+                        return [data.main_image_url, ...prev]
+                    }
+                    return prev
+                })
+            }
+        } catch (err: any) {
+            setImportError(err.message)
+        } finally {
+            setIsImporting(false)
+        }
+    }
+
+    const handleSubmit = async (e: React.FormEvent, statusOverride?: 'draft' | 'pending') => {
         e.preventDefault()
         setLoading(true)
         setError(null)
 
+        let finalStatus: string = statusOverride || submitStatus
+
+        if (mode === 'edit') {
+            if (statusOverride === 'draft') {
+                finalStatus = 'draft'
+            } else {
+                finalStatus = formData.status
+            }
+        } else {
+            if (isAdmin && finalStatus === 'pending') {
+                finalStatus = formData.status
+            }
+        }
+
         try {
-            const { data: { user } } = await supabase.auth.getUser()
+            const { data: { user }, error: authError } = await supabase.auth.getUser()
+            if (authError) throw authError
             if (!user) throw new Error('Unauthorized')
 
-            let propertyId = initialData?.id
+            let finalProjectId = formData.project_id
 
-            // Step 1: Handling Property Record
-            if (mode === 'create') {
-                // For create, we insert first to get the real propertyId if needed, 
-                // but since we want images to be part of the record, 
-                // let's use a temporary ID or insert without images first.
-                // Best pattern: Insert with placeholder/empty images, then upload, then update.
-
-                if (!formData.is_for_rent && !formData.is_for_sale) {
-                    throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
+            if (showNewProjectForm) {
+                if (!projectForm.name || !projectForm.area_id) {
+                    throw new Error('プロジェクト名とエリアは必須です。')
                 }
 
-                if (formData.is_for_sale && !formData.ownership_type) {
-                    throw new Error('売買物件の場合は「所有権タイプ（Quota）」を選択してください。')
+                const { data: newProject, error: projectError } = await supabase
+                    .from('projects')
+                    .insert({
+                        name: projectForm.name,
+                        area_id: projectForm.area_id,
+                        address: projectForm.address,
+                        image_url: projectForm.image_url,
+                        property_type: projectForm.property_type,
+                        year_built: projectForm.year_built,
+                        total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
+                        latitude: projectForm.latitude,
+                        longitude: projectForm.longitude
+                    })
+                    .select()
+                    .single()
+
+                if (projectError) throw projectError
+                finalProjectId = newProject.id
+            }
+
+            let propertyId = initialData?.id
+            if (mode === 'create') {
+                if (!formData.is_for_rent && !formData.is_for_sale) {
+                    throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
                 }
 
                 const { data: newProperty, error: insertError } = await supabase
@@ -212,11 +432,13 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         rent_price: formData.is_for_rent ? parseFloat(formData.rent_price) : null,
                         sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
                         area_id: formData.area_id,
-                        images: [], // Placeholder
+                        project_id: finalProjectId || null,
+                        building_name: formData.building_name,
+                        project_name: formData.project_name,
+                        images: [],
                         tags: formData.tags,
-                        status: 'pending',
+                        status: finalStatus,
                         expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                        // Japanese specific fields
                         has_bathtub: formData.has_bathtub,
                         has_washlet: formData.has_washlet,
                         water_heater_type: formData.water_heater_type,
@@ -237,11 +459,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         bathrooms: parseInt(formData.bathrooms),
                         year_built: formData.year_built,
                         total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                        ownership_type: formData.is_for_sale ? formData.ownership_type : null,
-                        latitude: formData.latitude,
-                        longitude: formData.longitude
+                        ownership_type: formData.is_for_sale ? formData.ownership_type : null
                     })
-
                     .select()
                     .single()
 
@@ -249,7 +468,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 propertyId = newProperty.id
             }
 
-            // Step 2: Upload new images if any
             const newImageUrls = await uploadImages(propertyId)
             const finalImages = [...existingImages, ...newImageUrls]
 
@@ -257,15 +475,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 throw new Error('少なくとも1枚の画像をアップロードしてください。')
             }
 
-            if (!formData.is_for_rent && !formData.is_for_sale) {
-                throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
-            }
-
-            if (formData.is_for_sale && !formData.ownership_type) {
-                throw new Error('売買物件の場合は「所有権タイプ（Quota）」を選択してください。')
-            }
-
-            // Step 3: Update property with final image list
             const { error: updateError } = await supabase
                 .from('properties')
                 .update({
@@ -275,10 +484,13 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     is_for_sale: formData.is_for_sale,
                     rent_price: formData.is_for_rent ? parseFloat(formData.rent_price) : null,
                     sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
+                    project_id: finalProjectId || null,
+                    building_name: formData.building_name,
+                    project_name: formData.project_name,
                     images: finalImages,
                     tags: formData.tags,
+                    status: finalStatus,
                     updated_at: new Date().toISOString(),
-                    // Japanese specific fields
                     has_bathtub: formData.has_bathtub,
                     has_washlet: formData.has_washlet,
                     water_heater_type: formData.water_heater_type,
@@ -299,21 +511,34 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     bathrooms: parseInt(formData.bathrooms),
                     year_built: formData.year_built,
                     total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                    ownership_type: formData.is_for_sale ? formData.ownership_type : null,
-                    latitude: formData.latitude,
-                    longitude: formData.longitude
+                    ownership_type: formData.is_for_sale ? formData.ownership_type : null
                 })
-
                 .eq('id', propertyId)
                 .eq('user_id', user.id)
 
             if (updateError) throw updateError
 
+            // Sync project data if admin edited an existing project
+            if (!showNewProjectForm && formData.project_id && isAdmin) {
+                const { error: projectSyncError } = await supabase
+                    .from('projects')
+                    .update({
+                        property_type: formData.property_type,
+                        year_built: formData.year_built,
+                        total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null
+                    })
+                    .eq('id', formData.project_id)
+
+                if (projectSyncError) {
+                    console.warn('Failed to sync project data:', projectSyncError)
+                }
+            }
+
             setSuccess(true)
-            setTimeout(() => router.push('/dashboard'), 2000)
+            setTimeout(() => router.push(isAdmin ? '/admin-secret' : '/dashboard'), 2000)
         } catch (err: any) {
             console.error('Submit error:', err)
-            setError(getErrorMessage(err))
+            setError(err.message)
         } finally {
             setLoading(false)
         }
@@ -335,7 +560,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={(e) => handleSubmit(e, 'pending')} className="space-y-8">
             {error && (
                 <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl flex items-center space-x-3 text-sm font-bold">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -343,445 +568,374 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 </div>
             )}
 
-            {/* Main Info */}
+            {/* AI Import Section (Admin Only) */}
+            {isAdmin && (
+                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-3xl shadow-lg p-8 border border-indigo-100 space-y-4">
+                    <div className="flex items-center space-x-3 mb-2">
+                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                        <h3 className="text-lg font-black text-indigo-900">AI 物件インポーター</h3>
+                    </div>
+                    <p className="text-indigo-700 text-sm font-medium">外部の不動産サイトのURLを入力すると、AIが情報を抽出し、日本語に翻訳してフォームを自動入力します。</p>
+                    <div className="flex space-x-4">
+                        <input
+                            type="url"
+                            placeholder="https://example.com/property/123"
+                            value={importUrl}
+                            onChange={(e) => setImportUrl(e.target.value)}
+                            className="flex-1 px-5 py-3 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+                            disabled={isImporting}
+                        />
+                        <button
+                            type="button"
+                            onClick={handleImport}
+                            disabled={isImporting || !importUrl}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all flex items-center space-x-2 disabled:opacity-50"
+                        >
+                            {isImporting ? <Loader2 className="animate-spin w-5 h-5" /> : <span>インポート開始</span>}
+                        </button>
+                    </div>
+                    {isImporting && (
+                        <div className="text-indigo-600 text-sm font-bold flex items-center animate-pulse">
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            URLを解析・翻訳中... ワクワクしながらお待ちください！✨
+                        </div>
+                    )}
+                    {importError && (
+                        <div className="text-red-500 text-sm font-bold flex items-center mt-2">
+                            <AlertCircle className="w-4 h-4 mr-1" /> {importError}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Section 1: Project & Basic Info */}
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
                     <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">1</span>
-                    基本情報
+                    物件・プロジェクト情報
                 </h3>
 
-                <div className="flex flex-wrap gap-4 mb-8">
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, is_for_rent: !formData.is_for_rent })}
-                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all border-2 ${formData.is_for_rent ? 'bg-navy-primary border-navy-primary text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-navy-primary/30'}`}
-                    >
-                        <div className="flex items-center space-x-2">
-                            {formData.is_for_rent && <CheckCircle2 className="w-4 h-4" />}
-                            <span>賃貸 (Rent)</span>
-                        </div>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, is_for_sale: !formData.is_for_sale })}
-                        className={`px-8 py-3 rounded-xl text-sm font-black transition-all border-2 ${formData.is_for_sale ? 'bg-navy-primary border-navy-primary text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-navy-primary/30'}`}
-                    >
-                        <div className="flex items-center space-x-2">
-                            {formData.is_for_sale && <CheckCircle2 className="w-4 h-4" />}
-                            <span>売買 (Sell)</span>
-                        </div>
-                    </button>
-                </div>
-
                 <div className="grid grid-cols-1 gap-6">
+                    {/* Area Selection (Filter step 1) */}
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイトル <span className="text-red-500">*</span></label>
-                        <input
-                            required
-                            type="text"
-                            value={formData.title}
-                            onChange={e => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                            placeholder="例: Riviera Jomtien (リビエラ・ジョムティエン)"
-                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('タイトルを入力してください')}
-                            onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-                        />
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">エリア (Area) <span className="text-red-500">*</span></label>
+                        <select
+                            value={formData.area_id}
+                            onChange={e => {
+                                const val = e.target.value
+                                setFormData({ ...formData, area_id: val, project_id: '' }) // Reset project when area changes
+                                setShowNewProjectForm(false)
+                            }}
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none"
+                        >
+                            <option value="">先にエリアを選択してください</option>
+                            <optgroup label="Pattaya">
+                                {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                            </optgroup>
+                            <optgroup label="Sriracha">
+                                {areas.filter(a => a.region?.name === 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                            </optgroup>
+                            {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 && (
+                                <optgroup label="Other">
+                                    {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                </optgroup>
+                            )}
+                        </select>
+                    </div>
 
+                    {/* Project Selection (Filter step 2 with react-select) */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">プロジェクト（建物） <span className="text-red-500">*</span></label>
+                            {formData.area_id && (
+                                <button type="button" onClick={() => { setShowNewProjectForm(true); setFormData({ ...formData, project_id: 'new' }) }} className="text-[10px] font-bold text-navy-secondary hover:text-navy-primary transition-colors bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full">
+                                    + 見つからない場合新規登録
+                                </button>
+                            )}
+                        </div>
+
+                        {!formData.area_id ? (
+                            <div className="w-full px-5 py-4 bg-slate-50 opacity-50 border border-slate-100 rounded-2xl font-bold text-slate-400 text-sm">
+                                ※ 上の「エリア」を選択するとプロジェクトが選べるようになります
+                            </div>
+                        ) : showNewProjectForm ? (
+                            <div className="w-full px-5 py-4 bg-navy-primary/5 border border-navy-primary/20 text-navy-primary rounded-2xl font-black text-sm text-center">
+                                新規プロジェクト情報入力モード
+                            </div>
+                        ) : (
+                            <Select
+                                isDisabled={!formData.area_id}
+                                placeholder="プロジェクト名で検索（例: Riviera...）"
+                                noOptionsMessage={() => "見つかりません。右上の「＋新規登録」から追加してください。"}
+                                options={projects
+                                    .filter(p => !formData.area_id || p.area_id === formData.area_id)
+                                    .map(p => ({ value: p.id, label: p.name }))}
+                                value={formData.project_id ? {
+                                    value: formData.project_id,
+                                    label: projects.find(p => p.id === formData.project_id)?.name || ''
+                                } : null}
+                                onChange={(selectedOption) => {
+                                    if (!selectedOption) {
+                                        setFormData({ ...formData, project_id: '', building_name: '', title: '' })
+                                        return
+                                    }
+
+                                    const val = selectedOption.value
+                                    setShowNewProjectForm(false)
+                                    const project = projects.find(p => p.id === val)
+                                    setFormData({
+                                        ...formData,
+                                        project_id: val,
+                                        area_id: project?.area_id || formData.area_id,
+                                        building_name: project?.name || formData.building_name,
+                                        property_type: project?.property_type || formData.property_type,
+                                        year_built: project?.year_built || formData.year_built,
+                                        total_floors: project?.total_floors?.toString() || formData.total_floors,
+                                        title: project?.name || formData.title
+                                    })
+                                }}
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        padding: '0.6rem',
+                                        borderRadius: '1rem',
+                                        border: '1px solid #f1f5f9', // slate-100
+                                        backgroundColor: '#f8fafc', // slate-50
+                                        boxShadow: 'none',
+                                        '&:hover': {
+                                            borderColor: '#cbd5e1'
+                                        }
+                                    }),
+                                    option: (base, state) => ({
+                                        ...base,
+                                        backgroundColor: state.isFocused ? '#f1f5f9' : 'white',
+                                        color: '#1e293b',
+                                        fontWeight: 'bold',
+                                        cursor: 'pointer'
+                                    }),
+                                    menu: (base) => ({
+                                        ...base,
+                                        borderRadius: '1rem',
+                                        overflow: 'hidden',
+                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                                        zIndex: 50
+                                    }),
+                                    placeholder: (base) => ({
+                                        ...base,
+                                        fontWeight: 'bold',
+                                        color: '#94a3b8' // slate-400
+                                    })
+                                }}
+                            />
+                        )}
+                    </div>
+
+                    {showNewProjectForm && (
+                        <div className="bg-slate-50 rounded-3xl p-8 border border-navy-primary/10 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-black text-navy-primary uppercase tracking-widest">新規プロジェクト情報</h4>
+                                <button type="button" onClick={() => setShowNewProjectForm(false)} className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors">キャンセル</button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">建物名/プロジェクト名 <span className="text-red-500">*</span></label>
+                                    <input type="text" value={projectForm.name} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, name: val }); setFormData({ ...formData, building_name: val, project_name: val, title: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary transition-all font-bold text-navy-secondary" placeholder="Riviera Jomtien" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">エリア <span className="text-red-500">*</span></label>
+                                    <select value={projectForm.area_id} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, area_id: val }); setFormData({ ...formData, area_id: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary">
+                                        <option value="">エリアを選択</option>
+                                        <optgroup label="Pattaya">
+                                            {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                        </optgroup>
+                                        <optgroup label="Sriracha">
+                                            {areas.filter(a => a.region?.name === 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                        </optgroup>
+                                        {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 && (
+                                            <optgroup label="Other">
+                                                {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                            </optgroup>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ (Type)</label>
+                                    <select value={projectForm.property_type} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, property_type: val }); setFormData({ ...formData, property_type: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl appearance-none font-bold">
+                                        <option value="Condo">Condo</option><option value="House">House</option><option value="Townhouse">Townhouse</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">築年数</label>
+                                    <input type="text" value={projectForm.year_built} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, year_built: val }); setFormData({ ...formData, year_built: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数</label>
+                                    <input type="number" value={projectForm.total_floors} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, total_floors: val }); setFormData({ ...formData, total_floors: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
+                                <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50">
+                                    <CoordinatePicker lat={projectForm.latitude} lng={projectForm.longitude} onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })} />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-4">
+                        <button type="button" onClick={() => setFormData({ ...formData, is_for_rent: !formData.is_for_rent })} className={`px-8 py-3 rounded-xl text-sm font-black transition-all border-2 ${formData.is_for_rent ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}>賃貸 (Rent)</button>
+                        <button type="button" onClick={() => setFormData({ ...formData, is_for_sale: !formData.is_for_sale })} className={`px-8 py-3 rounded-xl text-sm font-black transition-all border-2 ${formData.is_for_sale ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}>売買 (Sell)</button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-6">
-                            {formData.is_for_rent && (
-                                <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">賃料 / 月 (THB) <span className="text-red-500">*</span></label>
-                                    <input
-                                        required={formData.is_for_rent}
-                                        type="number"
-                                        value={formData.rent_price}
-                                        onChange={e => setFormData({ ...formData, rent_price: e.target.value })}
-                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                        placeholder="25000"
-                                    />
-                                </div>
-                            )}
-                            {formData.is_for_sale && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">販売価格 (THB) <span className="text-red-500">*</span></label>
-                                        <input
-                                            required={formData.is_for_sale}
-                                            type="number"
-                                            value={formData.sale_price}
-                                            onChange={e => setFormData({ ...formData, sale_price: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                            placeholder="5000000"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">所有権タイプ (Quota) <span className="text-red-500">*</span></label>
-                                        <select
-                                            required={formData.is_for_sale}
-                                            value={formData.ownership_type}
-                                            onChange={e => setFormData({ ...formData, ownership_type: e.target.value })}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none"
-                                        >
-                                            <option value="">選択してください</option>
-                                            <option value="Foreigner Quota">Foreigner Quota（外国人名義）</option>
-                                            <option value="Thai Quota">Thai Quota（タイ人名義）</option>
-                                            <option value="Company Name">Company Name（会社名義）</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">エリア <span className="text-red-500">*</span></label>
-                            <select
-                                required
-                                value={formData.area_id}
-                                onChange={e => setFormData({ ...formData, area_id: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none"
-                                onInvalid={e => (e.target as HTMLSelectElement).setCustomValidity('エリアを選択してください')}
-                                onInput={e => (e.target as HTMLSelectElement).setCustomValidity('')}
-                            >
-                                <option value="">選択してください</option>
-                                {Object.entries(
-                                    areas.reduce((acc, area) => {
-                                        const regionName = area.region?.name || 'Other'
-                                        if (!acc[regionName]) acc[regionName] = []
-                                        acc[regionName].push(area)
-                                        return acc
-                                    }, {} as Record<string, Area[]>)
-                                ).map(([region, regionAreas]) => (
-                                    <optgroup key={region} label={region}>
-                                        {regionAreas.map(area => (
-                                            <option key={area.id} value={area.id}>
-                                                {area.name}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                ))}
-                            </select>
-                        </div>
+                        {formData.is_for_rent && (
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">賃料 (THB) <span className="text-red-500">*</span></label>
+                                <input type="number" value={formData.rent_price} onChange={e => setFormData({ ...formData, rent_price: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
+                            </div>
+                        )}
+                        {formData.is_for_sale && (
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">販売価格 (THB) <span className="text-red-500">*</span></label>
+                                <input type="number" value={formData.sale_price} onChange={e => setFormData({ ...formData, sale_price: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ <span className="text-red-500">*</span></label>
-                            <select
-                                required
-                                value={formData.property_type}
-                                onChange={e => setFormData({ ...formData, property_type: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none"
-                            >
-                                <option value="Condo">コンドミニアム</option>
-                                <option value="Apartment">アパート</option>
-                                <option value="House">一軒家 / ヴィラ</option>
-                                <option value="Townhouse">タウンハウス</option>
-                                <option value="Land">土地</option>
-                                <option value="Commercial">商業用</option>
-                            </select>
+                    {!showNewProjectForm && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                <select
+                                    disabled={!!formData.project_id && !isAdmin}
+                                    value={formData.property_type}
+                                    onChange={e => setFormData({ ...formData, property_type: e.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <option value="Condo">コンド</option><option value="House">一軒家</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">築年数 {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                <input
+                                    disabled={!!formData.project_id && !isAdmin}
+                                    type="text"
+                                    value={formData.year_built}
+                                    onChange={e => setFormData({ ...formData, year_built: e.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数 {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                <input
+                                    disabled={!!formData.project_id && !isAdmin}
+                                    type="number"
+                                    value={formData.total_floors}
+                                    onChange={e => setFormData({ ...formData, total_floors: e.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                            </div>
                         </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">専有面積 (sqm) <span className="text-red-500">*</span></label>
-                            <input
-                                required
-                                type="number"
-                                step="0.01"
-                                value={formData.sqm}
-                                onChange={e => setFormData({ ...formData, sqm: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                placeholder="45.5"
-                            />
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">専有面積 (sqm)</label>
+                            <input type="number" value={formData.sqm} onChange={e => setFormData({ ...formData, sqm: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
                         </div>
                         <div>
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">所在階</label>
-                            <input
-                                type="text"
-                                value={formData.floor}
-                                onChange={e => setFormData({ ...formData, floor: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                placeholder="例: 15 (または 15+)"
-                            />
+                            <input type="text" value={formData.floor} onChange={e => setFormData({ ...formData, floor: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">築年数 (竣工年)</label>
-                            <input
-                                type="text"
-                                value={formData.year_built}
-                                onChange={e => setFormData({ ...formData, year_built: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                placeholder="例: 2020年 (または 築3年)"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数 (何階建てか)</label>
-                            <input
-                                type="number"
-                                value={formData.total_floors}
-                                onChange={e => setFormData({ ...formData, total_floors: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
-                                placeholder="例: 45"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">寝室数 (Bedroom)</label>
-                            <div className="flex bg-slate-50 rounded-2xl p-1 border border-slate-100">
-                                {['0', '1', '2', '3', '4+'].map(num => (
-                                    <button
-                                        key={num}
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, bedrooms: num })}
-                                        className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${formData.bedrooms === num ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
-                                    >
-                                        {num === '0' ? 'Studio' : num}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">浴室数 (Bathroom)</label>
-                            <div className="flex bg-slate-50 rounded-2xl p-1 border border-slate-100">
-                                {['1', '2', '3+'].map(num => (
-                                    <button
-                                        key={num}
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, bathrooms: num })}
-                                        className={`flex-1 py-3 text-sm font-black rounded-xl transition-all ${formData.bathrooms === num ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
-                                    >
-                                        {num}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                    <div>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイトル (キャッチコピー) <span className="text-[10px] text-navy-primary font-bold">(AIインポートで自動入力されます)</span></label>
+                        <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="（例）オーシャンビューが魅力の〇〇コンドミニアム" />
                     </div>
 
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">説明文 <span className="text-red-500">*</span></label>
-                        <textarea
-                            required
-                            rows={4}
-                            value={formData.description}
-                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-medium text-navy-secondary resize-none"
-                            placeholder="物件の魅力や詳細について入力してください"
-                            onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity('説明文を入力してください')}
-                            onInput={e => (e.target as HTMLTextAreaElement).setCustomValidity('')}
-                        />
-
+                        <textarea rows={4} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl resize-none font-medium" />
                     </div>
-                </div>
-
-                <div className="pt-8 border-t border-slate-50">
-                    <h4 className="text-sm font-black text-navy-secondary uppercase tracking-widest mb-6 flex items-center">
-                        水回り・付帯設備
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">給湯器タイプ</label>
-                            <input
-                                type="text"
-                                value={formData.water_heater_type}
-                                onChange={e => setFormData({ ...formData, water_heater_type: e.target.value })}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
-                                placeholder="例: 電気タンク式 / 個別給湯"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="pt-8 border-t border-slate-50">
-                    <h4 className="text-sm font-black text-navy-secondary uppercase tracking-widest mb-6 flex items-center">
-                        生活コスト・インフラ
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">電気代支払い形態</label>
-                            <select
-                                value={formData.electricity_bill_type}
-                                onChange={e => setFormData({ ...formData, electricity_bill_type: e.target.value as any })}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none appearance-none"
-                            >
-                                <option value="Direct">Direct（電力会社直）</option>
-                                <option value="Condo Rate">Condo Rate（割増あり）</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">水道代目安</label>
-                            <input
-                                type="text"
-                                value={formData.water_bill_desc}
-                                onChange={e => setFormData({ ...formData, water_bill_desc: e.target.value })}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
-                                placeholder="例: 月額300B固定、または実費"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">ネット環境</label>
-                            <input
-                                type="text"
-                                value={formData.internet_desc}
-                                onChange={e => setFormData({ ...formData, internet_desc: e.target.value })}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
-                                placeholder="例: AIS Fibre完備、または個別契約"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="pt-8 border-t border-slate-50">
-                    <h4 className="text-sm font-black text-navy-secondary uppercase tracking-widest mb-6 flex items-center">
-                        周辺環境・アクセス
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">最寄り日本食スーパーまで</label>
-                            <input
-                                type="text"
-                                value={formData.distance_to_supermarket}
-                                onChange={e => setFormData({ ...formData, distance_to_supermarket: e.target.value })}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
-                                placeholder="例: 徒歩5分、車で10分"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">騒音レベル (1-5)</label>
-                            <input
-                                type="range"
-                                min="1"
-                                max="5"
-                                value={formData.noise_level}
-                                onChange={e => setFormData({ ...formData, noise_level: parseInt(e.target.value) })}
-                                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-navy-primary mt-4"
-                            />
-                            <div className="flex justify-between text-[10px] font-bold text-slate-400 mt-2 px-1">
-                                <span>静か (1)</span>
-                                <span>普通 (3)</span>
-                                <span>賑やか (5)</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">送迎・公共交通</label>
-                            <input
-                                type="text"
-                                value={formData.transportation_desc}
-                                onChange={e => setFormData({ ...formData, transportation_desc: e.target.value })}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
-                                placeholder="例: ソンテウ巡回ルート沿い"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-
-                <div className="pt-8 border-t border-slate-50">
-                    <h4 className="text-sm font-black text-navy-secondary uppercase tracking-widest mb-6 flex items-center">
-                        <MapPin className="w-5 h-5 mr-3 text-navy-primary" />
-                        正確な位置情報 (Googleマップ連携)
-                    </h4>
-                    <CoordinatePicker
-                        lat={formData.latitude}
-                        lng={formData.longitude}
-                        onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
-                    />
-                </div>
-
-                <div className="pt-8 border-t border-slate-50">
-                    <h4 className="text-sm font-black text-navy-secondary uppercase tracking-widest mb-4 flex items-center">
-                        管理者メモ (内部用)
-                    </h4>
-                    <textarea
-                        rows={2}
-                        value={formData.admin_memo}
-                        onChange={e => setFormData({ ...formData, admin_memo: e.target.value })}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-medium text-navy-secondary resize-none"
-                        placeholder="在住者視点のコメントや注意点（※詳細ページに表示されます）"
-                    />
                 </div>
             </div>
 
-
-            {/* Images */}
+            {/* Section 2: Images */}
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
                     <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">2</span>
                     画像ギャラリー
                 </h3>
-
-                <ImageUploader
-                    initialImages={existingImages}
-                    onImagesChange={(files) => setSelectedFiles(files)}
-                />
+                <ImageUploader initialImages={existingImages} onImagesChange={(files) => setSelectedFiles(files)} />
             </div>
 
-            {/* Tags */}
+            {/* Section 3: Details & Settings */}
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
                     <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">3</span>
-                    こだわり条件（タグ）
+                    こだわり条件 & 設定
                 </h3>
+
+                {mode === 'edit' && (
+                    <div>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">公開ステータス</label>
+                        <select
+                            value={formData.status}
+                            onChange={e => setFormData({ ...formData, status: e.target.value })}
+                            className="w-full md:w-1/2 px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold disabled:opacity-50"
+                            disabled={!isAdmin && !['published', 'under_negotiation', 'contracted'].includes(initialData?.status)}
+                        >
+                            <option value="draft">下書き (Draft)</option>
+                            <option value="pending">承認待ち (Pending)</option>
+                            <option value="published">公開中 (Published)</option>
+                            <option value="under_negotiation">商談中 (Under Negotiation)</option>
+                            <option value="contracted">成約済 (Contracted)</option>
+                            <option value="expired">期限切れ (Expired)</option>
+                        </select>
+                        {!isAdmin && !['published', 'under_negotiation', 'contracted'].includes(initialData?.status) && (
+                            <p className="text-xs text-amber-500 mt-2 ml-1">承認前のためステータスは変更できません。</p>
+                        )}
+                    </div>
+                )}
 
                 <div className="flex flex-wrap gap-3">
                     {JA_TAGS.map(tag => (
-                        <button
-                            key={tag}
-                            type="button"
-                            onClick={() => toggleTag(tag)}
-                            className={`px-5 py-2.5 rounded-full text-xs font-black transition-all border-2 ${formData.tags.includes(tag)
-                                ? 'bg-navy-primary border-navy-primary text-white shadow-md'
-                                : 'bg-white border-slate-100 text-slate-400 hover:border-navy-primary/30 hover:text-navy-primary'
-                                }`}
-                        >
-                            <span className="flex items-center space-x-1">
-                                {formData.tags.includes(tag) && <Plus className="w-3 h-3 rotate-45" />}
-                                <span>{tag}</span>
-                            </span>
-                        </button>
+                        <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-5 py-2.5 rounded-full text-xs font-black border-2 ${formData.tags.includes(tag) ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}>{tag}</button>
                     ))}
                 </div>
             </div>
 
             {/* Submit */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-10 bg-navy-secondary rounded-3xl text-white shadow-2xl">
+            <div className="flex items-center justify-between p-10 bg-navy-secondary rounded-3xl text-white shadow-2xl flex-col md:flex-row gap-6">
                 <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
-                        <TagIcon className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">掲載コスト</p>
-                        <p className="text-xl font-black text-white">1 クレジット / 物件</p>
-                    </div>
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center"><TagIcon className="w-6 h-6 text-white" /></div>
+                    <div><p className="text-xs font-bold text-slate-400 uppercase tracking-widest">掲載コスト</p><p className="text-xl font-black">1 クレジット / 物件</p></div>
                 </div>
-                <button
-                    disabled={loading}
-                    className="w-full md:w-auto bg-navy-primary hover:bg-navy-secondary border-2 border-navy-primary text-white px-12 py-4 rounded-2xl font-black text-lg transition-all shadow-xl hover:shadow-2xl flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed group"
-                >
-                    {loading ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : (
-                        <>
-                            <span>物件を公開する</span>
-                            <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />
-                        </>
-                    )}
-                </button>
+                <div className="flex items-center space-x-4">
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={(e) => handleSubmit(e, 'draft')}
+                        className="bg-white/10 hover:bg-white/20 border-2 border-transparent text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all flex items-center disabled:opacity-50"
+                    >
+                        {loading && submitStatus === 'draft' ? <Loader2 className="animate-spin mr-2" /> : null}
+                        下書き保存
+                    </button>
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={(e) => handleSubmit(e, 'pending')}
+                        className="bg-navy-primary hover:bg-indigo-600 border-2 border-navy-primary text-white px-10 py-4 rounded-2xl font-black text-lg transition-all flex items-center space-x-3 disabled:opacity-50"
+                    >
+                        {loading && submitStatus === 'pending' ? <Loader2 className="animate-spin" /> : <><span>物件を公開する</span><Plus /></>}
+                    </button>
+                </div>
             </div>
 
-            <style jsx>{`
-        @keyframes progress-fast {
-          0% { width: 0%; }
-          100% { width: 100%; }
-        }
-        .animate-progress-fast {
-          animation: progress-fast 2s linear infinite;
-        }
-      `}</style>
+            <style jsx>{` @keyframes progress-fast { 0% { width: 0%; } 100% { width: 100%; } } .animate-progress-fast { animation: progress-fast 2s linear infinite; } `}</style>
         </form>
     )
 }

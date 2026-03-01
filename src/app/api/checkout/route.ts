@@ -7,10 +7,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2026-01-28.clover',
 })
 
-const PACKAGES: Record<string, { price: number, credits: number }> = {
-    lite: { price: 500, credits: 10 },
-    standard: { price: 3500, credits: 100 },
-    pro: { price: 20000, credits: 1000 }
+const PACKAGES: Record<string, { price: number, credits: number | string }> = {
+    standard: { price: 1500, credits: 100 },
+    premium: { price: 4000, credits: 'unlimited' }
 }
 
 export async function POST(req: Request) {
@@ -37,12 +36,12 @@ export async function POST(req: Request) {
             line_items: [
                 {
                     price_data: {
-                        currency: 'jpy',
+                        currency: 'thb',
                         product_data: {
                             name: `Chonburi Connect: ${packageId.toUpperCase()} PLAN`,
-                            description: `${pkg.credits} 掲載クレジット`,
+                            description: `${pkg.credits === 'unlimited' ? '無制限' : pkg.credits} 掲載クレジット`,
                         },
-                        unit_amount: pkg.price,
+                        unit_amount: pkg.price * 100, // THB requires amount in smallest currency unit (satang)
                     },
                     quantity: 1,
                 },
