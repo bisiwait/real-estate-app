@@ -13,7 +13,11 @@ import {
     MapPin,
     Calendar,
     Layers,
-    AlertCircle
+    AlertCircle,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    Filter
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import dynamic from 'next/dynamic'
@@ -49,6 +53,12 @@ export default function AdminProjectManagement() {
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+    // Search & Pagination & Filters
+    const [searchQuery, setSearchQuery] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [filterMissingInfo, setFilterMissingInfo] = useState(false)
+    const itemsPerPage = 10
 
     const [formData, setFormData] = useState<Partial<Project>>({
         name: '',
@@ -114,6 +124,34 @@ export default function AdminProjectManagement() {
     useEffect(() => {
         fetchData()
     }, [])
+
+    // Filter projects based on search query and missing info filter
+    const filteredProjects = projects.filter(project => {
+        // Missing Info Filter logic: IF filter is ON, project MUST be missing year_built OR total_floors
+        if (filterMissingInfo) {
+            const hasMissingInfo = !project.year_built || !project.total_floors;
+            if (!hasMissingInfo) return false;
+        }
+
+        if (!searchQuery) return true;
+        const query = searchQuery.toLowerCase();
+        return (
+            project.name.toLowerCase().includes(query) ||
+            (areas.find(a => a.id === project.area_id)?.name || '').toLowerCase().includes(query)
+        );
+    });
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+    const paginatedProjects = filteredProjects.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
 
     const handleEdit = (project: Project) => {
         setEditingId(project.id)
@@ -202,17 +240,55 @@ export default function AdminProjectManagement() {
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden mb-12">
             <div className="bg-slate-50 border-b border-slate-100 p-6 md:p-8 flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-black text-navy-secondary">プロジェクト情報管理（建物マスター）</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-black text-navy-secondary">プロジェクト情報管理（建物マスター）</h2>
+                        {!loading && (
+                            <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-xs font-bold">
+                                {filteredProjects.length}件
+                            </span>
+                        )}
+                    </div>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Project Master Management</p>
                 </div>
                 {!isAdding && !editingId && (
-                    <button
-                        onClick={() => setIsAdding(true)}
-                        className="flex items-center space-x-2 bg-navy-primary text-white px-6 py-2.5 rounded-xl text-xs font-black hover:bg-navy-secondary transition-all shadow-lg shadow-navy-primary/20"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>新規プロジェクト登録</span>
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4 md:mt-0">
+                        <button
+                            onClick={() => setFilterMissingInfo(!filterMissingInfo)}
+                            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${filterMissingInfo
+                                    ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-navy-secondary'
+                                }`}
+                            title="築年数または階数が未設定の建物を抽出"
+                        >
+                            <Filter className="w-4 h-4" />
+                            <span className="hidden sm:inline">未記入抽出</span>
+                        </button>
+                        <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="プロジェクト名で検索..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setIsAdding(true)}
+                            className="flex items-center space-x-2 bg-navy-primary text-white px-6 py-2.5 rounded-xl text-xs font-black hover:bg-navy-secondary transition-all shadow-lg shadow-navy-primary/20 w-full sm:w-auto justify-center"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>新規登録</span>
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -342,11 +418,11 @@ export default function AdminProjectManagement() {
                             ) : projects.length === 0 ? (
                                 <tr>
                                     <td colSpan={2} className="px-6 py-20 text-center font-bold text-slate-300">
-                                        プロジェクトが登録されていません
+                                        プロジェクトが見つかりません
                                     </td>
                                 </tr>
                             ) : (
-                                projects.map((project) => (
+                                paginatedProjects.map((project) => (
                                     <tr key={project.id} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-5">
                                             <div className="flex items-start space-x-4">
@@ -403,6 +479,59 @@ export default function AdminProjectManagement() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination Controls */}
+                {!loading && totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 mt-2">
+                        <span className="text-xs font-bold text-slate-400">
+                            全 {filteredProjects.length} 件中 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredProjects.length)} 件を表示
+                        </span>
+                        <div className="flex space-x-1">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+
+                            {Array.from({ length: totalPages }).map((_, i) => {
+                                // Show first, last, current, and adjacent pages
+                                if (
+                                    i === 0 ||
+                                    i === totalPages - 1 ||
+                                    Math.abs(i + 1 - currentPage) <= 1
+                                ) {
+                                    return (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCurrentPage(i + 1)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1
+                                                ? 'bg-navy-primary text-white border border-navy-primary'
+                                                : 'border border-slate-200 text-slate-500 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    );
+                                } else if (
+                                    Math.abs(i + 1 - currentPage) === 2
+                                ) {
+                                    return <span key={i} className="px-1 py-1.5 text-slate-400">...</span>;
+                                }
+                                return null;
+                            })}
+
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

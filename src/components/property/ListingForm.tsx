@@ -16,6 +16,7 @@ import {
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Select from 'react-select'
+import imageCompression from 'browser-image-compression'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -131,13 +132,13 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         has_japanese_tv: initialData?.has_japanese_tv || false,
         has_ev_charger: initialData?.has_ev_charger || false,
         admin_memo: initialData?.admin_memo || '',
-        status: initialData?.status || 'published',
+        status: initialData?.status || 'pending',
         // Core specs
         property_type: initialData?.property_type || 'Condo',
         sqm: initialData?.sqm?.toString() || '',
         floor: initialData?.floor || '',
         bedrooms: initialData?.bedrooms?.toString() || '0',
-        bathrooms: initialData?.bathrooms?.toString() || '0',
+        bathrooms: (initialData?.bathrooms && initialData.bathrooms > 0) ? initialData.bathrooms.toString() : '1',
         year_built: initialData?.year_built || '',
         total_floors: initialData?.total_floors?.toString() || '',
         ownership_type: initialData?.ownership_type || ''
@@ -220,29 +221,44 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     const uploadImages = async (propertyId: string) => {
         const uploadedUrls: string[] = []
 
+        const compressionOptions = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1200,
+            useWebWorker: true,
+            fileType: 'image/webp'
+        }
+
         for (const file of selectedFiles) {
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-            const filePath = `${propertyId}/${fileName}`
+            try {
+                console.log(`Optimizing image: ${file.name}...`);
+                const compressedFile = await imageCompression(file, compressionOptions);
 
-            console.log(`Uploading image: ${file.name} to ${filePath}...`);
-            const { error: uploadError, data } = await supabase.storage
-                .from('property-images')
-                .upload(filePath, file)
+                // Keep original extension or use .webp? Using .webp is better since we compressed to it.
+                const fileName = `${Math.random().toString(36).substring(2)}.webp`
+                const filePath = `${propertyId}/${fileName}`
 
-            if (uploadError) {
-                console.error(`Upload failed for ${file.name}:`, uploadError);
-                if (uploadError.message.includes('bucket not found') || (uploadError as any).status === 404) {
-                    throw new Error('Supabase Storageに "property-images" バケットが見つかりません。')
+                console.log(`Uploading optimized image: ${file.name} to ${filePath}...`);
+                const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(filePath, compressedFile, {
+                        contentType: 'image/webp',
+                        cacheControl: '3600'
+                    })
+
+                if (uploadError) {
+                    console.error(`Upload failed for ${file.name}:`, uploadError);
+                    throw new Error(`画像のアップロードに失敗しました (${file.name}): ${uploadError.message}`)
                 }
-                throw new Error(`画像のアップロードに失敗しました (${file.name}): ${uploadError.message}`)
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('property-images')
+                    .getPublicUrl(filePath)
+
+                uploadedUrls.push(publicUrl)
+            } catch (error) {
+                console.error('Image optimization/upload error:', error);
+                throw error;
             }
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('property-images')
-                .getPublicUrl(filePath)
-
-            uploadedUrls.push(publicUrl)
         }
 
         return uploadedUrls
@@ -316,9 +332,30 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     if (!data.title) updated.title = matchedBuildingName
                 }
 
-                // Add layout info to description if found
+                // Add layout info to description if found and parse bedrooms/bathrooms
                 if (data.layout) {
-                    updated.description = `【間取り】${data.layout}\n` + updated.description
+                    updated.description = `【間取り】${data.layout}\n` + (updated.description || '')
+
+                    const layoutLower = data.layout.toLowerCase();
+                    if (layoutLower.includes('studio') || layoutLower.includes('スタジオ')) {
+                        updated.bedrooms = '0';
+                        updated.bathrooms = '1';
+                    } else if (layoutLower.includes('1') || layoutLower.match(/one/i)) {
+                        updated.bedrooms = '1';
+                        updated.bathrooms = '1';
+                    } else if (layoutLower.includes('2') || layoutLower.match(/two/i)) {
+                        updated.bedrooms = '2';
+                        updated.bathrooms = '2';
+                    } else if (layoutLower.includes('3') || layoutLower.match(/three/i)) {
+                        updated.bedrooms = '3';
+                        updated.bathrooms = '3';
+                    } else if (layoutLower.includes('4') || layoutLower.match(/four/i)) {
+                        updated.bedrooms = '4';
+                        updated.bathrooms = '4';
+                    } else if (layoutLower.includes('5') || layoutLower.match(/five/i)) {
+                        updated.bedrooms = '5';
+                        updated.bathrooms = '5';
+                    }
                 }
 
                 return updated
@@ -848,6 +885,30 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         <div>
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">所在階</label>
                             <input type="text" value={formData.floor} onChange={e => setFormData({ ...formData, floor: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">間取り (Bedrooms)</label>
+                            <select value={formData.bedrooms} onChange={e => setFormData({ ...formData, bedrooms: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
+                                <option value="0">Studio</option>
+                                <option value="1">1 Bedroom</option>
+                                <option value="2">2 Bedrooms</option>
+                                <option value="3">3 Bedrooms</option>
+                                <option value="4">4 Bedrooms</option>
+                                <option value="5">5+ Bedrooms</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">バスルーム (Bathrooms)</label>
+                            <select value={formData.bathrooms} onChange={e => setFormData({ ...formData, bathrooms: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
+                                <option value="1">1 Bathroom</option>
+                                <option value="2">2 Bathrooms</option>
+                                <option value="3">3 Bathrooms</option>
+                                <option value="4">4 Bathrooms</option>
+                                <option value="5">5+ Bathrooms</option>
+                            </select>
                         </div>
                     </div>
 

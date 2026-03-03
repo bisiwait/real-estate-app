@@ -53,6 +53,11 @@ function PropertiesList() {
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
     const [dbProperties, setDbProperties] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const [page, setPage] = useState(0)
+    const [hasMore, setHasMore] = useState(true)
+    const [totalCount, setTotalCount] = useState<number>(0)
+    const PAGE_SIZE = 9
 
     // Local state derived from URL
     const selectedCity = searchParams.get('region') || 'Pattaya'
@@ -71,50 +76,145 @@ function PropertiesList() {
         setLocalSearchQuery(searchQuery)
     }, [searchQuery])
 
-    useEffect(() => {
-        async function fetchProperties() {
+    const fetchProperties = async (isLoadMore = false) => {
+        if (isLoadMore) setLoadingMore(true)
+        else {
             setLoading(true)
-            try {
-                // Query properties table directly with joins to avoid view cache issues
-                const { data, error } = await supabase
-                    .from('properties')
-                    .select('*, area:areas(name, region:regions(name))')
-                    .in('status', ['published', 'under_negotiation', 'contracted'])
-                    .eq('is_approved', true)
-                    .order('created_at', { ascending: false })
+            setPage(0)
+        }
 
-                if (error) {
-                    console.error('Supabase Error:', error)
+        try {
+            const currentPage = isLoadMore ? page + 1 : 0
+            const from = currentPage * PAGE_SIZE
+            const to = from + PAGE_SIZE - 1
+
+            let query = supabase
+                .from('properties')
+                .select(`
+                    *,
+                    area:areas!inner (
+                        name,
+                        region:regions!inner (
+                            name
+                        )
+                    )
+                `, { count: 'exact' })
+                .in('status', ['published', 'under_negotiation', 'contracted'])
+                .eq('is_approved', true)
+
+            // apply filters to query
+            if (selectedCity) {
+                query = query.eq('area.region.name', selectedCity)
+            }
+            if (selectedArea) {
+                query = query.eq('area.name', selectedArea)
+            }
+            if (selectedPropertyType) {
+                query = query.eq('property_type', selectedPropertyType)
+            }
+
+            // bathtub and pets filters
+            if (bathtubFilter) query = query.eq('has_bathtub', true)
+            if (petsFilter) query = query.eq('allows_pets', true)
+
+            // type filters
+            if (listingType === 'rent') {
+                query = query.eq('is_for_rent', true).eq('is_presale', false)
+            } else if (listingType === 'sell') {
+                query = query.eq('is_for_sale', true).eq('is_presale', false)
+            } else if (listingType === 'presale') {
+                query = query.eq('is_presale', true)
+            }
+
+            // Price filter... (omitted for brevity, keeping existing)
+            if (selectedPrice) {
+                const [min, max] = selectedPrice.split('-').map(Number)
+                const isMaxLimitRent = max >= 80000;
+                const isMaxLimitSale = max >= 30000000;
+
+                if (listingType !== 'all') {
+                    const priceCol = listingType === 'rent' ? 'rent_price' : 'sale_price'
+                    query = query.gte(priceCol, min)
+                    const isMaxLimit = listingType === 'rent' ? isMaxLimitRent : isMaxLimitSale
+                    if (!isMaxLimit) {
+                        query = query.lte(priceCol, max)
+                    }
                 }
+            }
 
-                if (data) {
-                    // Sort 'contracted' properties to the bottom, keep others sorted by created_at desc
-                    const sortedData = [...data].sort((a, b) => {
-                        if (a.status === 'contracted' && b.status !== 'contracted') return 1;
-                        if (a.status !== 'contracted' && b.status === 'contracted') return -1;
-                        return 0; // Preserve the original created_at descending order
-                    });
+            // Tags match (logical AND on server)
+            if (selectedTags.length > 0) {
+                query = query.contains('tags', selectedTags)
+            }
 
-                    // Map nested area.name to flat area_name for the PropertyCard
-                    const formatted = sortedData.map(p => ({
-                        ...p,
-                        city_name: p.area?.region?.name || 'Pattaya',
-                        area_name: p.area?.name || 'Unknown'
-                    }))
+            // Search query...
+            if (searchQuery) {
+                query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+            }
+
+            // Order and Range...
+            query = query
+                .order('status', { ascending: true })
+                .order('created_at', { ascending: false })
+                .range(from, to)
+
+            const { data, error, count } = await query
+
+            console.log(`Fetch Results:`, {
+                isLoadMore,
+                currentPage,
+                from,
+                to,
+                dataCount: data?.length,
+                totalCount: count,
+                selectedCity,
+                selectedArea
+            })
+
+            if (error) {
+                console.error('Supabase Error:', error)
+            }
+
+            if (count !== null) setTotalCount(count)
+
+            if (data) {
+                const formatted = data.map(p => ({
+                    ...p,
+                    city_name: p.area?.region?.name || 'Pattaya',
+                    area_name: p.area?.name || 'Unknown'
+                }))
+
+                if (isLoadMore) {
+                    setDbProperties(prev => {
+                        const newProps = [...prev, ...formatted]
+                        console.log(`Appending properties. New total: ${newProps.length}`)
+                        return newProps
+                    })
+                    setPage(currentPage)
+                } else {
                     setDbProperties(formatted)
                 }
-            } catch (err) {
-                console.error('Fetch Error:', err)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchProperties()
-        fetchProperties()
-    }, [])
 
-    // Use database properties directly
-    const allProperties = dbProperties
+                const hasMoreData = count ? (from + formatted.length) < count : formatted.length === PAGE_SIZE
+                console.log(`hasMore set to: ${hasMoreData}`)
+                setHasMore(hasMoreData)
+            }
+        } catch (err) {
+            console.error('Fetch Error:', err)
+        } finally {
+            setLoading(false)
+            setLoadingMore(false)
+        }
+    }
+
+    const tagsRaw = searchParams.get('tags') || ''
+
+    useEffect(() => {
+        fetchProperties()
+    }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, searchQuery, listingType, bathtubFilter, petsFilter])
+
+    // Use database properties directly as they are now filtered server-side
+    const filteredProperties = dbProperties
 
     // Sync filters to URL
     const updateFilters = (updates: Record<string, string | string[] | null>) => {
@@ -138,63 +238,6 @@ function PropertiesList() {
 
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
     }
-
-    const filteredProperties = useMemo(() => {
-        return allProperties.filter(property => {
-            // City match
-            const matchesCity = property.city_name === selectedCity
-
-            // Area match
-            const matchesArea = !selectedArea || property.area_name === selectedArea
-
-            // Property Type match
-            const matchesPropertyType = !selectedPropertyType || property.property_type === selectedPropertyType
-
-            // Price match (Update to support separate rent/sale prices and 'all' type)
-            let matchesPrice = true
-            if (selectedPrice) {
-                const [min, max] = selectedPrice.split('-').map(Number)
-                const isMaxLimitRent = max >= PRICE_RANGES.max;
-                const isMaxLimitSale = max >= SALE_PRICE_RANGES.max;
-
-                if (listingType === 'all') {
-                    // In 'all' mode, matches if either rent or sale price is in range
-                    const rPrice = property.rent_price ?? property.price
-                    const sPrice = property.sale_price ?? property.price
-                    const rentMatch = property.is_for_rent && rPrice >= min && (isMaxLimitRent ? true : rPrice <= max)
-                    const saleMatch = property.is_for_sale && sPrice >= min && (isMaxLimitSale ? true : sPrice <= max)
-                    matchesPrice = rentMatch || saleMatch
-                } else {
-                    const currentPrice = listingType === 'rent' ? property.rent_price : property.sale_price
-                    const effectivePrice = currentPrice ?? property.price
-                    const isMaxLimit = listingType === 'rent' ? isMaxLimitRent : isMaxLimitSale;
-                    matchesPrice = effectivePrice >= min && (isMaxLimit ? true : effectivePrice <= max)
-                }
-            }
-
-            // Tags match (logical AND)
-            const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => property.tags?.includes(tag))
-
-            // New Japanese-specific filters (Check both boolean column and tags for backward compatibility)
-            const matchesBathtub = !bathtubFilter || property.has_bathtub || property.tags?.includes('バスタブあり')
-            const matchesPets = !petsFilter || property.allows_pets || property.tags?.includes('ペット可')
-
-            // Search match
-            const matchesSearch = !searchQuery ||
-                property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                property.description.toLowerCase().includes(searchQuery.toLowerCase())
-
-            // Listing Type match (Update to support 'all' and dual listing)
-            const matchesType = listingType === 'all'
-                ? true
-                : listingType === 'presale'
-                    ? property.is_presale
-                    : (listingType === 'rent' ? (property.is_for_rent && !property.is_presale) : (property.is_for_sale && !property.is_presale))
-
-            return matchesCity && matchesArea && matchesPropertyType && matchesPrice && matchesTags && matchesSearch && matchesBathtub && matchesPets && matchesType
-
-        })
-    }, [allProperties, selectedCity, selectedArea, selectedPropertyType, selectedPrice, selectedTags, searchQuery])
 
     const toggleTag = (tag: string) => {
         const newTags = selectedTags.includes(tag)
@@ -377,7 +420,7 @@ function PropertiesList() {
                         </div>
                         <div className="text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center">
                             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            {filteredProperties.length} 件の物件が見つかりました
+                            全 {totalCount} 件中 {filteredProperties.length} 件を表示
                         </div>
                     </div>
                 </div>
@@ -453,10 +496,32 @@ function PropertiesList() {
                                 ))}
                             </div>
                         ) : filteredProperties.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {filteredProperties.map(property => (
-                                    <PropertyCard key={property.id} property={property} />
-                                ))}
+                            <div className="space-y-12">
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {filteredProperties.map(property => (
+                                        <PropertyCard key={property.id} property={property} />
+                                    ))}
+                                </div>
+
+                                {hasMore && (
+                                    <div className="flex justify-center pt-8">
+                                        <button
+                                            onClick={() => fetchProperties(true)}
+                                            disabled={loadingMore}
+                                            className="group flex flex-col items-center space-y-4"
+                                        >
+                                            <div className="px-12 py-4 bg-white border-2 border-slate-100 rounded-2xl font-black text-navy-secondary shadow-lg hover:shadow-navy-primary/5 hover:border-navy-primary/30 hover:-translate-y-1 transition-all flex items-center space-x-3">
+                                                {loadingMore ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin text-navy-primary" />
+                                                ) : (
+                                                    <ChevronRight className="w-5 h-5 text-navy-primary group-hover:rotate-90 transition-transform" />
+                                                )}
+                                                <span>{loadingMore ? '読み込み中...' : 'もっと見る'}</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Load More Listings</p>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="bg-white rounded-3xl shadow-lg p-20 text-center border border-slate-100">

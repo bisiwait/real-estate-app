@@ -17,6 +17,7 @@ import {
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Select from 'react-select'
+import imageCompression from 'browser-image-compression'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -199,23 +200,42 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
     const uploadImages = async (propertyId: string) => {
         const uploadedUrls: string[] = []
+
+        const compressionOptions = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1200,
+            useWebWorker: true,
+            fileType: 'image/webp'
+        }
+
         for (const file of selectedFiles) {
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-            const filePath = `${propertyId}/${fileName}`
+            try {
+                console.log(`Optimizing image: ${file.name}...`);
+                const compressedFile = await imageCompression(file, compressionOptions);
 
-            const { error: uploadError } = await supabase.storage
-                .from('property-images')
-                .upload(filePath, file)
+                const fileName = `${Math.random().toString(36).substring(2)}.webp`
+                const filePath = `${propertyId}/${fileName}`
 
-            if (uploadError) {
-                throw new Error(`画像のアップロードに失敗しました (${file.name}): ${uploadError.message}`)
+                console.log(`Uploading optimized image: ${file.name} to ${filePath}...`);
+                const { error: uploadError } = await supabase.storage
+                    .from('property-images')
+                    .upload(filePath, compressedFile, {
+                        contentType: 'image/webp',
+                        cacheControl: '3600'
+                    })
+
+                if (uploadError) {
+                    throw new Error(`画像のアップロードに失敗しました (${file.name}): ${uploadError.message}`)
+                }
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('property-images')
+                    .getPublicUrl(filePath)
+                uploadedUrls.push(publicUrl)
+            } catch (error) {
+                console.error('Image optimization/upload error:', error);
+                throw error;
             }
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('property-images')
-                .getPublicUrl(filePath)
-            uploadedUrls.push(publicUrl)
         }
         return uploadedUrls
     }

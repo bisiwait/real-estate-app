@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-export const runtime = 'edge';
 import { notFound } from 'next/navigation'
 import dynamic from 'next/dynamic'
 
@@ -7,6 +6,8 @@ import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 import PropertyGallery from '@/components/property/PropertyGallery'
 import RelatedProperties from '@/components/property/RelatedProperties'
 import InquiryForm from '@/components/property/InquiryForm'
+import AgentProfileCard from '@/components/agent/AgentProfileCard'
+import AgentOtherProperties from '@/components/agent/AgentOtherProperties'
 import {
     MapPin,
     Maximize2,
@@ -20,7 +21,19 @@ import {
     Tv,
     Zap,
     Home,
-    Building2
+    Building2,
+    Wifi,
+    Refrigerator,
+    PawPrint,
+    Building,
+    Sparkles,
+    Gem,
+    Wind,
+    Waves,
+    Shirt,
+    ArrowUpDown,
+    Droplets,
+    BadgePercent
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -64,13 +77,24 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
     // Define Japanese highlight tags with icons
     const highlightIcons: Record<string, any> = {
         'バスタブあり': Bath,
-        'ウォシュレット完備': Check,
-        '洗濯機室内': Coffee,
+        'ウォシュレット完備': Droplets,
+        '洗濯機': Shirt,
+        '洗濯機室内': Shirt,
+        'テレビ': Tv,
+        'WiFi': Wifi,
+        '冷蔵庫': Refrigerator,
+        'ペット可': PawPrint,
+        '高層階': ArrowUpDown,
+        '築浅': Sparkles,
+        '格安': BadgePercent,
+        '高級物件': Gem,
+        'バルコニー広い': Wind,
+        'オーシャンビュー': Waves,
+        'シティービュー': Building,
         '日本語対応スタッフ': Check,
         '日本語テレビ対応': Tv,
-        'ペット可': Check,
         'EV充電器あり': Zap,
-        '高層階（オーシャンビュー期待）': Maximize2
+        '高層階（オーシャンビュー期待）': Waves
     }
 
     return (
@@ -89,9 +113,30 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10 mt-6 overflow-hidden">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-8 border-b border-slate-50">
                                 <div>
-                                    <div className="flex items-center text-navy-primary font-black text-sm mb-3 uppercase tracking-tighter">
-                                        <MapPin className="w-4 h-4 mr-2" />
-                                        {property.area?.region?.name} • {property.area?.name}
+                                    <div className="flex flex-col gap-2 mb-3">
+                                        <div className="flex items-center text-navy-primary font-black text-sm uppercase tracking-tighter">
+                                            <MapPin className="w-4 h-4 mr-2" />
+                                            {property.area?.region?.name} • {property.area?.name}
+                                        </div>
+                                        <div className="flex items-center gap-3 overflow-x-auto pb-1 hide-scrollbar">
+                                            <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                                <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                                <span className="mr-1">{property.is_presale ? '竣工予定:' : '築年数:'}</span>
+                                                <span className="text-navy-secondary">{property.is_presale ? (property.completion_date || '--') : (property.year_built || '--')}</span>
+                                            </div>
+                                            <div className="w-[1px] h-3 bg-slate-300"></div>
+                                            <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                                <Layers className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                                <span className="mr-1">総階数:</span>
+                                                <span className="text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
+                                            </div>
+                                            <div className="w-[1px] h-3 bg-slate-300"></div>
+                                            <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                                <TagIcon className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                                <span className="mr-1">掲載日:</span>
+                                                <span className="text-navy-secondary">{new Date(property.created_at).toLocaleDateString('ja-JP')}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <h1 className="text-3xl md:text-4xl font-black text-navy-secondary leading-[1.2]">
                                         {property.status === 'contracted' && (
@@ -126,7 +171,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">物件タイプ</p>
                                     <p className="text-sm font-bold text-navy-secondary flex items-center">
@@ -161,20 +206,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                         {property.bathrooms || '1'}
                                     </p>
                                 </div>
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{property.is_presale ? '竣工予定' : '築年数'}</p>
-                                    <p className="text-sm font-bold text-navy-secondary flex items-center">
-                                        <Calendar className="w-4 h-4 mr-2 text-navy-primary" />
-                                        {property.is_presale ? (property.completion_date || '--') : (property.year_built || '--')}
-                                    </p>
-                                </div>
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">総階数</p>
-                                    <p className="text-sm font-bold text-navy-secondary flex items-center">
-                                        <Layers className="w-4 h-4 mr-2 text-navy-primary" />
-                                        {property.total_floors ? `${property.total_floors}階` : '--'}
-                                    </p>
-                                </div>
                                 {property.is_for_sale && property.ownership_type && (
                                     <div className="bg-navy-primary/5 p-4 rounded-2xl border border-navy-primary/10">
                                         <p className="text-[10px] font-black text-navy-primary uppercase tracking-widest mb-1.5">所有権 (Quota)</p>
@@ -184,13 +215,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                         </p>
                                     </div>
                                 )}
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">掲載日</p>
-                                    <p className="text-sm font-bold text-navy-secondary flex items-center">
-                                        <Calendar className="w-4 h-4 mr-2 text-navy-primary" />
-                                        {new Date(property.created_at).toLocaleDateString('ja-JP')}
-                                    </p>
-                                </div>
                             </div>
                         </div>
 
@@ -201,7 +225,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                 物件詳細
                             </h3>
                             <div className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm md:text-base">
-                                {property.description}
+                                {property.description?.replace(/<br\s*\/?>/gi, '\n')}
                             </div>
                         </div>
 
@@ -446,8 +470,8 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
 
                             <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center">
-                                <TagIcon className="w-5 h-5 mr-3 text-navy-primary" />
-                                日本人向けこだわり設備
+                                <Check className="w-5 h-5 mr-3 text-navy-primary" />
+                                こだわり設備
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {property.tags.map((tag: string) => {
@@ -479,14 +503,20 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                     </div>
 
                     {/* Sidebar (Inquiry Form & Contact) */}
-                    <div className="lg:col-span-1 space-y-8">
-                        <div className="sticky top-28 space-y-8">
+                    <div className="lg:col-span-1 relative">
+                        <div className="flex flex-col gap-8 lg:pb-8">
+                            <AgentProfileCard agentId={property.user_id} />
                             <InquiryForm propertyId={property.id} propertyName={property.title} />
-
                         </div>
                     </div>
 
                 </div>
+
+                {/* Agent Other Properties */}
+                <AgentOtherProperties
+                    agentId={property.user_id}
+                    currentPropertyId={property.id}
+                />
 
                 {/* Related Properties */}
                 <RelatedProperties

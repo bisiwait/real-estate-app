@@ -11,7 +11,11 @@ import {
     AlertCircle,
     Loader2,
     EyeOff,
-    RotateCcw
+    RotateCcw,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    Filter
 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -26,6 +30,11 @@ export default function AdminPropertyManagement() {
     const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'expired'>('all')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const supabase = createClient()
+
+    // Search & Pagination
+    const [searchQuery, setSearchQuery] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 10
 
     const fetchProperties = async () => {
         setLoading(true)
@@ -141,44 +150,101 @@ export default function AdminPropertyManagement() {
     }
 
     const filteredProperties = properties.filter(p => {
-        if (filter === 'pending') return !p.is_approved || p.status === 'pending'
-        if (filter === 'active') return p.is_approved && p.status === 'published'
-        if (filter === 'expired') return p.status === 'expired'
-        return true
+        // Tab Filter
+        let tabMatch = true;
+        if (filter === 'pending') tabMatch = !p.is_approved || p.status === 'pending'
+        else if (filter === 'active') tabMatch = p.is_approved && p.status === 'published'
+        else if (filter === 'expired') tabMatch = p.status === 'expired'
+
+        // Search Query Match
+        let searchMatch = true;
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            const titleMatch = (p.title || '').toLowerCase().includes(query);
+            const userMatch = (p.profile?.full_name || p.profile?.email || '').toLowerCase().includes(query);
+            searchMatch = titleMatch || userMatch;
+        }
+
+        return tabMatch && searchMatch;
     })
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+    const paginatedProperties = filteredProperties.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Reset to page 1 when search or filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, filter]);
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-100 p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-slate-50 border-b border-slate-100 p-6 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-xl font-black text-navy-secondary">物件承認・管理</h2>
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-xl font-black text-navy-secondary">物件承認・管理</h2>
+                        {!loading && (
+                            <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-xs font-bold">
+                                {filteredProperties.length}件
+                            </span>
+                        )}
+                    </div>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Property Management</p>
                 </div>
-                <div className="flex items-center space-x-2">
-                    <button
-                        onClick={() => setFilter('all')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${filter === 'all' ? 'bg-navy-primary text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        すべて表示
-                    </button>
-                    <button
-                        onClick={() => setFilter('pending')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${filter === 'pending' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'}`}
-                    >
-                        承認待ち
-                    </button>
-                    <button
-                        onClick={() => setFilter('active')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${filter === 'active' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
-                    >
-                        公開中
-                    </button>
-                    <button
-                        onClick={() => setFilter('expired')}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${filter === 'expired' ? 'bg-red-500 text-white' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
-                    >
-                        期限切れ
-                    </button>
+
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full xl:w-auto">
+                    {/* Search Bar */}
+                    <div className="relative w-full md:w-64 flex-shrink-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="物件名・担当者で検索..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filter Tabs */}
+                    <div className="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
+                        <div className="flex bg-white p-1 rounded-xl border border-slate-200">
+                            <button
+                                onClick={() => setFilter('all')}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'all' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                            >
+                                すべて
+                            </button>
+                            <button
+                                onClick={() => setFilter('pending')}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-amber-500'}`}
+                            >
+                                承認待ち
+                            </button>
+                            <button
+                                onClick={() => setFilter('active')}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'active' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-500'}`}
+                            >
+                                公開中
+                            </button>
+                            <button
+                                onClick={() => setFilter('expired')}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'expired' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-500 hover:text-red-500'}`}
+                            >
+                                期限切れ
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -209,12 +275,15 @@ export default function AdminPropertyManagement() {
                             </tr>
                         ) : filteredProperties.length === 0 ? (
                             <tr>
-                                <td colSpan={4} className="px-6 py-20 text-center font-bold text-slate-300">
-                                    表示する物件はありません
+                                <td colSpan={4} className="px-6 py-20 text-center font-bold text-slate-400">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <Filter className="w-10 h-10 text-slate-200 mb-4" />
+                                        <p>表示する物件がありません</p>
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
-                            filteredProperties.map((property) => (
+                            paginatedProperties.map((property) => (
                                 <tr key={property.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-6 py-5">
                                         <div className="flex items-center space-x-4">
@@ -334,6 +403,59 @@ export default function AdminPropertyManagement() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 bg-white">
+                    <span className="text-xs font-bold text-slate-400">
+                        全 {filteredProperties.length} 件中 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredProperties.length)} 件を表示
+                    </span>
+                    <div className="flex space-x-1">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        {Array.from({ length: totalPages }).map((_, i) => {
+                            // Show first, last, current, and adjacent pages
+                            if (
+                                i === 0 ||
+                                i === totalPages - 1 ||
+                                Math.abs(i + 1 - currentPage) <= 1
+                            ) {
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1
+                                            ? 'bg-navy-primary text-white border border-navy-primary'
+                                            : 'border border-slate-200 text-slate-500 hover:bg-slate-50'
+                                            }`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                );
+                            } else if (
+                                Math.abs(i + 1 - currentPage) === 2
+                            ) {
+                                return <span key={i} className="px-1 py-1.5 text-slate-400">...</span>;
+                            }
+                            return null;
+                        })}
+
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
