@@ -15,7 +15,7 @@ export default async function AgentProfileCard({ agentId }: { agentId: string })
 
     return (
         <div className="bg-white rounded-[2rem] p-5 sm:p-6 md:p-8 shadow-xl border border-slate-100 flex-shrink-0">
-            <h3 className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-6 text-center sm:text-left">担当エージェント</h3>
+            <h3 className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-6 text-center sm:text-left">エージェント</h3>
 
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 sm:mb-8 text-center sm:text-left">
                 <div className="w-20 h-20 sm:w-16 sm:h-16 bg-navy-primary/10 rounded-full flex items-center justify-center overflow-hidden shrink-0 border-2 border-slate-100">

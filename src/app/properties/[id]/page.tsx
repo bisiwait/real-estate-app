@@ -9,6 +9,7 @@ import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 import PropertyGallery from '@/components/property/PropertyGallery'
 import RelatedProperties from '@/components/property/RelatedProperties'
 import InquiryForm from '@/components/property/InquiryForm'
+import PropertyDescription from '@/components/property/PropertyDescription'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import AgentOtherProperties from '@/components/agent/AgentOtherProperties'
 import {
@@ -141,7 +142,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                             </div>
                                         </div>
                                     </div>
-                                    <h1 className="text-3xl md:text-4xl font-black text-navy-secondary leading-[1.2]">
+                                    <h1 className="text-xl md:text-2xl font-black text-navy-secondary leading-[1.2]">
                                         {property.status === 'contracted' && (
                                             <span className="inline-block bg-purple-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">成約済</span>
                                         )}
@@ -222,15 +223,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         </div>
 
                         {/* Description */}
-                        <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
-                            <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center">
-                                <Layers className="w-5 h-5 mr-3 text-navy-primary" />
-                                物件詳細
-                            </h3>
-                            <div className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm md:text-base">
-                                {property.description?.replace(/<br\s*\/?>/gi, '\n')}
-                            </div>
-                        </div>
+                        <PropertyDescription description={property.description} />
 
                         {/* Presale Specifics */}
                         {property.is_presale && (
@@ -414,60 +407,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
 
                         </div>
 
-                        {/* Project / Building Info Section */}
-                        {property.project && (
-                            <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden group">
-                                <div className="grid grid-cols-1 md:grid-cols-2">
-                                    <div className="relative h-64 md:h-full min-h-[300px]">
-                                        <img
-                                            src={property.project.image_url || property.images[0]}
-                                            alt={property.project.name}
-                                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-navy-secondary/80 to-transparent" />
-                                        <div className="absolute bottom-8 left-8 right-8 text-white">
-                                            <div className="text-[10px] font-black uppercase tracking-widest mb-2 opacity-70">Building Overview</div>
-                                            <h3 className="text-2xl font-black">{property.project.name}</h3>
-                                        </div>
-                                    </div>
-                                    <div className="p-8 md:p-10 space-y-8">
-                                        <h3 className="text-lg font-black text-navy-secondary flex items-center">
-                                            <Home className="w-5 h-5 mr-3 text-navy-primary" />
-                                            建物・プロジェクト情報
-                                        </h3>
-
-                                        {property.project.description && (
-                                            <p className="text-sm font-medium text-slate-500 leading-relaxed italic">
-                                                「{property.project.description}」
-                                            </p>
-                                        )}
-
-                                        <div className="grid grid-cols-1 gap-4">
-                                            {property.project.address && (
-                                                <div className="flex items-start">
-                                                    <MapPin className="w-4 h-4 mr-3 text-navy-primary flex-shrink-0 mt-0.5" />
-                                                    <span className="text-xs font-bold text-slate-600 leading-relaxed">{property.project.address}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {property.project.facilities && property.project.facilities.length > 0 && (
-                                            <div className="pt-4 border-t border-slate-50">
-                                                <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Common Facilities</div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {property.project.facilities.map((fac: string) => (
-                                                        <span key={fac} className="bg-slate-50 text-navy-secondary text-[10px] font-black px-3 py-1.5 rounded-full border border-slate-100">
-                                                            {fac}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
 
                         {/* Tags / Features */}
                         <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
@@ -513,21 +452,21 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         </div>
                     </div>
 
-                </div>
+                </div >
 
                 {/* Agent Other Properties */}
-                <AgentOtherProperties
+                < AgentOtherProperties
                     agentId={property.user_id}
                     currentPropertyId={property.id}
                 />
 
                 {/* Related Properties */}
-                <RelatedProperties
+                < RelatedProperties
                     currentPropertyId={property.id}
                     buildingName={property.building_name}
                     projectName={property.project_name}
                 />
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }

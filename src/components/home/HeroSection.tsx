@@ -34,40 +34,42 @@ export default function HeroSection() {
 
                 <div className="mx-auto max-w-4xl relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
                     {/* Search Tabs */}
-                    <div className="flex justify-center mb-0 relative z-20">
-                        <div className="bg-white/95 backdrop-blur-md rounded-t-2xl overflow-hidden flex shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
+                    <div className="flex justify-center mb-0 relative z-20 px-2 sm:px-0">
+                        <div className="bg-white/95 backdrop-blur-md rounded-t-2xl overflow-hidden flex w-full sm:w-auto shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
                             <button
                                 onClick={() => setActiveTab('rent')}
-                                className={`px-8 py-5 text-lg font-bold transition-all relative ${activeTab === 'rent'
+                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 ${activeTab === 'rent'
                                     ? 'bg-navy-primary text-white'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-navy-primary'
                                     }`}
                             >
-                                賃貸（RENT）
+                                <span>賃貸</span>
+                                <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（RENT）</span>
                                 {activeTab === 'rent' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-navy-primary pointer-events-none z-30" />
                                 )}
                             </button>
                             <button
                                 onClick={() => setActiveTab('buy')}
-                                className={`px-8 py-5 text-lg font-bold transition-all relative ${activeTab === 'buy'
+                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 ${activeTab === 'buy'
                                     ? 'bg-navy-primary text-white'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-navy-primary'
                                     }`}
                             >
-                                売買（SELL）
+                                <span>売買</span>
+                                <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（SELL）</span>
                                 {activeTab === 'buy' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-navy-primary pointer-events-none z-30" />
                                 )}
                             </button>
                             <button
                                 onClick={() => setActiveTab('presale')}
-                                className={`px-8 py-5 text-lg font-bold transition-all relative ${activeTab === 'presale'
+                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 ${activeTab === 'presale'
                                     ? 'bg-amber-500 text-white'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-amber-500'
                                     }`}
                             >
-                                プレセール
+                                <span className="pt-1 sm:pt-0">プレセール</span>
                                 {activeTab === 'presale' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-amber-500 pointer-events-none z-30" />
                                 )}
