@@ -434,35 +434,35 @@ function PropertiesList() {
                     <div className="lg:col-span-4 mb-8">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                             {/* Tabs */}
-                            <div className="flex bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-fit border border-slate-200 shadow-sm">
+                            <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
                                 <button
                                     onClick={() => updateFilters({ type: 'all', price: null })}
-                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     すべて
                                 </button>
                                 <button
                                     onClick={() => updateFilters({ type: 'rent', price: null })}
-                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     賃貸
                                 </button>
                                 <button
                                     onClick={() => updateFilters({ type: 'sell', price: null })}
-                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary'}`}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     売買
                                 </button>
                                 <button
                                     onClick={() => updateFilters({ type: 'presale', price: null })}
-                                    className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${listingType === 'presale' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-amber-500'}`}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'presale' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-50'}`}
                                 >
                                     プレセール
                                 </button>
                             </div>
 
                             {/* Mobile search bar (Integrated) */}
-                            <div className="lg:hidden">
+                            <div className="lg:hidden w-full">
                                 <MobileSearchBar
                                     searchQuery={searchQuery}
                                     onSearchChange={(val: string) => updateFilters({ q: val })}

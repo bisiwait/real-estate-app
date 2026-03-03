@@ -16,13 +16,13 @@ export default function MobileSearchBar({
     activeFiltersCount
 }: MobileSearchBarProps) {
     return (
-        <div className="flex items-center space-x-3 w-full animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="relative flex-1 group">
+        <div className="flex items-center gap-2 sm:gap-3 w-full animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="relative flex-1 group min-w-0">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-navy-primary transition-colors" />
                 <input
                     type="text"
                     placeholder="物件名・エリアで検索..."
-                    className="w-full pl-11 pr-4 py-4 bg-white border border-slate-100 rounded-2xl shadow-sm focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none font-bold text-navy-secondary transition-all"
+                    className="w-full pl-11 pr-4 py-3 sm:py-4 bg-white border border-slate-100 rounded-xl sm:rounded-2xl shadow-sm focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none text-xs sm:text-sm font-bold text-navy-secondary transition-all"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                 />
@@ -37,11 +37,11 @@ export default function MobileSearchBar({
             </div>
             <button
                 onClick={onFilterClick}
-                className="relative p-4 bg-navy-primary text-white rounded-2xl shadow-lg shadow-navy-primary/20 hover:scale-105 active:scale-95 transition-all"
+                className="relative p-3 sm:p-4 shrink-0 bg-navy-primary text-white rounded-xl sm:rounded-2xl shadow-lg shadow-navy-primary/20 hover:scale-105 active:scale-95 transition-all"
             >
-                <SlidersHorizontal className="w-6 h-6" />
+                <SlidersHorizontal className="w-5 h-5 sm:w-6 sm:h-6" />
                 {activeFiltersCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">
                         {activeFiltersCount}
                     </span>
                 )}

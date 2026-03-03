@@ -85,14 +85,14 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
             <main className="container mx-auto px-4 pt-8 md:pt-12 pb-24 max-w-[1200px]">
 
                 {/* Agent Header / Hero Section */}
-                <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-slate-100 mb-12 relative overflow-hidden">
+                <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-xl border border-slate-100 mb-8 sm:mb-12 relative overflow-hidden">
                     {/* Decorative Background Element */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-navy-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 relative z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 relative z-10">
                         {/* Avatar & Title */}
                         <div className="flex flex-col items-center lg:items-start text-center lg:text-left lg:col-span-1">
-                            <div className="w-40 h-40 md:w-48 md:h-48 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg mb-6 shrink-0 relative">
+                            <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg mb-6 shrink-0 relative">
                                 {agent.avatar_url ? (
                                     <Image src={agent.avatar_url} alt={agent.full_name || 'Agent'} fill className="object-cover" />
                                 ) : (
@@ -126,19 +126,19 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                         <div className="lg:col-span-2 flex flex-col justify-center">
 
                             {/* Quick Stats */}
-                            <div className="flex gap-6 mb-8 pb-8 border-b border-slate-100">
-                                <div>
-                                    <div className="text-3xl font-black text-navy-secondary">{totalListings || 0}</div>
+                            <div className="flex flex-wrap gap-4 sm:gap-6 mb-8 pb-8 border-b border-slate-100 justify-center lg:justify-start">
+                                <div className="text-center lg:text-left">
+                                    <div className="text-2xl sm:text-3xl font-black text-navy-secondary">{totalListings || 0}</div>
                                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">掲載中の物件</div>
                                 </div>
-                                <div className="w-px bg-slate-100"></div>
-                                <div>
-                                    <div className="text-3xl font-black text-navy-secondary">{dealsClosed}</div>
+                                <div className="w-px bg-slate-100 hidden sm:block"></div>
+                                <div className="text-center lg:text-left">
+                                    <div className="text-2xl sm:text-3xl font-black text-navy-secondary">{dealsClosed}</div>
                                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">成約実績</div>
                                 </div>
                                 <div className="w-px bg-slate-100 hidden sm:block"></div>
-                                <div className="hidden sm:block">
-                                    <div className="text-3xl font-black text-navy-secondary">{experienceYears}<span className="text-lg">年</span></div>
+                                <div className="text-center lg:text-left">
+                                    <div className="text-2xl sm:text-3xl font-black text-navy-secondary">{experienceYears}<span className="text-lg">年</span></div>
                                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">業界経験</div>
                                 </div>
                             </div>
@@ -187,11 +187,11 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                     {/* Sidebar Contact Actions (Sticky on Desktop) */}
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 sticky top-28">
-                            <h3 className="text-sm font-black text-navy-secondary text-center mb-6">このエージェントに直接連絡する</h3>
+                            <h3 className="text-sm font-black text-navy-secondary text-center lg:text-left mb-6">このエージェントに直接連絡する</h3>
 
-                            <div className="space-y-4">
-                                <a href="#whatsapp" className="flex items-center justify-between w-full p-4 bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-2xl transition-all shadow-sm group">
-                                    <div className="flex items-center gap-3 font-black text-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4">
+                                <a href="#whatsapp" className="flex items-center justify-between w-full p-3 sm:p-4 bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-2xl transition-all shadow-sm group">
+                                    <div className="flex items-center gap-3 font-black text-xs sm:text-sm">
                                         <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30">
                                             <MessageCircle className="w-5 h-5" />
                                         </div>
@@ -200,8 +200,8 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                                     <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                 </a>
 
-                                <a href="#line" className="flex items-center justify-between w-full p-4 bg-[#06C755]/10 hover:bg-[#06C755] text-[#06C755] hover:text-white rounded-2xl transition-all shadow-sm group">
-                                    <div className="flex items-center gap-3 font-black text-sm">
+                                <a href="#line" className="flex items-center justify-between w-full p-3 sm:p-4 bg-[#06C755]/10 hover:bg-[#06C755] text-[#06C755] hover:text-white rounded-2xl transition-all shadow-sm group">
+                                    <div className="flex items-center gap-3 font-black text-xs sm:text-sm">
                                         <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30">
                                             <MessageCircle className="w-5 h-5 fill-current" />
                                         </div>
@@ -210,8 +210,8 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                                     <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                 </a>
 
-                                <a href={`tel:${agent.phone || ''}`} className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl transition-all shadow-sm group border border-slate-100">
-                                    <div className="flex items-center gap-3 font-black text-sm">
+                                <a href={`tel:${agent.phone || ''}`} className="flex items-center justify-between w-full p-3 sm:p-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl transition-all shadow-sm group border border-slate-100">
+                                    <div className="flex items-center gap-3 font-black text-xs sm:text-sm">
                                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
                                             <Phone className="w-4 h-4" />
                                         </div>
@@ -220,8 +220,8 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                                     <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-1 transition-all" />
                                 </a>
 
-                                <a href={`mailto:${agent.email || ''}`} className="flex items-center justify-between w-full p-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl transition-all shadow-sm group border border-slate-100">
-                                    <div className="flex items-center gap-3 font-bold text-sm">
+                                <a href={`mailto:${agent.email || ''}`} className="flex items-center justify-between w-full p-3 sm:p-4 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl transition-all shadow-sm group border border-slate-100">
+                                    <div className="flex items-center gap-3 font-bold text-xs sm:text-sm">
                                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
                                             <Mail className="w-4 h-4" />
                                         </div>
