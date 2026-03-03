@@ -20,6 +20,7 @@ import {
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
 export const revalidate = 60 // Revalidate page every 60 seconds
+export const runtime = 'edge'
 
 export default async function AgentProfilePage({ params }: { params: Promise<{ id: string }> }) {
     // We use the admin client here to bypass RLS on the profiles table since public read isn't enabled

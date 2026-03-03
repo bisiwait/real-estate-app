@@ -15,6 +15,7 @@ import {
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
 export const revalidate = 60
+export const runtime = 'edge'
 
 export default async function AgentPropertiesPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const { id: agentId } = await params;
