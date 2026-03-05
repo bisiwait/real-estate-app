@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Building2, Globe, Award, MapPin, ChevronRight, Projector as Project } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge';
 
 export default async function DeveloperDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params

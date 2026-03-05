@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ChevronRight, Building2, Globe, Award } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge';
 
 export default async function DevelopersPage() {
     const supabase = await createClient()

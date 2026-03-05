@@ -5,6 +5,7 @@ import { Heart, Home, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge';
 
 export default async function FavoritesPage() {
     const supabase = await createClient()
