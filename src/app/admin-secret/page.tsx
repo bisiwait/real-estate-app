@@ -12,7 +12,10 @@ import {
     Clock,
     AlertTriangle,
     ShieldCheck,
-    Sparkles
+    Sparkles,
+    Bell,
+    ChevronRight,
+    Building2
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -20,7 +23,12 @@ import AdminPropertyManagement from '@/components/admin/PropertyManagement'
 import AdminUserManagement from '@/components/admin/UserManagement'
 import AdminProjectManagement from '@/components/admin/ProjectManagement'
 
-export default async function AdminSecretDashboard() {
+export default async function AdminSecretDashboard({
+    searchParams,
+}: {
+    searchParams: { tab?: string }
+}) {
+    const { tab = 'overview' } = await searchParams
     const isUserAdmin = await isAdmin()
 
     // Strict redirect for non-admins
@@ -53,68 +61,130 @@ export default async function AdminSecretDashboard() {
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Admin Access Only</span>
                     </div>
 
-                    <Link href="/list-property" className="flex items-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                        <Sparkles className="w-4 h-4 text-amber-300" />
-                        <span>AIで物件を取り込む</span>
+                    <div className="flex flex-wrap items-center gap-4">
+                        <Link href="/admin-secret/broadcast" className="flex items-center space-x-2 bg-white border border-slate-200 hover:border-navy-primary text-navy-secondary px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md">
+                            <Bell className="w-4 h-4 text-navy-primary" />
+                            <span>一斉通知を配信</span>
+                        </Link>
+                        <Link href="/list-property" className="flex items-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                            <Sparkles className="w-4 h-4 text-amber-300" />
+                            <span>AIで物件を取り込む</span>
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="bg-white p-2 rounded-2xl shadow-md border border-slate-100 flex flex-wrap gap-2 mb-10">
+                    <Link
+                        href="?tab=overview"
+                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'overview'
+                            ? 'bg-navy-primary text-white shadow-lg'
+                            : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
+                            }`}
+                    >
+                        <BarChart3 className="w-4 h-4" />
+                        <span>概要</span>
+                    </Link>
+                    <Link
+                        href="?tab=projects"
+                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'projects'
+                            ? 'bg-navy-primary text-white shadow-lg'
+                            : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
+                            }`}
+                    >
+                        <Building2 className="w-4 h-4" />
+                        <span>プロジェクト</span>
+                    </Link>
+                    <Link
+                        href="?tab=properties"
+                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'properties'
+                            ? 'bg-navy-primary text-white shadow-lg'
+                            : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
+                            }`}
+                    >
+                        <Home className="w-4 h-4" />
+                        <span>物件承認</span>
+                    </Link>
+                    <Link
+                        href="?tab=users"
+                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'users'
+                            ? 'bg-navy-primary text-white shadow-lg'
+                            : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
+                            }`}
+                    >
+                        <Users className="w-4 h-4" />
+                        <span>エージェント・ユーザ</span>
                     </Link>
                 </div>
 
-                {/* Summary Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-amber-500/50 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="bg-amber-50 p-3 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                                <TrendingUp className="w-6 h-6 text-amber-500 group-hover:text-white" />
+                {/* Summary Grid - Only on Overview */}
+                {tab === 'overview' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-amber-500/50 transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="bg-amber-50 p-3 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                                    <TrendingUp className="w-6 h-6 text-amber-500 group-hover:text-white" />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Sales</span>
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Sales</span>
+                            <p className="text-2xl font-black text-navy-secondary">¥ ---,---</p>
+                            <p className="text-xs text-slate-400 font-medium mt-1">Stripe連携準備中</p>
                         </div>
-                        <p className="text-2xl font-black text-navy-secondary">¥ ---,---</p>
-                        <p className="text-xs text-slate-400 font-medium mt-1">Stripe連携準備中</p>
-                    </div>
 
-                    <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-navy-primary/50 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="bg-blue-50 p-3 rounded-2xl group-hover:bg-navy-primary group-hover:text-white transition-colors">
-                                <Home className="w-6 h-6 text-navy-primary group-hover:text-white" />
+                        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-navy-primary/50 transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="bg-blue-50 p-3 rounded-2xl group-hover:bg-navy-primary group-hover:text-white transition-colors">
+                                    <Home className="w-6 h-6 text-navy-primary group-hover:text-white" />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Listings</span>
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Listings</span>
+                            <p className="text-2xl font-black text-navy-secondary">{activeCount} <span className="text-sm font-medium">物件</span></p>
+                            <div className="flex items-center mt-1 text-emerald-500 font-bold text-[10px]">
+                                <CheckCircle className="w-3 h-3 mr-1" /> 公開中
+                            </div>
                         </div>
-                        <p className="text-2xl font-black text-navy-secondary">{activeCount} <span className="text-sm font-medium">物件</span></p>
-                        <div className="flex items-center mt-1 text-emerald-500 font-bold text-[10px]">
-                            <CheckCircle className="w-3 h-3 mr-1" /> 公開中
-                        </div>
-                    </div>
 
-                    <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-red-500/50 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="bg-red-50 p-3 rounded-2xl group-hover:bg-red-500 group-hover:text-white transition-colors">
-                                <Clock className="w-6 h-6 text-red-500 group-hover:text-white" />
+                        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-red-500/50 transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="bg-red-50 p-3 rounded-2xl group-hover:bg-red-500 group-hover:text-white transition-colors">
+                                    <Clock className="w-6 h-6 text-red-500 group-hover:text-white" />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
+                            <p className="text-2xl font-black text-navy-secondary">{pendingCount} <span className="text-sm font-medium">物件</span></p>
+                            <div className="flex items-center mt-1 text-red-500 font-bold text-[10px]">
+                                <AlertTriangle className="w-3 h-3 mr-1" /> 承認待ち
+                            </div>
                         </div>
-                        <p className="text-2xl font-black text-navy-secondary">{pendingCount} <span className="text-sm font-medium">物件</span></p>
-                        <div className="flex items-center mt-1 text-red-500 font-bold text-[10px]">
-                            <AlertTriangle className="w-3 h-3 mr-1" /> 承認待ち
-                        </div>
-                    </div>
 
-                    <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-navy-secondary/50 transition-all">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="bg-slate-100 p-3 rounded-2xl group-hover:bg-navy-secondary group-hover:text-white transition-colors">
-                                <MessageSquare className="w-6 h-6 text-navy-secondary group-hover:text-white" />
+                        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 group hover:border-navy-secondary/50 transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="bg-slate-100 p-3 rounded-2xl group-hover:bg-navy-secondary group-hover:text-white transition-colors">
+                                    <MessageSquare className="w-6 h-6 text-navy-secondary group-hover:text-white" />
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inquiries (24h)</span>
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inquiries (24h)</span>
+                            <p className="text-2xl font-black text-navy-secondary">{recentInquiries} <span className="text-sm font-medium">件</span></p>
+                            <p className="text-xs text-slate-400 font-medium mt-1">直近24時間の問い合わせ</p>
                         </div>
-                        <p className="text-2xl font-black text-navy-secondary">{recentInquiries} <span className="text-sm font-medium">件</span></p>
-                        <p className="text-xs text-slate-400 font-medium mt-1">直近24時間の問い合わせ</p>
                     </div>
-                </div>
+                )}
 
                 {/* Main Management Section */}
                 <div className="grid grid-cols-1 gap-12">
-                    <AdminProjectManagement />
-                    <AdminPropertyManagement />
-                    <AdminUserManagement />
+                    {tab === 'projects' && <AdminProjectManagement />}
+                    {tab === 'properties' && <AdminPropertyManagement />}
+                    {tab === 'users' && <AdminUserManagement />}
+
+                    {tab === 'overview' && (
+                        <div className="bg-white rounded-3xl p-12 shadow-xl border border-slate-100 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <Sparkles className="w-16 h-16 text-navy-primary/10 mx-auto mb-6" />
+                            <h3 className="text-2xl font-black text-navy-secondary mb-4">管理者ダッシュボードへようこそ</h3>
+                            <p className="text-slate-500 max-w-lg mx-auto leading-relaxed">
+                                上記のタブから、プロジェクト（建物マスター）、物件の承認プロセス、エージェントや一般ユーザーの管理を個別に行うことができます。
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

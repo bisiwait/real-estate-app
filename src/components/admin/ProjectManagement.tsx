@@ -255,8 +255,8 @@ export default function AdminProjectManagement() {
                         <button
                             onClick={() => setFilterMissingInfo(!filterMissingInfo)}
                             className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${filterMissingInfo
-                                    ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm'
-                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-navy-secondary'
+                                ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm'
+                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-navy-secondary'
                                 }`}
                             title="築年数または階数が未設定の建物を抽出"
                         >
@@ -399,8 +399,8 @@ export default function AdminProjectManagement() {
                     </form>
                 )}
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto pb-4">
+                    <table className="w-full text-left min-w-[800px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">プロジェクト基本情報</th>

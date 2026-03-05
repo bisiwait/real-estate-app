@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, PlusCircle, Home, Search, Info, Mail } from 'lucide-react'
+import { Menu, X, PlusCircle, Home, Search, Info, Mail, Building2, Heart, ShieldCheck, LayoutDashboard, User } from 'lucide-react'
 import UserNav from '@/components/layout/UserNav'
+import { createClient } from '@/lib/supabase/client'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -14,7 +15,45 @@ function cn(...inputs: ClassValue[]) {
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [userRole, setUserRole] = useState<'admin' | 'agent' | 'general' | null>(null)
     const pathname = usePathname()
+    const supabase = createClient()
+
+    // Fetch user role
+    useEffect(() => {
+        const getUserRole = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                setUserRole(null)
+                return
+            }
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('user_role, is_admin, available_credits')
+                .eq('id', user.id)
+                .single()
+
+            if (profile) {
+                const isAdmin = profile.is_admin === true || profile.user_role === 'admin'
+                const hasCredits = (profile.available_credits || 0) > 0
+                const isAgent = profile.user_role === 'agent' || hasCredits || (profile.user_role === undefined && !isAdmin)
+
+                if (isAdmin) setUserRole('admin')
+                else if (isAgent) setUserRole('agent')
+                else setUserRole('general')
+            }
+        }
+
+        getUserRole()
+
+        // Auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+            getUserRole()
+        })
+
+        return () => subscription.unsubscribe()
+    }, [supabase])
 
     // Close menu when route changes
     useEffect(() => {
@@ -33,8 +72,6 @@ export default function Header() {
 
     const navLinks = [
         { href: '/properties', label: '物件を探す', icon: Search },
-        { href: '/about', label: 'サービスについて', icon: Info },
-        { href: '/contact', label: 'お問い合わせ', icon: Mail },
     ]
 
     return (

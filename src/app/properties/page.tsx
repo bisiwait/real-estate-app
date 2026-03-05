@@ -7,6 +7,7 @@ import MobileSearchBar from '@/components/property/MobileSearchBar'
 import { createClient } from '@/lib/supabase/client'
 import { Search, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
+import SaveSearchButton from '@/components/property/SaveSearchButton'
 
 
 const CITIES = [
@@ -155,7 +156,7 @@ function PropertiesList() {
             // Order and Range...
             query = query
                 .order('status', { ascending: true })
-                .order('created_at', { ascending: false })
+                .order('last_confirmed_at', { ascending: false })
                 .range(from, to)
 
             const { data, error, count } = await query
@@ -387,6 +388,10 @@ function PropertiesList() {
                 </div>
             </div>
 
+            <div>
+                <SaveSearchButton variant="outline" fullWidth />
+            </div>
+
             {
                 (selectedArea || selectedPropertyType || selectedPrice || selectedTags.length > 0 || searchQuery || bathtubFilter || petsFilter) && (
                     <button
@@ -418,9 +423,12 @@ function PropertiesList() {
                             <h1 className="text-4xl font-black mb-2 tracking-tight">物件を探す</h1>
                             <p className="text-slate-400 text-sm font-medium tracking-wide">PATTAYA LUXURY LISTINGS</p>
                         </div>
-                        <div className="text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center">
-                            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            全 {totalCount} 件中 {filteredProperties.length} 件を表示
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <SaveSearchButton />
+                            <div className="text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center shrink-0">
+                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                全 {totalCount} 件中 {filteredProperties.length} 件を表示
+                            </div>
                         </div>
                     </div>
                 </div>

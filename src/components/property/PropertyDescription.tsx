@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronUp, Layers } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -10,6 +10,17 @@ interface PropertyDescriptionProps {
 
 export default function PropertyDescription({ description }: PropertyDescriptionProps) {
     const [isOpen, setIsOpen] = useState(false)
+    const [isDesktop, setIsDesktop] = useState(false)
+
+    useEffect(() => {
+        // Initial check
+        setIsDesktop(window.innerWidth >= 1024)
+
+        // Update on resize
+        const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     // Format description text
     const formattedDescription = description?.replace(/<br\s*\/?>/gi, '\n') || ''
@@ -19,7 +30,7 @@ export default function PropertyDescription({ description }: PropertyDescription
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between lg:cursor-default"
-                disabled={typeof window !== 'undefined' && window.innerWidth >= 1024}
+                disabled={isDesktop}
             >
                 <h3 className="text-lg font-black text-navy-secondary flex items-center">
                     <Layers className="w-5 h-5 mr-3 text-navy-primary" />

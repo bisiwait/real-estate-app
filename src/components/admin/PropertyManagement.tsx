@@ -248,8 +248,8 @@ export default function AdminPropertyManagement() {
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-left">
+            <div className="overflow-x-auto pb-4">
+                <table className="w-full text-left min-w-[1000px]">
                     <thead>
                         <tr className="bg-slate-50/50 border-b border-slate-100">
                             <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">物件情報</th>
