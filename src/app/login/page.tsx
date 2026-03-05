@@ -8,7 +8,9 @@ import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function LoginPage() {
+import { Suspense } from 'react'
+
+function LoginContent() {
     const searchParams = useSearchParams()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -256,6 +258,18 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-navy-primary" />
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     )
 }
 
