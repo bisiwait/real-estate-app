@@ -1,4 +1,5 @@
 import HeroSection from "@/components/home/HeroSection";
+export const runtime = 'edge';
 import SectionHeader from "@/components/ui/SectionHeader";
 import PresaleCard, { PresaleProject } from "@/components/property/PresaleCard";
 import PropertyCard from "@/components/property/PropertyCard";
