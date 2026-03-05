@@ -18,8 +18,8 @@ interface PresaleCardProps {
 
 export default function PresaleCard({ project }: PresaleCardProps) {
     return (
-        <Link href={`/presale/${project.slug}`} className="group block h-full">
-            <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col h-full group-hover:-translate-y-1">
+        <Link href={`/presale/${project.slug}`} className="group block h-full transition-transform active:scale-[0.98] duration-200">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-100 flex flex-col h-full group-hover:-translate-y-1">
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">
                     <img

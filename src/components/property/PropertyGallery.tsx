@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination, Autoplay, Zoom } from 'swiper/modules'
-import { X } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
@@ -123,33 +123,48 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
           className="fixed inset-0 z-[99999] bg-black/95 flex flex-col justify-center items-center"
           onClick={closeFullscreen}
         >
-          {/* 閉じるボタン（ヘッダーよりも前面に来るよう Portal 内で配置） */}
+          {/* 閉じるボタン */}
           <button
-            onClick={closeFullscreen}
-            className="absolute top-12 right-6 md:top-8 md:right-8 z-[100000] text-white p-4 rounded-full bg-navy-primary hover:bg-navy-secondary shadow-2xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              closeFullscreen();
+            }}
+            className="absolute top-12 right-6 md:top-8 md:right-8 z-[100000] text-white p-4 rounded-full bg-navy-primary hover:bg-navy-secondary shadow-2xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-90"
           >
             <X className="w-8 h-8" />
             <span className="text-sm font-bold pr-1 hidden sm:block">閉じる</span>
           </button>
 
           <div
-            className="w-full h-full py-0 relative flex items-center justify-center pointer-events-none"
+            className="w-full h-full py-0 relative flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-full h-full pointer-events-auto">
+            {/* Custom Navigation */}
+            <button className="swiper-fullscreen-prev absolute left-4 md:left-8 z-[100000] w-12 h-12 md:w-16 md:h-16 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all border border-white/20 active:scale-90 active:bg-white/30">
+              <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
+            </button>
+            <button className="swiper-fullscreen-next absolute right-4 md:right-8 z-[100000] w-12 h-12 md:w-16 md:h-16 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all border border-white/20 active:scale-90 active:bg-white/30">
+              <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
+            </button>
+
+            <div className="w-full h-full">
               <Swiper
                 modules={[Navigation, Pagination, Zoom]}
                 spaceBetween={20}
                 slidesPerView={1}
                 initialSlide={initialSlide}
-                navigation
+                loop={true}
+                navigation={{
+                  nextEl: '.swiper-fullscreen-next',
+                  prevEl: '.swiper-fullscreen-prev',
+                }}
                 pagination={{ clickable: true, type: 'fraction' }}
                 zoom={true}
-                onClick={closeFullscreen}
-                className="w-full h-[80vh] md:h-full mt-[10vh] md:mt-0"
+                className="w-full h-full"
               >
                 {images.map((image, index) => (
                   <SwiperSlide key={index} className="flex items-center justify-center">
-                    <div className="swiper-zoom-container flex items-center justify-center w-full h-[80vh] md:h-full">
+                    <div className="swiper-zoom-container flex items-center justify-center w-full h-full">
                       <img
                         src={image}
                         alt={`Fullscreen ${index + 1}`}
@@ -160,24 +175,26 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
                 ))}
               </Swiper>
             </div>
-            <style jsx global>{`
-              .swiper-zoom-container {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-                height: 100%;
-              }
-              .swiper-zoom-container > img {
-                max-width: 100%;
-                max-height: 100%;
-                object-fit: contain;
-              }
-            `}</style>
           </div>
+          <style jsx global>{`
+            .swiper-pagination-fraction {
+              color: white !important;
+              bottom: 24px !important;
+              font-weight: bold;
+              font-size: 14px;
+            }
+            .swiper-zoom-container {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 100%;
+              height: 100%;
+            }
+          `}</style>
         </div>,
         document.body
       )}
     </>
+
   )
 }

@@ -78,7 +78,7 @@ export default function Header() {
         <header className={cn("border-b border-slate-100 sticky top-0 z-[100] transition-colors duration-300", isMenuOpen ? "bg-white" : "bg-white/80 backdrop-blur-md")}>
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex flex-col relative z-[110]">
+                <Link href="/" className="flex flex-col relative z-[110] active:scale-95 transition-transform duration-200">
                     <span className="text-2xl font-black text-navy-primary tracking-tighter italic whitespace-nowrap">Chonburi Connect</span>
                     <span className="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase -mt-1 ml-0.5">Chonburi Real Estate for Japanese</span>
                 </Link>
@@ -90,7 +90,7 @@ export default function Header() {
                             key={link.href}
                             href={link.href}
                             className={cn(
-                                "text-sm font-bold transition-all hover:text-navy-primary relative py-2",
+                                "text-sm font-bold transition-all hover:text-navy-primary relative py-2 active:opacity-70",
                                 pathname === link.href ? "text-navy-primary" : "text-slate-500"
                             )}
                         >
@@ -110,7 +110,7 @@ export default function Header() {
                 {/* Mobile Menu Trigger */}
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="lg:hidden relative z-[110] p-2 -mr-2 text-navy-primary hover:bg-slate-50 rounded-xl transition-colors"
+                    className="lg:hidden relative z-[110] p-2 -mr-2 text-navy-primary hover:bg-slate-50 rounded-xl transition-all active:scale-90"
                     aria-label="Toggle menu"
                 >
                     {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
@@ -132,8 +132,8 @@ export default function Header() {
                                         href={link.href}
                                         onClick={() => setIsMenuOpen(false)}
                                         className={cn(
-                                            "flex items-center space-x-4 px-4 py-4 rounded-2xl text-lg font-black transition-all",
-                                            pathname === link.href ? "bg-navy-primary/5 text-navy-primary shadow-sm" : "text-slate-600 hover:bg-slate-50"
+                                            "flex items-center space-x-4 px-4 py-4 rounded-2xl text-lg font-black transition-all active:scale-[0.98]",
+                                            pathname === link.href ? "bg-navy-primary/5 text-navy-primary shadow-sm" : "text-slate-600 hover:bg-slate-50 active:bg-slate-100"
                                         )}
                                     >
                                         <link.icon className={cn("w-5 h-5", pathname === link.href ? "text-navy-primary" : "text-slate-400")} />

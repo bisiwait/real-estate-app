@@ -97,8 +97,8 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                     href="/login"
                     onClick={onCloseMobileMenu}
                     className={cn(
-                        "text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
-                        isMobile && "w-full text-center py-3 border border-slate-100 rounded-xl"
+                        "text-sm font-bold text-navy-primary hover:text-navy-secondary transition-all active:scale-95",
+                        isMobile && "w-full text-center py-3 border border-slate-100 rounded-xl active:bg-slate-50"
                     )}
                 >
                     ログイン
@@ -107,7 +107,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                     href="/login?signup=true"
                     onClick={onCloseMobileMenu}
                     className={cn(
-                        "bg-navy-primary text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-navy-secondary transition-all shadow-sm",
+                        "bg-navy-primary text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-navy-secondary transition-all shadow-sm active:scale-95 active:shadow-inner",
                         isMobile && "w-full text-center py-4 rounded-xl"
                     )}
                 >
@@ -128,12 +128,6 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             : (user?.email || userData.fullName || 'Anonymous')}
                     </span>
                 </div>
-                {userData.role === 'agent' && userData.credits !== null && (
-                    <div className="flex items-center bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full border border-amber-100 shadow-sm animate-in fade-in zoom-in duration-300">
-                        <Coins className="w-3.5 h-3.5 mr-1.5" />
-                        <span className="text-[11px] font-black">{userData.credits} pts</span>
-                    </div>
-                )}
             </div>
 
             <div className={cn("flex items-center", isMobile ? "flex-col space-y-3 w-full" : "space-x-4")}>
@@ -230,8 +224,8 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                 <button
                     onClick={handleLogout}
                     className={cn(
-                        "flex items-center space-x-2 text-sm font-bold text-slate-500 hover:text-red-500 transition-colors",
-                        isMobile && "w-full justify-center py-3"
+                        "flex items-center space-x-2 text-sm font-bold text-slate-500 hover:text-red-500 transition-all active:scale-95",
+                        isMobile && "w-full justify-center py-3 active:bg-red-50"
                     )}
                 >
                     <LogOut className="w-4 h-4" />

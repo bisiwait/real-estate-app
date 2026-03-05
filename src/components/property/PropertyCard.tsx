@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, Bath, Dog } from 'lucide-react'
+import { MapPin, Bath, Dog, BedDouble } from 'lucide-react'
 import FavoriteButton from './FavoriteButton'
 
 interface PropertyCardProps {
@@ -34,8 +34,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 <FavoriteButton propertyId={property.id} />
             </div>
 
-            <Link href={`/properties/${property.id}`} className="block h-full">
-                <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-100 h-full flex flex-col">
+            <Link href={`/properties/${property.id}`} className="block h-full transition-transform active:scale-[0.98] duration-200">
+                <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg border border-slate-100 h-full flex flex-col">
                     <div className="relative h-48 w-full overflow-hidden">
                         <img
                             src={property.images[0]}
@@ -75,32 +75,35 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                             <div className="flex items-center space-x-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
                                 <span>{property.sqm || '--'} sqm</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                <span>{property.bedrooms === 0 ? 'Studio' : `${property.bedrooms}BR`}</span>
+                                <div className="flex items-center">
+                                    <BedDouble className="w-3 h-3 mr-1" />
+                                    <span>{property.bedrooms === 0 ? 'Studio' : `${property.bedrooms}BR`}</span>
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-50">
                             <div className="flex flex-col space-y-1">
                                 {property.is_for_rent && (
-                                    <div className="text-lg font-black text-navy-primary leading-none">
+                                    <div className="text-lg font-black text-navy-secondary leading-none">
                                         <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Rent:</span>
                                         {property.rent_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB / 月</span>
                                     </div>
                                 )}
                                 {property.is_for_sale && (
                                     <div className="space-y-1">
-                                        <div className="text-lg font-black text-navy-primary leading-none">
+                                        <div className="text-lg font-black text-navy-secondary leading-none">
                                             <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Sale:</span>
                                             {property.sale_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB</span>
                                         </div>
                                         {property.ownership_type && (
-                                            <div className="text-[9px] font-bold text-navy-primary bg-navy-primary/5 w-fit px-1.5 py-0.5 rounded border border-navy-primary/10">
+                                            <div className="text-[9px] font-bold text-navy-secondary bg-navy-secondary/5 w-fit px-1.5 py-0.5 rounded border border-navy-secondary/10">
                                                 {property.ownership_type}
                                             </div>
                                         )}
                                     </div>
                                 )}
                                 {!property.is_for_rent && !property.is_for_sale && (
-                                    <div className="text-lg font-black text-navy-primary">
+                                    <div className="text-lg font-black text-navy-secondary">
                                         {property.price?.toLocaleString()} <span className="text-xs font-normal text-slate-500">THB</span>
                                     </div>
                                 )}

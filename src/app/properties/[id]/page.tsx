@@ -159,7 +159,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                     {property.is_for_rent && (
                                         <div>
                                             <div className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest leading-none">賃貸 / 月</div>
-                                            <div className="text-3xl font-black text-navy-primary leading-none">
+                                            <div className="text-3xl font-black text-navy-secondary leading-none">
                                                 {property.rent_price?.toLocaleString()} <span className="text-sm font-normal">THB</span>
                                             </div>
                                         </div>
@@ -167,7 +167,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                     {property.is_for_sale && (
                                         <div>
                                             <div className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest leading-none">販売価格</div>
-                                            <div className="text-3xl font-black text-navy-primary leading-none">
+                                            <div className="text-3xl font-black text-navy-secondary leading-none">
                                                 {property.sale_price?.toLocaleString()} <span className="text-sm font-normal">THB</span>
                                             </div>
                                         </div>

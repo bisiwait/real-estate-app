@@ -38,7 +38,7 @@ export default function HeroSection() {
                         <div className="bg-white/95 backdrop-blur-md rounded-t-2xl overflow-hidden flex w-full sm:w-auto shadow-[0_-8px_30px_rgb(0,0,0,0.12)]">
                             <button
                                 onClick={() => setActiveTab('rent')}
-                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 ${activeTab === 'rent'
+                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 active:scale-95 ${activeTab === 'rent'
                                     ? 'bg-navy-primary text-white'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-navy-primary'
                                     }`}
@@ -51,7 +51,7 @@ export default function HeroSection() {
                             </button>
                             <button
                                 onClick={() => setActiveTab('buy')}
-                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 ${activeTab === 'buy'
+                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 active:scale-95 ${activeTab === 'buy'
                                     ? 'bg-navy-primary text-white'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-navy-primary'
                                     }`}
@@ -64,7 +64,7 @@ export default function HeroSection() {
                             </button>
                             <button
                                 onClick={() => setActiveTab('presale')}
-                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 ${activeTab === 'presale'
+                                className={`flex-1 sm:flex-none px-1 sm:px-8 py-3 sm:py-5 text-sm sm:text-lg font-bold transition-all relative flex flex-col sm:block items-center justify-center gap-0.5 sm:gap-0 active:scale-95 ${activeTab === 'presale'
                                     ? 'bg-amber-500 text-white'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-amber-500'
                                     }`}
@@ -84,7 +84,7 @@ export default function HeroSection() {
                             <div className="flex bg-gray-100 p-1 rounded-xl">
                                 <button
                                     onClick={() => setActiveArea('pattaya')}
-                                    className={`flex-1 flex items-center justify-center py-2.5 rounded-lg text-sm font-bold transition-all ${activeArea === 'pattaya' ? 'bg-white text-navy-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    className={`flex-1 flex items-center justify-center py-2.5 rounded-lg text-sm font-bold transition-all active:scale-95 ${activeArea === 'pattaya' ? 'bg-white text-navy-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                 >
                                     <MapPin className="w-4 h-4 mr-1.5" />
                                     パタヤ
@@ -114,7 +114,7 @@ export default function HeroSection() {
                         <div className="flex-[0.8] flex items-end">
                             <Link
                                 href={`/properties?type=${activeTab}&region=${activeArea === 'pattaya' ? 'Pattaya' : 'Sriracha'}${activePropertyType ? `&property_type=${activePropertyType}` : ''}`}
-                                className="w-full h-[44px] bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                className="w-full h-[44px] bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 active:translate-y-0"
                             >
                                 <Search className="w-5 h-5 mr-2" />
                                 検索する
@@ -125,7 +125,7 @@ export default function HeroSection() {
                     {/* Partner Ads Area */}
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Ad Placeholder 1 */}
-                        <div className="h-24 bg-white/80 backdrop-blur border border-white/50 rounded-xl overflow-hidden flex items-center justify-center relative group cursor-pointer shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                        <div className="h-24 bg-white/80 backdrop-blur border border-white/50 rounded-xl overflow-hidden flex items-center justify-center relative group cursor-pointer shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 active:scale-[0.98] active:translate-y-0">
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none" />
                             <div className="text-center">
                                 <p className="text-xs text-gray-500 font-semibold mb-1 tracking-wider uppercase">Partner Ad</p>
@@ -133,7 +133,7 @@ export default function HeroSection() {
                             </div>
                         </div>
                         {/* Ad Placeholder 2 */}
-                        <div className="h-24 bg-white/80 backdrop-blur border border-white/50 rounded-xl overflow-hidden flex items-center justify-center relative group cursor-pointer shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                        <div className="h-24 bg-white/80 backdrop-blur border border-white/50 rounded-xl overflow-hidden flex items-center justify-center relative group cursor-pointer shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 active:scale-[0.98] active:translate-y-0">
                             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none" />
                             <div className="text-center">
                                 <p className="text-xs text-gray-500 font-semibold mb-1 tracking-wider uppercase">Partner Ad</p>

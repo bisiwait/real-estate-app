@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Loader2, User, Building2, Phone, Globe, MessageSquare, Info } from 'lucide-react'
+import { Save, Loader2, User, Building2, Phone, Globe, MessageSquare, Info, Camera, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
+import imageCompression from 'browser-image-compression'
+import Image from 'next/image'
 
 interface ProfileData {
     full_name: string
@@ -14,6 +16,7 @@ interface ProfileData {
     website: string
     line_id: string
     email: string
+    avatar_url: string
 }
 
 export default function ProfileForm() {
@@ -26,9 +29,13 @@ export default function ProfileForm() {
         bio: '',
         website: '',
         line_id: '',
-        email: ''
+        email: '',
+        avatar_url: ''
     })
     const [error, setError] = useState<string | null>(null)
+    const [avatarFile, setAvatarFile] = useState<File | null>(null)
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const router = useRouter()
     const supabase = createClient()
 
@@ -53,14 +60,67 @@ export default function ProfileForm() {
                     bio: data.bio || '',
                     website: data.website || '',
                     line_id: data.line_id || '',
-                    email: user.email || ''
+                    email: user.email || '',
+                    avatar_url: data.avatar_url || ''
                 })
+                if (data.avatar_url) {
+                    setAvatarPreview(data.avatar_url)
+                }
             }
             setLoading(false)
         }
 
         fetchProfile()
     }, [])
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setAvatarFile(file)
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setAvatarPreview(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
+    const uploadAvatar = async (userId: string) => {
+        if (!avatarFile) return formData.avatar_url
+
+        const options = {
+            maxSizeMB: 0.5,
+            maxWidthOrHeight: 400,
+            useWebWorker: true,
+            fileType: 'image/webp'
+        }
+
+        try {
+            const compressedFile = await imageCompression(avatarFile, options)
+            const fileName = `avatar-${Date.now()}.webp`
+            const filePath = `${userId}/${fileName}`
+
+            // Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, compressedFile, {
+                    cacheControl: '3600',
+                    upsert: true
+                })
+
+            if (uploadError) throw uploadError
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath)
+
+            return publicUrl
+        } catch (err) {
+            console.error('Avatar upload error:', err)
+            throw new Error('画像のアップロードに失敗しました。')
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -71,17 +131,29 @@ export default function ProfileForm() {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Authentication required')
 
+            // 1. Upload avatar if changed
+            let finalAvatarUrl = formData.avatar_url
+            if (avatarFile) {
+                finalAvatarUrl = await uploadAvatar(user.id)
+            }
+
+            // 2. Update profile
             const { error } = await supabase
                 .from('profiles')
                 .update({
-                    ...formData,
+                    full_name: formData.full_name,
+                    company_name: formData.company_name,
+                    phone: formData.phone,
+                    bio: formData.bio,
+                    website: formData.website,
+                    line_id: formData.line_id,
+                    avatar_url: finalAvatarUrl,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id)
 
             if (error) throw error
 
-            // Redirect immediately
             router.push('/dashboard?profile_updated=true')
         } catch (err: any) {
             console.error('Update profile error:', err)
@@ -107,6 +179,58 @@ export default function ProfileForm() {
                 </div>
             )}
 
+            {/* アバターアップロードセクション */}
+            <div className="flex flex-col items-center sm:flex-row sm:items-end gap-6 pb-6 border-b border-slate-50">
+                <div className="relative group">
+                    <div className="w-32 h-32 rounded-3xl bg-slate-100 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center text-slate-300 relative">
+                        {avatarPreview ? (
+                            <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                            <User className="w-16 h-16" />
+                        )}
+                        <div
+                            onClick={() => fileInputRef.current?.click()}
+                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer active:bg-black/60"
+                        >
+                            <Camera className="w-8 h-8 mb-1 transition-transform active:scale-90" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Change</span>
+                        </div>
+                    </div>
+                    {avatarPreview && avatarFile && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setAvatarFile(null)
+                                setAvatarPreview(formData.avatar_url || null)
+                            }}
+                            className="absolute -top-2 -right-2 bg-white text-red-500 p-1.5 rounded-xl shadow-lg hover:scale-110 transition-transform"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    )}
+                </div>
+                <div className="text-center sm:text-left space-y-2">
+                    <h3 className="text-lg font-black text-navy-secondary leading-none">プロフィール画像</h3>
+                    <p className="text-xs text-slate-400 font-medium max-w-xs">
+                        顔写真や会社のロゴを登録してください。<br />
+                        推奨サイズ: 400x400px (正方形)
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-[10px] font-black text-navy-primary hover:text-navy-secondary uppercase tracking-widest bg-navy-primary/5 px-4 py-2 rounded-lg transition-all active:scale-95 active:bg-navy-primary/10"
+                    >
+                        画像を選択する
+                    </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleAvatarChange}
+                        accept="image/*"
+                        className="hidden"
+                    />
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* 基本情報 */}

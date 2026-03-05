@@ -212,14 +212,14 @@ export default function PriceRangeSlider({
             <div className="flex items-center justify-between gap-4">
                 <div className="relative w-full">
                     <span className="absolute -top-5 text-[10px] text-slate-400 font-bold">下限</span>
-                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-bold text-navy-primary text-center">
+                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-bold text-navy-secondary text-center">
                         {formatValue(minValue)}
                     </div>
                 </div>
                 <span className="text-slate-300 font-black">-</span>
                 <div className="relative w-full">
                     <span className="absolute -top-5 text-[10px] text-slate-400 font-bold">上限</span>
-                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-bold text-navy-primary text-center">
+                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-bold text-navy-secondary text-center">
                         {formatValue(maxValue) === formatValue(max) ? '上限なし' : formatValue(maxValue)}
                     </div>
                 </div>

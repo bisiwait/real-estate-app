@@ -1,5 +1,3 @@
-'use client'
-
 import HeroSection from "@/components/home/HeroSection";
 import SectionHeader from "@/components/ui/SectionHeader";
 import PresaleCard, { PresaleProject } from "@/components/property/PresaleCard";
@@ -7,8 +5,9 @@ import PropertyCard from "@/components/property/PropertyCard";
 import LifeSupportBanners from "@/components/home/LifeSupportBanners";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { getRecommendedRentals, getRecommendedSales } from "@/lib/services/propertyService";
 
-export default function Home() {
+export default async function Home() {
 
   // Mock Data for Presale Projects
   const mockPresaleProjects: PresaleProject[] = [
@@ -44,39 +43,21 @@ export default function Home() {
     }
   ];
 
-  // Adapter for PropertyCard props based on existing properties structure
-  const createMockProperty = (id: string, title: string, rent_price: number | undefined, sale_price: number | undefined, is_for_rent: boolean, is_for_sale: boolean, area: string, city: string, images: string[], beds: number, hasBath: boolean, sqm: number) => ({
-    id,
-    title,
-    area_name: area,
-    city_name: city,
-    images,
-    tags: ["おすすめ", "駅近"],
-    has_bathtub: hasBath,
-    allows_pets: false,
-    sqm,
-    bedrooms: beds,
-    is_for_rent,
-    is_for_sale,
-    rent_price,
-    sale_price,
-    price: rent_price || sale_price || 0,
-    ownership_type: is_for_sale ? "Foreign Quota" : undefined
+  // Fetch real data from service
+  const rentals = await getRecommendedRentals();
+  const sales = await getRecommendedSales();
+
+  // Adapter to ensure data matches PropertyCard expected format
+  const formatProperty = (p: any) => ({
+    ...p,
+    city_name: p.region_name || 'Pattaya',
+    area_name: p.area_name || 'Unknown',
+    price: p.rent_price || p.sale_price || 0,
+    tags: p.tags || []
   });
 
-  const mockRentals = [
-    createMockProperty("r1", "Base Central Pattaya 1BR 高層階", 25000, undefined, true, false, "Central Pattaya", "Pattaya", ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800"], 1, true, 35),
-    createMockProperty("r2", "Lumpini Seaview Jomtien 海が見える部屋", 15000, undefined, true, false, "Jomtien", "Pattaya", ["https://images.unsplash.com/photo-1502672260266-1c1e5239dfb3?auto=format&fit=crop&q=80&w=800"], 1, false, 28),
-    createMockProperty("r3", "Knightsbridge The Ocean Sriracha", 35000, undefined, true, false, "Sriracha", "Sriracha", ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800"], 2, true, 55),
-    createMockProperty("r4", "Unixx South Pattaya", 18000, undefined, true, false, "Pratumnak", "Pattaya", ["https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&q=80&w=800"], 1, false, 30),
-  ];
-
-  const mockSales = [
-    createMockProperty("s1", "Riviera Wongamat 2BR オーシャンフロント", undefined, 12500000, false, true, "Wongamat", "Pattaya", ["https://images.unsplash.com/photo-1600607687935-ce50026c2e39?auto=format&fit=crop&q=80&w=800"], 2, true, 70),
-    createMockProperty("s2", "Zire Wongamat お手頃価格のスタジオ", undefined, 4500000, false, true, "Wongamat", "Pattaya", ["https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=800"], 0, false, 38),
-    createMockProperty("s3", "Marina Bayfront Sriracha 高層階", undefined, 8800000, false, true, "Sriracha", "Sriracha", ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800"], 2, true, 65),
-    createMockProperty("s4", "Edge Central Pattaya 投資用物件", undefined, 5200000, false, true, "Central Pattaya", "Pattaya", ["https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?auto=format&fit=crop&q=80&w=800"], 1, false, 32),
-  ];
+  const rentalProperties = rentals.map(formatProperty);
+  const saleProperties = sales.map(formatProperty);
 
   return (
     <div className="flex flex-col min-h-screen pb-20">
@@ -120,11 +101,16 @@ export default function Home() {
             }
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mockRentals.map((prop) => (
+            {rentalProperties.map((prop) => (
               <div key={prop.id} className="h-full">
                 <PropertyCard property={prop} />
               </div>
             ))}
+            {rentalProperties.length === 0 && (
+              <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                現在、おすすめの賃貸物件はありません。
+              </div>
+            )}
           </div>
         </section>
 
@@ -141,11 +127,16 @@ export default function Home() {
             }
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mockSales.map((prop) => (
+            {saleProperties.map((prop) => (
               <div key={prop.id} className="h-full">
                 <PropertyCard property={prop} />
               </div>
             ))}
+            {saleProperties.length === 0 && (
+              <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                現在、おすすめの売買物件はありません。
+              </div>
+            )}
           </div>
         </section>
 

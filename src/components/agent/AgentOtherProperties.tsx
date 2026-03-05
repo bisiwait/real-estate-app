@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
-import { MapPin, BedDouble, Bath, ArrowRight, Building2, Layers } from 'lucide-react'
+import { MapPin, BedDouble, Bath, ArrowRight, Building2 } from 'lucide-react'
 
 export default async function AgentOtherProperties({ agentId, currentPropertyId, agentName }: { agentId: string, currentPropertyId: string, agentName?: string }) {
     const supabase = await createClient()
@@ -77,13 +77,13 @@ export default async function AgentOtherProperties({ agentId, currentPropertyId,
                             <div className="flex items-center justify-between border-t border-slate-100 pt-5 mt-auto">
                                 <div className="text-xl font-black text-navy-secondary tabular-nums tracking-tight">
                                     <span className="text-xs text-slate-400 mr-1">฿</span>
-                                    {property.price?.toLocaleString()}
-                                    {property.is_for_rent && !property.is_for_sale && <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase">/ 月</span>}
+                                    {property.is_for_rent ? property.rent_price?.toLocaleString() : property.is_for_sale ? property.sale_price?.toLocaleString() : property.price?.toLocaleString()}
+                                    {property.is_for_rent && <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase">/ 月</span>}
                                 </div>
 
                                 <div className="flex items-center gap-3 text-slate-400 bg-slate-50 px-3 py-1.5 rounded-xl">
                                     <div className="flex items-center gap-1.5 text-[11px] font-black" title="間取り">
-                                        <Layers className="w-3.5 h-3.5" />
+                                        <BedDouble className="w-3.5 h-3.5" />
                                         <span>{property.bedrooms === 0 ? 'ST' : property.bedrooms || 1}</span>
                                     </div>
                                     <div className="w-[1px] h-3 bg-slate-200"></div>
