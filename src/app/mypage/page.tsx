@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LayoutDashboard, LogOut, ChevronLeft, Loader2, Settings as SettingsIcon, ChevronRight } from "lucide-react";
@@ -10,7 +10,7 @@ import ProfileSection from "@/components/dashboard/ProfileSection";
 import FavoritesSection from "@/components/dashboard/FavoritesSection";
 import SavedSearchesSection from "@/components/dashboard/SavedSearchesSection";
 
-export default function MyPage() {
+function MyPageContent() {
     const [activeTab, setActiveTab] = useState("profile");
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
@@ -57,13 +57,6 @@ export default function MyPage() {
 
             if (favoritesRes.data) {
                 // Flatten the data for easier use in PropertyCard
-                const flattenedFavorites = favoritesRes.data
-                    .filter(f => f.properties)
-                    .map(f => ({
-                        ...f.properties[0], // Depending on Supabase relationship mapping, it might be an object or array
-                        is_favorite: true
-                    }));
-                // If it's a 1:1, it might just be f.properties. Let's handle both.
                 const betterFlattened = favoritesRes.data
                     .filter(f => f.properties)
                     .map(f => {
@@ -136,6 +129,19 @@ export default function MyPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function MyPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+                <Loader2 className="w-10 h-10 text-navy-primary animate-spin mb-6" />
+                <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Loading page...</p>
+            </div>
+        }>
+            <MyPageContent />
+        </Suspense>
     );
 }
 
