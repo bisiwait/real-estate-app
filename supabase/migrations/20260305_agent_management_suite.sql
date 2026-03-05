@@ -29,6 +29,7 @@ CREATE INDEX IF NOT EXISTS idx_property_stats_date ON public.property_stats(date
 ALTER TABLE public.property_stats ENABLE ROW LEVEL SECURITY;
 
 -- 管理者はすべて操作可能
+DROP POLICY IF EXISTS "Admins can manage all stats" ON public.property_stats;
 CREATE POLICY "Admins can manage all stats" ON public.property_stats
     FOR ALL USING (
         EXISTS (
@@ -39,6 +40,7 @@ CREATE POLICY "Admins can manage all stats" ON public.property_stats
     );
 
 -- エージェントは自分の物件の統計のみ閲覧可能
+DROP POLICY IF EXISTS "Agents can view own property stats" ON public.property_stats;
 CREATE POLICY "Agents can view own property stats" ON public.property_stats
     FOR SELECT USING (
         EXISTS (
