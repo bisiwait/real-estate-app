@@ -114,43 +114,47 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
 
                         {/* Title and Key Stats - Ensure clear separation */}
                         <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10 mt-6 overflow-hidden">
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-8 border-b border-slate-50">
-                                <h1 className="text-xl md:text-2xl font-black text-navy-secondary leading-[1.2] mb-4">
-                                    {property.status === 'contracted' && (
-                                        <span className="inline-block bg-purple-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">成約済</span>
-                                    )}
-                                    {property.status === 'under_negotiation' && (
-                                        <span className="inline-block bg-blue-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">商談中</span>
-                                    )}
-                                    {property.is_presale && (
-                                        <span className="inline-block bg-amber-500 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">プレセール</span>
-                                    )}
-                                    {property.title}
-                                </h1>
-                                <div className="flex items-center text-navy-primary font-black text-xs uppercase tracking-tighter mb-4">
-                                    <MapPin className="w-3.5 h-3.5 mr-1.5" />
-                                    {property.area?.region?.name} • {property.area?.name}
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8 pb-8 border-b border-slate-50">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4 mb-4">
+                                        <h1 className="text-xl md:text-2xl font-black text-navy-secondary leading-[1.2]">
+                                            {property.status === 'contracted' && (
+                                                <span className="inline-block bg-purple-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">成約済</span>
+                                            )}
+                                            {property.status === 'under_negotiation' && (
+                                                <span className="inline-block bg-blue-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">商談中</span>
+                                            )}
+                                            {property.is_presale && (
+                                                <span className="inline-block bg-amber-500 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">プレセール</span>
+                                            )}
+                                            {property.title}
+                                        </h1>
+                                        <div className="flex items-center text-navy-primary font-black text-xs uppercase tracking-tighter shrink-0">
+                                            <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                                            {property.area?.region?.name} • {property.area?.name}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 overflow-x-auto pb-1 hide-scrollbar">
+                                        <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                            <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                            <span className="mr-1">{property.is_presale ? '竣工予定:' : '築年数:'}</span>
+                                            <span className="text-navy-secondary">{property.is_presale ? (property.completion_date || '--') : (property.year_built || '--')}</span>
+                                        </div>
+                                        <div className="w-[1px] h-3 bg-slate-200"></div>
+                                        <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                            <Layers className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                            <span className="mr-1">総階数:</span>
+                                            <span className="text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
+                                        </div>
+                                        <div className="w-[1px] h-3 bg-slate-200"></div>
+                                        <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                            <TagIcon className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                            <span className="mr-1">掲載日:</span>
+                                            <span className="text-navy-secondary">{new Date(property.created_at).toLocaleDateString('ja-JP')}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3 overflow-x-auto pb-1 hide-scrollbar">
-                                    <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
-                                        <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
-                                        <span className="mr-1">{property.is_presale ? '竣工予定:' : '築年数:'}</span>
-                                        <span className="text-navy-secondary">{property.is_presale ? (property.completion_date || '--') : (property.year_built || '--')}</span>
-                                    </div>
-                                    <div className="w-[1px] h-3 bg-slate-200"></div>
-                                    <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
-                                        <Layers className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
-                                        <span className="mr-1">総階数:</span>
-                                        <span className="text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
-                                    </div>
-                                    <div className="w-[1px] h-3 bg-slate-200"></div>
-                                    <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
-                                        <TagIcon className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
-                                        <span className="mr-1">掲載日:</span>
-                                        <span className="text-navy-secondary">{new Date(property.created_at).toLocaleDateString('ja-JP')}</span>
-                                    </div>
-                                </div>
-                                <div className="text-right space-y-4">
+                                <div className="text-left md:text-right space-y-2 md:space-y-4 shrink-0">
                                     {property.is_for_rent && (
                                         <div>
                                             <div className="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest leading-none">賃貸 / 月</div>
