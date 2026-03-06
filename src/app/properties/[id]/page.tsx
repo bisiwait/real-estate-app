@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
 
 export const runtime = 'edge'
 export const revalidate = 60
@@ -45,34 +46,32 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
     const { id } = await params
     const supabase = await createClient()
 
-    let { data: property, error } = await supabase
-        .from('properties')
-        .select('*, area:areas(name, slug, region:regions(name)), project:projects(*)')
-        .eq('id', id)
-        .single()
+    // Fetch property and auth user in parallel for speed
+    const [propertyRes, authRes] = await Promise.all([
+        supabase
+            .from('properties')
+            .select('*, area:areas(name, slug, region:regions(name)), project:projects(*)')
+            .eq('id', id)
+            .single(),
+        supabase.auth.getUser()
+    ])
+
+    const { data: property, error } = propertyRes
+    const { data: { user } } = authRes
 
     if (error) {
         console.error('Error fetching property:', error)
     }
-    console.log('Fetched property:', property ? { id: property.id, status: property.status, is_approved: property.is_approved } : 'null')
-
-    // Fallback logic removed to ensure only DB properties are shown
-    const isMock = false
 
     if (!property) {
         notFound()
     }
 
-    // Access Check
-    const { data: { user } } = await supabase.auth.getUser()
+    // Fetch admin status if logged in
     const isAdmin = user ? (await supabase.from('profiles').select('is_admin').eq('id', user.id).single()).data?.is_admin : false
 
-    // Allow access if:
-    // 1. It's a mock property (for demo)
-    // 2. It's approved
-    // 3. User is the owner
-    // 4. User is an admin
-    const hasAccess = isMock || property.is_approved || (user && property.user_id === user.id) || isAdmin
+    // Allow access check
+    const hasAccess = property.is_approved || (user && property.user_id === user.id) || isAdmin
 
     if (!hasAccess) {
         notFound()
@@ -409,17 +408,21 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                 </div >
 
                 {/* Agent Other Properties */}
-                < AgentOtherProperties
-                    agentId={property.user_id}
-                    currentPropertyId={property.id}
-                />
+                <Suspense fallback={<div className="mt-20 h-40 bg-slate-100 animate-pulse rounded-3xl" />}>
+                    <AgentOtherProperties
+                        agentId={property.user_id}
+                        currentPropertyId={property.id}
+                    />
+                </Suspense>
 
                 {/* Related Properties */}
-                < RelatedProperties
-                    currentPropertyId={property.id}
-                    buildingName={property.building_name}
-                    projectName={property.project_name}
-                />
+                <Suspense fallback={<div className="mt-20 h-40 bg-slate-100 animate-pulse rounded-3xl" />}>
+                    <RelatedProperties
+                        currentPropertyId={property.id}
+                        buildingName={property.building_name}
+                        projectName={property.project_name}
+                    />
+                </Suspense>
             </div >
         </div >
     )
