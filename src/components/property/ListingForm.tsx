@@ -531,7 +531,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
                         total_units: formData.total_units ? parseInt(formData.total_units) : null,
                         developer: formData.developer,
-                        ownership_type: formData.is_for_sale ? formData.ownership_type : null
+                        ownership_type: formData.is_for_sale ? formData.ownership_type : null,
+                        project_facilities: formData.project_facilities
                     })
                     .select()
                     .single()
@@ -583,7 +584,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     bathrooms: parseInt(formData.bathrooms),
                     year_built: formData.year_built,
                     total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                    ownership_type: formData.is_for_sale ? formData.ownership_type : null
+                    ownership_type: formData.is_for_sale ? formData.ownership_type : null,
+                    project_facilities: formData.project_facilities
                 })
                 .eq('id', propertyId)
                 .eq('user_id', user.id)

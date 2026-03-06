@@ -354,7 +354,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         has_washlet: formData.has_washlet,
                         allows_pets: formData.allows_pets,
                         has_japanese_tv: formData.has_japanese_tv,
-                        has_ev_charger: formData.has_ev_charger
+                        has_ev_charger: formData.has_ev_charger,
+                        project_facilities: formData.project_facilities
                     })
                     .select()
                     .single()
