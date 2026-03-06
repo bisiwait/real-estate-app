@@ -52,6 +52,9 @@ interface Project {
     property_type?: string
     year_built?: string
     total_floors?: number | string
+    total_units?: number | string
+    developer?: string
+    facilities?: string[]
     latitude?: number
     longitude?: number
 }
@@ -75,6 +78,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         property_type: 'Condo',
         year_built: '',
         total_floors: '',
+        total_units: '',
+        total_buildings: '',
+        developer: '',
         latitude: 12.9236,
         longitude: 100.8824
     })
@@ -288,8 +294,12 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         property_type: projectForm.property_type,
                         year_built: projectForm.year_built,
                         total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
+                        total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
+                        total_buildings: projectForm.total_buildings ? parseInt(projectForm.total_buildings as string) : null,
+                        developer: projectForm.developer,
                         latitude: projectForm.latitude,
-                        longitude: projectForm.longitude
+                        longitude: projectForm.longitude,
+                        facilities: formData.project_facilities
                     })
                     .select()
                     .single()
@@ -397,7 +407,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     has_washlet: formData.has_washlet,
                     allows_pets: formData.allows_pets,
                     has_japanese_tv: formData.has_japanese_tv,
-                    has_ev_charger: formData.has_ev_charger
+                    has_ev_charger: formData.has_ev_charger,
+                    project_facilities: formData.project_facilities
                 })
                 .eq('id', propertyId)
                 .eq('user_id', user.id)
@@ -517,6 +528,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                         property_type: project?.property_type || formData.property_type,
                                         year_built: project?.year_built || formData.year_built,
                                         total_floors: project?.total_floors?.toString() || formData.total_floors,
+                                        total_units: project?.total_units?.toString() || formData.total_units,
+                                        developer: project?.developer || formData.developer,
+                                        project_facilities: project?.facilities || [],
                                         title: project?.name || formData.title
                                     })
                                 }}
@@ -632,6 +646,35 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 <div>
                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">プロジェクトの魅力・アピールポイント <span className="text-red-500">*</span></label>
                     <textarea rows={4} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl resize-none font-medium" />
+                </div>
+
+                <div className="pt-8 border-t border-slate-50">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-6 ml-1 flex items-center">
+                        <Shield className="w-4 h-4 mr-2 text-navy-primary" />
+                        共有施設 (Shared Facilities)
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        {SHARED_FACILITIES.map(facility => {
+                            const isSelected = formData.project_facilities.includes(facility)
+                            return (
+                                <button
+                                    key={facility}
+                                    type="button"
+                                    onClick={() => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            project_facilities: isSelected
+                                                ? prev.project_facilities.filter((f: string) => f !== facility)
+                                                : [...prev.project_facilities, facility]
+                                        }))
+                                    }}
+                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                >
+                                    {facility}
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
 

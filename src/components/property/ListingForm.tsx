@@ -56,6 +56,8 @@ interface Project {
     property_type?: string
     year_built?: string
     total_floors?: number | string
+    total_units?: number | string
+    developer?: string
     latitude?: number
     longitude?: number
 }
@@ -79,6 +81,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         property_type: 'Condo',
         year_built: '',
         total_floors: '',
+        total_units: '',
+        developer: '',
         latitude: 12.9236,
         longitude: 100.8824
     })
@@ -163,6 +167,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         bathrooms: (initialData?.bathrooms && initialData.bathrooms > 0) ? initialData.bathrooms.toString() : '1',
         year_built: initialData?.year_built || '',
         total_floors: initialData?.total_floors?.toString() || '',
+        total_units: initialData?.total_units?.toString() || '',
+        developer: initialData?.developer || '',
         ownership_type: initialData?.ownership_type || '',
         // Project facilities
         project_facilities: initialData?.project_facilities || [] as string[]
@@ -466,8 +472,11 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         property_type: projectForm.property_type,
                         year_built: projectForm.year_built,
                         total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
+                        total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
+                        developer: projectForm.developer,
                         latitude: projectForm.latitude,
-                        longitude: projectForm.longitude
+                        longitude: projectForm.longitude,
+                        facilities: formData.project_facilities
                     })
                     .select()
                     .single()
@@ -520,6 +529,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         bathrooms: parseInt(formData.bathrooms),
                         year_built: formData.year_built,
                         total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
+                        total_units: formData.total_units ? parseInt(formData.total_units) : null,
+                        developer: formData.developer,
                         ownership_type: formData.is_for_sale ? formData.ownership_type : null
                     })
                     .select()
@@ -587,6 +598,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         property_type: formData.property_type,
                         year_built: formData.year_built,
                         total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
+                        total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
+                        developer: formData.developer,
                         facilities: formData.project_facilities
                     })
                     .eq('id', formData.project_id)
@@ -753,6 +766,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                         property_type: project?.property_type || formData.property_type,
                                         year_built: project?.year_built || formData.year_built,
                                         total_floors: project?.total_floors?.toString() || formData.total_floors,
+                                        total_units: project?.total_units?.toString() || formData.total_units,
+                                        developer: project?.developer || formData.developer,
+                                        project_facilities: project?.facilities || [],
                                         title: project?.name || formData.title
                                     })
                                 }}
@@ -838,6 +854,14 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数</label>
                                     <input type="number" value={projectForm.total_floors} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, total_floors: val }); setFormData({ ...formData, total_floors: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
                                 </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総戸数 (Units)</label>
+                                    <input type="number" value={projectForm.total_units} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, total_units: val }); setFormData({ ...formData, total_units: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー</label>
+                                    <input type="text" value={projectForm.developer} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, developer: val }); setFormData({ ...formData, developer: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
@@ -900,6 +924,26 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     type="number"
                                     value={formData.total_floors}
                                     onChange={e => setFormData({ ...formData, total_floors: e.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総戸数 {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                <input
+                                    disabled={!!formData.project_id && !isAdmin}
+                                    type="number"
+                                    value={formData.total_units}
+                                    onChange={e => setFormData({ ...formData, total_units: e.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                            </div>
+                            <div className="md:col-span-1">
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                <input
+                                    disabled={!!formData.project_id && !isAdmin}
+                                    type="text"
+                                    value={formData.developer}
+                                    onChange={e => setFormData({ ...formData, developer: e.target.value })}
                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
@@ -995,6 +1039,35 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     {JA_TAGS.map(tag => (
                         <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-5 py-2.5 rounded-full text-xs font-black border-2 ${formData.tags.includes(tag) ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}>{tag}</button>
                     ))}
+                </div>
+
+                <div className="pt-8 border-t border-slate-50">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-6 ml-1 flex items-center">
+                        <Shield className="w-4 h-4 mr-2 text-navy-primary" />
+                        共有施設 (Shared Facilities)
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                        {SHARED_FACILITIES.map(facility => {
+                            const isSelected = formData.project_facilities.includes(facility)
+                            return (
+                                <button
+                                    key={facility}
+                                    type="button"
+                                    onClick={() => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            project_facilities: isSelected
+                                                ? prev.project_facilities.filter((f: string) => f !== facility)
+                                                : [...prev.project_facilities, facility]
+                                        }))
+                                    }}
+                                    className={`px-4 py-3 rounded-2xl text-[10px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                >
+                                    {facility}
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
 
