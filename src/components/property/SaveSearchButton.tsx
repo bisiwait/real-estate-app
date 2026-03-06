@@ -272,6 +272,7 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                         <label className="text-xs font-black text-navy-secondary uppercase tracking-widest ml-1">保存する名前</label>
                         <input
                             type="text"
+                            suppressHydrationWarning
                             value={searchName}
                             onChange={(e) => setSearchName(e.target.value)}
                             placeholder="例: パタヤ 500万バーツ以下"

@@ -21,6 +21,7 @@ export default function MobileSearchBar({
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-navy-primary transition-colors" />
                 <input
                     type="text"
+                    suppressHydrationWarning
                     placeholder="物件名・エリアで検索..."
                     className="w-full pl-11 pr-4 py-3 sm:py-4 bg-white border border-slate-100 rounded-xl sm:rounded-2xl shadow-sm focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none text-xs sm:text-sm font-bold text-navy-secondary transition-all"
                     value={searchQuery}
@@ -28,6 +29,7 @@ export default function MobileSearchBar({
                 />
                 {searchQuery && (
                     <button
+                        type="button"
                         onClick={() => onSearchChange('')}
                         className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200"
                     >
@@ -36,6 +38,7 @@ export default function MobileSearchBar({
                 )}
             </div>
             <button
+                type="button"
                 onClick={onFilterClick}
                 className="relative p-3 sm:p-4 shrink-0 bg-navy-primary text-white rounded-xl sm:rounded-2xl shadow-lg shadow-navy-primary/20 hover:scale-105 active:scale-95 transition-all"
             >

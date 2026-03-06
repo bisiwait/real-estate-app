@@ -251,6 +251,7 @@ function PropertiesList() {
                 <div className="relative">
                     <input
                         type="text"
+                        suppressHydrationWarning
                         placeholder="物件名、設備など..."
                         className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
                         value={localSearchQuery}
