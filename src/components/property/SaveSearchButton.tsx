@@ -42,68 +42,69 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
         return filters;
     }, [searchParams]);
 
-    // Check if current search is already saved
-    const checkIfSaved = async () => {
-        const filterCount = Object.keys(currentFilters).length;
-        if (filterCount === 0) {
-            setSaved(false);
-            return;
-        }
-
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Strict check: currentFilters must match exactly
-            // We fetch all searches and compare carefully since JSONB equality in eq() can be sensitive
-            const { data, error } = await supabase
-                .from("saved_searches")
-                .select("id, filters")
-                .eq("user_id", user.id);
-
-            if (error) throw error;
-
-            const isAlreadySaved = data?.some(item => {
-                const dbFilters = item.filters || {};
-                const dbKeys = Object.keys(dbFilters);
-                const currentKeys = Object.keys(currentFilters);
-
-                if (dbKeys.length !== currentKeys.length) return false;
-
-                return currentKeys.every(key => dbFilters[key] === currentFilters[key]);
-            });
-
-            setSaved(!!isAlreadySaved);
-        } catch (error) {
-            console.error("Check saved error:", error);
-        }
-    };
-
-    // Check on param changes or when component mounts
+    // Consolidated check for restrictions and saved status
     useEffect(() => {
-        const checkRestrictions = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("user_role, is_admin, available_credits")
-                .eq("id", user.id)
-                .single();
-
-            if (profile) {
-                const isAdmin = profile.is_admin === true || profile.user_role === 'admin';
-                const hasCredits = (profile.available_credits || 0) > 0;
-                const isAgent = profile.user_role === 'agent' || hasCredits || (profile.user_role === undefined && !isAdmin);
-
-                if (isAdmin || isAgent) {
-                    setIsRestricted(true);
+        let isMounted = true;
+        const timer = setTimeout(async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!isMounted || !user) {
+                    if (!user) {
+                        setSaved(false);
+                        setIsRestricted(false);
+                    }
+                    return;
                 }
-            }
-        };
 
-        checkRestrictions();
-        checkIfSaved();
+                // 1. Check Restrictions
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("user_role, is_admin, available_credits")
+                    .eq("id", user.id)
+                    .single();
+
+                if (profile && isMounted) {
+                    const isAdmin = profile.is_admin === true || profile.user_role === 'admin';
+                    const hasCredits = (profile.available_credits || 0) > 0;
+                    const isAgent = profile.user_role === 'agent' || hasCredits || (profile.user_role === undefined && !isAdmin);
+
+                    if (isAdmin || isAgent) {
+                        setIsRestricted(true);
+                    }
+                }
+
+                // 2. Check if Saved
+                const filterCount = Object.keys(currentFilters).length;
+                if (filterCount === 0) {
+                    setSaved(false);
+                } else {
+                    const { data, error } = await supabase
+                        .from("saved_searches")
+                        .select("id, filters")
+                        .eq("user_id", user.id);
+
+                    if (error) throw error;
+
+                    if (isMounted) {
+                        const isAlreadySaved = data?.some(item => {
+                            const dbFilters = item.filters || {};
+                            const dbKeys = Object.keys(dbFilters);
+                            const currentKeys = Object.keys(currentFilters);
+                            if (dbKeys.length !== currentKeys.length) return false;
+                            return currentKeys.every(key => dbFilters[key] === currentFilters[key]);
+                        });
+                        setSaved(!!isAlreadySaved);
+                    }
+                }
+            } catch (error) {
+                console.error("SaveSearchButton sync error:", error);
+            }
+        }, 500); // 500ms debounce
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timer);
+        };
     }, [currentFilters, supabase]);
 
     // Generate default name and filter list for preview
@@ -158,8 +159,11 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
             return;
         }
 
-        // Final check
-        await checkIfSaved();
+        if (activeFilters.length === 0) {
+            alert("検索条件が設定されていません。フィルターを適用してから保存してください。");
+            return;
+        }
+
         if (saved) {
             alert("この検索条件は既に保存されています。");
             return;

@@ -161,19 +161,13 @@ function PropertiesList() {
 
             const { data, error, count } = await query
 
-            console.log(`Fetch Results:`, {
-                isLoadMore,
-                currentPage,
-                from,
-                to,
-                dataCount: data?.length,
-                totalCount: count,
-                selectedCity,
-                selectedArea
-            })
-
             if (error) {
-                console.error('Supabase Error:', error)
+                console.error('Supabase Error Details:', {
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code
+                })
             }
 
             if (count !== null) setTotalCount(count)
@@ -186,22 +180,22 @@ function PropertiesList() {
                 }))
 
                 if (isLoadMore) {
-                    setDbProperties(prev => {
-                        const newProps = [...prev, ...formatted]
-                        console.log(`Appending properties. New total: ${newProps.length}`)
-                        return newProps
-                    })
+                    setDbProperties(prev => [...prev, ...formatted])
                     setPage(currentPage)
                 } else {
                     setDbProperties(formatted)
                 }
 
                 const hasMoreData = count ? (from + formatted.length) < count : formatted.length === PAGE_SIZE
-                console.log(`hasMore set to: ${hasMoreData}`)
                 setHasMore(hasMoreData)
             }
-        } catch (err) {
-            console.error('Fetch Error:', err)
+        } catch (err: any) {
+            console.error('Fetch Runtime Error:', {
+                name: err.name,
+                message: err.message,
+                stack: err.stack,
+                raw: err
+            })
         } finally {
             setLoading(false)
             setLoadingMore(false)
