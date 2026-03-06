@@ -38,7 +38,12 @@ import {
     Shirt,
     ArrowUpDown,
     Droplets,
-    BadgePercent
+    BadgePercent,
+    Shield,
+    Users,
+    Car,
+    Dumbbell,
+    Baby
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -97,7 +102,17 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
         '日本語対応スタッフ': Check,
         '日本語テレビ対応': Tv,
         'EV充電器あり': Zap,
-        '高層階（オーシャンビュー期待）': Waves
+        '高層階（オーシャンビュー期待）': Waves,
+        'スイミングプール': Waves,
+        'サウナ': Wind,
+        'スチームルーム': Wind,
+        'ジャグジー': Bath,
+        'フィットネス': Dumbbell,
+        'EV充電器': Car,
+        'キッズプレイグラウンド': Baby,
+        'オートロック': Shield,
+        'コンシェルジュ': Users,
+        '駐車場': Car
     }
 
     return (
@@ -220,6 +235,63 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                 )}
                             </div>
                         </div>
+
+                        {/* Property Basic Information */}
+                        <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10">
+                            <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center">
+                                <Building2 className="w-5 h-5 mr-3 text-navy-primary" />
+                                物件基本情報
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                                    <span className="text-sm font-bold text-slate-500">物件名 / 建物名</span>
+                                    <span className="text-sm font-black text-navy-secondary">{property.building_name || property.project_name || '--'}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                                    <span className="text-sm font-bold text-slate-500">築年数 / 完成年</span>
+                                    <span className="text-sm font-black text-navy-secondary">{property.year_built || property.completion_date || '--'}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                                    <span className="text-sm font-bold text-slate-500">総階数</span>
+                                    <span className="text-sm font-black text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                                    <span className="text-sm font-bold text-slate-500">総ユニット数</span>
+                                    <span className="text-sm font-black text-navy-secondary">{property.total_units ? `${property.total_units}戸` : '--'}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                                    <span className="text-sm font-bold text-slate-500">デベロッパー</span>
+                                    <span className="text-sm font-black text-navy-secondary">{property.developer || '--'}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                                    <span className="text-sm font-bold text-slate-500">所在エリア</span>
+                                    <span className="text-sm font-black text-navy-secondary">{property.area?.name || '--'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Shared Facilities */}
+                        {property.project?.facilities && property.project.facilities.length > 0 && (
+                            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10">
+                                <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center">
+                                    <Shield className="w-5 h-5 mr-3 text-navy-primary" />
+                                    共有施設
+                                </h3>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    {property.project.facilities.map((facility: string) => {
+                                        const Icon = highlightIcons[facility] || Check
+                                        return (
+                                            <div key={facility} className="flex items-center p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs font-bold text-navy-secondary">
+                                                <div className="w-8 h-8 rounded-full bg-navy-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <Icon className="w-4 h-4 text-navy-primary" />
+                                                </div>
+                                                {facility}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Description */}
                         <PropertyDescription description={property.description} />

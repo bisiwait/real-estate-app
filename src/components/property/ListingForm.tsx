@@ -11,7 +11,16 @@ import {
     CheckCircle2,
     Loader2,
     AlertCircle,
-    ChevronRight
+    ChevronRight,
+    Wind,
+    Waves,
+    Shield,
+    Users,
+    Car,
+    Dumbbell,
+    Baby,
+    Tv,
+    Coffee
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -106,6 +115,19 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         'シティービュー'
     ]
 
+    const SHARED_FACILITIES = [
+        'スイミングプール',
+        'サウナ',
+        'スチームルーム',
+        'ジャグジー',
+        'フィットネス',
+        'EV充電器',
+        'キッズプレイグラウンド',
+        'オートロック',
+        'コンシェルジュ',
+        '駐車場'
+    ]
+
     const [formData, setFormData] = useState({
         title: initialData?.title || '',
         description: initialData?.description || '',
@@ -141,7 +163,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         bathrooms: (initialData?.bathrooms && initialData.bathrooms > 0) ? initialData.bathrooms.toString() : '1',
         year_built: initialData?.year_built || '',
         total_floors: initialData?.total_floors?.toString() || '',
-        ownership_type: initialData?.ownership_type || ''
+        ownership_type: initialData?.ownership_type || '',
+        // Project facilities
+        project_facilities: initialData?.project_facilities || [] as string[]
     })
 
     useEffect(() => {
@@ -562,7 +586,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     .update({
                         property_type: formData.property_type,
                         year_built: formData.year_built,
-                        total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null
+                        total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
+                        facilities: formData.project_facilities
                     })
                     .eq('id', formData.project_id)
 

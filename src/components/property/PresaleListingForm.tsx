@@ -12,7 +12,16 @@ import {
     AlertCircle,
     Building2,
     Calendar,
-    Wallet
+    Wallet,
+    Wind,
+    Waves,
+    Shield,
+    Users,
+    Car,
+    Dumbbell,
+    Baby,
+    Tv,
+    Coffee
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -95,6 +104,19 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         'シティービュー'
     ]
 
+    const SHARED_FACILITIES = [
+        'スイミングプール',
+        'サウナ',
+        'スチームルーム',
+        'ジャグジー',
+        'フィットネス',
+        'EV充電器',
+        'キッズプレイグラウンド',
+        'オートロック',
+        'コンシェルジュ',
+        '駐車場'
+    ]
+
     const [formData, setFormData] = useState({
         title: initialData?.title || '',
         description: initialData?.description || '',
@@ -132,7 +154,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         has_washlet: initialData?.has_washlet || false,
         allows_pets: initialData?.allows_pets || false,
         has_ev_charger: initialData?.has_ev_charger || false,
-        has_japanese_tv: initialData?.has_japanese_tv || false
+        has_japanese_tv: initialData?.has_japanese_tv || false,
+        // Project facilities
+        project_facilities: initialData?.project_facilities || [] as string[]
     })
 
     useEffect(() => {
