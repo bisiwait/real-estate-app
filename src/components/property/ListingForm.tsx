@@ -58,6 +58,7 @@ interface Project {
     total_floors?: number | string
     total_units?: number | string
     developer?: string
+    developer_id?: string
     latitude?: number
     longitude?: number
 }
@@ -71,6 +72,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     const [loading, setLoading] = useState(false)
     const [areas, setAreas] = useState<Area[]>([])
     const [projects, setProjects] = useState<Project[]>([])
+    const [developers, setDevelopers] = useState<{ id: string, name: string }[]>([])
     const [isAdmin, setIsAdmin] = useState(false)
     const [showNewProjectForm, setShowNewProjectForm] = useState(false)
     const [projectForm, setProjectForm] = useState({
@@ -83,6 +85,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         total_floors: '',
         total_units: '',
         developer: '',
+        developer_id: '',
         latitude: 12.9236,
         longitude: 100.8824
     })
@@ -473,7 +476,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         year_built: projectForm.year_built,
                         total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
                         total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
-                        developer: projectForm.developer,
+                        developer_id: projectForm.developer_id,
                         latitude: projectForm.latitude,
                         longitude: projectForm.longitude,
                         facilities: formData.project_facilities

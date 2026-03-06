@@ -107,8 +107,8 @@ export default async function DashboardPage({
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
             {/* Header */}
-            <div className="bg-navy-secondary py-12 text-white">
-                <div className="container mx-auto px-4">
+            <div className="bg-navy-secondary py-10 md:py-12 text-white">
+                <div className="container mx-auto px-3 sm:px-4">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex items-center space-x-4">
                             <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/20">
@@ -141,8 +141,7 @@ export default async function DashboardPage({
                     </div>
                 </div>
             </div>
-
-            <div className="container mx-auto px-4 -mt-10">
+            <div className="container mx-auto px-3 sm:px-4 -mt-10">
                 {profile_updated === 'true' && (
                     <FlashMessage message="プロフィール情報を更新しました。" duration={3000} />
                 )}
@@ -223,9 +222,9 @@ export default async function DashboardPage({
                         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                             {tab === 'properties' ? (
                                 <>
-                                    <div className="p-8 border-b border-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div className="p-4 sm:p-8 border-b border-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                         <div className="flex flex-col gap-1">
-                                            <h3 className="text-xl font-black text-navy-secondary">登録物件一覧</h3>
+                                            <h3 className="text-lg sm:text-xl font-black text-navy-secondary">登録物件一覧</h3>
                                             <BulkConfirmButton
                                                 propertyIds={filteredProperties
                                                     .filter(p => p.status === 'published')
@@ -247,59 +246,51 @@ export default async function DashboardPage({
                                         <span className="text-xs font-bold text-slate-400 whitespace-nowrap">表示: {filteredProperties.length} / 全: {stats.total} 件</span>
                                     </div>
 
-                                    <div className="overflow-x-auto pb-4">
-                                        <div className="divide-y divide-slate-50 min-w-[1000px]">
+                                    <div className="overflow-x-auto sm:overflow-visible pb-4">
+                                        <div className="divide-y divide-slate-50 min-w-0 sm:min-w-[1000px]">
                                             {filteredProperties && filteredProperties.length > 0 ? (
                                                 filteredProperties.map((property) => (
-                                                    <div key={property.id} className="p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-6">
-                                                        <div className="flex items-center space-x-6">
-                                                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                                                    <div key={property.id} className="p-4 sm:p-6 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+                                                        <div className="flex items-center space-x-4 sm:space-x-6 min-w-0 flex-1">
+                                                            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
                                                                 {property.images?.[0] ? (
                                                                     <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                                        <LayoutDashboard className="w-8 h-8" />
+                                                                        <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8" />
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <div>
-                                                                <div className="flex items-center space-x-3 mb-1">
-                                                                    {property.status === 'published' && (
-                                                                        <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold">公開中</span>
-                                                                    )}
-                                                                    {property.status === 'under_negotiation' && (
-                                                                        <span className="bg-blue-100 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold">商談中</span>
-                                                                    )}
-                                                                    {property.status === 'contracted' && (
-                                                                        <span className="bg-purple-100 text-purple-600 px-2 py-0.5 rounded text-[10px] font-bold">成約済</span>
-                                                                    )}
-                                                                    {property.status === 'pending' && (
-                                                                        <span className="bg-amber-100 text-amber-600 px-2 py-0.5 rounded text-[10px] font-bold">承認待ち</span>
-                                                                    )}
-                                                                    {property.status === 'draft' && (
-                                                                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">下書き</span>
-                                                                    )}
-                                                                    {property.status === 'expired' && (
-                                                                        <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold">期限切れ</span>
-                                                                    )}
-                                                                    <span className="text-xs text-slate-400 font-medium">#{property.id.slice(0, 8)}</span>
-                                                                    <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                                        {property.status === 'published' && <span className="bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">公開中</span>}
+                                                                        {property.status === 'pending' && <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">承認待ち</span>}
+                                                                        {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">下書き</span>}
+                                                                        {property.status === 'under_negotiation' && <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">商談中</span>}
+                                                                        {property.status === 'contracted' && <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">成約済</span>}
+                                                                        {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">期限切れ</span>}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">#{property.id.slice(0, 8)}</span>
+                                                                        <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
+                                                                    </div>
                                                                     <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
                                                                 </div>
-                                                                <h4 className="text-lg font-bold text-navy-secondary mb-1">{property.title}</h4>
-                                                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm font-medium">
+                                                                <h4 className="text-sm sm:text-lg font-bold text-navy-secondary mb-0.5 sm:mb-1 truncate">{property.title}</h4>
+                                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs sm:text-sm font-medium">
                                                                     <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
                                                                     <div className="flex items-center space-x-3">
                                                                         {property.is_for_rent && (
-                                                                            <span className="text-navy-primary">
-                                                                                <span className="text-[10px] font-bold opacity-50 mr-1">RENT:</span>
-                                                                                {property.rent_price?.toLocaleString()} THB
+                                                                            <span className="text-navy-primary font-bold">
+                                                                                <span className="text-[9px] opacity-50 mr-1 uppercase">Rent</span>
+                                                                                {property.rent_price?.toLocaleString()}
                                                                             </span>
                                                                         )}
                                                                         {property.is_for_sale && (
-                                                                            <span className="text-navy-primary">
-                                                                                <span className="text-[10px] font-bold opacity-50 mr-1">SALE:</span>
-                                                                                {property.sale_price?.toLocaleString()} THB
+                                                                            <span className="text-navy-primary font-bold">
+                                                                                <span className="text-[9px] opacity-50 mr-1 uppercase">Sale</span>
+                                                                                {property.sale_price?.toLocaleString()}
                                                                             </span>
                                                                         )}
                                                                     </div>
@@ -307,38 +298,30 @@ export default async function DashboardPage({
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex flex-col md:flex-row items-center gap-2">
-                                                            <div className="flex gap-2 min-w-max">
+                                                        <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0 mt-1 sm:mt-0">
+                                                            <div className="flex gap-1.5">
                                                                 {property.is_presale ? (
-                                                                    <span className="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest border border-amber-200">
-                                                                        PRESALE
-                                                                    </span>
+                                                                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PRESALE</span>
                                                                 ) : (
                                                                     <>
-                                                                        {property.is_for_rent && (
-                                                                            <span className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest border border-indigo-100">
-                                                                                RENT
-                                                                            </span>
-                                                                        )}
-                                                                        {property.is_for_sale && (
-                                                                            <span className="bg-orange-50 text-orange-600 px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest border border-orange-100">
-                                                                                SALE
-                                                                            </span>
-                                                                        )}
+                                                                        {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">Rent</span>}
+                                                                        {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">Sale</span>}
                                                                     </>
                                                                 )}
                                                             </div>
-                                                            <Link
-                                                                href={`/properties/${property.id}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="flex items-center space-x-1 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-white transition-all border border-transparent hover:border-slate-100"
-                                                            >
-                                                                <span>詳細</span>
-                                                                <ChevronRight className="w-4 h-4" />
-                                                            </Link>
-                                                            <PropertyConfirmButton propertyId={property.id} title={property.title} />
-                                                            <DashboardActions propertyId={property.id} propertyTitle={property.title} />
+                                                            <div className="flex items-center gap-1 sm:gap-2">
+                                                                <Link
+                                                                    href={`/properties/${property.id}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="p-1 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center"
+                                                                >
+                                                                    <span className="hidden sm:inline">詳細</span>
+                                                                    <ChevronRight className="w-4 h-4 ml-1 sm:ml-0" />
+                                                                </Link>
+                                                                <PropertyConfirmButton propertyId={property.id} title={property.title} />
+                                                                <DashboardActions propertyId={property.id} propertyTitle={property.title} />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))
@@ -363,6 +346,6 @@ export default async function DashboardPage({
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }

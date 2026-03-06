@@ -35,7 +35,7 @@ export default function RootLayout({
           {children}
         </main>
         <footer className="bg-navy-secondary text-white py-16">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-3 sm:px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-12 border-b border-white/10 pb-12 text-center md:text-left">
               <div>
                 <h2 className="text-xl font-black italic tracking-tighter mb-2">Chonburi Connect</h2>

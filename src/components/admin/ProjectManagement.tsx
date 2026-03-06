@@ -44,11 +44,14 @@ interface Project {
     image_url: string
     latitude: number | null
     longitude: number | null
+    developer_id?: string | null
+    total_units?: number | null
 }
 
 export default function AdminProjectManagement() {
     const [projects, setProjects] = useState<Project[]>([])
     const [areas, setAreas] = useState<Area[]>([])
+    const [developers, setDevelopers] = useState<{ id: string, name: string }[]>([])
     const [loading, setLoading] = useState(true)
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
@@ -69,7 +72,9 @@ export default function AdminProjectManagement() {
         address: '',
         image_url: '',
         latitude: 12.9236,
-        longitude: 100.8824
+        longitude: 100.8824,
+        developer_id: '',
+        total_units: null
     })
 
     const supabase = createClient()
@@ -78,15 +83,17 @@ export default function AdminProjectManagement() {
         setLoading(true)
         setErrorMessage(null)
         try {
-            const [projectsRes, areasRes] = await Promise.all([
+            const [projectsRes, areasRes, developersRes] = await Promise.all([
                 supabase.from('projects').select('*').order('name'),
-                supabase.from('areas').select('id, name, region:regions(name)').order('name')
+                supabase.from('areas').select('id, name, region:regions(name)').order('name'),
+                supabase.from('developers').select('id, name').order('name')
             ])
 
             if (projectsRes.error) throw projectsRes.error
             if (areasRes.error) throw areasRes.error
 
             setProjects(projectsRes.data || [])
+            setDevelopers(developersRes.data || [])
             if (areasRes.data) {
                 const mappedAreas = areasRes.data.map((item: any) => ({
                     id: item.id,
@@ -171,7 +178,8 @@ export default function AdminProjectManagement() {
             address: '',
             image_url: '',
             latitude: 12.9236,
-            longitude: 100.8824
+            longitude: 100.8824,
+            developer_id: ''
         })
     }
 
@@ -181,27 +189,31 @@ export default function AdminProjectManagement() {
         setErrorMessage(null)
 
         try {
+            const projectData = {
+                name: formData.name,
+                area_id: formData.area_id,
+                property_type: formData.property_type,
+                year_built: formData.year_built,
+                total_floors: formData.total_floors,
+                address: formData.address,
+                image_url: formData.image_url,
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+                developer_id: formData.developer_id || null,
+                total_units: formData.total_units
+            }
+
             if (editingId) {
                 const { error } = await supabase
                     .from('projects')
-                    .update({
-                        name: formData.name,
-                        area_id: formData.area_id,
-                        property_type: formData.property_type,
-                        year_built: formData.year_built,
-                        total_floors: formData.total_floors,
-                        address: formData.address,
-                        image_url: formData.image_url,
-                        latitude: formData.latitude,
-                        longitude: formData.longitude
-                    })
+                    .update(projectData)
                     .eq('id', editingId)
 
                 if (error) throw error
             } else {
                 const { error } = await supabase
                     .from('projects')
-                    .insert([formData])
+                    .insert([projectData])
 
                 if (error) throw error
             }
@@ -369,14 +381,33 @@ export default function AdminProjectManagement() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総ユニット数</label>
                                 <input
                                     type="number"
-                                    value={formData.total_floors || ''}
-                                    onChange={e => setFormData({ ...formData, total_floors: e.target.value ? parseInt(e.target.value) : null })}
+                                    value={formData.total_units || ''}
+                                    onChange={e => setFormData({ ...formData, total_units: e.target.value ? parseInt(e.target.value) : null })}
                                     className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
-                                    placeholder="40"
+                                    placeholder="200"
                                 />
+                            </div>
+                            <div>
+                                <div className="flex justify-between items-center mb-2 ml-1">
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">デベロッパー <span className="text-red-500">*</span></label>
+                                    {developers.length === 0 && (
+                                        <span className="text-[10px] font-bold text-amber-600 animate-pulse">※先にデベロッパー登録が必要です</span>
+                                    )}
+                                </div>
+                                <select
+                                    required
+                                    value={formData.developer_id || ''}
+                                    onChange={e => setFormData({ ...formData, developer_id: e.target.value })}
+                                    className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
+                                >
+                                    <option value="">デベロッパーを選択</option>
+                                    {developers.map(dev => (
+                                        <option key={dev.id} value={dev.id}>{dev.name}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
@@ -449,6 +480,12 @@ export default function AdminProjectManagement() {
                                                         {project.total_floors && (
                                                             <span className="flex items-center text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
                                                                 地上{project.total_floors}階
+                                                            </span>
+                                                        )}
+                                                        {(project as any).developer_id && (
+                                                            <span className="flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
+                                                                <Building2 className="w-3 h-3 mr-1" />
+                                                                {developers.find(d => d.id === (project as any).developer_id)?.name || 'Unknown Developer'}
                                                             </span>
                                                         )}
                                                     </div>

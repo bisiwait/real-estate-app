@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 export const runtime = 'edge';
 import { notFound, redirect } from 'next/navigation'
 import ListingForm from '@/components/property/ListingForm'
+import PresaleListingForm from '@/components/property/PresaleListingForm'
 import { ChevronLeft, Edit3 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -47,13 +48,17 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
                                 <Edit3 className="w-8 h-8 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-3xl font-black text-navy-secondary mb-1">物件情報を編集</h1>
+                                <h1 className="text-3xl font-black text-navy-secondary mb-1">{property.is_presale ? 'プレセール情報を編集' : '物件情報を編集'}</h1>
                                 <p className="text-slate-500 font-medium">#{property.id.slice(0, 8)} - {property.title}</p>
                             </div>
                         </div>
                     </div>
 
-                    <ListingForm initialData={property} mode="edit" />
+                    {property.is_presale ? (
+                        <PresaleListingForm initialData={property} mode="edit" />
+                    ) : (
+                        <ListingForm initialData={property} mode="edit" />
+                    )}
                 </div>
             </div>
         </div>

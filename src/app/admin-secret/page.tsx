@@ -22,6 +22,7 @@ import Link from 'next/link'
 import AdminPropertyManagement from '@/components/admin/PropertyManagement'
 import AdminUserManagement from '@/components/admin/UserManagement'
 import AdminProjectManagement from '@/components/admin/ProjectManagement'
+import AdminDeveloperManagement from '@/components/admin/DeveloperManagement'
 
 export default async function AdminSecretDashboard({
     searchParams,
@@ -94,6 +95,16 @@ export default async function AdminSecretDashboard({
                     >
                         <Building2 className="w-4 h-4" />
                         <span>プロジェクト</span>
+                    </Link>
+                    <Link
+                        href="?tab=developers"
+                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'developers'
+                            ? 'bg-navy-primary text-white shadow-lg'
+                            : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
+                            }`}
+                    >
+                        <Building2 className="w-4 h-4" />
+                        <span>デベロッパー</span>
                     </Link>
                     <Link
                         href="?tab=properties"
@@ -173,6 +184,7 @@ export default async function AdminSecretDashboard({
                 {/* Main Management Section */}
                 <div className="grid grid-cols-1 gap-12">
                     {tab === 'projects' && <AdminProjectManagement />}
+                    {tab === 'developers' && <AdminDeveloperManagement />}
                     {tab === 'properties' && <AdminPropertyManagement />}
                     {tab === 'users' && <AdminUserManagement />}
 

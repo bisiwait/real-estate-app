@@ -1,20 +1,48 @@
 import { createClient } from '@supabase/supabase-js'
-import dotenv from 'dotenv'
+import fs from 'fs'
 
-dotenv.config({ path: '.env.local' })
+function getEnv(key) {
+    try {
+        const content = fs.readFileSync('.env.local', 'utf8')
+        const lines = content.split('\n')
+        for (const line of lines) {
+            if (line.startsWith(key + '=')) {
+                return line.split('=')[1].trim()
+            }
+        }
+    } catch (e) { }
+    return null
+}
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const SUPABASE_URL = getEnv('NEXT_PUBLIC_SUPABASE_URL')
+const SUPABASE_KEY = getEnv('SUPABASE_SERVICE_ROLE_KEY')
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 async function checkSchema() {
-    console.log('Checking profiles table...');
-    const { data: profiles, error: err1 } = await supabase.from('profiles').select('plan').limit(1);
-    console.log('Profiles plan:', profiles, err1);
+    const columns = [
+        'project_facilities',
+        'land_area',
+        'total_units',
+        'total_buildings',
+        'developer',
+        'is_presale'
+    ];
 
-    console.log('Checking properties table...');
-    const { data: props, error: err2 } = await supabase.from('properties').select('is_presale').limit(1);
-    console.log('Properties is_presale:', props, err2);
+    const results = {};
+    for (const col of columns) {
+        const { error } = await supabase
+            .from('properties')
+            .select(col)
+            .limit(1);
+
+        if (error) {
+            results[col] = 'MISSING';
+        } else {
+            results[col] = 'EXISTS';
+        }
+    }
+
+    console.log(JSON.stringify(results, null, 2));
 }
 
 checkSchema()

@@ -54,6 +54,7 @@ interface Project {
     total_floors?: number | string
     total_units?: number | string
     developer?: string
+    developer_id?: string
     facilities?: string[]
     latitude?: number
     longitude?: number
@@ -68,6 +69,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
     const [loading, setLoading] = useState(false)
     const [areas, setAreas] = useState<Area[]>([])
     const [projects, setProjects] = useState<Project[]>([])
+    const [developers, setDevelopers] = useState<{ id: string, name: string }[]>([])
     const [isAdmin, setIsAdmin] = useState(false)
     const [showNewProjectForm, setShowNewProjectForm] = useState(false)
 
@@ -81,6 +83,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         total_units: '',
         total_buildings: '',
         developer: '',
+        developer_id: '',
         latitude: 12.9236,
         longitude: 100.8824
     })
@@ -182,9 +185,10 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
     useEffect(() => {
         const fetchInitialData = async () => {
-            const [areasRes, projectsRes] = await Promise.all([
+            const [areasRes, projectsRes, developersRes] = await Promise.all([
                 supabase.from('areas').select('id, name, region:regions(name)').order('name'),
-                supabase.from('projects').select('*').order('name')
+                supabase.from('projects').select('*').order('name'),
+                supabase.from('developers').select('id, name').order('name')
             ])
 
             if (areasRes.data) {
@@ -205,9 +209,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 })
                 setAreas(mappedAreas)
             }
-            if (projectsRes.data) {
-                setProjects(projectsRes.data)
-            }
+            if (projectsRes.data) setProjects(projectsRes.data)
+            if (developersRes.data) setDevelopers(developersRes.data)
         }
         fetchInitialData()
     }, [supabase])
@@ -347,7 +350,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         land_area: formData.land_area,
                         total_units: formData.total_units ? parseInt(formData.total_units) : null,
                         total_buildings: formData.total_buildings ? parseInt(formData.total_buildings) : null,
-                        developer: formData.developer,
+                        developer_id: projectForm.developer_id,
 
                         // Booleans mapped from tags
                         has_bathtub: formData.has_bathtub,
@@ -415,6 +418,25 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 .eq('user_id', user.id)
 
             if (updateError) throw updateError
+
+            // Sync project data if admin edited an existing project
+            if (!showNewProjectForm && formData.project_id && isAdmin) {
+                const { error: projectSyncError } = await supabase
+                    .from('projects')
+                    .update({
+                        property_type: formData.property_type,
+                        year_built: formData.year_built,
+                        total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
+                        total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
+                        developer: formData.developer,
+                        facilities: formData.project_facilities
+                    })
+                    .eq('id', formData.project_id)
+
+                if (projectSyncError) {
+                    console.warn('Failed to sync project data:', projectSyncError)
+                }
+            }
 
             setSuccess(true)
             setTimeout(() => router.push('/dashboard'), 2000)
@@ -555,6 +577,20 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                 <div>
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">プロジェクト名 <span className="text-red-500">*</span></label>
                                     <input type="text" value={projectForm.name} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, name: val }); setFormData({ ...formData, building_name: val, project_name: val, title: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary transition-all font-bold text-navy-secondary" placeholder="TBD Tower" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー <span className="text-red-500">*</span></label>
+                                    <select
+                                        required
+                                        value={projectForm.developer_id}
+                                        onChange={e => setProjectForm({ ...projectForm, developer_id: e.target.value })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
+                                    >
+                                        <option value="">デベロッパーを選択</option>
+                                        {developers.map(dev => (
+                                            <option key={dev.id} value={dev.id}>{dev.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>

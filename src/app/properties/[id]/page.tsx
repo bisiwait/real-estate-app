@@ -55,7 +55,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
     const [propertyRes, authRes] = await Promise.all([
         supabase
             .from('properties')
-            .select('*, area:areas(name, slug, region:regions(name)), project:projects(*)')
+            .select('*, area:areas(name, slug, region:regions(name)), project:projects(*, developers(name)), developers(name)')
             .eq('id', id)
             .single(),
         supabase.auth.getUser()
@@ -117,9 +117,9 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
-            <BreadcrumbUpdater label={`詳細 / ${property.title}`} />
+            <BreadcrumbUpdater label={property.title} />
 
-            <div className="container mx-auto px-4 pt-8 md:pt-12 relative z-10">
+            <div className="container mx-auto px-3 sm:px-4 pt-8 md:pt-12 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
                     {/* Main Info (Left Column) */}
@@ -131,8 +131,8 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10 mt-6 overflow-hidden">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8 pb-8 border-b border-slate-50">
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4 mb-4">
-                                        <h1 className="text-xl md:text-2xl font-black text-navy-secondary leading-[1.2]">
+                                    <div className="mb-6">
+                                        <h1 className="text-xl md:text-2xl font-black text-navy-secondary leading-[1.2] mb-3">
                                             {property.status === 'contracted' && (
                                                 <span className="inline-block bg-purple-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">成約済</span>
                                             )}
@@ -144,22 +144,41 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                             )}
                                             {property.title}
                                         </h1>
-                                        <div className="flex items-center text-navy-primary font-black text-xs uppercase tracking-tighter shrink-0">
-                                            <MapPin className="w-3.5 h-3.5 mr-1.5" />
-                                            {property.area?.region?.name} • {property.area?.name}
+
+                                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                            {/* Building Name / Project Name Display */}
+                                            {(property.building_name || property.project?.name) && (
+                                                <div className="flex items-center text-slate-500 font-bold text-sm">
+                                                    <Building2 className="w-4 h-4 mr-2 text-slate-400" />
+                                                    <span>{property.building_name || property.project?.name}</span>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center text-navy-primary font-black text-xs uppercase tracking-tighter shrink-0">
+                                                <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                                                {property.area?.region?.name} • {property.area?.name}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 overflow-x-auto pb-1 hide-scrollbar">
                                         <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
                                             <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
                                             <span className="mr-1">{property.is_presale ? '竣工予定:' : '築年数:'}</span>
-                                            <span className="text-navy-secondary">{property.is_presale ? (property.completion_date || '--') : (property.year_built || '--')}</span>
+                                            <span className="text-navy-secondary">
+                                                {property.is_presale
+                                                    ? (property.completion_date || property.project?.completion_date || '--')
+                                                    : (property.year_built || property.project?.year_built || '--')}
+                                            </span>
                                         </div>
                                         <div className="w-[1px] h-3 bg-slate-200"></div>
                                         <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
                                             <Layers className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
                                             <span className="mr-1">総階数:</span>
-                                            <span className="text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
+                                            <span className="text-navy-secondary">
+                                                {property.total_floors || property.project?.total_floors
+                                                    ? `${property.total_floors || property.project?.total_floors}階`
+                                                    : '--'}
+                                            </span>
                                         </div>
                                         <div className="w-[1px] h-3 bg-slate-200"></div>
                                         <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
@@ -309,76 +328,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                             </div>
                         )}
 
-                        {/* Detailed Spec Sections */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {/* Water Features */}
-                            {(property.has_bathtub || property.has_washlet || property.water_heater_type) && (
-                                <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
-                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center">
-                                        <Bath className="w-4 h-4 mr-2 text-navy-primary" />
-                                        水回り・設備
-                                    </h3>
-                                    <div className="space-y-4">
-                                        {property.has_bathtub && (
-                                            <div className="flex items-center justify-between py-3 border-b border-slate-50">
-                                                <span className="text-sm font-bold text-slate-600">バスタブ</span>
-                                                <span className="text-xs font-black px-3 py-1 rounded-full bg-emerald-100 text-emerald-600">
-                                                    あり
-                                                </span>
-                                            </div>
-                                        )}
-                                        {property.has_washlet && (
-                                            <div className="flex items-center justify-between py-3 border-b border-slate-50">
-                                                <span className="text-sm font-bold text-slate-600">ウォシュレット</span>
-                                                <span className="text-xs font-black px-3 py-1 rounded-full bg-emerald-100 text-emerald-600">
-                                                    完備
-                                                </span>
-                                            </div>
-                                        )}
-                                        {property.water_heater_type && (
-                                            <div className="flex flex-col space-y-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">給湯器</span>
-                                                <span className="text-sm font-bold text-navy-secondary">{property.water_heater_type}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Utility Costs */}
-                            {(property.electricity_bill_type || property.water_bill_desc || property.internet_desc) && (
-                                <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
-                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center">
-                                        <Layers className="w-4 h-4 mr-2 text-navy-primary" />
-                                        生活コスト
-                                    </h3>
-                                    <div className="space-y-4">
-                                        {property.electricity_bill_type && (
-                                            <div className="flex flex-col space-y-1 py-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">電気代支払い</span>
-                                                <span className="text-sm font-bold text-navy-secondary">
-                                                    {property.electricity_bill_type === 'Direct' ? 'Direct (電力会社直接払い)' : 'Condo Rate (コンドミニアム設定価格)'}
-                                                </span>
-                                            </div>
-                                        )}
-                                        {property.water_bill_desc && (
-                                            <div className="flex flex-col space-y-1 py-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">水道代</span>
-                                                <span className="text-sm font-bold text-navy-secondary">{property.water_bill_desc}</span>
-                                            </div>
-                                        )}
-                                        {property.internet_desc && (
-                                            <div className="flex flex-col space-y-1 py-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">インターネット</span>
-                                                <span className="text-sm font-bold text-navy-secondary">{property.internet_desc}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-
-                        </div>
 
 
                         {/* Tags / Features */}
@@ -416,19 +365,35 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                 </div>
                                 <div className="flex items-center justify-between py-3 border-b border-slate-50">
                                     <span className="text-sm font-bold text-slate-500">築年数 / 完成年</span>
-                                    <span className="text-sm font-black text-navy-secondary">{property.year_built || property.completion_date || '--'}</span>
+                                    <span className="text-sm font-black text-navy-secondary">
+                                        {property.year_built || property.project?.year_built || property.completion_date || property.project?.completion_date || '--'}
+                                    </span>
                                 </div>
                                 <div className="flex items-center justify-between py-3 border-b border-slate-50">
                                     <span className="text-sm font-bold text-slate-500">総階数</span>
-                                    <span className="text-sm font-black text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
+                                    <span className="text-sm font-black text-navy-secondary">
+                                        {property.total_floors || property.project?.total_floors
+                                            ? `${property.total_floors || property.project?.total_floors}階`
+                                            : '--'}
+                                    </span>
                                 </div>
                                 <div className="flex items-center justify-between py-3 border-b border-slate-50">
                                     <span className="text-sm font-bold text-slate-500">総ユニット数</span>
-                                    <span className="text-sm font-black text-navy-secondary">{property.total_units ? `${property.total_units}戸` : '--'}</span>
+                                    <span className="text-sm font-black text-navy-secondary">
+                                        {property.total_units || property.project?.total_units
+                                            ? `${property.total_units || property.project?.total_units}戸`
+                                            : '--'}
+                                    </span>
                                 </div>
                                 <div className="flex items-center justify-between py-3 border-b border-slate-50">
                                     <span className="text-sm font-bold text-slate-500">デベロッパー</span>
-                                    <span className="text-sm font-black text-navy-secondary">{property.developer || '--'}</span>
+                                    <span className="text-sm font-black text-navy-secondary">
+                                        {property.developer ||
+                                            property.project?.developer ||
+                                            (property.project as any)?.developers?.name ||
+                                            (property as any).developers?.name ||
+                                            '--'}
+                                    </span>
                                 </div>
                                 <div className="flex items-center justify-between py-3 border-b border-slate-50">
                                     <span className="text-sm font-bold text-slate-500">所在エリア</span>
@@ -438,27 +403,35 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         </div>
 
                         {/* Shared Facilities */}
-                        {((property.project_facilities && property.project_facilities.length > 0) || (property.project?.facilities && property.project.facilities.length > 0)) && (
-                            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10">
-                                <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center">
-                                    <Shield className="w-5 h-5 mr-3 text-navy-primary" />
-                                    共有施設
-                                </h3>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    {(property.project_facilities || property.project?.facilities || []).map((facility: string) => {
-                                        const Icon = highlightIcons[facility] || Check
-                                        return (
-                                            <div key={facility} className="flex items-center p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs font-bold text-navy-secondary">
-                                                <div className="w-8 h-8 rounded-full bg-navy-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <Icon className="w-4 h-4 text-navy-primary" />
+                        {(() => {
+                            const displayFacilities = property.project_facilities?.length > 0
+                                ? property.project_facilities
+                                : (property.project?.facilities || []);
+
+                            if (displayFacilities.length === 0) return null;
+
+                            return (
+                                <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10">
+                                    <h3 className="text-lg font-black text-navy-secondary mb-6 flex items-center">
+                                        <Shield className="w-5 h-5 mr-3 text-navy-primary" />
+                                        共有施設
+                                    </h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                        {displayFacilities.map((facility: string) => {
+                                            const Icon = highlightIcons[facility] || Check
+                                            return (
+                                                <div key={facility} className="flex items-center p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs font-bold text-navy-secondary">
+                                                    <div className="w-8 h-8 rounded-full bg-navy-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
+                                                        <Icon className="w-4 h-4 text-navy-primary" />
+                                                    </div>
+                                                    {facility}
                                                 </div>
-                                                {facility}
-                                            </div>
-                                        )
-                                    })}
+                                            )
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Location Link Button */}
                         <div className="pt-2 pb-6 flex justify-center w-full">
