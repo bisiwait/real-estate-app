@@ -515,6 +515,7 @@ function PropertiesList() {
                                 {hasMore && (
                                     <div className="flex justify-center pt-8">
                                         <button
+                                            type="button"
                                             onClick={() => fetchProperties(true)}
                                             disabled={loadingMore}
                                             className="group flex flex-col items-center space-y-4"
@@ -540,6 +541,7 @@ function PropertiesList() {
                                 <h3 className="text-xl font-bold text-navy-secondary mb-2">該当する物件が見つかりませんでした</h3>
                                 <p className="text-slate-500 mb-8">別の条件でお試しいただくか、条件をリセットしてください。</p>
                                 <button
+                                    type="button"
                                     onClick={() => updateFilters({ region: null, property_type: null, price: null, tags: null, q: null })}
                                     className="bg-navy-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-navy-secondary transition-all"
                                 >

@@ -159,11 +159,6 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
             return;
         }
 
-        if (activeFilters.length === 0) {
-            alert("検索条件が設定されていません。フィルターを適用してから保存してください。");
-            return;
-        }
-
         if (saved) {
             alert("この検索条件は既に保存されています。");
             return;
@@ -227,6 +222,8 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
     return (
         <>
             <button
+                type="button"
+                suppressHydrationWarning
                 onClick={handleOpenSheet}
                 disabled={loading || saved}
                 className={`flex items-center justify-center space-x-2 px-6 py-2.5 rounded-full text-sm font-black transition-all border shadow-lg ${fullWidth ? "w-full py-4 rounded-2xl" : ""} ${saved
@@ -297,6 +294,7 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                     {/* Actions */}
                     <div className="flex flex-col space-y-3 pt-6">
                         <button
+                            type="button"
                             onClick={handleSaveSearch}
                             disabled={loading}
                             className="w-full py-5 bg-navy-primary text-white rounded-2xl font-black text-sm hover:bg-navy-secondary transition-all shadow-xl shadow-navy-primary/20 flex items-center justify-center space-x-2"
@@ -305,6 +303,7 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                             <span>この条件で保存する</span>
                         </button>
                         <button
+                            type="button"
                             onClick={() => setIsSheetOpen(false)}
                             className="w-full py-5 bg-white text-slate-400 border border-slate-100 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all"
                         >
@@ -330,12 +329,14 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                     </p>
                     <div className="flex flex-col space-y-4">
                         <button
+                            type="button"
                             onClick={() => router.push("/login")}
                             className="w-full py-5 bg-navy-primary text-white rounded-2xl font-black text-sm hover:bg-navy-secondary transition-all shadow-xl shadow-navy-primary/20"
                         >
                             ログイン・新規登録画面へ
                         </button>
                         <button
+                            type="button"
                             onClick={() => setIsLoginSheetOpen(false)}
                             className="w-full py-5 bg-white text-slate-400 border border-slate-100 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all"
                         >
