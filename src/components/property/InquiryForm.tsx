@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Loader2, CheckCircle } from 'lucide-react'
+import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { clsx } from 'clsx'
 
 interface InquiryFormProps {
     propertyId: string
@@ -20,6 +21,15 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isOpen, setIsOpen] = useState(false)
+    const [isDesktop, setIsDesktop] = useState(false)
+
+    useEffect(() => {
+        setIsDesktop(window.innerWidth >= 1024)
+        const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     const supabase = createClient()
 
@@ -97,88 +107,104 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
 
     return (
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
-            <h3 className="text-xl font-black text-navy-secondary mb-6 flex items-center">
-                <Send className="w-5 h-5 mr-3 text-navy-primary" />
-                お問い合わせ
-            </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">お名前 (必須)</label>
-                    <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="山田 太郎"
-                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                        onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('お名前を入力してください')}
-                        onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-                    />
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex items-center justify-between lg:cursor-default"
+                disabled={isDesktop}
+            >
+                <h3 className="text-xl font-black text-navy-secondary flex items-center">
+                    <Send className="w-5 h-5 mr-3 text-navy-primary" />
+                    お問い合わせ
+                </h3>
+                <div className="lg:hidden text-navy-primary bg-slate-50 p-1 rounded-lg">
+                    {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </div>
+            </button>
 
-                <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">メールアドレス (必須)</label>
-                    <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="yamada@example.com"
-                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                        onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('メールアドレスを正しく入力してください')}
-                        onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-                    />
-                </div>
+            <div className={clsx(
+                "transition-all duration-500 ease-in-out overflow-hidden lg:opacity-100 lg:max-h-none lg:mt-6",
+                isOpen
+                    ? "mt-6 max-h-[2000px] opacity-100"
+                    : "max-h-0 opacity-0 lg:max-h-none lg:opacity-100"
+            )}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">お名前 (必須)</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="山田 太郎"
+                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
+                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('お名前を入力してください')}
+                            onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
+                        />
+                    </div>
 
-                <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">電話番号</label>
-                    <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="090-0000-0000"
-                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                    />
-                </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">メールアドレス (必須)</label>
+                        <input
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="yamada@example.com"
+                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
+                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('メールアドレスを正しく入力してください')}
+                            onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
+                        />
+                    </div>
 
-                <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">お問い合わせ内容</label>
-                    <textarea
-                        rows={4}
-                        required
-                        value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none"
-                        onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity('お問い合わせ内容を入力してください')}
-                        onInput={e => (e.target as HTMLTextAreaElement).setCustomValidity('')}
-                    ></textarea>
-                </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">電話番号</label>
+                        <input
+                            type="tel"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            placeholder="090-0000-0000"
+                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
+                        />
+                    </div>
 
-                {error && (
-                    <div className="text-red-500 text-xs font-bold px-1">{error}</div>
-                )}
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">お問い合わせ内容</label>
+                        <textarea
+                            rows={4}
+                            required
+                            value={formData.message}
+                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none"
+                            onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity('お問い合わせ内容を入力してください')}
+                            onInput={e => (e.target as HTMLTextAreaElement).setCustomValidity('')}
+                        ></textarea>
+                    </div>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-navy-primary text-white py-4 rounded-xl font-black flex items-center justify-center space-x-2 hover:bg-navy-secondary transition-all shadow-lg hover:shadow-xl mt-4"
-                >
-                    {loading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                        <>
-                            <span>この物件にお問い合わせ</span>
-                            <Send className="w-4 h-4 ml-1" />
-                        </>
+                    {error && (
+                        <div className="text-red-500 text-xs font-bold px-1">{error}</div>
                     )}
-                </button>
 
-                <p className="text-[10px] text-slate-400 text-center mt-4">
-                    お問い合わせ内容送信後、担当者よりご連絡いたします。<br />
-                    ※匿名性は維持され、掲載主に直接メールアドレス等が開示されることはありません。
-                </p>
-            </form>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-navy-primary text-white py-4 rounded-xl font-black flex items-center justify-center space-x-2 hover:bg-navy-secondary transition-all shadow-lg hover:shadow-xl mt-4"
+                    >
+                        {loading ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <>
+                                <span>この物件にお問い合わせ</span>
+                                <Send className="w-4 h-4 ml-1" />
+                            </>
+                        )}
+                    </button>
+
+                    <p className="text-[10px] text-slate-400 text-center mt-4">
+                        お問い合わせ内容送信後、担当者よりご連絡いたします。<br />
+                        ※匿名性は維持され、掲載主に直接メールアドレス等が開示されることはありません。
+                    </p>
+                </form>
+            </div>
         </div>
     )
 }

@@ -336,8 +336,15 @@ function PropertiesList() {
                         onClick={() => updateFilters({ property_type: 'House' })}
                         className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedPropertyType === 'House' ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
                     >
-                        <span>一軒家ヴィラ</span>
+                        <span>一軒家・ヴィラ</span>
                         {selectedPropertyType === 'House' && <ChevronRight className="w-4 h-4" />}
+                    </button>
+                    <button
+                        onClick={() => updateFilters({ property_type: 'Townhouse' })}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedPropertyType === 'Townhouse' ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
+                    >
+                        <span>タウンハウス</span>
+                        {selectedPropertyType === 'Townhouse' && <ChevronRight className="w-4 h-4" />}
                     </button>
                 </div>
             </div>

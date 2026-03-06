@@ -92,7 +92,7 @@ export default async function Home() {
         {/* Recommended Rentals Section */}
         <section className="scroll-mt-24" id="rentals">
           <SectionHeader
-            title="おすすめの賃貸物件（パタヤ・シラチャ）"
+            title="おすすめの賃貸物件"
             subtitle="すぐに入居可能。日本語サポート対応のおすすめ物件"
             action={
               <Link href="/properties?type=rent" className="text-navy-primary font-bold hover:text-navy-secondary flex items-center group text-sm">

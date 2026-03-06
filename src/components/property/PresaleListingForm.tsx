@@ -546,7 +546,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         <div>
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ</label>
                             <select value={formData.property_type} onChange={e => setFormData({ ...formData, property_type: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
-                                <option value="Condo">コンドミニアム</option><option value="House">一軒家・ヴィラ</option>
+                                <option value="Condo">コンドミニアム</option>
+                                <option value="House">一軒家・ヴィラ</option>
+                                <option value="Townhouse">タウンハウス</option>
                             </select>
                         </div>
                         <div>
@@ -619,12 +621,15 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             </div>
 
             {/* Submit */}
-            <div className="flex items-center justify-between p-10 bg-navy-secondary rounded-3xl text-white shadow-2xl">
+            <div className="flex items-center justify-between p-10 bg-navy-secondary rounded-3xl text-white shadow-2xl flex-col md:flex-row gap-6">
                 <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center"><TagIcon className="w-6 h-6 text-white" /></div>
                     <div><p className="text-xs font-bold text-slate-400 uppercase tracking-widest">掲載コスト</p><p className="text-xl font-black">1 クレジット / 案件</p></div>
                 </div>
-                <button disabled={loading} className="bg-amber-500 hover:bg-amber-600 border-2 border-amber-500 text-white px-12 py-4 rounded-2xl font-black text-lg transition-all flex items-center space-x-3 disabled:opacity-50">
+                <button
+                    disabled={loading}
+                    className="w-full md:w-auto bg-amber-500 hover:bg-amber-600 border-2 border-amber-500 text-white px-12 py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
+                >
                     {loading ? <Loader2 className="animate-spin" /> : <><span>プレセールを公開</span><Plus /></>}
                 </button>
             </div>

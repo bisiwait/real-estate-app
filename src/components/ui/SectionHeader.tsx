@@ -10,7 +10,7 @@ export default function SectionHeader({ title, subtitle, action }: SectionHeader
     return (
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
             <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-navy-primary mb-2">{title}</h2>
+                <h2 className="text-lg md:text-3xl font-bold text-navy-primary mb-2">{title}</h2>
                 {subtitle && <p className="text-gray-600">{subtitle}</p>}
             </div>
             {action && <div>{action}</div>}

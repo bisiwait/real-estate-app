@@ -116,44 +116,40 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         {/* Title and Key Stats - Ensure clear separation */}
                         <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 relative z-10 mt-6 overflow-hidden">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-8 border-b border-slate-50">
-                                <div>
-                                    <div className="flex flex-col gap-2 mb-3">
-                                        <div className="flex items-center text-navy-primary font-black text-sm uppercase tracking-tighter">
-                                            <MapPin className="w-4 h-4 mr-2" />
-                                            {property.area?.region?.name} • {property.area?.name}
-                                        </div>
-                                        <div className="flex items-center gap-3 overflow-x-auto pb-1 hide-scrollbar">
-                                            <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
-                                                <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
-                                                <span className="mr-1">{property.is_presale ? '竣工予定:' : '築年数:'}</span>
-                                                <span className="text-navy-secondary">{property.is_presale ? (property.completion_date || '--') : (property.year_built || '--')}</span>
-                                            </div>
-                                            <div className="w-[1px] h-3 bg-slate-300"></div>
-                                            <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
-                                                <Layers className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
-                                                <span className="mr-1">総階数:</span>
-                                                <span className="text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
-                                            </div>
-                                            <div className="w-[1px] h-3 bg-slate-300"></div>
-                                            <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
-                                                <TagIcon className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
-                                                <span className="mr-1">掲載日:</span>
-                                                <span className="text-navy-secondary">{new Date(property.created_at).toLocaleDateString('ja-JP')}</span>
-                                            </div>
-                                        </div>
+                                <h1 className="text-xl md:text-2xl font-black text-navy-secondary leading-[1.2] mb-4">
+                                    {property.status === 'contracted' && (
+                                        <span className="inline-block bg-purple-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">成約済</span>
+                                    )}
+                                    {property.status === 'under_negotiation' && (
+                                        <span className="inline-block bg-blue-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">商談中</span>
+                                    )}
+                                    {property.is_presale && (
+                                        <span className="inline-block bg-amber-500 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">プレセール</span>
+                                    )}
+                                    {property.title}
+                                </h1>
+                                <div className="flex items-center text-navy-primary font-black text-xs uppercase tracking-tighter mb-4">
+                                    <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                                    {property.area?.region?.name} • {property.area?.name}
+                                </div>
+                                <div className="flex items-center gap-3 overflow-x-auto pb-1 hide-scrollbar">
+                                    <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                        <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                        <span className="mr-1">{property.is_presale ? '竣工予定:' : '築年数:'}</span>
+                                        <span className="text-navy-secondary">{property.is_presale ? (property.completion_date || '--') : (property.year_built || '--')}</span>
                                     </div>
-                                    <h1 className="text-xl md:text-2xl font-black text-navy-secondary leading-[1.2]">
-                                        {property.status === 'contracted' && (
-                                            <span className="inline-block bg-purple-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">成約済</span>
-                                        )}
-                                        {property.status === 'under_negotiation' && (
-                                            <span className="inline-block bg-blue-600 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">商談中</span>
-                                        )}
-                                        {property.is_presale && (
-                                            <span className="inline-block bg-amber-500 text-white text-sm px-3 py-1 rounded-full align-middle mr-3 mb-1 shadow-sm tracking-widest uppercase">プレセール</span>
-                                        )}
-                                        {property.title}
-                                    </h1>
+                                    <div className="w-[1px] h-3 bg-slate-200"></div>
+                                    <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                        <Layers className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                        <span className="mr-1">総階数:</span>
+                                        <span className="text-navy-secondary">{property.total_floors ? `${property.total_floors}階` : '--'}</span>
+                                    </div>
+                                    <div className="w-[1px] h-3 bg-slate-200"></div>
+                                    <div className="flex items-center text-[10px] md:text-xs font-bold text-slate-500 whitespace-nowrap">
+                                        <TagIcon className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1 md:mr-1.5 text-slate-400" />
+                                        <span className="mr-1">掲載日:</span>
+                                        <span className="text-navy-secondary">{new Date(property.created_at).toLocaleDateString('ja-JP')}</span>
+                                    </div>
                                 </div>
                                 <div className="text-right space-y-4">
                                     {property.is_for_rent && (
@@ -175,11 +171,11 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">物件タイプ</p>
-                                    <p className="text-sm font-bold text-navy-secondary flex items-center">
-                                        <Layers className="w-4 h-4 mr-2 text-navy-primary" />
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-6">
+                                <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-100">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 sm:mb-1.5">物件タイプ</p>
+                                    <p className="text-xs sm:text-sm font-bold text-navy-secondary flex items-center">
+                                        <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 text-navy-primary" />
                                         {property.property_type === 'Condo' ? 'コンドミニアム' :
                                             property.property_type === 'Apartment' ? 'アパート' :
                                                 property.property_type === 'House' ? '一軒家 / ヴィラ' :
@@ -188,33 +184,33 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                                             property.property_type === 'Commercial' ? '商業用' : 'コンドミニアム'}
                                     </p>
                                 </div>
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">広さ</p>
-                                    <p className="text-sm font-bold text-navy-secondary flex items-center">
-                                        <Maximize2 className="w-4 h-4 mr-2 text-navy-primary" />
+                                <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-100">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 sm:mb-1.5">広さ</p>
+                                    <p className="text-xs sm:text-sm font-bold text-navy-secondary flex items-center">
+                                        <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 text-navy-primary" />
                                         {property.sqm || '--'} ㎡
                                     </p>
                                 </div>
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">所在階 / 間取り</p>
-                                    <p className="text-sm font-bold text-navy-secondary flex items-center">
-                                        <Layers className="w-4 h-4 mr-2 text-navy-primary" />
+                                <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-100">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 sm:mb-1.5">所在階 / 間取り</p>
+                                    <p className="text-xs sm:text-sm font-bold text-navy-secondary flex items-center">
+                                        <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 text-navy-primary" />
                                         {property.floor ? `${property.floor}F / ` : ''}
                                         {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms}BR`}
                                     </p>
                                 </div>
-                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">浴室数</p>
-                                    <p className="text-sm font-bold text-navy-secondary flex items-center">
-                                        <Bath className="w-4 h-4 mr-2 text-navy-primary" />
+                                <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-100">
+                                    <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 sm:mb-1.5">浴室数</p>
+                                    <p className="text-xs sm:text-sm font-bold text-navy-secondary flex items-center">
+                                        <Bath className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 text-navy-primary" />
                                         {property.bathrooms || '1'}
                                     </p>
                                 </div>
                                 {property.is_for_sale && property.ownership_type && (
-                                    <div className="bg-navy-primary/5 p-4 rounded-2xl border border-navy-primary/10">
-                                        <p className="text-[10px] font-black text-navy-primary uppercase tracking-widest mb-1.5">所有権 (Quota)</p>
-                                        <p className="text-sm font-black text-navy-primary flex items-center">
-                                            <TagIcon className="w-4 h-4 mr-2" />
+                                    <div className="bg-navy-primary/5 p-3 sm:p-4 rounded-2xl border border-navy-primary/10">
+                                        <p className="text-[9px] sm:text-[10px] font-black text-navy-primary uppercase tracking-widest mb-1 sm:mb-1.5">所有権 (Quota)</p>
+                                        <p className="text-xs sm:text-sm font-black text-navy-primary flex items-center">
+                                            <TagIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
                                             {property.ownership_type}
                                         </p>
                                     </div>
@@ -362,48 +358,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                 </div>
                             )}
 
-                            {/* Environment */}
-                            {(property.distance_to_supermarket || property.noise_level || property.transportation_desc) && (
-                                <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
-                                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center">
-                                        <MapPin className="w-4 h-4 mr-2 text-navy-primary" />
-                                        周辺環境
-                                    </h3>
-                                    <div className="space-y-4">
-                                        {property.distance_to_supermarket && (
-                                            <div className="flex flex-col space-y-1 py-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">日本食スーパー</span>
-                                                <span className="text-sm font-bold text-navy-secondary">{property.distance_to_supermarket}</span>
-                                            </div>
-                                        )}
-                                        {property.noise_level && (
-                                            <div className="flex flex-col space-y-3 py-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase flex justify-between items-center">
-                                                    騒音レベル
-                                                    <span className="text-navy-primary opacity-50 uppercase tracking-tighter">Scale 1-5</span>
-                                                </span>
-                                                <div className="flex space-x-1.5 pt-1">
-                                                    {[1, 2, 3, 4, 5].map(level => (
-                                                        <div
-                                                            key={level}
-                                                            className={`h-2 flex-1 rounded-full transition-all ${level <= property.noise_level ? 'bg-navy-primary shadow-sm shadow-navy-primary/20' : 'bg-slate-100'}`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <span className="text-[10px] font-bold text-slate-400 text-center">
-                                                    {property.noise_level <= 2 ? '比較的静かな環境です' : property.noise_level === 3 ? '一般的な生活音レベル' : '商業エリアのため賑やかです'}
-                                                </span>
-                                            </div>
-                                        )}
-                                        {property.transportation_desc && (
-                                            <div className="flex flex-col space-y-1 py-1">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase">交通アクセス</span>
-                                                <span className="text-sm font-bold text-navy-secondary">{property.transportation_desc}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
 
                         </div>
 
@@ -415,13 +369,13 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                                 <Check className="w-5 h-5 mr-3 text-navy-primary" />
                                 こだわり設備
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
                                 {property.tags.map((tag: string) => {
                                     const Icon = highlightIcons[tag] || Check
                                     return (
-                                        <div key={tag} className="flex items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm font-bold text-navy-secondary">
-                                            <div className="w-8 h-8 rounded-full bg-navy-primary/10 flex items-center justify-center mr-3 flex-shrink-0">
-                                                <Icon className="w-4 h-4 text-navy-primary" />
+                                        <div key={tag} className="flex items-center p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[11px] sm:text-sm font-bold text-navy-secondary">
+                                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-navy-primary/10 flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+                                                <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-navy-primary" />
                                             </div>
                                             {tag}
                                         </div>

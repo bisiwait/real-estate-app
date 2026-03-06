@@ -24,11 +24,11 @@ export default function HeroSection() {
 
             <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
                 <div className="mx-auto max-w-3xl text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                    <h1 className="text-4xl font-bold tracking-tight text-white !text-white sm:text-6xl drop-shadow-lg">
+                    <h1 className="text-2xl font-bold tracking-tight text-white !text-white sm:text-6xl drop-shadow-lg">
                         パタヤ・シラチャで<br />理想の住まいを見つける
                     </h1>
-                    <p className="mt-6 text-lg leading-8 text-white drop-shadow-md font-medium">
-                        あなたの快適なタイ生活を全力でサポートします。
+                    <p className="mt-6 text-base sm:text-lg leading-8 text-white drop-shadow-md font-medium">
+                        快適なタイ生活をサポートします。
                     </p>
                 </div>
 
@@ -109,6 +109,7 @@ export default function HeroSection() {
                                 <option value="">すべてのタイプ</option>
                                 <option value="Condo">コンドミニアム</option>
                                 <option value="House">一軒家・ヴィラ</option>
+                                <option value="Townhouse">タウンハウス</option>
                             </select>
                         </div>
                         <div className="flex-[0.8] flex items-end">

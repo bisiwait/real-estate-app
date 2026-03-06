@@ -122,7 +122,14 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
             const typeLabels: Record<string, string> = { rent: "賃貸", sell: "売買", presale: "プレセール" };
             filters.push({ label: "種別", value: typeLabels[type] || type });
         }
-        if (propType) filters.push({ label: "タイプ", value: propType === "Condo" ? "コンドミニアム" : "一軒家" });
+        if (propType) {
+            const propLabels: Record<string, string> = {
+                Condo: "コンドミニアム",
+                House: "一軒家・ヴィラ",
+                Townhouse: "タウンハウス"
+            };
+            filters.push({ label: "タイプ", value: propLabels[propType] || propType });
+        }
         if (price) {
             const [min, max] = price.split("-");
             filters.push({ label: "予算", value: `${min.toLocaleString()}〜${max.toLocaleString()} ฿` });

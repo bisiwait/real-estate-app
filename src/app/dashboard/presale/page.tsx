@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, CreditCard, Building2 } from 'lucide-react'
+import { AlertTriangle, CreditCard, Building2, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import PresaleListingForm from '@/components/property/PresaleListingForm'
 
@@ -107,6 +107,14 @@ export default function PresalePropertyPage() {
         <div className="bg-slate-50 min-h-screen py-16">
             <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center space-x-2 text-slate-400 hover:text-navy-primary font-bold mb-8 transition-colors group"
+                    >
+                        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                        <span>ダッシュボードに戻る</span>
+                    </Link>
+
                     <div className="flex items-center justify-between mb-12">
                         <div>
                             <div className="flex items-center space-x-2 mb-2">

@@ -22,7 +22,7 @@ export default async function AgentOtherProperties({ agentId, currentPropertyId,
         <div className="mt-20 mb-8 w-full max-w-[1400px] mx-auto overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4 px-4 xl:px-0">
                 <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-navy-secondary">
+                    <h2 className="text-lg font-black text-navy-secondary">
                         この担当者の他の物件
                     </h2>
                     <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">

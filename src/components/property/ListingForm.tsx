@@ -800,7 +800,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                 <div>
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ (Type)</label>
                                     <select value={projectForm.property_type} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, property_type: val }); setFormData({ ...formData, property_type: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl appearance-none font-bold">
-                                        <option value="Condo">Condo</option><option value="House">House</option><option value="Townhouse">Townhouse</option>
+                                        <option value="Condo">コンドミニアム</option>
+                                        <option value="House">一軒家・ヴィラ</option>
+                                        <option value="Townhouse">タウンハウス</option>
                                     </select>
                                 </div>
                                 <div>
@@ -851,7 +853,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     onChange={e => setFormData({ ...formData, property_type: e.target.value })}
                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <option value="Condo">コンド</option><option value="House">一軒家</option>
+                                    <option value="Condo">コンドミニアム</option>
+                                    <option value="House">一軒家・ヴィラ</option>
+                                    <option value="Townhouse">タウンハウス</option>
                                 </select>
                             </div>
                             <div>
@@ -975,12 +979,12 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center"><TagIcon className="w-6 h-6 text-white" /></div>
                     <div><p className="text-xs font-bold text-slate-400 uppercase tracking-widest">掲載コスト</p><p className="text-xl font-black">1 クレジット / 物件</p></div>
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full md:w-auto">
                     <button
                         type="button"
                         disabled={loading}
                         onClick={(e) => handleSubmit(e, 'draft')}
-                        className="bg-white/10 hover:bg-white/20 border-2 border-transparent text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all flex items-center disabled:opacity-50"
+                        className="w-full sm:w-auto bg-white/10 hover:bg-white/20 border-2 border-transparent text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center disabled:opacity-50"
                     >
                         {loading && submitStatus === 'draft' ? <Loader2 className="animate-spin mr-2" /> : null}
                         下書き保存
@@ -989,7 +993,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         type="button"
                         disabled={loading}
                         onClick={(e) => handleSubmit(e, 'pending')}
-                        className="bg-navy-primary hover:bg-indigo-600 border-2 border-navy-primary text-white px-10 py-4 rounded-2xl font-black text-lg transition-all flex items-center space-x-3 disabled:opacity-50"
+                        className="w-full sm:w-auto bg-navy-primary hover:bg-indigo-600 border-2 border-navy-primary text-white px-10 py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
                     >
                         {loading && submitStatus === 'pending' ? <Loader2 className="animate-spin" /> : <><span>物件を公開する</span><Plus /></>}
                     </button>
