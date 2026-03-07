@@ -115,6 +115,11 @@ export default async function AdminSecretDashboard({
                     >
                         <Home className="w-4 h-4" />
                         <span>物件承認</span>
+                        {pendingCount > 0 && (
+                            <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full ml-1 min-w-[1.5rem] text-center">
+                                {pendingCount}
+                            </span>
+                        )}
                     </Link>
                     <Link
                         href="?tab=users"

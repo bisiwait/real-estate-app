@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
     Plus,
@@ -17,7 +17,8 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
-    Filter
+    Filter,
+    Shield
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import dynamic from 'next/dynamic'
@@ -46,6 +47,7 @@ interface Project {
     longitude: number | null
     developer_id?: string | null
     total_units?: number | null
+    facilities?: string[]
 }
 
 export default function AdminProjectManagement() {
@@ -56,6 +58,7 @@ export default function AdminProjectManagement() {
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const formRef = useRef<HTMLDivElement>(null)
 
     // Search & Pagination & Filters
     const [searchQuery, setSearchQuery] = useState('')
@@ -74,7 +77,8 @@ export default function AdminProjectManagement() {
         latitude: 12.9236,
         longitude: 100.8824,
         developer_id: '',
-        total_units: null
+        total_units: null,
+        facilities: []
     })
 
     const supabase = createClient()
@@ -132,6 +136,24 @@ export default function AdminProjectManagement() {
         fetchData()
     }, [])
 
+    const SHARED_FACILITIES = [
+        'プール',
+        'インフィニティプール',
+        'サウナ',
+        'フィットネス',
+        'スカイラウンジ',
+        '多目的ルーム',
+        'キッズルーム',
+        'レストラン',
+        'EV充電器',
+        'オートロック',
+        '24Hセキュリティ',
+        'コンシェルジュ',
+        '駐車場',
+        'WiFi',
+        'シャトルサービス'
+    ]
+
     // Filter projects based on search query and missing info filter
     const filteredProjects = projects.filter(project => {
         // Missing Info Filter logic: IF filter is ON, project MUST be missing year_built OR total_floors
@@ -155,10 +177,18 @@ export default function AdminProjectManagement() {
         currentPage * itemsPerPage
     );
 
-    // Reset to page 1 when search changes
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery]);
+
+    // Scroll to form when adding or editing
+    useEffect(() => {
+        if (isAdding || editingId) {
+            setTimeout(() => {
+                formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }, [isAdding, editingId]);
 
     const handleEdit = (project: Project) => {
         setEditingId(project.id)
@@ -179,7 +209,9 @@ export default function AdminProjectManagement() {
             image_url: '',
             latitude: 12.9236,
             longitude: 100.8824,
-            developer_id: ''
+            developer_id: '',
+            total_units: null,
+            facilities: []
         })
     }
 
@@ -200,7 +232,8 @@ export default function AdminProjectManagement() {
                 latitude: formData.latitude,
                 longitude: formData.longitude,
                 developer_id: formData.developer_id || null,
-                total_units: formData.total_units
+                total_units: formData.total_units,
+                facilities: formData.facilities || []
             }
 
             if (editingId) {
@@ -313,121 +346,161 @@ export default function AdminProjectManagement() {
                 )}
 
                 {(isAdding || editingId) && (
-                    <form onSubmit={handleSubmit} className="bg-slate-50 rounded-3xl p-8 border border-navy-primary/10 space-y-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-black text-navy-primary uppercase tracking-widest">
-                                {editingId ? 'プロジェクト編集' : '新規プロジェクト登録'}
-                            </h3>
-                            <button type="button" onClick={handleCancel} className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors">キャンセル</button>
-                        </div>
+                    <div ref={formRef}>
+                        <form onSubmit={handleSubmit} className="bg-slate-50 rounded-3xl p-8 border border-navy-primary/10 space-y-6 mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-black text-navy-primary uppercase tracking-widest">
+                                    {editingId ? 'プロジェクト編集' : '新規プロジェクト登録'}
+                                </h3>
+                                <button type="button" onClick={handleCancel} className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors">キャンセル</button>
+                            </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">プロジェクト名 <span className="text-red-500">*</span></label>
-                                <input
-                                    required
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary"
-                                    placeholder="Riviera Jomtien"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">エリア <span className="text-red-500">*</span></label>
-                                <select
-                                    required
-                                    value={formData.area_id}
-                                    onChange={e => setFormData({ ...formData, area_id: e.target.value })}
-                                    className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
-                                >
-                                    <option value="">エリアを選択</option>
-                                    <optgroup label="Pattaya">
-                                        {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                                    </optgroup>
-                                    <optgroup label="Sriracha">
-                                        {areas.filter(a => a.region?.name === 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                                    </optgroup>
-                                    {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 && (
-                                        <optgroup label="Other">
-                                            {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                                        </optgroup>
-                                    )}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ</label>
-                                <select
-                                    value={formData.property_type}
-                                    onChange={e => setFormData({ ...formData, property_type: e.target.value })}
-                                    className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
-                                >
-                                    <option value="Condo">Condo</option>
-                                    <option value="House">House</option>
-                                    <option value="Townhouse">Townhouse</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">築年数</label>
-                                <input
-                                    type="text"
-                                    value={formData.year_built || ''}
-                                    onChange={e => setFormData({ ...formData, year_built: e.target.value })}
-                                    className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
-                                    placeholder="2023"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総ユニット数</label>
-                                <input
-                                    type="number"
-                                    value={formData.total_units || ''}
-                                    onChange={e => setFormData({ ...formData, total_units: e.target.value ? parseInt(e.target.value) : null })}
-                                    className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
-                                    placeholder="200"
-                                />
-                            </div>
-                            <div>
-                                <div className="flex justify-between items-center mb-2 ml-1">
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">デベロッパー <span className="text-red-500">*</span></label>
-                                    {developers.length === 0 && (
-                                        <span className="text-[10px] font-bold text-amber-600 animate-pulse">※先にデベロッパー登録が必要です</span>
-                                    )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">プロジェクト名 <span className="text-red-500">*</span></label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary"
+                                        placeholder="Riviera Jomtien"
+                                    />
                                 </div>
-                                <select
-                                    required
-                                    value={formData.developer_id || ''}
-                                    onChange={e => setFormData({ ...formData, developer_id: e.target.value })}
-                                    className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">エリア <span className="text-red-500">*</span></label>
+                                    <select
+                                        required
+                                        value={formData.area_id}
+                                        onChange={e => setFormData({ ...formData, area_id: e.target.value })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
+                                    >
+                                        <option value="">エリアを選択</option>
+                                        <optgroup label="Pattaya">
+                                            {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                        </optgroup>
+                                        <optgroup label="Sriracha">
+                                            {areas.filter(a => a.region?.name === 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                        </optgroup>
+                                        {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 && (
+                                            <optgroup label="Other">
+                                                {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                            </optgroup>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ</label>
+                                    <select
+                                        value={formData.property_type}
+                                        onChange={e => setFormData({ ...formData, property_type: e.target.value })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
+                                    >
+                                        <option value="Condo">Condo</option>
+                                        <option value="House">House</option>
+                                        <option value="Townhouse">Townhouse</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">築年数</label>
+                                    <input
+                                        type="text"
+                                        value={formData.year_built || ''}
+                                        onChange={e => setFormData({ ...formData, year_built: e.target.value })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
+                                        placeholder="2023"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数</label>
+                                    <input
+                                        type="number"
+                                        value={formData.total_floors || ''}
+                                        onChange={e => setFormData({ ...formData, total_floors: e.target.value ? parseInt(e.target.value) : null })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
+                                        placeholder="30"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総ユニット数</label>
+                                    <input
+                                        type="number"
+                                        value={formData.total_units || ''}
+                                        onChange={e => setFormData({ ...formData, total_units: e.target.value ? parseInt(e.target.value) : null })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
+                                        placeholder="200"
+                                    />
+                                </div>
+                                <div>
+                                    <div className="flex justify-between items-center mb-2 ml-1">
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">デベロッパー</label>
+                                        {developers.length === 0 && (
+                                            <span className="text-[10px] font-bold text-amber-600 animate-pulse">※先にデベロッパー登録が必要です</span>
+                                        )}
+                                    </div>
+                                    <select
+                                        value={formData.developer_id || ''}
+                                        onChange={e => setFormData({ ...formData, developer_id: e.target.value })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
+                                    >
+                                        <option value="">デベロッパーを選択</option>
+                                        {developers.map(dev => (
+                                            <option key={dev.id} value={dev.id}>{dev.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="mt-6">
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
+                                <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50">
+                                    <CoordinatePicker lat={formData.latitude || 12.9236} lng={formData.longitude || 100.8824} onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })} />
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-slate-200">
+                                <label className="block text-xs font-black text-navy-primary uppercase tracking-widest mb-4 ml-1 flex items-center">
+                                    <Shield className="w-4 h-4 mr-2" />
+                                    共有施設 (Shared Facilities)
+                                </label>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                    {SHARED_FACILITIES.map(facility => {
+                                        const isSelected = formData.facilities?.includes(facility)
+                                        return (
+                                            <button
+                                                key={facility}
+                                                type="button"
+                                                onClick={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        facilities: isSelected
+                                                            ? prev.facilities?.filter((f: string) => f !== facility)
+                                                            : [...(prev.facilities || []), facility]
+                                                    }))
+                                                }}
+                                                className={`px-3 py-2 rounded-xl text-[10px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}
+                                            >
+                                                {facility}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end pt-4">
+                                <button
+                                    disabled={loading}
+                                    type="submit"
+                                    className="bg-navy-primary text-white px-10 py-4 rounded-2xl font-black flex items-center space-x-2 hover:bg-navy-secondary transition-all"
                                 >
-                                    <option value="">デベロッパーを選択</option>
-                                    {developers.map(dev => (
-                                        <option key={dev.id} value={dev.id}>{dev.name}</option>
-                                    ))}
-                                </select>
+                                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <><Save className="w-5 h-5" /><span>保存する</span></>}
+                                </button>
                             </div>
-                        </div>
-
-                        <div className="mt-6">
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
-                            <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50">
-                                <CoordinatePicker lat={formData.latitude || 12.9236} lng={formData.longitude || 100.8824} onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })} />
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end pt-4">
-                            <button
-                                disabled={loading}
-                                type="submit"
-                                className="bg-navy-primary text-white px-10 py-4 rounded-2xl font-black flex items-center space-x-2 hover:bg-navy-secondary transition-all"
-                            >
-                                {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <><Save className="w-5 h-5" /><span>保存する</span></>}
-                            </button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 )}
 
                 <div className="overflow-x-auto pb-4">
@@ -486,6 +559,12 @@ export default function AdminProjectManagement() {
                                                             <span className="flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                                                                 <Building2 className="w-3 h-3 mr-1" />
                                                                 {developers.find(d => d.id === (project as any).developer_id)?.name || 'Unknown Developer'}
+                                                            </span>
+                                                        )}
+                                                        {project.facilities && project.facilities.length > 0 && (
+                                                            <span className="flex items-center text-[10px] font-bold text-navy-primary bg-navy-primary/5 px-2.5 py-1 rounded-full">
+                                                                <Shield className="w-3 h-3 mr-1" />
+                                                                共有施設 {project.facilities.length}件
                                                             </span>
                                                         )}
                                                     </div>
@@ -570,6 +649,6 @@ export default function AdminProjectManagement() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }

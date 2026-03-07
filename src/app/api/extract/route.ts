@@ -88,24 +88,32 @@ ${textContent}
 Tasks:
 1. "title": Create a welcoming property title in Japanese (up to 40 chars).
 2. "description": Write an appealing, natural Japanese description detailing the selling points, location, and atmosphere. Ensure it targets Japanese expats or investors. Use HTML formatting like <br/> for line breaks if needed.
-3. "price": Extract the price as a plain INTEGER number (e.g., 2800000). Look for THB, Baht, ฿, or numbers with commas. If not found, use 0. If it's for rent, the monthly rent. If it's for sale, the sale price.
-4. "sqm": Extract the property size in square meters as a plain INTEGER or FLOAT number (e.g., 35.5). Look for sqm, sq.m, or 平米.
-5. "layout": Extract the room layout (e.g. "1 Bedroom", "Studio", "2 LDK").
-6. "floor": Extract the floor ONLY as a plain INTEGER or string (e.g. "10", "High", "Low"). Do not include words like "Level", "Floor", or "階". Look for "Floor", "Level", or "階". If not found, leave blank string.
-7. "amenities": Identify amenities/features. IF AND ONLY IF they apply, select from this exact list: ["バスタブあり", "ウォシュレット完備", "洗濯機", "テレビ", "冷蔵庫", "WiFi", "ペット可", "EV充電器あり", "高層階", "築浅", "格安", "高級物件", "バルコニー広い", "オーシャンビュー", "シティービュー"]. Return empty array if none apply.
-8. "image_urls": Look at the Images found on page list. Select 1 to 5 URLs of property photos (e.g. rooms, buildings, interior). You MUST pick at least 1 URL if any valid .jpg, .png, or .webp image is in the list. Do NOT return an empty array if there are images.
-9. "building_name": Extract the name of the condominium, project, or building (e.g., "The Riviera Jomtien", "L Pattaya"). If not found, leave as empty string.
-10. "area": Extract the specific city or location area (e.g., "Pattaya", "Jomtien", "Wongamat", "Sriracha"). If not found, leave as empty string.
+3. "rent_price": Extract the monthly rent as a plain INTEGER number (e.g., 25000). If it's only for sale, use 0.
+4. "sale_price": Extract the sale price as a plain INTEGER number (e.g., 3500000). If it's only for rent, use 0.
+5. "is_for_rent": Boolean. Set to true if it is available for rent.
+6. "is_for_sale": Boolean. Set to true if it is available for sale.
+7. "sqm": Extract the property size in square meters as a plain INTEGER or FLOAT number (e.g., 35.5). Look for sqm, sq.m, or 平米.
+8. "layout": Extract the room layout (e.g. "1 Bedroom", "Studio", "2 LDK").
+9. "floor": Extract the floor ONLY as a plain INTEGER or string (e.g. "10", "High", "Low"). Do not include words like "Level", "Floor", or "階". Look for "Floor", "Level", or "階". If not found, leave blank string.
+10. "amenities": Identify unit-specific amenities. Select from this list: ["バスタブあり", "ウォシュレット完備", "洗濯機", "テレビ", "冷蔵庫", "WiFi", "ペット可", "EV充電器あり", "高層階", "築浅", "格安", "高級物件", "バルコニー広い", "オーシャンビュー", "シティービュー"].
+11. "facilities": Identify project-wide shared facilities. Select from this list: ["プール", "インフィニティプール", "サウナ", "フィットネス", "スカイラウンジ", "多目的ルーム", "キッズルーム", "レストラン", "EV充電器", "オートロック", "24Hセキュリティ", "コンシェルジュ", "駐車場", "WiFi", "シャトルサービス"].
+12. "image_urls": Select 1 to 5 property photos.
+13. "building_name": Name of the condominium/project.
+14. "area": City or area name.
 
 Respond EXACTLY with valid JSON. Do not include markdown \`\`\`json wrappers.
 {
   "title": "...",
   "description": "...",
-  "price": 0,
+  "rent_price": 0,
+  "sale_price": 0,
+  "is_for_rent": true,
+  "is_for_sale": false,
   "sqm": 0,
   "layout": "...",
   "floor": "...",
   "amenities": ["...", "..."],
+  "facilities": ["...", "..."],
   "image_urls": ["...", "..."],
   "building_name": "...",
   "area": "..."

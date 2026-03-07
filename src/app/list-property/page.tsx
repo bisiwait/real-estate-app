@@ -10,11 +10,12 @@ import ListingForm from '@/components/property/ListingForm'
 export default function ListPropertyPage() {
     const [credits, setCredits] = useState<number | null>(null)
     const [loading, setLoading] = useState(true)
+    const [isAdmin, setIsAdmin] = useState(false)
     const router = useRouter()
     const supabase = createClient()
 
     useEffect(() => {
-        async function checkCredits() {
+        async function checkUserData() {
             const { data: { user } } = await supabase.auth.getUser()
 
             if (!user) {
@@ -24,15 +25,16 @@ export default function ListPropertyPage() {
 
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('available_credits')
+                .select('available_credits, is_admin')
                 .eq('id', user.id)
                 .single()
 
             setCredits(profile?.available_credits || 0)
+            setIsAdmin(!!profile?.is_admin)
             setLoading(false)
         }
 
-        checkCredits()
+        checkUserData()
     }, [supabase, router])
 
     if (loading) {
@@ -42,6 +44,8 @@ export default function ListPropertyPage() {
             </div>
         )
     }
+
+    const dashboardPath = isAdmin ? '/admin-secret' : '/dashboard'
 
     if (credits !== null && credits <= 0) {
         return (
@@ -63,13 +67,13 @@ export default function ListPropertyPage() {
                         <span>プランをチェックする</span>
                     </Link>
                     <Link
-                        href="/dashboard"
+                        href={dashboardPath}
                         className="mt-4 w-full bg-white border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-slate-50 transition-all shadow-sm"
                     >
                         <span>ダッシュボードへ戻る</span>
                     </Link>
                     <button
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => router.push(dashboardPath)}
                         className="mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
                     >
                         キャンセル
@@ -84,7 +88,7 @@ export default function ListPropertyPage() {
             <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                     <Link
-                        href="/dashboard"
+                        href={dashboardPath}
                         className="inline-flex items-center space-x-2 text-slate-400 hover:text-navy-primary font-bold mb-8 transition-colors group"
                     >
                         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
