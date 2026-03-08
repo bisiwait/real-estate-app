@@ -144,7 +144,14 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                                     )}
                                     <span className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center">
                                         <Calendar className="w-3 h-3 mr-1" />
-                                        {new Date(inquiry.created_at).toLocaleDateString('ja-JP')}
+                                        {new Date(inquiry.created_at).toLocaleString('ja-JP', {
+                                            timeZone: 'Asia/Bangkok',
+                                            year: 'numeric',
+                                            month: '2-digit',
+                                            day: '2-digit',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
                                     </span>
                                 </div>
                                 <h4 className="text-lg font-bold text-navy-secondary">
@@ -213,7 +220,14 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                                             <div key={reply.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm ml-4 relative">
                                                 <div className="absolute top-4 -left-2 w-4 h-4 bg-white border-l border-t border-slate-100 rotate-45"></div>
                                                 <p className="text-xs text-slate-400 mb-2 font-bold">
-                                                    {new Date(reply.created_at).toLocaleString('ja-JP')}
+                                                    {new Date(reply.created_at).toLocaleString('ja-JP', {
+                                                        timeZone: 'Asia/Bangkok',
+                                                        year: 'numeric',
+                                                        month: '2-digit',
+                                                        day: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
                                                 </p>
                                                 <p className="text-sm text-slate-700 leading-relaxed">{reply.message}</p>
                                             </div>

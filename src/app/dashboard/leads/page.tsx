@@ -107,10 +107,14 @@ export default async function AgentLeadsPage() {
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col">
                                                 <span className="text-xs font-bold text-navy-secondary">
-                                                    {new Date(lead.created_at).toLocaleDateString('ja-JP')}
-                                                </span>
-                                                <span className="text-[10px] text-slate-400 font-medium">
-                                                    {new Date(lead.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                                                    {new Date(lead.created_at).toLocaleString('ja-JP', {
+                                                        timeZone: 'Asia/Bangkok',
+                                                        year: 'numeric',
+                                                        month: '2-digit',
+                                                        day: '2-digit',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
                                                 </span>
                                             </div>
                                         </td>

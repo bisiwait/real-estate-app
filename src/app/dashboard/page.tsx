@@ -96,13 +96,20 @@ export default async function DashboardPage({
     }
 
 
+    // Fetch Leads Count
+    const { count: leadsCount } = await supabase
+        .from('inquiry_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('agent_id', user.id)
+
     const stats = {
         total: properties?.length || 0,
         published: properties?.filter(p => p.status === 'published' || p.status === 'under_negotiation' || p.status === 'contracted').length || 0,
         draft: properties?.filter(p => p.status === 'draft').length || 0,
         pending: properties?.filter(p => p.status === 'pending').length || 0,
         expired: properties?.filter(p => p.status === 'expired').length || 0,
-        unreadInquiries: inquiries?.filter(i => !i.is_read).length || 0
+        unreadInquiries: inquiries?.filter(i => !i.is_read).length || 0,
+        leadsCount: leadsCount || 0
     }
 
     return (
@@ -210,7 +217,7 @@ export default async function DashboardPage({
                                     }`}
                             >
                                 <Mail className="w-4 h-4" />
-                                <span>お問い合わせ ({inquiries?.length || 0})</span>
+                                <span>メール問い合わせ ({inquiries?.length || 0})</span>
                                 {stats.unreadInquiries > 0 && (
                                     <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white ring-2 ring-white">
                                         {stats.unreadInquiries}
@@ -222,7 +229,7 @@ export default async function DashboardPage({
                                 className="flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all text-slate-400 hover:text-navy-primary hover:bg-slate-50 border border-transparent hover:border-navy-primary/10"
                             >
                                 <Users className="w-4 h-4" />
-                                <span>リード管理</span>
+                                <span>LINE問い合わせ ({stats.leadsCount})</span>
                             </Link>
                         </div>
 
@@ -342,9 +349,9 @@ export default async function DashboardPage({
                                     </div>
                                 </>
                             ) : (
-                                <>
+                                <>{/* Inquiries List View */}
                                     <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-                                        <h3 className="text-xl font-black text-navy-secondary">届いたお問い合わせ</h3>
+                                        <h3 className="text-xl font-black text-navy-secondary">届いたメール問い合わせ</h3>
                                         <span className="text-xs font-bold text-slate-400">Total: {inquiries?.length || 0} messages</span>
                                     </div>
                                     <InquiryList initialInquiries={inquiries || []} />
