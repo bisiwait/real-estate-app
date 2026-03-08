@@ -10,6 +10,7 @@ interface PropertyInfo {
     price: string
     url: string
     refId?: string
+    agentId?: string
 }
 
 interface StickyContactBarProps {

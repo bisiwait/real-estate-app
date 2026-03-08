@@ -9,6 +9,7 @@ interface PropertyInfo {
     price: string
     url: string
     refId?: string
+    agentId?: string
 }
 
 interface LineContactButtonProps {
@@ -21,7 +22,7 @@ export default function LineContactButton({ property, variant = 'default', class
     // LINE Official Account ID (Should be configured per agent or globally)
     const LINE_ID = '@164exdsf'
 
-    const handleLineContact = () => {
+    const handleLineContact = async () => {
         const greeting = 'こんにちは。物件ポータルサイトを見て連絡しました。'
         const message = `${greeting}\n\n【問い合わせ物件】\n物件名: ${property.title}\n価格: ${property.price}\nURL: ${property.url}${property.refId ? `\n管理ID: ${property.refId}` : ''}\n\n空き状況を教えてください。`
 
@@ -31,6 +32,35 @@ export default function LineContactButton({ property, variant = 'default', class
 
         // Use the official oaMessage scheme
         const lineUrl = `https://line.me/R/oaMessage/${encodedId}/?${encodedMessage}`
+
+        // --- Log Inquiry to Supabase ---
+        try {
+            const { createClient } = await import('@/lib/supabase/client')
+            const supabase = createClient()
+
+            // Get current user if logged in
+            const { data: { user } } = await supabase.auth.getUser()
+
+            // We need the property's agent_id. 
+            // In a real app, this should be passed in props, but for now we'll assume it's needed.
+            // Let's modify the PropertyInfo to include a guessed agent_id if possible or fetch it.
+            // For now, let's just log what we have.
+
+            await supabase.from('inquiry_logs').insert({
+                user_id: user?.id || null,
+                property_id: property.id,
+                agent_id: property.agentId || '00000000-0000-0000-0000-000000000000',
+                inquiry_type: 'line',
+                status: 'new',
+                metadata: {
+                    browser: navigator.userAgent,
+                    url: window.location.href
+                }
+            })
+        } catch (error) {
+            console.error('Failed to log inquiry:', error)
+        }
+        // -------------------------------
 
         // Detection and logic for PC vs Mobile
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)

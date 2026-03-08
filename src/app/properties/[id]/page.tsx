@@ -134,7 +134,8 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
         title: property.title,
         price: currentPrice,
         url: currentUrl,
-        refId: property.reference_id || property.id.slice(0, 8)
+        refId: property.reference_id || property.id.slice(0, 8),
+        agentId: property.user_id
     }
 
     return (
