@@ -35,28 +35,34 @@ export default function LineContactButton({ property, variant = 'default', class
 
         // --- Log Inquiry to Supabase ---
         try {
-            const { createClient } = await import('@/lib/supabase/client')
-            const supabase = createClient()
+            // UUID validation helper
+            const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
-            // Get current user if logged in
-            const { data: { user } } = await supabase.auth.getUser()
+            const propertyId = property.id
+            const agentId = property.agentId
 
-            // We need the property's agent_id. 
-            // In a real app, this should be passed in props, but for now we'll assume it's needed.
-            // Let's modify the PropertyInfo to include a guessed agent_id if possible or fetch it.
-            // For now, let's just log what we have.
+            // Only attempt to log if we have valid UUIDs to avoid foreign key constraint errors
+            if (isUuid(propertyId) && agentId && isUuid(agentId)) {
+                const { createClient } = await import('@/lib/supabase/client')
+                const supabase = createClient()
 
-            await supabase.from('inquiry_logs').insert({
-                user_id: user?.id || null,
-                property_id: property.id,
-                agent_id: property.agentId || '00000000-0000-0000-0000-000000000000',
-                inquiry_type: 'line',
-                status: 'new',
-                metadata: {
-                    browser: navigator.userAgent,
-                    url: window.location.href
-                }
-            })
+                // Get current user if logged in
+                const { data: { user } } = await supabase.auth.getUser()
+
+                await supabase.from('inquiry_logs').insert({
+                    user_id: user?.id || null,
+                    property_id: propertyId,
+                    agent_id: agentId,
+                    inquiry_type: 'line',
+                    status: 'new',
+                    metadata: {
+                        browser: navigator.userAgent,
+                        url: window.location.href
+                    }
+                })
+            } else {
+                console.warn('Skipping inquiry log: Invalid UUID for property or agent.', { propertyId, agentId })
+            }
         } catch (error) {
             console.error('Failed to log inquiry:', error)
         }
