@@ -20,7 +20,10 @@ import {
     Maximize2,
     Layers,
     Tag as TagIcon,
+    RefreshCw,
+    Mail,
     Calendar,
+    ChevronDown,
     ChevronLeft,
     Bath,
     Coffee,
@@ -351,7 +354,18 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                             </div>
                         )}
 
-
+                        <section id="inquiry-form-section" className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                            <div className="bg-navy-primary p-6 sm:p-8 text-white">
+                                <h2 className="text-xl sm:text-2xl font-black mb-2 flex items-center">
+                                    <Mail className="w-6 h-6 mr-3" />
+                                    お問い合わせ
+                                </h2>
+                                <p className="text-navy-primary/10 text-sm font-bold">Inquiry Form</p>
+                            </div>
+                            <div className="p-6 sm:p-10">
+                                <InquiryForm propertyId={property.id} propertyName={property.title} />
+                            </div>
+                        </section>
 
                         {/* Tags / Features */}
                         <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
