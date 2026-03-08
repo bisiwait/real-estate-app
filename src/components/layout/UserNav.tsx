@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { User, LogOut, LayoutDashboard, Coins, LogIn, UserPlus, ShieldCheck, Search, Settings, Heart } from 'lucide-react'
+import { User, LogOut, LayoutDashboard, Coins, LogIn, UserPlus, ShieldCheck, Search, Settings, Heart, BarChart3 } from 'lucide-react'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
