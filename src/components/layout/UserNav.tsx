@@ -208,17 +208,30 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                 )}
 
                 {userData.role === 'admin' && (
-                    <Link
-                        href="/admin-secret"
-                        onClick={onCloseMobileMenu}
-                        className={cn(
-                            "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
-                            isMobile && "w-full justify-center py-3 bg-slate-50 rounded-xl"
-                        )}
-                    >
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>管理画面</span>
-                    </Link>
+                    <>
+                        <Link
+                            href="/admin-secret"
+                            onClick={onCloseMobileMenu}
+                            className={cn(
+                                "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
+                                isMobile && "w-full justify-center py-3 bg-slate-50 rounded-xl"
+                            )}
+                        >
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>管理画面</span>
+                        </Link>
+                        <Link
+                            href="/admin-secret/analytics"
+                            onClick={onCloseMobileMenu}
+                            className={cn(
+                                "flex items-center space-x-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors",
+                                isMobile && "w-full justify-center py-3 bg-indigo-50/50 rounded-xl"
+                            )}
+                        >
+                            <BarChart3 className="w-4 h-4" />
+                            <span>サイト分析</span>
+                        </Link>
+                    </>
                 )}
 
                 <button

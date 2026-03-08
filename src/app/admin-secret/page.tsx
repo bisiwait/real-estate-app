@@ -63,6 +63,10 @@ export default async function AdminSecretDashboard({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">
+                        <Link href="/admin-secret/analytics" className="flex items-center space-x-2 bg-indigo-50 border border-indigo-100 hover:border-indigo-300 text-indigo-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md">
+                            <BarChart3 className="w-4 h-4" />
+                            <span>サイト統計・分析</span>
+                        </Link>
                         <Link href="/admin-secret/broadcast" className="flex items-center space-x-2 bg-white border border-slate-200 hover:border-navy-primary text-navy-secondary px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md">
                             <Bell className="w-4 h-4 text-navy-primary" />
                             <span>一斉通知を配信</span>
@@ -85,6 +89,13 @@ export default async function AdminSecretDashboard({
                     >
                         <BarChart3 className="w-4 h-4" />
                         <span>概要</span>
+                    </Link>
+                    <Link
+                        href="/admin-secret/analytics"
+                        className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all text-slate-400 hover:text-navy-secondary hover:bg-slate-50"
+                    >
+                        <BarChart3 className="w-4 h-4 text-indigo-500" />
+                        <span>サイト分析</span>
                     </Link>
                     <Link
                         href="?tab=projects"

@@ -8,8 +8,10 @@ import {
     Home,
     MessageCircle,
     ArrowUpRight,
-    Search
+    Search,
+    ArrowLeft
 } from 'lucide-react'
+import Link from 'next/link'
 import AnalyticsCharts from './AnalyticsCharts'
 
 export const dynamic = 'force-dynamic'
@@ -69,6 +71,13 @@ export default async function AdminAnalyticsPage() {
         <div className="p-4 md:p-10 space-y-10 bg-slate-50 min-h-screen">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
+                    <Link
+                        href="/admin-secret"
+                        className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-navy-primary mb-4 transition-colors group"
+                    >
+                        <ArrowLeft className="w-3 h-3 mr-1 group-hover:-translate-x-1 transition-transform" />
+                        管理者ダッシュボードに戻る
+                    </Link>
                     <h1 className="text-3xl font-black text-navy-secondary mb-2 flex items-center gap-3">
                         <BarChart3 className="w-10 h-10 text-navy-primary" />
                         サイト全体分析
