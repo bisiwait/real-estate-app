@@ -94,10 +94,10 @@ function LoginContent() {
         }
     }
 
-    const handleSocialLogin = async (provider: 'google' | 'line') => {
+    const handleSocialLogin = async (provider: 'google') => {
         try {
             const { error } = await supabase.auth.signInWithOAuth({
-                provider: provider as any,
+                provider,
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`,
                 },
@@ -151,17 +151,10 @@ function LoginContent() {
                         </div>
 
                         {/* Social Buttons */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
-                            <button
-                                onClick={() => handleSocialLogin('line')}
-                                className="flex items-center justify-center space-x-3 bg-[#06C755] text-white py-4 rounded-2xl font-black hover:opacity-90 transition-all shadow-lg shadow-[#06C755]/20 animate-in fade-in slide-in-from-bottom-2 duration-500"
-                            >
-                                <MessageSquare className="w-5 h-5 fill-white" />
-                                <span>LINE で続ける</span>
-                            </button>
+                        <div className="flex justify-center mb-10">
                             <button
                                 onClick={() => handleSocialLogin('google')}
-                                className="flex items-center justify-center space-x-3 bg-white text-slate-700 py-4 rounded-2xl font-black border border-slate-200 hover:bg-slate-50 transition-all shadow-lg shadow-slate-200/50 animate-in fade-in slide-in-from-bottom-2 duration-700"
+                                className="w-full flex items-center justify-center space-x-3 bg-white text-slate-700 py-4 rounded-2xl font-black border border-slate-200 hover:bg-slate-50 transition-all shadow-lg shadow-slate-200/50 animate-in fade-in slide-in-from-bottom-2 duration-700"
                             >
                                 <Chrome className="w-5 h-5 text-red-500" />
                                 <span>Google で進む</span>
