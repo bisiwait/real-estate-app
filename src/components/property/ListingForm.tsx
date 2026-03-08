@@ -346,7 +346,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     setProjectForm(pf => ({
                         ...pf,
                         name: data.building_name,
-                        area_id: matchedNewAreaId
+                        area_id: matchedNewAreaId,
+                        latitude: data.latitude || pf.latitude,
+                        longitude: data.longitude || pf.longitude
                     }))
                 }
             }

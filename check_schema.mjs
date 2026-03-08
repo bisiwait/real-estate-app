@@ -4,13 +4,16 @@ import fs from 'fs'
 function getEnv(key) {
     try {
         const content = fs.readFileSync('.env.local', 'utf8')
-        const lines = content.split('\n')
+        const lines = content.split(/\r?\n/)
         for (const line of lines) {
-            if (line.startsWith(key + '=')) {
-                return line.split('=')[1].trim()
+            const trimmed = line.trim()
+            if (trimmed.startsWith(key + '=')) {
+                return trimmed.split('=')[1].trim()
             }
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error(`Error reading .env.local: ${e.message}`)
+    }
     return null
 }
 

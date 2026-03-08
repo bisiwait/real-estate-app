@@ -53,8 +53,8 @@ export default function PropertyConfirmButton({ propertyId, title }: PropertyCon
             onClick={handleConfirm}
             disabled={loading || confirmed}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all shadow-md active:scale-95 ${confirmed
-                    ? 'bg-emerald-500 text-white cursor-default'
-                    : 'bg-white text-navy-primary border border-slate-100 hover:border-navy-primary hover:bg-slate-50'
+                ? 'bg-emerald-500 text-white cursor-default'
+                : 'bg-white text-navy-primary border border-slate-100 hover:border-navy-primary hover:bg-slate-50'
                 }`}
         >
             {loading ? (
@@ -64,7 +64,7 @@ export default function PropertyConfirmButton({ propertyId, title }: PropertyCon
             ) : (
                 <RefreshCw size={16} />
             )}
-            <span>{confirmed ? '更新完了' : '掲載を継続する'}</span>
+            <span>{confirmed ? '更新完了' : '掲載を継続'}</span>
         </button>
     )
 }

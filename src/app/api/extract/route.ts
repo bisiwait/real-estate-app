@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
 
         // 3. Query Gemini
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        // Use gemini-2.5-flash (gemini-1.5-flash returns 404 on this key)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        // Use gemini-2.0-flash (gemini-1.5-flash might return 404 depending on region/key)
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
 You are a professional real estate agent helping Japanese expats and investors in Thailand.
@@ -100,8 +100,10 @@ Tasks:
 12. "image_urls": Select 1 to 5 property photos.
 13. "building_name": Name of the condominium/project.
 14. "area": City or area name.
+15. "latitude": Extract the latitude of the property as a FLOAT number if found.
+16. "longitude": Extract the longitude of the property as a FLOAT number if found.
 
-Respond EXACTLY with valid JSON. Do not include markdown \`\`\`json wrappers.
+Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wrappers.
 {
   "title": "...",
   "description": "...",
@@ -116,24 +118,54 @@ Respond EXACTLY with valid JSON. Do not include markdown \`\`\`json wrappers.
   "facilities": ["...", "..."],
   "image_urls": ["...", "..."],
   "building_name": "...",
-  "area": "..."
+  "area": "...",
+  "latitude": 0,
+  "longitude": 0
 }
 `;
 
-        const result = await model.generateContent(prompt);
+        console.log("Calling Gemini API with model:", "gemini-2.0-flash");
+
+        // Retry logic for 429 errors
+        let result;
+        let retryCount = 0;
+        const maxRetries = 2;
+
+        while (retryCount <= maxRetries) {
+            try {
+                result = await model.generateContent(prompt);
+                break; // Success, exit loop
+            } catch (err: any) {
+                const isRateLimit = err.message?.includes('429') || err.status === 429;
+                if (isRateLimit && retryCount < maxRetries) {
+                    retryCount++;
+                    const waitTime = Math.pow(2, retryCount) * 1000;
+                    console.warn(`Gemini 429 Rate Limit hit. Retrying in ${waitTime}ms... (Attempt ${retryCount}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    continue;
+                }
+                throw err; // Re-throw if not 429 or max retries reached
+            }
+        }
+
+        if (!result) throw new Error("Failed to get response from Gemini after retries");
+
         let responseText = result.response.text().trim();
+        console.log("Gemini Response length:", responseText.length);
 
         // Clean up markdown if the AI includes it despite instructions
-        if (responseText.startsWith('```json')) {
-            responseText = responseText.replace(/^```json/, '').replace(/```$/, '').trim();
+        if (responseText.includes('```')) {
+            console.log("Cleaning up markdown code blocks...");
+            responseText = responseText.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
         }
 
         let parsedData;
         try {
             parsedData = JSON.parse(responseText);
-        } catch (e) {
+            console.log("Successfully parsed JSON data");
+        } catch (e: any) {
             console.error("Failed to parse Gemini JSON:", responseText);
-            throw new Error("AI returned invalid data format.");
+            throw new Error(`AI returned invalid JSON: ${e?.message || 'Unknown error'}`);
         }
 
         // 4. Upload Images to Supabase Storage if found
@@ -189,6 +221,15 @@ Respond EXACTLY with valid JSON. Do not include markdown \`\`\`json wrappers.
 
     } catch (error: any) {
         console.error('API Extract Error:', error);
+
+        // Specific handling for Gemini 429 Rate Limit
+        if (error.message?.includes('429') || error.status === 429) {
+            return NextResponse.json({
+                error: 'Gemini APIの利用制限（429 Too Many Requests）に達しました。1分ほど待ってから再度お試しください。',
+                details: error.message
+            }, { status: 429 });
+        }
+
         return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
     }
 }

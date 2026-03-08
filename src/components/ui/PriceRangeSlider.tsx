@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 interface PriceRangeSliderProps {
     min: number;
@@ -112,14 +112,78 @@ export default function PriceRangeSlider({
         maxValRef.current = value;
     };
 
+    // Generate price options for the dropdown
+    const priceOptions = useMemo(() => {
+        const options = [];
+        for (let i = min; i <= max; i += step) {
+            options.push(i);
+        }
+        // Ensure max is always included if step doesn't land on it perfectly
+        if (options[options.length - 1] !== max) {
+            options.push(max);
+        }
+        return options;
+    }, [min, max, step]);
+
     return (
-        <div className="w-full flex flex-col pt-10 pb-4">
+        <div className="w-full flex flex-col pt-6 pb-4">
+            {/* Dropdown Selects Row */}
+            <div className="flex items-center gap-2 mb-8">
+                <div className="relative flex-1">
+                    <span className="absolute -top-5 left-1 text-[10px] text-slate-400 font-bold uppercase tracking-tight">Price Min</span>
+                    <select
+                        value={minValue}
+                        onChange={(e) => {
+                            const val = Number(e.target.value);
+                            const nextMin = Math.min(val, maxValue - step);
+                            setMinValue(nextMin);
+                            minValRef.current = nextMin;
+                        }}
+                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-3 text-sm font-bold text-navy-secondary outline-none focus:ring-2 focus:ring-navy-primary appearance-none cursor-pointer"
+                    >
+                        {priceOptions.map((option: number) => (
+                            <option key={`min-${option}`} value={option} disabled={option > maxValue - step}>
+                                {formatValue(option)}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                </div>
+
+                <span className="text-slate-300 font-black mt-1">~</span>
+
+                <div className="relative flex-1">
+                    <span className="absolute -top-5 left-1 text-[10px] text-slate-400 font-bold uppercase tracking-tight">Price Max</span>
+                    <select
+                        value={maxValue}
+                        onChange={(e) => {
+                            const val = Number(e.target.value);
+                            const nextMax = Math.max(val, minValue + step);
+                            setMaxValue(nextMax);
+                            maxValRef.current = nextMax;
+                        }}
+                        className="w-full bg-white border border-slate-200 rounded-xl py-3 px-3 text-sm font-bold text-navy-secondary outline-none focus:ring-2 focus:ring-navy-primary appearance-none cursor-pointer"
+                    >
+                        {priceOptions.map((option: number) => (
+                            <option key={`max-${option}`} value={option} disabled={option < minValue + step}>
+                                {option === max ? '上限なし' : formatValue(option)}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                </div>
+            </div>
+
             {/* Visual Slider */}
-            <div className="relative w-full h-1 bg-slate-200 rounded-full mb-6 mt-4">
+            <div className="relative w-full h-1.5 bg-slate-100 rounded-full mb-8 px-1">
                 {/* Active Range Line */}
                 <div
                     ref={rangeRef}
-                    className="absolute h-1 bg-navy-primary rounded-full z-10"
+                    className="absolute h-1.5 bg-navy-primary rounded-full z-10"
                 ></div>
 
                 {/* Min/Max Thumb Inputs overlays */}
@@ -131,8 +195,8 @@ export default function PriceRangeSlider({
                     pointer-events: none;
                     position: absolute;
                     width: 100%;
-                    top: -6px;
-                    height: 4px;
+                    top: -10px;
+                    height: 20px;
                     opacity: 0;
                     z-index: 30;
                     margin: 0;
@@ -141,15 +205,15 @@ export default function PriceRangeSlider({
                     -webkit-appearance: none;
                     appearance: none;
                     pointer-events: auto;
-                    width: 20px;
-                    height: 20px;
+                    width: 32px;
+                    height: 32px;
                     border-radius: 50%;
                     cursor: pointer;
                   }
                   .dual-slider-input::-moz-range-thumb {
                     pointer-events: auto;
-                    width: 20px;
-                    height: 20px;
+                    width: 32px;
+                    height: 32px;
                     border-radius: 50%;
                     cursor: pointer;
                     border: none;
@@ -189,40 +253,34 @@ export default function PriceRangeSlider({
                 />
 
                 {/* Tick marks */}
-                <div className="absolute top-4 left-0 w-full flex justify-between px-1 text-[9px] text-slate-300 font-medium pointer-events-none">
+                <div className="absolute top-5 left-0 w-full flex justify-between px-1 text-[9px] text-slate-300 font-black pointer-events-none uppercase tracking-tighter">
                     <span>{formatValue(min)}</span>
-                    <span>{formatValue(min + (max - min) / 2)}</span>
-                    <span>{formatValue(max)}</span>
+                    <span className="opacity-0 sm:opacity-100">{formatValue(min + (max - min) / 2)}</span>
+                    <span>{formatValue(max)}+</span>
                 </div>
 
                 {/* Custom Min Thumb Visual */}
                 <div
-                    className={`absolute w-5 h-5 bg-white border-2 border-navy-primary rounded-full shadow-md top-1/2 -mt-2.5 -ml-2.5 pointer-events-none transition-transform ${activeThumb === 'min' ? 'scale-110' : ''}`}
+                    className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'min' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
                     style={{ left: `${getPercent(minValue)}%`, zIndex: activeThumb === 'min' || minValue > max - step * 2 ? 40 : 30 }}
-                />
+                >
+                    <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
+                </div>
 
                 {/* Custom Max Thumb Visual */}
                 <div
-                    className={`absolute w-5 h-5 bg-white border-2 border-navy-primary rounded-full shadow-md top-1/2 -mt-2.5 -ml-2.5 pointer-events-none transition-transform ${activeThumb === 'max' ? 'scale-110' : ''}`}
+                    className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'max' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
                     style={{ left: `${getPercent(maxValue)}%`, zIndex: activeThumb === 'max' ? 40 : 30 }}
-                />
+                >
+                    <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
+                </div>
             </div>
 
-            {/* Values Display */}
-            <div className="flex items-center justify-between gap-4">
-                <div className="relative w-full">
-                    <span className="absolute -top-5 text-[10px] text-slate-400 font-bold">下限</span>
-                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-bold text-navy-secondary text-center">
-                        {formatValue(minValue)}
-                    </div>
-                </div>
-                <span className="text-slate-300 font-black">-</span>
-                <div className="relative w-full">
-                    <span className="absolute -top-5 text-[10px] text-slate-400 font-bold">上限</span>
-                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm font-bold text-navy-secondary text-center">
-                        {formatValue(maxValue) === formatValue(max) ? '上限なし' : formatValue(maxValue)}
-                    </div>
-                </div>
+            {/* Current Range Note */}
+            <div className="mt-2 text-center">
+                <p className="text-[11px] font-bold text-slate-400">
+                    選択中: <span className="text-navy-primary">{formatValue(minValue)}</span> 〜 <span className="text-navy-primary">{maxValue === max ? '上限なし' : formatValue(maxValue)}</span>
+                </p>
             </div>
         </div>
     );

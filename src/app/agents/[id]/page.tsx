@@ -190,15 +190,6 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                             <h3 className="text-sm font-black text-navy-secondary text-center lg:text-left mb-6">このエージェントに直接連絡する</h3>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4">
-                                <a href="#whatsapp" className="flex items-center justify-between w-full p-3 sm:p-4 bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-2xl transition-all shadow-sm group">
-                                    <div className="flex items-center gap-3 font-black text-xs sm:text-sm">
-                                        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30">
-                                            <MessageCircle className="w-5 h-5" />
-                                        </div>
-                                        WhatsApp
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                                </a>
 
                                 <a href="#line" className="flex items-center justify-between w-full p-3 sm:p-4 bg-[#06C755]/10 hover:bg-[#06C755] text-[#06C755] hover:text-white rounded-2xl transition-all shadow-sm group">
                                     <div className="flex items-center gap-3 font-black text-xs sm:text-sm">
@@ -292,10 +283,28 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ i
                                             </h3>
 
                                             <div className="flex items-center justify-between border-t border-slate-100 pt-5 mt-auto">
-                                                <div className="text-xl font-black text-navy-secondary tabular-nums tracking-tight">
-                                                    <span className="text-xs text-slate-400 mr-1">฿</span>
-                                                    {property.price?.toLocaleString()}
-                                                    {property.is_for_rent && !property.is_for_sale && <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase">/ 月</span>}
+                                                <div className="flex flex-col space-y-1">
+                                                    {property.is_for_sale && (
+                                                        <div className="text-lg font-black text-navy-secondary tabular-nums tracking-tight leading-none">
+                                                            <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">売:</span>
+                                                            <span className="text-xs text-slate-400 mr-0.5">฿</span>
+                                                            {property.sale_price?.toLocaleString() || '---'}
+                                                        </div>
+                                                    )}
+                                                    {property.is_for_rent && (
+                                                        <div className="text-lg font-black text-navy-secondary tabular-nums tracking-tight leading-none">
+                                                            <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">賃:</span>
+                                                            <span className="text-xs text-slate-400 mr-0.5">฿</span>
+                                                            {property.rent_price?.toLocaleString() || '---'}
+                                                            <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase">/ 月</span>
+                                                        </div>
+                                                    )}
+                                                    {!property.is_for_sale && !property.is_for_rent && (
+                                                        <div className="text-xl font-black text-navy-secondary tabular-nums tracking-tight">
+                                                            <span className="text-xs text-slate-400 mr-1">฿</span>
+                                                            {property.price?.toLocaleString() || '---'}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="flex flex-col items-end gap-1">

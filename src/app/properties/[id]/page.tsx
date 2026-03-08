@@ -13,6 +13,8 @@ import InquiryForm from '@/components/property/InquiryForm'
 import PropertyDescription from '@/components/property/PropertyDescription'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import AgentOtherProperties from '@/components/agent/AgentOtherProperties'
+import StickyContactBar from '@/components/property/StickyContactBar'
+import LineContactButton from '@/components/property/LineContactButton'
 import {
     MapPin,
     Maximize2,
@@ -113,6 +115,22 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
         'オートロック': Shield,
         'コンシェルジュ': Users,
         '駐車場': Car
+    }
+
+    const currentPrice = property.is_for_rent
+        ? `${property.rent_price?.toLocaleString()} THB/月`
+        : `${property.sale_price?.toLocaleString()} THB`
+
+    // Use environment variable for site URL if available
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const currentUrl = `${baseUrl}/properties/${property.id}`
+
+    const propertyInfo = {
+        id: property.id,
+        title: property.title,
+        price: currentPrice,
+        url: currentUrl,
+        refId: property.reference_id || property.id.slice(0, 8) // Fallback to partial ID if reference_id is missing
     }
 
     return (
@@ -451,10 +469,23 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                     <div className="lg:col-span-1 relative">
                         <div className="flex flex-col gap-8 lg:pb-8">
                             <AgentProfileCard agentId={property.user_id} />
+
+                            {/* PC Sidebar LINE Button */}
+                            <div className="hidden lg:block bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
+                                <h3 className="text-sm font-black text-navy-secondary mb-4 uppercase tracking-widest">クイック連絡</h3>
+                                <LineContactButton
+                                    property={propertyInfo}
+                                    variant="full"
+                                    className="shadow-lg shadow-[#06C755]/20"
+                                />
+                                <p className="mt-4 text-[11px] text-slate-400 font-bold text-center">
+                                    LINEでメッセージをお送りいただくと、エージェントがスムーズに対応します。
+                                </p>
+                            </div>
+
                             <InquiryForm propertyId={property.id} propertyName={property.title} />
                         </div>
                     </div>
-
                 </div >
 
                 {/* Agent Other Properties */}
@@ -474,6 +505,9 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                     />
                 </Suspense>
             </div >
+
+            {/* Mobile Sticky Bar */}
+            <StickyContactBar property={propertyInfo} />
         </div >
     )
 }

@@ -41,10 +41,6 @@ export default async function AgentProfileCard({ agentId }: { agentId: string })
             </div>
 
             <div className="space-y-2.5 sm:space-y-3">
-                <a href="#whatsapp" className="flex items-center justify-center w-full py-3 sm:py-3.5 bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white rounded-2xl font-black text-xs sm:text-sm transition-all shadow-sm gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    WhatsAppで問い合わせ
-                </a>
                 <a href="#line" className="flex items-center justify-center w-full py-3 sm:py-3.5 bg-[#06C755]/10 hover:bg-[#06C755] text-[#06C755] hover:text-white rounded-2xl font-black text-xs sm:text-sm transition-all shadow-sm gap-2">
                     <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                     LINEで相談

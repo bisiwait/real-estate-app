@@ -56,8 +56,8 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
             onClick={handleBulkConfirm}
             disabled={loading || status === 'success'}
             className={`flex items-center gap-2 px-6 py-3 rounded-full font-black text-xs transition-all shadow-lg hover:shadow-xl active:scale-95 ${status === 'success'
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-navy-primary text-white hover:bg-navy-secondary'
+                ? 'bg-emerald-500 text-white'
+                : 'bg-navy-primary text-white hover:bg-navy-secondary'
                 }`}
         >
             {status === 'loading' ? (
@@ -72,7 +72,7 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
                     ? '更新中...'
                     : status === 'success'
                         ? 'すべて更新完了'
-                        : 'すべての公開中物件を継続にする'}
+                        : 'すべての公開中物件を掲載継続'}
             </span>
         </button>
     )
