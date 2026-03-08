@@ -274,9 +274,9 @@ function generateLineFlexMessage(log: any, properties: any[]) {
         type: "bubble",
         hero: {
             type: "image",
-            url: p.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop",
+            url: p.images?.[0] || "https://example.com/no-image.jpg",
             size: "full",
-            aspectRatio: "1.51:1",
+            aspectRatio: "20:13",
             aspectMode: "cover"
         },
         body: {
@@ -285,69 +285,30 @@ function generateLineFlexMessage(log: any, properties: any[]) {
             contents: [
                 {
                     type: "text",
-                    text: "✨ おすすめの新着物件",
-                    weight: "bold",
-                    color: "#0066ff",
-                    size: "sm"
-                },
-                {
-                    type: "text",
                     text: p.title,
                     weight: "bold",
-                    size: "xl",
-                    margin: "md",
+                    size: "md",
                     wrap: true
                 },
                 {
                     type: "box",
-                    layout: "vertical",
-                    margin: "lg",
-                    spacing: "sm",
-                    contents: [
-                        {
-                            type: "box",
-                            layout: "baseline",
-                            spacing: "sm",
-                            contents: [
-                                {
-                                    type: "text",
-                                    text: "価格",
-                                    color: "#aaaaaa",
-                                    size: "sm",
-                                    flex: 1
-                                },
-                                {
-                                    type: "text",
-                                    text: `${p.price?.toLocaleString()} THB`,
-                                    wrap: true,
-                                    color: "#333333",
-                                    size: "lg",
-                                    flex: 4,
-                                    weight: "bold"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    type: "box",
                     layout: "baseline",
-                    spacing: "xs",
                     margin: "md",
                     contents: [
                         {
                             type: "text",
-                            text: "📍 エリア:",
-                            color: "#aaaaaa",
-                            size: "xs",
-                            flex: 1
+                            text: `${p.price?.toLocaleString()} THB`,
+                            weight: "bold",
+                            size: "lg",
+                            color: "#0066ff",
+                            flex: 0
                         },
                         {
                             type: "text",
-                            text: p.area?.name || "パタヤ",
-                            color: "#666666",
+                            text: p.area?.name || "",
                             size: "xs",
-                            flex: 4
+                            color: "#999999",
+                            align: "end"
                         }
                     ]
                 }
@@ -360,17 +321,15 @@ function generateLineFlexMessage(log: any, properties: any[]) {
             contents: [
                 {
                     type: "button",
-                    style: "primary",
+                    style: "link",
                     height: "sm",
-                    color: "#1a1e2e",
                     action: {
                         type: "uri",
                         label: "詳細を見る",
-                        uri: `https://real-estate-app-8oj.pages.dev/properties/${p.id}`
+                        uri: `http://pattaya-realestate.com/properties/${p.id}`
                     }
                 }
-            ],
-            flex: 0
+            ]
         }
     }))
 
