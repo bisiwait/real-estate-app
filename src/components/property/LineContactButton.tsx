@@ -49,7 +49,7 @@ export default function LineContactButton({ property, variant = 'default', class
                 // Get current user if logged in
                 const { data: { user } } = await supabase.auth.getUser()
 
-                await supabase.from('inquiry_logs').insert({
+                const { error: insertError } = await supabase.from('inquiry_logs').insert({
                     user_id: user?.id || null,
                     property_id: propertyId,
                     agent_id: agentId,
@@ -60,11 +60,21 @@ export default function LineContactButton({ property, variant = 'default', class
                         url: window.location.href
                     }
                 })
+
+                if (insertError) {
+                    console.error('Supabase insert error details:', insertError)
+                    // If it's a foreign key error, it's likely a mock property or invalid agent
+                    if (insertError.code === '23503') {
+                        console.warn('Foreign key violation: This property might be a mock or have an invalid agent ID.')
+                    }
+                } else {
+                    console.log('Inquiry logged successfully to dashboard.')
+                }
             } else {
                 console.warn('Skipping inquiry log: Invalid UUID for property or agent.', { propertyId, agentId })
             }
         } catch (error) {
-            console.error('Failed to log inquiry:', error)
+            console.error('Failed to log inquiry (Exception):', error)
         }
         // -------------------------------
 

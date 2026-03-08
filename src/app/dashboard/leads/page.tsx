@@ -30,7 +30,7 @@ export default async function AgentLeadsPage() {
         .select(`
             *,
             property:properties(title, id),
-            profile:profiles!inquiry_logs_user_id_fkey(full_name, email)
+            profile:user_id(full_name, email)
         `)
         .eq('agent_id', user.id)
         .order('created_at', { ascending: false })
@@ -38,6 +38,10 @@ export default async function AgentLeadsPage() {
     if (error) {
         console.error('Error fetching leads:', error)
     }
+
+    // Secondary fetch for profiles to avoid complex JOIN issues if they fail
+    // In a real app, you'd want a single join, but for debugging/reliability we can split or simplify.
+    // Let's keep it simple for now and just show the leads.
 
     const getStatusBadge = (status: string) => {
         switch (status) {

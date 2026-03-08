@@ -35,7 +35,7 @@ export default async function AdminAnalyticsPage() {
         .select(`
             *,
             property:properties(title),
-            agent:profiles!inquiry_logs_agent_id_fkey(full_name)
+            agent:agent_id(full_name)
         `)
 
     // Simple aggregation for the dashboard counters
