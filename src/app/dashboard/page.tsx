@@ -17,7 +17,8 @@ import {
     LayoutDashboard,
     Building2,
     Mail,
-    RefreshCw
+    RefreshCw,
+    Users
 } from 'lucide-react'
 import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
 import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
@@ -215,6 +216,13 @@ export default async function DashboardPage({
                                         {stats.unreadInquiries}
                                     </span>
                                 )}
+                            </Link>
+                            <Link
+                                href="/dashboard/leads"
+                                className="flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all text-slate-400 hover:text-navy-primary hover:bg-slate-50 border border-transparent hover:border-navy-primary/10"
+                            >
+                                <Users className="w-4 h-4" />
+                                <span>リード管理</span>
                             </Link>
                         </div>
 
