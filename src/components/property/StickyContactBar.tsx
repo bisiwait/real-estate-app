@@ -22,7 +22,14 @@ export default function StickyContactBar({ property, phoneNumber }: StickyContac
     const scrollToInquiry = () => {
         const element = document.getElementById('inquiry-form-section')
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth' })
+            const headerOffset = 100
+            const elementPosition = element.getBoundingClientRect().top
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            })
         }
     }
 
@@ -32,7 +39,7 @@ export default function StickyContactBar({ property, phoneNumber }: StickyContac
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-transparent h-full -top-4 pointer-events-none" />
 
             <div className="relative bg-white border-t border-slate-100 p-3 pb-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pointer-events-auto">
-                <div className="container mx-auto flex items-center justify-center gap-4">
+                <div className="container mx-auto flex items-center justify-center gap-3">
                     {/* Phone Call Button - Only show if phoneNumber exists */}
                     {phoneNumber && (
                         <a
@@ -47,16 +54,17 @@ export default function StickyContactBar({ property, phoneNumber }: StickyContac
                     {/* Email Inquiry Button (Scroll to form) */}
                     <button
                         onClick={scrollToInquiry}
-                        className="flex flex-col items-center justify-center bg-navy-primary text-white w-14 h-14 rounded-xl active:scale-95 transition-all flex-shrink-0 shadow-lg shadow-navy-primary/20"
+                        className="flex-1 flex flex-col items-center justify-center bg-navy-primary text-white h-14 rounded-xl active:scale-95 transition-all shadow-lg shadow-navy-primary/20"
                     >
                         <Mail className="w-5 h-5 mb-0.5" />
-                        <span className="text-[9px] font-black uppercase">Mail</span>
+                        <span className="text-[10px] font-black uppercase">Mail</span>
                     </button>
 
                     {/* Main Action: LINE Button */}
                     <LineContactButton
                         property={property}
                         variant="icon"
+                        className="flex-1 h-14"
                     />
                 </div>
 

@@ -40,16 +40,6 @@ export default async function AgentProfileCard({ agentId }: { agentId: string })
                 </div>
             </div>
 
-            <div className="space-y-2.5 sm:space-y-3">
-                <a href="#line" className="flex items-center justify-center w-full py-3 sm:py-3.5 bg-[#06C755]/10 hover:bg-[#06C755] text-[#06C755] hover:text-white rounded-2xl font-black text-xs sm:text-sm transition-all shadow-sm gap-2">
-                    <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-                    LINEで相談
-                </a>
-                <a href="#phone" className="flex items-center justify-center w-full py-3 sm:py-3.5 bg-slate-50 border-2 border-transparent hover:border-slate-200 hover:bg-slate-100 text-slate-600 rounded-2xl font-black text-xs sm:text-sm transition-all shadow-sm gap-2">
-                    <Phone className="w-5 h-5" />
-                    電話をかける
-                </a>
-            </div>
 
             <div className="mt-6 pt-6 border-t border-slate-100 text-center">
                 <Link href={`/agents/${agentId}`} className="text-[10px] font-black text-navy-primary hover:text-indigo-600 transition-colors uppercase tracking-widest inline-flex items-center gap-1 group">
