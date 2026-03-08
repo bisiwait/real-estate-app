@@ -121,8 +121,12 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
         ? `${property.rent_price?.toLocaleString()} THB/月`
         : `${property.sale_price?.toLocaleString()} THB`
 
-    // Use environment variable for site URL if available
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    // Dynamically get the host to ensure the URL is correct on any environment (local, preview, production)
+    const { headers } = await import('next/headers')
+    const headersList = await headers()
+    const host = headersList.get('host')
+    const protocol = headersList.get('x-forwarded-proto') || 'https'
+    const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
     const currentUrl = `${baseUrl}/properties/${property.id}`
 
     const propertyInfo = {
@@ -130,7 +134,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
         title: property.title,
         price: currentPrice,
         url: currentUrl,
-        refId: property.reference_id || property.id.slice(0, 8) // Fallback to partial ID if reference_id is missing
+        refId: property.reference_id || property.id.slice(0, 8)
     }
 
     return (
