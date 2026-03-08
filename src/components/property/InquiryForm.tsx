@@ -60,7 +60,7 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
             }
 
             console.log('Inserting inquiry for property:', propertyId)
-            const { data: submitResult, error: submitError } = await supabase
+            const { error: submitError } = await supabase
                 .from('inquiries')
                 .insert([
                     {
@@ -71,14 +71,13 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
                         message: formData.message
                     }
                 ])
-                .select()
 
             if (submitError) {
                 console.error('Supabase error details:', submitError)
                 throw submitError
             }
 
-            console.log('Inquiry submitted successfully:', submitResult)
+            console.log('Inquiry submitted successfully')
 
             // Set rate limit timestamp
             localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
