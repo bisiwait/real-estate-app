@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
+import type { Provider } from '@supabase/supabase-js'
 
 export function SocialLoginButtons() {
     const [loading, setLoading] = useState<string | null>(null)
@@ -18,7 +19,7 @@ export function SocialLoginButtons() {
         }
 
         const { error } = await supabase.auth.signInWithOAuth({
-            provider,
+            provider: provider as Provider,
             options: {
                 redirectTo: `${window.location.origin}/auth/callback`,
                 queryParams,
