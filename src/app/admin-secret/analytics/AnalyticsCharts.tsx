@@ -19,6 +19,14 @@ interface ChartProps {
 }
 
 export default function AnalyticsCharts({ data, type, color = '#3B82F6' }: ChartProps) {
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) return <div className="h-full bg-slate-50/50 animate-pulse rounded-2xl" />
+
     if (!data || data.length === 0) {
         return (
             <div className="h-full flex items-center justify-center text-slate-400 text-sm italic font-medium">

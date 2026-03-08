@@ -10,12 +10,10 @@ import {
     ArrowUpRight,
     Search
 } from 'lucide-react'
-import dynamic from 'next/dynamic'
-
-// Dynamically import charts to avoid SSR issues with Recharts
-const AnalyticsCharts = dynamic(() => import('./AnalyticsCharts'), { ssr: false })
+import AnalyticsCharts from './AnalyticsCharts'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 export default async function AdminAnalyticsPage() {
     const supabase = await createClient()
