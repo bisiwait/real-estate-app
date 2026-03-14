@@ -52,32 +52,35 @@ export async function POST(req: NextRequest) {
 
 
         const { GoogleGenerativeAI } = await import('@google/generative-ai');
-        const cheerio = await import('cheerio');
         const html = await response.text();
-        const $ = cheerio.load(html);
+        
+        // 2. Extract Basic Elements without cheerio
+        // Remove scripts, styles etc with regex
+        const cleanHtml = html
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+            .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
 
-        // 2. Extract Basic Elements
-        $('script, style, noscript, iframe, svg, head, nav, footer').remove();
-        let textContent = $('body').text().replace(/\s+/g, ' ').trim();
+        const textContent = cleanHtml.slice(0, 15000);
 
-        // Further reduce to avoid "heavy request" triggers and token limits on free tier
-        textContent = textContent.slice(0, 10000);
-
-        // Extract potential images
+        // Extract potential images with regex
         const images: string[] = [];
-        $('img').each((i, el) => {
-            let src = $(el).attr('src') || $(el).attr('data-src');
+        const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
+        let match;
+        while ((match = imgRegex.exec(html)) !== null) {
+            const src = match[1];
             if (src && !src.startsWith('data:') && !src.includes('avatar') && !src.includes('logo') && !src.endsWith('.svg')) {
                 try {
                     const absoluteUrl = new URL(src, url).href;
                     if (!images.includes(absoluteUrl)) {
                         images.push(absoluteUrl);
                     }
-                } catch (e) {
-                    // Ignore invalid URLs
-                }
+                } catch (e) {}
             }
-        });
+            if (images.length > 50) break;
+        }
 
         // 3. Query Gemini with Dual-Model Fallback and Faster Retries
         const genAI = new GoogleGenerativeAI(apiKey);

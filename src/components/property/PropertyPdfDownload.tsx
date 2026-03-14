@@ -5,8 +5,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PropertyFlyer } from './PropertyFlyer';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-// qrcode import is kept because it's already in package.json and not too heavy, but we'll monitor
-import QRCode from 'qrcode'; 
 
 interface PropertyPdfDownloadProps {
     property: any;
@@ -94,40 +92,47 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
             setIsDataReady(false);
 
             try {
-                // 1. Generate QR Code
+                // 1. Generate QR Code using CDN library
                 const url = `${window.location.origin}/properties/${property.id}`;
-                console.log('Generating QR code for PDF Flyer URL:', url);
-                const qrDataUrl = await QRCode.toDataURL(url, {
-                    margin: 1,
-                    width: 250,
-                    color: {
-                        dark: '#2A4076',
-                        light: '#ffffff'
+                console.log('Generating QR code for PDF Flyer URL (CDN Mode):', url);
+                
+                // Wait for QRCode to be available
+                const checkQRCode = () => {
+                    if (window.QRCode) {
+                        const tempContainer = document.createElement('div');
+                        const qr = new window.QRCode(tempContainer, {
+                            text: url,
+                            width: 250,
+                            height: 250,
+                            colorDark: "#2A4076",
+                            colorLight: "#ffffff",
+                            correctLevel: window.QRCode.CorrectLevel.H
+                        });
+                        
+                        // Small delay to ensure canvas is rendered
+                        setTimeout(() => {
+                            const canvas = tempContainer.querySelector('canvas');
+                            if (canvas) {
+                                setQrCodeUrl(canvas.toDataURL());
+                                setIsDataReady(true);
+                                console.log('QR Code generated successfully via CDN');
+                            }
+                        }, 100);
+                    } else {
+                        setTimeout(checkQRCode, 500);
                     }
-                });
-                setQrCodeUrl(qrDataUrl);
-                console.log('QR Code generated successfully for PDF');
+                };
+                
+                checkQRCode();
 
                 // 2. Convert Main Image to Base64
                 if (property.images && property.images.length > 0) {
                     console.log('Starting pre-load of main property image for PDF...');
                     const b64 = await fetchImageAsBase64(property.images[0]);
                     setImageBase64(b64);
-                    if (b64) {
-                        console.log('Main image pre-loaded successfully');
-                    } else {
-                        console.warn('Main image pre-load failed');
-                    }
-                }
-
-                // Strictly ready only if QR code is done (image is optional but logged)
-                if (qrDataUrl) {
-                    setIsDataReady(true);
-                    console.log('PDF Data Preparation Complete: Ready for download');
                 }
             } catch (err) {
                 console.error('Error in PDF data preparation:', err);
-                // Fallback: at least allow text/QR if possible
                 setIsDataReady(true);
             }
         };
@@ -240,6 +245,7 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
             {/* Load CDN Scripts */}
             <Script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" strategy="lazyOnload" />
             <Script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js" strategy="lazyOnload" />
+            <Script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" strategy="lazyOnload" />
         </div>
     );
 }
