@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, Globe, Award, MapPin, ChevronRight, Projector as Project } from 'lucide-react'
 
-export const runtime = 'edge';
+
 export const dynamic = 'force-static'
 export const revalidate = 3600
 
