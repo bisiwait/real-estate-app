@@ -19,18 +19,8 @@ import {
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
-
-export async function generateStaticParams() {
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    const { data: agents } = await supabase.from('profiles').select('id')
-    return agents?.map((a) => ({ id: a.id })) || []
-}
 
 export default async function AgentProfilePage({ params }: { params: Promise<{ id: string }> }) {
     // We use the admin client here to bypass RLS on the profiles table since public read isn't enabled
