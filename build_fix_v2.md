@@ -1,0 +1,13 @@
+# build_fix_v2.md
+- [ ] 'use client' と 'export const runtime = 'edge';' の順序修正
+  - [ ] src/app/[locale]/about/page.tsx
+  - [ ] src/app/[locale]/auth/forgot-password/page.tsx
+  - [ ] src/app/[locale]/auth/reset-password/page.tsx
+  - [ ] src/app/[locale]/contact/page.tsx
+  - [ ] src/app/[locale]/dashboard/presale/page.tsx
+  - [ ] src/app/[locale]/list-property/page.tsx
+  - [ ] src/app/[locale]/login/page.tsx
+  - [ ] src/app/[locale]/pricing/page.tsx
+  - [ ] src/app/[locale]/register/page.tsx
+- [ ] 他の Client Component の確認
+- [ ] Git コミット & プッシュ
