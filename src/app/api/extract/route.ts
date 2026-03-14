@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-export const runtime = 'edge';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as cheerio from 'cheerio';
 import { createClient } from '@supabase/supabase-js';
+
+export const runtime = 'nodejs';
 
 // Initialize Supabase admin client to bypass RLS for image upload
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -17,30 +18,38 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
         }
 
-        if (!process.env.GEMINI_API_KEY) {
-            return NextResponse.json({ error: 'GEMINI_API_KEY is not configured on the server.' }, { status: 500 });
+        const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return NextResponse.json({ error: 'GOOGLE_GENERATIVE_AI_API_KEY is not configured on the server.' }, { status: 500 });
         }
 
-        // 1. Fetch HTML with full browser headers to avoid 403 Forbidden
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                'Accept-Language': 'en-US,en;q=0.9,ja;q=0.8',
-                'Cache-Control': 'max-age=0',
-                'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-                'Sec-Ch-Ua-Mobile': '?0',
-                'Sec-Ch-Ua-Platform': '"Windows"',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Sec-Fetch-User': '?1',
-                'Upgrade-Insecure-Requests': '1'
-            }
-        });
+        // 1. Fetch HTML with full browser headers
+        let response;
+        try {
+            response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'Referer': 'https://www.google.com/',
+                }
+            });
+        } catch (fetchErr: any) {
+            console.error('Fetch error:', fetchErr);
+            throw new Error(`物件サイトに接続できませんでした。URLが正しいか確認してください。 (Network Error)`);
+        }
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch URL: ${response.statusText}`);
+            if (response.status === 429) {
+                // Return a specific message for site-side limits
+                return NextResponse.json({
+                    error: "【アクセス拒絶】物件サイト側からアクセスの一時制限を受けています。このサイトは現在取り込みができません。別の物件サイトでお試しください。",
+                    details: "Target site returned 429"
+                }, { status: 429 });
+            }
+            return NextResponse.json({
+                error: `物件サイトの読み込みに失敗しました (Status: ${response.status})。`,
+                details: response.statusText
+            }, { status: response.status });
         }
 
         const html = await response.text();
@@ -50,8 +59,8 @@ export async function POST(req: NextRequest) {
         $('script, style, noscript, iframe, svg, head, nav, footer').remove();
         let textContent = $('body').text().replace(/\s+/g, ' ').trim();
 
-        // Truncate to save tokens, though Gemini 1.5 can handle a lot
-        textContent = textContent.slice(0, 40000);
+        // Further reduce to avoid "heavy request" triggers and token limits on free tier
+        textContent = textContent.slice(0, 10000);
 
         // Extract potential images
         const images: string[] = [];
@@ -69,10 +78,8 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        // 3. Query Gemini
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        // Use gemini-2.0-flash (gemini-1.5-flash might return 404 depending on region/key)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // 3. Query Gemini with Dual-Model Fallback and Faster Retries
+        const genAI = new GoogleGenerativeAI(apiKey);
 
         const prompt = `
 You are a professional real estate agent helping Japanese expats and investors in Thailand.
@@ -102,6 +109,9 @@ Tasks:
 14. "area": City or area name.
 15. "latitude": Extract the latitude of the property as a FLOAT number if found.
 16. "longitude": Extract the longitude of the property as a FLOAT number if found.
+17. "sns_copy_ja": Create a short, catchy SNS copy in Japanese for this property. Use bullet points, emojis, and hashtags (e.g., #PattayaRealEstate #PattayaProperty). Ensure it appeals to investors or expats.
+18. "sns_copy_en": Create a short, catchy SNS copy in English for this property. Use bullet points, emojis, and hashtags.
+19. "sns_copy_th": Create a short, catchy SNS copy in Thai for this property. Use bullet points, emojis, and hashtags.
 
 Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wrappers.
 {
@@ -120,63 +130,94 @@ Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wra
   "building_name": "...",
   "area": "...",
   "latitude": 0,
-  "longitude": 0
+  "longitude": 0,
+  "sns_copy_ja": "...",
+  "sns_copy_en": "...",
+  "sns_copy_th": "..."
 }
 `;
 
-        console.log("Calling Gemini API with model:", "gemini-2.0-flash");
+        const tryQuery = async (modelName: string) => {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            console.log("Calling Gemini API with model:", modelName);
 
-        // Retry logic for 429 errors
-        let result;
-        let retryCount = 0;
-        const maxRetries = 2;
+            let retryCount = 0;
+            const maxRetries = 1;
 
-        while (retryCount <= maxRetries) {
-            try {
-                result = await model.generateContent(prompt);
-                break; // Success, exit loop
-            } catch (err: any) {
-                const isRateLimit = err.message?.includes('429') || err.status === 429;
-                if (isRateLimit && retryCount < maxRetries) {
-                    retryCount++;
-                    const waitTime = Math.pow(2, retryCount) * 1000;
-                    console.warn(`Gemini 429 Rate Limit hit. Retrying in ${waitTime}ms... (Attempt ${retryCount}/${maxRetries})`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                    continue;
+            while (retryCount <= maxRetries) {
+                try {
+                    return await model.generateContent(prompt);
+                } catch (err: any) {
+                    const status = err.status || err.response?.status;
+                    const isRateLimit = status === 429 || err.message?.includes('429');
+
+                    if (isRateLimit && retryCount < maxRetries) {
+                        retryCount++;
+                        console.warn(`Gemini 429 hit for ${modelName}. Retrying in 5s...`);
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        continue;
+                    }
+                    throw err;
                 }
-                throw err; // Re-throw if not 429 or max retries reached
+            }
+            throw new Error(`Failed to get response from Gemini model ${modelName} after retries`);
+        };
+
+        const modelsToTry = ["gemini-2.0-flash", "gemini-flash-latest", "gemini-2.5-flash"];
+        let result = null;
+        const errorHistory: string[] = [];
+
+        for (const modelName of modelsToTry) {
+            try {
+                result = await tryQuery(modelName);
+                if (result) break; // Success!
+            } catch (err: any) {
+                console.warn(`Model ${modelName} failed:`, err.message);
+                errorHistory.push(`${modelName}: ${err.message}`);
+                // Continue to next model for 429 or 404
+                const status = err.status || err.response?.status;
+                const isRateLimit = status === 429 || err.message?.includes('429');
+                const isNotFound = status === 404 || err.message?.includes('404');
+
+                if (isRateLimit || isNotFound) {
+                    continue;
+                } else {
+                    // Critical error (e.g. 401, 403), stop early
+                    throw err;
+                }
             }
         }
 
-        if (!result) throw new Error("Failed to get response from Gemini after retries");
+        if (!result) {
+            const compositeMsg = `[DEBUG_V3] 全てのAIモデルが制限中または利用不可です。\n試行履歴:\n- ${errorHistory.join('\n- ')}`;
+            const lastError: any = new Error(compositeMsg);
+            lastError.status = 429;
+            throw lastError;
+        }
 
         let responseText = result.response.text().trim();
-        console.log("Gemini Response length:", responseText.length);
 
-        // Clean up markdown if the AI includes it despite instructions
         if (responseText.includes('```')) {
-            console.log("Cleaning up markdown code blocks...");
             responseText = responseText.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
         }
 
         let parsedData;
         try {
             parsedData = JSON.parse(responseText);
-            console.log("Successfully parsed JSON data");
         } catch (e: any) {
             console.error("Failed to parse Gemini JSON:", responseText);
-            throw new Error(`AI returned invalid JSON: ${e?.message || 'Unknown error'}`);
+            throw new Error(`AIからのデータ解析に失敗しました。`);
         }
 
         // 4. Upload Images to Supabase Storage if found
         let finalImageUrls: string[] = [];
 
         if (parsedData.image_urls && Array.isArray(parsedData.image_urls)) {
-            // Process uploads in parallel
-            const uploadPromises = parsedData.image_urls.map(async (imageUrl: string) => {
+            const targetImages = parsedData.image_urls.slice(0, 5);
+            const uploadPromises = targetImages.map(async (imageUrl: string) => {
                 if (!imageUrl) return null;
                 try {
-                    const imgRes = await fetch(imageUrl);
+                    const imgRes = await fetch(imageUrl, { signal: AbortSignal.timeout(5000) });
                     if (imgRes.ok) {
                         const arrayBuffer = await imgRes.arrayBuffer();
                         const buffer = Buffer.from(arrayBuffer);
@@ -197,12 +238,10 @@ Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wra
                                 .getPublicUrl(fileName);
 
                             return publicUrlData.publicUrl;
-                        } else {
-                            console.error('Supabase storage upload error:', error);
                         }
                     }
                 } catch (err) {
-                    console.error("Image upload failed for", imageUrl, err);
+                    console.error("Image upload failed for", imageUrl);
                 }
                 return null;
             });
@@ -210,8 +249,6 @@ Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wra
             const results = await Promise.all(uploadPromises);
             finalImageUrls = results.filter((url): url is string => url !== null);
             parsedData.image_urls = finalImageUrls;
-
-            // For backward compatibility with the client code if we want to keep it simple
             if (finalImageUrls.length > 0) {
                 parsedData.main_image_url = finalImageUrls[0];
             }
@@ -222,14 +259,26 @@ Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wra
     } catch (error: any) {
         console.error('API Extract Error:', error);
 
-        // Specific handling for Gemini 429 Rate Limit
-        if (error.message?.includes('429') || error.status === 429) {
+        // If we caught an error from the scraper earlier, it might already be handled by returning a NextResponse.
+        // However, if logic reached here as a thrown error:
+
+        const status = error.status || error.response?.status;
+        const errMsg = error.message || "Unknown error";
+        const isGeminiRateLimit = (status === 429 || errMsg.includes('429')) &&
+            (errMsg.includes('Gemini') || errMsg.includes('Google') || errMsg.includes('Generative'));
+
+        if (isGeminiRateLimit) {
             return NextResponse.json({
-                error: 'Gemini APIの利用制限（429 Too Many Requests）に達しました。1分ほど待ってから再度お試しください。',
-                details: error.message
+                error: 'AIサービス（Gemini）の利用制限に達しました。1〜2分ほど待ってから再度お試しください。',
+                details: `Google API Error: ${errMsg}`,
+                isRateLimit: true
             }, { status: 429 });
         }
 
-        return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+        return NextResponse.json({
+            error: errMsg,
+            details: `Error Type: ${error.name}, Message: ${errMsg}`,
+            isRateLimit: false
+        }, { status: 500 });
     }
 }
