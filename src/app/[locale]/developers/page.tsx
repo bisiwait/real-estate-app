@@ -1,4 +1,3 @@
-﻿export const runtime = 'edge';
 import { createStaticClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ChevronRight, Building2, Globe, Award } from 'lucide-react'
@@ -31,10 +30,10 @@ export default async function DevelopersPage() {
                     </div>
                 </div>
                 <div className="container mx-auto px-4 relative z-10">
-                    <h1 className="text-4xl font-black mb-4 tracking-tight">荳ｻ隕√ョ繝吶Ο繝・ヱ繝ｼ</h1>
+                    <h1 className="text-4xl font-black mb-4 tracking-tight">主要デベロッパー</h1>
                     <p className="text-slate-400 max-w-2xl text-sm font-medium leading-relaxed">
-                        繝代ち繝､繝ｻ繧ｷ繝ｩ繝√Ε縺ｮ荳榊虚逕｣髢狗匱繧堤何蠑輔☆繧九ヨ繝・・繝ｬ繝吶Ν縺ｮ繝・・繝ｭ繝・ヱ繝ｼ繧偵＃邏ｹ莉九＠縺ｾ縺吶・
-                        縺薙ｌ縺ｾ縺ｧ縺ｮ螳溽ｸｾ繧・・繝ｭ繧ｸ繧ｧ繧ｯ繝医・雉ｪ繧貞渕縺ｫ縲∽ｿ｡鬆ｼ縺ｧ縺阪ｋ繝代・繝医リ繝ｼ謗｢縺励ｒ縺頑焔莨昴＞縺励∪縺吶・
+                        パタヤ・シラチャの不動産開発を牽引するトップレベルのデベロッパーをご紹介します。
+                        これまでの実績やプロジェクトの質を基に、信頼できるパートナー探しをお手伝いします。
                     </p>
                 </div>
             </div>
@@ -61,14 +60,14 @@ export default async function DevelopersPage() {
                             </h2>
 
                             <p className="text-slate-500 text-sm line-clamp-3 mb-6 leading-relaxed">
-                                {developer.description || '莨夂､ｾ讎りｦ√′逋ｻ骭ｲ縺輔ｌ縺ｦ縺・∪縺帙ｓ縲・}
+                                {developer.description || '会社概要が登録されていません。'}
                             </p>
 
                             <div className="mt-auto w-full pt-6 border-t border-slate-50 flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Projects</span>
-                                        <span className="text-sm font-black text-navy-secondary">{(developer.projects?.[0] as any)?.count || 0} 莉ｶ</span>
+                                        <span className="text-sm font-black text-navy-secondary">{(developer.projects?.[0] as any)?.count || 0} 件</span>
                                     </div>
                                     {developer.website_url && (
                                         <div className="h-4 w-px bg-slate-200"></div>
@@ -91,8 +90,8 @@ export default async function DevelopersPage() {
                 {(!developers || developers.length === 0) && (
                     <div className="bg-white rounded-3xl p-20 text-center shadow-sm border border-slate-100">
                         <Building2 className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                        <h3 className="text-xl font-bold text-navy-secondary mb-2">繝・・繝ｭ繝・ヱ繝ｼ縺瑚ｦ九▽縺九ｊ縺ｾ縺帙ｓ</h3>
-                        <p className="text-slate-500">迴ｾ蝨ｨ縲√ョ繝吶Ο繝・ヱ繝ｼ諠・ｱ繧呈ｺ門ｙ荳ｭ縺ｧ縺吶・/p>
+                        <h3 className="text-xl font-bold text-navy-secondary mb-2">デベロッパーが見つかりません</h3>
+                        <p className="text-slate-500">現在、デベロッパー情報を準備中です。</p>
                     </div>
                 )}
             </div>

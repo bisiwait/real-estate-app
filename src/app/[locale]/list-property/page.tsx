@@ -1,4 +1,3 @@
-﻿export const runtime = 'edge';
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -55,29 +54,29 @@ export default function ListPropertyPage() {
                     <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
                         <AlertTriangle className="text-amber-600 w-8 h-8" />
                     </div>
-                    <h2 className="text-2xl font-black text-navy-secondary mb-4">謗ｲ霈峨け繝ｬ繧ｸ繝・ヨ縺御ｸ崎ｶｳ縺励※縺・∪縺・/h2>
+                    <h2 className="text-2xl font-black text-navy-secondary mb-4">掲載クレジットが不足しています</h2>
                     <p className="text-slate-500 mb-10 leading-relaxed">
-                        迚ｩ莉ｶ繧呈軸霈峨☆繧九↓縺ｯ縲∽ｺ句燕縺ｫ縲梧軸霈画棧・医け繝ｬ繧ｸ繝・ヨ・峨阪ｒ雉ｼ蜈･縺励※縺・◆縺縺丞ｿ・ｦ√′縺ゅｊ縺ｾ縺吶・
-                        迴ｾ蝨ｨ縲√♀螳｢讒倥・菫晄戟繧ｯ繝ｬ繧ｸ繝・ヨ縺ｯ <span className="text-navy-primary font-bold">0</span> 縺ｧ縺吶・
+                        物件を掲載するには、事前に「掲載枠（クレジット）」を購入していただく必要があります。
+                        現在、お客様の保持クレジットは <span className="text-navy-primary font-bold">0</span> です。
                     </p>
                     <Link
                         href="/pricing"
                         className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-navy-secondary transition-all shadow-lg hover:shadow-xl"
                     >
                         <CreditCard className="w-5 h-5" />
-                        <span>繝励Λ繝ｳ繧偵メ繧ｧ繝・け縺吶ｋ</span>
+                        <span>プランをチェックする</span>
                     </Link>
                     <Link
                         href={dashboardPath}
                         className="mt-4 w-full bg-white border border-slate-200 text-slate-600 py-3 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-slate-50 transition-all shadow-sm"
                     >
-                        <span>繝繝・す繝･繝懊・繝峨∈謌ｻ繧・/span>
+                        <span>ダッシュボードへ戻る</span>
                     </Link>
                     <button
                         onClick={() => router.push(dashboardPath)}
                         className="mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
                     >
-                        繧ｭ繝｣繝ｳ繧ｻ繝ｫ
+                        キャンセル
                     </button>
                 </div>
             </div>
@@ -93,18 +92,18 @@ export default function ListPropertyPage() {
                         className="inline-flex items-center space-x-2 text-slate-400 hover:text-navy-primary font-bold mb-8 transition-colors group"
                     >
                         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span>繝繝・す繝･繝懊・繝峨↓謌ｻ繧・/span>
+                        <span>ダッシュボードに戻る</span>
                     </Link>
 
                     <div className="flex items-center justify-between mb-12">
                         <div>
-                            <h1 className="text-3xl font-black text-navy-secondary mb-2">迚ｩ莉ｶ繧呈軸霈峨☆繧・/h1>
-                            <p className="text-slate-500">隧ｳ邏ｰ諠・ｱ繧貞・蜉帙＠縺ｦ縲∫黄莉ｶ繧貞・髢九＠縺ｾ縺励ｇ縺・・/p>
+                            <h1 className="text-3xl font-black text-navy-secondary mb-2">物件を掲載する</h1>
+                            <p className="text-slate-500">詳細情報を入力して、物件を公開しましょう。</p>
                         </div>
                         <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-3">
                             <PlusCircle className="text-navy-primary w-5 h-5" />
                             <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">菫晄戟繧ｯ繝ｬ繧ｸ繝・ヨ</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">保持クレジット</div>
                                 <div className="text-xl font-black text-navy-primary leading-none">{credits}</div>
                             </div>
                         </div>

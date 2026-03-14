@@ -1,4 +1,3 @@
-﻿export const runtime = 'edge';
 'use client'
 
 import { useState } from 'react'
@@ -11,7 +10,7 @@ export default function ContactPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        type: '迚ｩ莉ｶ縺ｫ縺､縺・※',
+        type: '物件について',
         message: ''
     })
 
@@ -51,12 +50,12 @@ export default function ContactPage() {
                     <div className="bg-emerald-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="text-emerald-600 w-10 h-10" />
                     </div>
-                    <h2 className="text-3xl font-black text-navy-secondary mb-4">縺雁撫縺・粋繧上○螳御ｺ・/h2>
+                    <h2 className="text-3xl font-black text-navy-secondary mb-4">お問い合わせ完了</h2>
                     <p className="text-slate-500 mb-8">
-                        縺雁撫縺・粋繧上○縺ゅｊ縺後→縺・＃縺悶＞縺ｾ縺吶よ律譛ｬ莠ｺ繧ｹ繧ｿ繝・ヵ繧医ｊ縲∫匳骭ｲ縺・◆縺縺・◆繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺ｸ霑ｽ縺｣縺ｦ縺秘｣邨｡縺輔○縺ｦ縺・◆縺縺阪∪縺吶・
+                        お問い合わせありがとうございます。日本人スタッフより、登録いただいたメールアドレスへ追ってご連絡させていただきます。
                     </p>
                     <button onClick={() => setStatus('idle')} className="bg-navy-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-navy-secondary transition-all">
-                        繝輔か繝ｼ繝縺ｫ謌ｻ繧・
+                        フォームに戻る
                     </button>
                 </div>
             </div>
@@ -67,10 +66,10 @@ export default function ContactPage() {
         <div className="bg-slate-50 min-h-screen">
             <div className="bg-navy-secondary py-20 text-white">
                 <div className="container mx-auto px-4 text-center">
-                    <h1 className="text-4xl md:text-6xl font-black mb-6">縺雁撫縺・粋繧上○</h1>
+                    <h1 className="text-4xl md:text-6xl font-black mb-6">お問い合わせ</h1>
                     <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                        迚ｩ莉ｶ縺ｫ髢｢縺吶ｋ縺碑ｳｪ蝠上ｄ謗ｲ霈峨・縺皮嶌隲・↑縺ｩ縲・br className="hidden md:block" />
-                        譌･譛ｬ莠ｺ繧ｹ繧ｿ繝・ヵ縺御ｸ∝ｯｧ縺ｫ縺顔ｭ斐∴縺・◆縺励∪縺吶・
+                        物件に関するご質問や掲載のご相談など、<br className="hidden md:block" />
+                        日本人スタッフが丁寧にお答えいたします。
                     </p>
                 </div>
             </div>
@@ -79,24 +78,24 @@ export default function ContactPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                     <div className="bg-white rounded-3xl p-10 shadow-xl border border-slate-100 lg:col-span-2">
-                        <h2 className="text-2xl font-black text-navy-secondary mb-8">騾∽ｿ｡繝輔か繝ｼ繝</h2>
+                        <h2 className="text-2xl font-black text-navy-secondary mb-8">送信フォーム</h2>
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">縺雁錐蜑・(蠢・・</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">お名前 (必須)</label>
                                     <input
                                         required
                                         type="text"
                                         className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                                        placeholder="螻ｱ逕ｰ 螟ｪ驛・
+                                        placeholder="山田 太郎"
                                         value={formData.name}
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('縺雁錐蜑阪ｒ蜈･蜉帙＠縺ｦ縺上□縺輔＞')}
+                                        onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('お名前を入力してください')}
                                         onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ (蠢・・</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">メールアドレス (必須)</label>
                                     <input
                                         required
                                         type="email"
@@ -104,33 +103,33 @@ export default function ContactPage() {
                                         placeholder="yamada@example.com"
                                         value={formData.email}
                                         onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('譛牙柑縺ｪ繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ繧貞・蜉帙＠縺ｦ縺上□縺輔＞')}
+                                        onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('有効なメールアドレスを入力してください')}
                                         onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">縺雁撫縺・粋繧上○遞ｮ蛻･</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">お問い合わせ種別</label>
                                 <select
                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all appearance-none cursor-pointer"
                                     value={formData.type}
                                     onChange={e => setFormData({ ...formData, type: e.target.value })}
                                 >
-                                    <option>迚ｩ莉ｶ縺ｫ縺､縺・※</option>
-                                    <option>謗ｲ霈峨↓縺､縺・※・医が繝ｼ繝翫・讒假ｼ・/option>
-                                    <option>縺昴・莉・/option>
+                                    <option>物件について</option>
+                                    <option>掲載について（オーナー様）</option>
+                                    <option>その他</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">繝｡繝・そ繝ｼ繧ｸ (蠢・・</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">メッセージ (必須)</label>
                                 <textarea
                                     required
                                     rows={6}
                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none"
-                                    placeholder="繝｡繝・そ繝ｼ繧ｸ繧貞・蜉帙＠縺ｦ縺上□縺輔＞"
+                                    placeholder="メッセージを入力してください"
                                     value={formData.message}
                                     onChange={e => setFormData({ ...formData, message: e.target.value })}
-                                    onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity('繝｡繝・そ繝ｼ繧ｸ繧貞・蜉帙＠縺ｦ縺上□縺輔＞')}
+                                    onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity('メッセージを入力してください')}
                                     onInput={e => (e.target as HTMLTextAreaElement).setCustomValidity('')}
                                 ></textarea>
                             </div>
@@ -138,7 +137,7 @@ export default function ContactPage() {
                             {status === 'error' && (
                                 <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-bold flex items-center space-x-2">
                                     <Send className="w-4 h-4" />
-                                    <span>騾∽ｿ｡縺ｫ螟ｱ謨励＠縺ｾ縺励◆縲よ凾髢薙ｒ鄂ｮ縺・※蜀榊ｺｦ縺願ｩｦ縺励￥縺縺輔＞縲・/span>
+                                    <span>送信に失敗しました。時間を置いて再度お試しください。</span>
                                 </div>
                             )}
 
@@ -151,7 +150,7 @@ export default function ContactPage() {
                                     <Loader2 className="w-6 h-6 animate-spin" />
                                 ) : (
                                     <>
-                                        <span>繝｡繝・そ繝ｼ繧ｸ繧帝∽ｿ｡縺吶ｋ</span>
+                                        <span>メッセージを送信する</span>
                                         <Send className="w-5 h-5" />
                                     </>
                                 )}
@@ -162,7 +161,7 @@ export default function ContactPage() {
 
                     <div className="space-y-6">
                         <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
-                            <h3 className="text-xl font-black text-navy-secondary mb-8 underline decoration-navy-primary decoration-4 underline-offset-8">騾｣邨｡蜈域ュ蝣ｱ</h3>
+                            <h3 className="text-xl font-black text-navy-secondary mb-8 underline decoration-navy-primary decoration-4 underline-offset-8">連絡先情報</h3>
                             <div className="space-y-8">
                                 <div className="flex items-start">
                                     <div className="w-12 h-12 bg-navy-primary/10 rounded-2xl flex items-center justify-center mr-4 flex-shrink-0">
@@ -179,7 +178,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Business Hours</p>
-                                        <p className="text-navy-secondary font-bold">10:00 - 18:00 (蟷ｳ譌･)</p>
+                                        <p className="text-navy-secondary font-bold">10:00 - 18:00 (平日)</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start">

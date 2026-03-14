@@ -1,4 +1,3 @@
-﻿export const runtime = 'edge';
 'use client'
 
 import { useState } from 'react'
@@ -20,7 +19,7 @@ export default function ResetPasswordPage() {
         e.preventDefault()
 
         if (password !== confirmPassword) {
-            setMessage({ type: 'error', text: '繝代せ繝ｯ繝ｼ繝峨′荳閾ｴ縺励∪縺帙ｓ縲・ })
+            setMessage({ type: 'error', text: 'パスワードが一致しません。' })
             return
         }
 
@@ -33,7 +32,7 @@ export default function ResetPasswordPage() {
             })
             if (error) throw error
 
-            setMessage({ type: 'success', text: '繝代せ繝ｯ繝ｼ繝峨ｒ譖ｴ譁ｰ縺励∪縺励◆縲・遘貞ｾ後↓繝ｭ繧ｰ繧､繝ｳ逕ｻ髱｢縺ｸ遘ｻ蜍輔＠縺ｾ縺吶・ })
+            setMessage({ type: 'success', text: 'パスワードを更新しました。3秒後にログイン画面へ移動します。' })
             setTimeout(() => {
                 router.push('/login')
             }, 3000)
@@ -52,9 +51,9 @@ export default function ResetPasswordPage() {
                         <Lock className="w-8 h-8 text-navy-primary" />
                     </div>
                     <h1 className="text-3xl font-black text-navy-secondary mb-3">
-                        譁ｰ縺励＞繝代せ繝ｯ繝ｼ繝・
+                        新しいパスワード
                     </h1>
-                    <p className="text-slate-400 font-medium">繧ｻ繧ｭ繝･繝ｪ繝・ぅ菫晁ｭｷ縺ｮ縺溘ａ縲∵耳貂ｬ縺輔ｌ縺ｫ縺上＞蠑ｷ蜉帙↑繝代せ繝ｯ繝ｼ繝峨ｒ險ｭ螳壹＠縺ｦ縺上□縺輔＞縲・/p>
+                    <p className="text-slate-400 font-medium">セキュリティ保護のため、推測されにくい強力なパスワードを設定してください。</p>
                 </div>
 
                 {message && (
@@ -66,14 +65,14 @@ export default function ResetPasswordPage() {
 
                 <form onSubmit={handleResetPassword} className="space-y-6">
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">譁ｰ縺励＞繝代せ繝ｯ繝ｼ繝・/label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">新しいパスワード</label>
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="窶｢窶｢窶｢窶｢窶｢窶｢窶｢窶｢"
+                                placeholder="••••••••"
                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-navy-primary/5 focus:border-navy-primary outline-none transition-all font-medium"
                                 required
                                 minLength={6}
@@ -82,14 +81,14 @@ export default function ResetPasswordPage() {
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">繝代せ繝ｯ繝ｼ繝峨・遒ｺ隱・/label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">パスワードの確認</label>
                         <div className="relative">
                             <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                             <input
                                 type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="窶｢窶｢窶｢窶｢窶｢窶｢窶｢窶｢"
+                                placeholder="••••••••"
                                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-navy-primary/5 focus:border-navy-primary outline-none transition-all font-medium"
                                 required
                                 minLength={6}
@@ -105,7 +104,7 @@ export default function ResetPasswordPage() {
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            <span>繝代せ繝ｯ繝ｼ繝峨ｒ譖ｴ譁ｰ縺吶ｋ</span>
+                            <span>パスワードを更新する</span>
                         )}
                     </button>
                 </form>

@@ -1,11 +1,10 @@
-﻿export const runtime = 'edge';
 import Link from 'next/link'
 import { CheckCircle2, ChevronRight, Rocket, Star, UploadCloud, Users } from 'lucide-react'
 import PricingSection from './PricingSection'
 
 export const metadata = {
-    title: '迚ｩ莉ｶ繧呈軸霈峨☆繧具ｼ医お繝ｼ繧ｸ繧ｧ繝ｳ繝域ｧ伜髄縺托ｼ・| Chonburi Connect',
-    description: '繝代ち繝､繝ｻ繧ｷ繝ｩ繝√Ε譛螟ｧ邏壹・譌･譛ｬ莠ｺ蜷代￠荳榊虚逕｣繝昴・繧ｿ繝ｫ縺ｧ縲∬ｳｪ縺ｮ鬮倥＞鬘ｧ螳｢縺ｸ繧｢繝励Ο繝ｼ繝√・I繧帝ｧ・ｽｿ縺励◆邁｡蜊倥↑迚ｩ莉ｶ逋ｻ骭ｲ縺ｧ縲・寔螳｢繧貞柑邇・喧縺励∪縺吶・
+    title: '物件を掲載する（エージェント様向け） | Chonburi Connect',
+    description: 'パタヤ・シラチャ最大級の日本人向け不動産ポータルで、質の高い顧客へアプローチ。AIを駆使した簡単な物件登録で、集客を効率化します。'
 }
 
 export default function PostPropertyLandingPage() {
@@ -28,20 +27,20 @@ export default function PostPropertyLandingPage() {
                             For Real Estate Agents
                         </span>
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6">
-                            繝代ち繝､繝ｻ繧ｷ繝ｩ繝√Ε譛螟ｧ邏壹・<br className="hidden md:block" />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">譌･譛ｬ莠ｺ蜷代￠荳榊虚逕｣繝昴・繧ｿ繝ｫ</span>縺ｧ縲・br className="hidden md:block" />
-                            雉ｪ縺ｮ鬮倥＞鬘ｧ螳｢縺ｸ繧｢繝励Ο繝ｼ繝√・
+                            パタヤ・シラチャ最大級の<br className="hidden md:block" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">日本人向け不動産ポータル</span>で、<br className="hidden md:block" />
+                            質の高い顧客へアプローチ。
                         </h1>
                         <p className="text-lg md:text-xl text-slate-300 font-medium mb-10 leading-relaxed max-w-2xl">
-                            Chonburi Connect縺ｯ縲√ヱ繧ｿ繝､繝ｻ繧ｷ繝ｩ繝√Ε繧ｨ繝ｪ繧｢縺ｫ迚ｹ蛹悶＠縺滉ｸ榊虚逕｣繝励Λ繝・ヨ繝輔か繝ｼ繝縺ｧ縺吶よｴ礼ｷｴ縺輔ｌ縺欟I縺ｨ遒ｺ縺九↑繧ｿ繝ｼ繧ｲ繝・ぅ繝ｳ繧ｰ縺ｧ縲∵律譛ｬ縺ｮ鬧仙惠蜩｡繝ｻ謚戊ｳ・ｮｶ縺ｨ縺ゅ↑縺溘ｒ郢九℃縺ｾ縺吶・
+                            Chonburi Connectは、パタヤ・シラチャエリアに特化した不動産プラットフォームです。洗練されたUIと確かなターゲティングで、日本の駐在員・投資家とあなたを繋ぎます。
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link href="/register" className="bg-navy-primary hover:bg-blue-600 text-white px-8 py-4 rounded-full font-black text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center">
-                                莉翫☆縺千┌譁吶〒謗ｲ霈峨ｒ蟋九ａ繧・
+                                今すぐ無料で掲載を始める
                                 <ChevronRight className="w-5 h-5 ml-2" />
                             </Link>
                             <a href="#plans" className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center">
-                                譁咎≡繝励Λ繝ｳ繧定ｦ九ｋ
+                                料金プランを見る
                             </a>
                         </div>
                     </div>
@@ -51,8 +50,8 @@ export default function PostPropertyLandingPage() {
             {/* Steps Section */}
             <div className="container mx-auto px-4 py-24">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-black text-navy-secondary mb-4">謗ｲ霈峨∪縺ｧ縺ｮ繧ｷ繝ｳ繝励Ν縺ｪ3繧ｹ繝・ャ繝・/h2>
-                    <p className="text-slate-500 font-medium">譛譁ｰ縺ｮ繝・け繝弱Ο繧ｸ繝ｼ繧呈ｴｻ逕ｨ縺励・ｩ壹￥縺ｻ縺ｩ邁｡蜊倥↓迚ｩ莉ｶ繧貞・髢九〒縺阪∪縺吶・/p>
+                    <h2 className="text-3xl md:text-4xl font-black text-navy-secondary mb-4">掲載までのシンプルな3ステップ</h2>
+                    <p className="text-slate-500 font-medium">最新のテクノロジーを活用し、驚くほど簡単に物件を公開できます。</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
@@ -65,9 +64,9 @@ export default function PostPropertyLandingPage() {
                             <Users className="w-8 h-8" />
                         </div>
                         <div className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">Step 1</div>
-                        <h3 className="text-xl font-black text-navy-secondary mb-3">繧｢繧ｫ繧ｦ繝ｳ繝育匳骭ｲ・育┌譁呻ｼ・/h3>
+                        <h3 className="text-xl font-black text-navy-secondary mb-3">アカウント登録（無料）</h3>
                         <p className="text-slate-600 font-medium leading-relaxed">
-                            繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ縺ｮ縺ｿ縺ｧ縲√ｏ縺壹°1蛻・〒逋ｻ骭ｲ螳御ｺ・ゅ☆縺舌↓繝繝・す繝･繝懊・繝峨∈繧｢繧ｯ繧ｻ繧ｹ縺ｧ縺阪∪縺吶・
+                            メールアドレスのみで、わずか1分で登録完了。すぐにダッシュボードへアクセスできます。
                         </p>
                     </div>
 
@@ -77,9 +76,9 @@ export default function PostPropertyLandingPage() {
                             <UploadCloud className="w-8 h-8" />
                         </div>
                         <div className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2">Step 2</div>
-                        <h3 className="text-xl font-black text-navy-secondary mb-3">迚ｩ莉ｶ諠・ｱ縺ｮ逋ｻ骭ｲ</h3>
+                        <h3 className="text-xl font-black text-navy-secondary mb-3">物件情報の登録</h3>
                         <p className="text-slate-600 font-medium leading-relaxed">
-                            <span className="font-bold text-navy-secondary">AI繧､繝ｳ繝昴・繧ｿ繝ｼ讖溯・</span>縺ｫ繧医ｊ縲∝､夜Κ繧ｵ繧､繝医・URL繧・縺､蜈･蜉帙☆繧九□縺代〒縲∫判蜒上ｄ隧ｳ邏ｰ諠・ｱ繧定・蜍募叙蠕励・鄙ｻ險ｳ縺励∪縺吶・
+                            <span className="font-bold text-navy-secondary">AIインポーター機能</span>により、外部サイトのURLを1つ入力するだけで、画像や詳細情報を自動取得・翻訳します。
                         </p>
                     </div>
 
@@ -89,9 +88,9 @@ export default function PostPropertyLandingPage() {
                             <Rocket className="w-8 h-8" />
                         </div>
                         <div className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2">Step 3</div>
-                        <h3 className="text-xl font-black text-navy-secondary mb-3">謗ｲ霈蛾幕蟋九・髮・ｮ｢</h3>
+                        <h3 className="text-xl font-black text-navy-secondary mb-3">掲載開始・集客</h3>
                         <p className="text-slate-600 font-medium leading-relaxed">
-                            繝ｯ繝ｳ繧ｯ繝ｪ繝・け縺ｧ蜈ｬ髢九ゅ・繝ｼ繧ｿ繝ｫ繧ｵ繧､繝医ｒ險ｪ繧後ｋ譌･譛ｬ莠ｺ繝ｦ繝ｼ繧ｶ繝ｼ縺九ｉ縺ｮ蝠上＞蜷医ｏ縺帙′縲∫峩謗･縺ゅ↑縺溘↓螻翫″縺ｾ縺吶・
+                            ワンクリックで公開。ポータルサイトを訪れる日本人ユーザーからの問い合わせが、直接あなたに届きます。
                         </p>
                     </div>
                 </div>
@@ -107,12 +106,12 @@ export default function PostPropertyLandingPage() {
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
 
                     <div className="relative z-10">
-                        <h2 className="text-3xl font-black text-navy-secondary mb-6">縺ｾ縺壹・辟｡譁吶〒蟋九ａ縺ｦ縺ｿ縺ｾ縺帙ｓ縺具ｼ・/h2>
+                        <h2 className="text-3xl font-black text-navy-secondary mb-6">まずは無料で始めてみませんか？</h2>
                         <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto font-medium">
-                            Chonburi Connect縺ｯ縲∫樟蝨ｰ縺ｮ迚ｩ莉ｶ諠・ｱ繧呈爾縺呎律譛ｬ莠ｺ縺ｨ縲∝━濶ｯ縺ｪ迚ｩ莉ｶ繧呈戟縺､縺ゅ↑縺溘ｒ蜉ｹ邇・噪縺ｫ邨舌・縺､縺代∪縺吶ょ・譛溯ｲｻ逕ｨ繧ｼ繝ｭ縲∵怙遏ｭ1蛻・〒逋ｻ骭ｲ螳御ｺ・〒縺吶・
+                            Chonburi Connectは、現地の物件情報を探す日本人と、優良な物件を持つあなたを効率的に結びつけます。初期費用ゼロ、最短1分で登録完了です。
                         </p>
                         <Link href="/register" className="inline-flex bg-navy-secondary hover:bg-slate-800 text-white px-10 py-5 rounded-full font-black text-lg transition-all shadow-xl hover:-translate-y-1 items-center">
-                            辟｡譁吶い繧ｫ繧ｦ繝ｳ繝医ｒ菴懈・縺吶ｋ
+                            無料アカウントを作成する
                             <ChevronRight className="w-5 h-5 ml-2" />
                         </Link>
                     </div>

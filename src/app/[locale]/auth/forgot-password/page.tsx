@@ -1,4 +1,3 @@
-﻿export const runtime = 'edge';
 'use client'
 
 import { useState } from 'react'
@@ -25,7 +24,7 @@ export default function ForgotPasswordPage() {
                 redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
             })
             if (error) throw error
-            setMessage({ type: 'success', text: '繝代せ繝ｯ繝ｼ繝牙・險ｭ螳夂畑縺ｮ繝｡繝ｼ繝ｫ繧帝∽ｿ｡縺励∪縺励◆縲・ })
+            setMessage({ type: 'success', text: 'パスワード再設定用のメールを送信しました。' })
         } catch (error: any) {
             setMessage({ type: 'error', text: getErrorMessage(error) })
         } finally {
@@ -41,9 +40,9 @@ export default function ForgotPasswordPage() {
                         <Mail className="w-8 h-8 text-navy-primary" />
                     </div>
                     <h1 className="text-3xl font-black text-navy-secondary mb-3">
-                        繝代せ繝ｯ繝ｼ繝峨ｒ縺雁ｿ倥ｌ縺ｧ縺吶°・・
+                        パスワードをお忘れですか？
                     </h1>
-                    <p className="text-slate-400 font-medium">逋ｻ骭ｲ貂医∩縺ｮ繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ繧貞・蜉帙＠縺ｦ縺上□縺輔＞縲ょ・險ｭ螳夂畑縺ｮ繝ｪ繝ｳ繧ｯ繧偵♀騾√ｊ縺励∪縺吶・/p>
+                    <p className="text-slate-400 font-medium">登録済みのメールアドレスを入力してください。再設定用のリンクをお送りします。</p>
                 </div>
 
                 {message && (
@@ -56,7 +55,7 @@ export default function ForgotPasswordPage() {
                 {message?.type !== 'success' ? (
                     <form onSubmit={handleResetRequest} className="space-y-6">
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">メールアドレス</label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                                 <input
@@ -79,7 +78,7 @@ export default function ForgotPasswordPage() {
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
                                 <>
-                                    <span>騾∽ｿ｡縺吶ｋ</span>
+                                    <span>送信する</span>
                                     <Send className="w-5 h-5" />
                                 </>
                             )}
@@ -87,13 +86,13 @@ export default function ForgotPasswordPage() {
                     </form>
                 ) : (
                     <div className="text-center">
-                        <p className="text-slate-500 mb-8 font-medium">繝｡繝ｼ繝ｫ縺悟ｱ翫°縺ｪ縺・ｴ蜷医・縲∬ｿｷ諠代Γ繝ｼ繝ｫ繝輔か繝ｫ繝繧堤｢ｺ隱阪☆繧九°縲∵凾髢薙ｒ縺翫＞縺ｦ蜀榊ｺｦ縺願ｩｦ縺励￥縺縺輔＞縲・/p>
+                        <p className="text-slate-500 mb-8 font-medium">メールが届かない場合は、迷惑メールフォルダを確認するか、時間をおいて再度お試しください。</p>
                         <Link
                             href="/login"
                             className="inline-flex items-center space-x-2 text-navy-primary font-black hover:text-navy-secondary transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            <span>繝ｭ繧ｰ繧､繝ｳ逕ｻ髱｢縺ｫ謌ｻ繧・/span>
+                            <span>ログイン画面に戻る</span>
                         </Link>
                     </div>
                 )}
@@ -104,7 +103,7 @@ export default function ForgotPasswordPage() {
                         className="text-sm text-slate-400 hover:text-navy-primary transition-colors flex items-center justify-center space-x-2"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        <span>繝ｭ繧ｰ繧､繝ｳ縺ｫ謌ｻ繧・/span>
+                        <span>ログインに戻る</span>
                     </Link>
                 </div>
             </div>
