@@ -1,9 +1,10 @@
 'use client'
 
+import Script from 'next/script'
 import React, { useRef, useState, useEffect } from 'react'
 import { X, Copy, Download, Share2, Facebook, MessageCircle, FileText, CheckCircle, Crown, Sparkles, RefreshCw } from 'lucide-react'
-// import html2canvas from 'html2canvas' // Moved to internal dynamic import for bundle optimization
-import { QRCodeCanvas } from 'qrcode.react'
+// import html2canvas from 'html2canvas' // Removed for bundle optimization
+// import { QRCodeCanvas } from 'qrcode.react' // Removed for bundle optimization
 import { toast } from 'sonner'
 
 interface SocialShareDialogProps {
@@ -165,9 +166,31 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
       console.log("[SNS Banner] All images resolved. Waiting 300ms for layout stabilization...");
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      const html2canvas = (await import('html2canvas')).default
+      // Inject QR code for banner using CDN qrcode.js
+      if (window.QRCode) {
+        const qrContainer = document.getElementById('banner-qrcode');
+        if (qrContainer) {
+          qrContainer.innerHTML = '';
+          new window.QRCode(qrContainer, {
+            text: propertyUrl,
+            width: 128,
+            height: 128,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: window.QRCode.CorrectLevel.H
+          });
+          // Small wait for QR render if any
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      if (!window.html2canvas) {
+        toast.error("画像を生成するためのライブラリを読み込み中です。数秒待ってお試しください。")
+        return;
+      }
+
       console.log("[SNS Banner] Starting html2canvas capture...");
-      const canvas = await html2canvas(bannerRef.current, {
+      const canvas = await window.html2canvas(bannerRef.current, {
         scale: 2, // High resolution
         useCORS: true,
         allowTaint: false,
@@ -379,13 +402,7 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                         {/* Bottom Right: QR Code */}
                         <div className="flex flex-col items-center bg-[#FFFFFF] p-5 rounded-3xl shadow-2xl skew-y-0 transform border-4 border-[#fbbf24]">
                            <div className="bg-[#FFFFFF]">
-                             <QRCodeCanvas 
-                               value={propertyUrl} 
-                               size={160}
-                               level="H"
-                               fgColor="#2A4076"
-                               bgColor="#ffffff"
-                             />
+                             <div id="preview-qrcode" className="w-[160px] h-[160px] flex items-center justify-center bg-white" />
                            </div>
                            <p className="text-[#2A4076] font-black text-xl mt-3 tracking-widest uppercase text-center w-full bg-[#f1f5f9] py-1.5 rounded-xl">
                              Scan Link
@@ -429,6 +446,27 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
           </div>
         </div>
       </div>
+      {/* Load CDN Scripts */}
+      <Script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js" strategy="lazyOnload" />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" 
+        strategy="lazyOnload"
+        onLoad={() => {
+          // Initialize preview QR code
+          const qrContainer = document.getElementById('preview-qrcode');
+          if (qrContainer && window.QRCode) {
+            qrContainer.innerHTML = '';
+            new window.QRCode(qrContainer, {
+              text: propertyUrl,
+              width: 160,
+              height: 160,
+              colorDark: "#2A4076",
+              colorLight: "#ffffff",
+              correctLevel: window.QRCode.CorrectLevel.H
+            });
+          }
+        }}
+      />
     </div>
   )
 }

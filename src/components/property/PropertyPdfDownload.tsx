@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-// import { pdf } from '@react-pdf/renderer'; // Moved to handleDownload for bundle optimization
+import Script from 'next/script';
+import React, { useState, useEffect, useRef } from 'react';
+// import { pdf } from '@react-pdf/renderer'; // Removed for bundle optimization
 import { PropertyFlyer } from './PropertyFlyer';
 import { FileText, Download, Loader2 } from 'lucide-react';
-import QRCode from 'qrcode';
+import { toast } from 'sonner';
+// qrcode import is kept because it's already in package.json and not too heavy, but we'll monitor
+import QRCode from 'qrcode'; 
 
 interface PropertyPdfDownloadProps {
     property: any;
@@ -19,6 +22,7 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
     const [imageBase64, setImageBase64] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isDataReady, setIsDataReady] = useState(false);
+    const flyerRef = useRef<HTMLDivElement>(null);
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
 
 
@@ -137,29 +141,29 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
         setIsGenerating(true);
 
         try {
-            console.log('Starting PDF generation process...');
+            console.log('Starting PDF generation process (CDN Mode)...');
 
-            console.log('PDF Data prepared:', {
-                is_for_rent: flyerData.property.is_for_rent,
-                price: flyerData.property.price,
-                has_image: !!flyerData.property.images[0],
-                img_is_base64: flyerData.property.images[0]?.startsWith('data:'),
-                has_qr: !!flyerData.qrCodeUrl
+            if (!window.jspdf || !window.html2canvas) {
+                toast.error("PDF生成用のライブラリを読み込み中です。数秒待ってお試しください。")
+                return;
+            }
+
+            console.log('Invoking html2canvas on hidden flyer container...');
+            const canvas = await window.html2canvas(flyerRef.current, {
+                scale: 2,
+                useCORS: true,
+                logging: false
             });
 
-            const { pdf } = await import('@react-pdf/renderer');
-            console.log('Invoking @react-pdf/renderer.pdf().toBlob()...');
-            const blob = await pdf(<PropertyFlyer {...flyerData} />).toBlob();
-            console.log('PDF Blob generated successfully, size:', blob.size);
-
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Property_${property.reference_id || property.id.slice(0, 8)}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+            pdf.save(`Property_${property.reference_id || property.id.slice(0, 8)}.pdf`);
+            
             console.log('Download initiated successfully');
         } catch (error) {
             console.error('Critical error in handleDownload:', error);
@@ -226,6 +230,17 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
                     PDFデータを準備中...
                 </button>
             )}
+
+            {/* Hidden Flyer for Capture */}
+            <div className="fixed -left-[4000px] top-0 pointer-events-none">
+                <div ref={flyerRef} style={{ width: '210mm', height: '297mm', backgroundColor: 'white' }}>
+                    <PropertyFlyer {...flyerData} />
+                </div>
+            </div>
+
+            {/* Load CDN Scripts */}
+            <Script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" strategy="lazyOnload" />
+            <Script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js" strategy="lazyOnload" />
         </div>
     );
 }

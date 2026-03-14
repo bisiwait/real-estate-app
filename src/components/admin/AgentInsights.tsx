@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
-import {
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    AreaChart,
-    Area
-} from 'recharts'
+import Script from 'next/script'
+// import { ... } from 'recharts' // Removed for bundle optimization
 import {
     TrendingUp,
     Users,
@@ -237,46 +230,67 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                         </select>
                     </div>
 
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData.length > 0 ? chartData : mockChartData}>
-                                <defs>
-                                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis
-                                    dataKey="name"
-                                    tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }}
-                                    axisLine={false}
-                                    tickLine={false}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        borderRadius: '1.25rem',
-                                        border: 'none',
-                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                                        fontSize: '12px',
-                                        fontWeight: 'black'
-                                    }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="views"
-                                    stroke="#3b82f6"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorViews)"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    <div className="h-[300px] w-full relative">
+                        <canvas id="agent-performance-chart" />
+                        <Script 
+                            src="https://cdn.jsdelivr.net/npm/chart.js" 
+                            strategy="lazyOnload"
+                            onLoad={() => {
+                                const ctx = (document.getElementById('agent-performance-chart') as HTMLCanvasElement)?.getContext('2d');
+                                if (ctx && window.Chart) {
+                                    const data = chartData.length > 0 ? chartData : mockChartData;
+                                    new window.Chart(ctx, {
+                                        type: 'line',
+                                        data: {
+                                            labels: data.map(d => d.name),
+                                            datasets: [{
+                                                label: '動向',
+                                                data: data.map(d => d.views),
+                                                borderColor: '#3b82f6',
+                                                borderWidth: 3,
+                                                fill: true,
+                                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                                tension: 0.4,
+                                                pointRadius: 0
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: false },
+                                                tooltip: {
+                                                    backgroundColor: '#ffffff',
+                                                    titleColor: '#64748b',
+                                                    bodyColor: '#1e293b',
+                                                    bodyFont: { weight: 'bold' },
+                                                    borderColor: '#f1f5f9',
+                                                    borderWidth: 1,
+                                                    padding: 12,
+                                                    displayColors: false
+                                                }
+                                            },
+                                            scales: {
+                                                x: {
+                                                    grid: { display: false },
+                                                    ticks: {
+                                                        font: { size: 10, weight: 'bold' },
+                                                        color: '#94a3b8'
+                                                    }
+                                                },
+                                                y: {
+                                                    grid: { color: '#f1f5f9' },
+                                                    ticks: {
+                                                        font: { size: 10, weight: 'bold' },
+                                                        color: '#94a3b8'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            }}
+                        />
                     </div>
                 </div>
 
