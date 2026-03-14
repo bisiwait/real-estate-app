@@ -1,17 +1,10 @@
 import { createStaticClient } from '@/lib/supabase/server'
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, Globe, Award, MapPin, ChevronRight, Projector as Project } from 'lucide-react'
 
-
-export const revalidate = 3600
-
-export async function generateStaticParams() {
-    const supabase = createStaticClient()
-    const { data: developers } = await supabase.from('developers').select('id')
-    return developers?.map((d) => ({ id: d.id })) || []
-}
 
 export default async function DeveloperDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params

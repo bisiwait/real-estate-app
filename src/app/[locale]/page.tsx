@@ -1,6 +1,6 @@
+export const dynamic = 'force-dynamic'
 export const runtime = 'edge';
 import HeroSection from "@/components/home/HeroSection";
-export const revalidate = 3600;
 
 import SectionHeader from "@/components/ui/SectionHeader";
 import PresaleCard, { PresaleProject } from "@/components/property/PresaleCard";

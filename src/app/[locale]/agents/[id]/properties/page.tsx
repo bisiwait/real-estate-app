@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import AgentPropertiesList from './AgentPropertiesList'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 export default async function AgentPropertiesPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {

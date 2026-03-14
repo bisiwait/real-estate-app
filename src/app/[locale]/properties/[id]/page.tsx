@@ -18,8 +18,8 @@ import {
     Bus, Lock, ShieldCheck, CalendarDays
 } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
-export const revalidate = 60
 
 // Icon mapping for features and facilities
 const getFeatureIcon = (featureName: string) => {
