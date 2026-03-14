@@ -1,6 +1,4 @@
 'use client'
-
-export const runtime = 'edge';
 import { createClient } from '@/lib/supabase/server'
 import { useState } from 'react'
 import Link from 'next/link'

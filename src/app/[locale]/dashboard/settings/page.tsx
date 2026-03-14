@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-export const runtime = 'edge';
 import { redirect } from 'next/navigation'
 import { Settings, UserCircle } from 'lucide-react'
 import ProfileForm from '@/components/dashboard/ProfileForm'

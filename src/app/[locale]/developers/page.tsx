@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { createStaticClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ChevronRight, Building2, Globe, Award } from 'lucide-react'

@@ -5,7 +5,6 @@ import { Heart, Home, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge';
 
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 

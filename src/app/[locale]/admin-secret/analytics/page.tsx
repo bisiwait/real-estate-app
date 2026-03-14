@@ -15,7 +15,6 @@ import Link from 'next/link'
 import AnalyticsCharts from './AnalyticsCharts'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 export default async function AdminAnalyticsPage() {
     const supabase = await createClient()
