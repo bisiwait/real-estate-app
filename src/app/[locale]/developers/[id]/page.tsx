@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 import { createStaticClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -90,17 +91,17 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                         <div className="bg-white rounded-3xl p-10 shadow-xl border border-white/50 backdrop-blur-sm">
                             <h2 className="text-2xl font-black text-navy-secondary mb-8 flex items-center">
                                 <Building2 className="w-6 h-6 mr-3 text-navy-primary" />
-                                会社概要
+                                莨夂､ｾ讎りｦ・
                             </h2>
                             <div className="prose prose-slate max-w-none">
                                 <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-lg">
-                                    {developer.description || '会社概要は現在提供されていません。'}
+                                    {developer.description || '莨夂､ｾ讎りｦ√・迴ｾ蝨ｨ謠蝉ｾ帙＆繧後※縺・∪縺帙ｓ縲・}
                                 </p>
                             </div>
 
                             {developer.track_record && Array.isArray(developer.track_record) && developer.track_record.length > 0 && (
                                 <div className="mt-12">
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">主な実績</h3>
+                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">荳ｻ縺ｪ螳溽ｸｾ</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {developer.track_record.map((item: any, idx: number) => (
                                             <div key={idx} className="flex items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -116,7 +117,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                         {/* Projects Section */}
                         <div>
                             <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-2xl font-black text-navy-secondary">進行中・管理プロジェクト</h2>
+                                <h2 className="text-2xl font-black text-navy-secondary">騾ｲ陦御ｸｭ繝ｻ邂｡逅・・繝ｭ繧ｸ繧ｧ繧ｯ繝・/h2>
                                 <span className="text-sm font-bold text-slate-400 bg-white px-4 py-1.5 rounded-full border border-slate-100 shadow-sm">
                                     Total {projects?.length || 0}
                                 </span>
@@ -167,7 +168,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
 
                             {(!projects || projects.length === 0) && (
                                 <div className="bg-white/50 border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center text-slate-400 font-bold">
-                                    プロジェクト情報がありません
+                                    繝励Ο繧ｸ繧ｧ繧ｯ繝域ュ蝣ｱ縺後≠繧翫∪縺帙ｓ
                                 </div>
                             )}
                         </div>
@@ -177,20 +178,20 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                     <div className="space-y-8">
                         <div className="bg-navy-primary rounded-3xl p-8 text-white shadow-xl shadow-navy-primary/20 relative overflow-hidden">
                             <div className="absolute top-0 right-0 -mr-16 -mt-16 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-                            <h3 className="text-lg font-black mb-6 relative z-10">お問い合わせはこちら</h3>
+                            <h3 className="text-lg font-black mb-6 relative z-10">縺雁撫縺・粋繧上○縺ｯ縺薙■繧・/h3>
                             <p className="text-navy-primary-foreground/80 text-sm mb-8 relative z-10 leading-relaxed">
-                                このデベロッパーの物件に関する詳細情報や内見のご相談は、専任のエージェントまでお気軽にご連絡ください。
+                                縺薙・繝・・繝ｭ繝・ヱ繝ｼ縺ｮ迚ｩ莉ｶ縺ｫ髢｢縺吶ｋ隧ｳ邏ｰ諠・ｱ繧・・隕九・縺皮嶌隲・・縲∝ｰゆｻｻ縺ｮ繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝医∪縺ｧ縺頑ｰ苓ｻｽ縺ｫ縺秘｣邨｡縺上□縺輔＞縲・
                             </p>
                             <Link
                                 href="/contact"
                                 className="block w-full text-center bg-white text-navy-primary py-4 rounded-2xl font-black hover:bg-slate-50 transition-all shadow-lg active:scale-[0.98]"
                             >
-                                お問い合わせフォーム
+                                縺雁撫縺・粋繧上○繝輔か繝ｼ繝
                             </Link>
                         </div>
 
                         <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">デベロッパー情報</h3>
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">繝・・繝ｭ繝・ヱ繝ｼ諠・ｱ</h3>
                             <dl className="space-y-6">
                                 <div>
                                     <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Company Name</dt>

@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -71,7 +72,7 @@ export default function PricingPage() {
 
             if (updateError) {
                 console.error('Supabase update error:', updateError)
-                alert(`アップグレード中にエラーが発生しました: ${updateError.message} (${updateError.code})`)
+                alert(`繧｢繝・・繧ｰ繝ｬ繝ｼ繝我ｸｭ縺ｫ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆: ${updateError.message} (${updateError.code})`)
                 return
             }
 
@@ -80,7 +81,7 @@ export default function PricingPage() {
             router.refresh()
         } catch (err: any) {
             console.error('Upgrade catch error:', err)
-            alert(`予期せぬエラーが発生しました: ${err.message || 'Unknown error'}`)
+            alert(`莠域悄縺帙〓繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆: ${err.message || 'Unknown error'}`)
         } finally {
             setLoading(false)
         }
@@ -134,14 +135,14 @@ export default function PricingPage() {
                         Exclusive Agent Club
                     </div>
                     <h1 className="text-4xl md:text-7xl font-black mb-8 tracking-tight leading-tight hero-shadow">
-                        あなたの仲介業務を、<br />
+                        縺ゅ↑縺溘・莉ｲ莉区･ｭ蜍吶ｒ縲・br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F4CE6A] via-[#D4AF37] to-[#F4CE6A]">
-                            AIと共に次のステージへ。
+                            AI縺ｨ蜈ｱ縺ｫ谺｡縺ｮ繧ｹ繝・・繧ｸ縺ｸ縲・
                         </span>
                     </h1>
                     <p className="text-slate-200 text-lg md:text-2xl font-medium leading-relaxed max-w-3xl mx-auto drop-shadow-lg hero-shadow">
-                        パタヤ・シラチャのトップランナーが選ぶ、<br className="hidden md:block" />
-                        生産性を極限まで高め、成約を加速させる不動産DXプラットフォーム。
+                        繝代ち繝､繝ｻ繧ｷ繝ｩ繝√Ε縺ｮ繝医ャ繝励Λ繝ｳ繝翫・縺碁∈縺ｶ縲・br className="hidden md:block" />
+                        逕溽肇諤ｧ繧呈･ｵ髯舌∪縺ｧ鬮倥ａ縲∵・邏・ｒ蜉騾溘＆縺帙ｋ荳榊虚逕｣DX繝励Λ繝・ヨ繝輔か繝ｼ繝縲・
                     </p>
 
                     <div className="mt-12 animate-bounce flex flex-col items-center gap-2 text-slate-400">
@@ -157,26 +158,26 @@ export default function PricingPage() {
                     <div className="bg-slate-900/40 backdrop-blur-2xl border border-slate-800 rounded-[3rem] p-8 md:p-12 flex flex-col hover:border-slate-700 transition-all group relative overflow-hidden opacity-90">
                         <div className="mb-8">
                             <h3 className="text-xl font-black text-slate-400 mb-2">Standard</h3>
-                            <p className="text-slate-600 text-sm">まずは物件を掲載したい方へ</p>
+                            <p className="text-slate-600 text-sm">縺ｾ縺壹・迚ｩ莉ｶ繧呈軸霈峨＠縺溘＞譁ｹ縺ｸ</p>
                         </div>
                         <div className="mb-10 flex items-baseline gap-2">
                             <span className="text-5xl font-black text-slate-500 italic">Free</span>
                         </div>
 
                         <div className="space-y-5 mb-12 flex-1">
-                            <FeatureItem text="物件情報の一般掲載（制限なし）" />
-                            <FeatureItem text="基本お問い合わせの受信" />
-                            <FeatureItem text="エージェントプロフィールの表示" />
-                            <FeatureItem text="AI多言語自動翻訳" strike active={false} />
-                            <FeatureItem text="プレセール物件の優先掲載" strike active={false} />
-                            <FeatureItem text="PDFチラシ作成" strike active={false} />
+                            <FeatureItem text="迚ｩ莉ｶ諠・ｱ縺ｮ荳闊ｬ謗ｲ霈会ｼ亥宛髯舌↑縺暦ｼ・ />
+                            <FeatureItem text="蝓ｺ譛ｬ縺雁撫縺・粋繧上○縺ｮ蜿嶺ｿ｡" />
+                            <FeatureItem text="繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝医・繝ｭ繝輔ぅ繝ｼ繝ｫ縺ｮ陦ｨ遉ｺ" />
+                            <FeatureItem text="AI螟夊ｨ隱櫁・蜍慕ｿｻ險ｳ" strike active={false} />
+                            <FeatureItem text="繝励Ξ繧ｻ繝ｼ繝ｫ迚ｩ莉ｶ縺ｮ蜆ｪ蜈域軸霈・ strike active={false} />
+                            <FeatureItem text="PDF繝√Λ繧ｷ菴懈・" strike active={false} />
                         </div>
 
                         <Link
                             href={user ? `/${locale}/dashboard/settings` : `/${locale}/register`}
                             className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 font-bold text-center hover:bg-white/10 transition-all active:scale-[0.98]"
                         >
-                            {user ? '現在のプラン' : '無料で始める'}
+                            {user ? '迴ｾ蝨ｨ縺ｮ繝励Λ繝ｳ' : '辟｡譁吶〒蟋九ａ繧・}
                         </Link>
                     </div>
 
@@ -196,7 +197,7 @@ export default function PricingPage() {
                                     <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#F4CE6A] to-[#D4AF37]">Premium Suite</h3>
                                     <Crown className="w-6 h-6 text-[#D4AF37] animate-pulse" />
                                 </div>
-                                <p className="text-slate-400 text-sm italic">勝ち続けるためのプロフェッショナル装備</p>
+                                <p className="text-slate-400 text-sm italic">蜍昴■邯壹￠繧九◆繧√・繝励Ο繝輔ぉ繝・す繝ｧ繝翫Ν陬・ｙ</p>
                             </div>
 
                             <div className="mb-4">
@@ -207,30 +208,30 @@ export default function PricingPage() {
                                 </div>
                                 <p className="mt-2 text-[#D4AF37] text-sm font-black flex items-center gap-2">
                                     <Zap className="w-4 h-4 fill-[#D4AF37]" />
-                                    成約1件で、約1年分の利用料を回収可能
+                                    謌千ｴ・莉ｶ縺ｧ縲∫ｴ・蟷ｴ蛻・・蛻ｩ逕ｨ譁吶ｒ蝗槫庶蜿ｯ閭ｽ
                                 </p>
                             </div>
 
                             <div className="space-y-6 mb-12 mt-8 flex-1">
                                 <BenefitItem
                                     icon={<Building2 className="w-5 h-5 text-white" />}
-                                    title="プレセール物件の優先掲載"
-                                    desc="一般公開前の希少な情報を扱い、優良投資家顧客をいち早く囲い込みます。"
+                                    title="繝励Ξ繧ｻ繝ｼ繝ｫ迚ｩ莉ｶ縺ｮ蜆ｪ蜈域軸霈・
+                                    desc="荳闊ｬ蜈ｬ髢句燕縺ｮ蟶悟ｰ代↑諠・ｱ繧呈桶縺・∝━濶ｯ謚戊ｳ・ｮｶ鬘ｧ螳｢繧偵＞縺｡譌ｩ縺丞峇縺・ｾｼ縺ｿ縺ｾ縺吶・
                                 />
                                 <BenefitItem
                                     icon={<Sparkles className="w-5 h-5 text-white" />}
-                                    title="AI 3か国語自動翻訳・執筆"
-                                    desc="日英タイの紹介文作成時間をゼロに。多言語で「売れる」文章を瞬時に生成。"
+                                    title="AI 3縺句嵜隱櫁・蜍慕ｿｻ險ｳ繝ｻ蝓ｷ遲・
+                                    desc="譌･闍ｱ繧ｿ繧､縺ｮ邏ｹ莉区枚菴懈・譎る俣繧偵ぞ繝ｭ縺ｫ縲ょ､夊ｨ隱槭〒縲悟｣ｲ繧後ｋ縲肴枚遶繧堤椪譎ゅ↓逕滓・縲・
                                 />
                                 <BenefitItem
                                     icon={<FileText className="w-5 h-5 text-white" />}
-                                    title="プロ仕様PDFプレゼン資料"
-                                    desc="自身の連絡先・QRコード入りチラシを1クリック。即内見・即商談へ繋げます。"
+                                    title="繝励Ο莉墓ｧ榔DF繝励Ξ繧ｼ繝ｳ雉・侭"
+                                    desc="閾ｪ霄ｫ縺ｮ騾｣邨｡蜈医・QR繧ｳ繝ｼ繝牙・繧翫メ繝ｩ繧ｷ繧・繧ｯ繝ｪ繝・け縲ょ叉蜀・ｦ九・蜊ｳ蝠・ｫ・∈郢九￡縺ｾ縺吶・
                                 />
                                 <BenefitItem
                                     icon={<Search className="w-5 h-5 text-white" />}
-                                    title="検索結果の最上位表示"
-                                    desc="物件一覧のトップに固定。無料プラン比でPV数を最大10倍まで引き上げます。"
+                                    title="讀懃ｴ｢邨先棡縺ｮ譛荳贋ｽ崎｡ｨ遉ｺ"
+                                    desc="迚ｩ莉ｶ荳隕ｧ縺ｮ繝医ャ繝励↓蝗ｺ螳壹ら┌譁吶・繝ｩ繝ｳ豈斐〒PV謨ｰ繧呈怙螟ｧ10蛟阪∪縺ｧ蠑輔″荳翫￡縺ｾ縺吶・
                                 />
                             </div>
 
@@ -243,12 +244,12 @@ export default function PricingPage() {
                                     <Loader2 className="w-6 h-6 animate-spin" />
                                 ) : (
                                     <>
-                                        2週間の無料トライアルを開始
+                                        2騾ｱ髢薙・辟｡譁吶ヨ繝ｩ繧､繧｢繝ｫ繧帝幕蟋・
                                         <ArrowRight className="w-6 h-6 group-hover/btn:translate-x-1 transition-transform" />
                                     </>
                                 )}
                             </button>
-                            <p className="text-center text-slate-500 text-[10px] mt-4 font-bold">※ トライアル期間終了まで費用は一切かかりません</p>
+                            <p className="text-center text-slate-500 text-[10px] mt-4 font-bold">窶ｻ 繝医Λ繧､繧｢繝ｫ譛滄俣邨ゆｺ・∪縺ｧ雋ｻ逕ｨ縺ｯ荳蛻・°縺九ｊ縺ｾ縺帙ｓ</p>
                         </div>
                     </div>
                 </div>
@@ -257,22 +258,22 @@ export default function PricingPage() {
                 <div className="mt-32 max-w-3xl mx-auto">
                     <div className="text-center mb-16">
                         <HelpCircle className="w-12 h-12 text-[#D4AF37] mx-auto mb-4 opacity-50" />
-                        <h2 className="text-3xl md:text-5xl font-black mb-4">よくあるご質問</h2>
+                        <h2 className="text-3xl md:text-5xl font-black mb-4">繧医￥縺ゅｋ縺碑ｳｪ蝠・/h2>
                         <p className="text-slate-400 mt-2 font-medium">Q&A</p>
                     </div>
 
                     <div className="space-y-4">
                         <FaqItem
-                            question="2週間の無料トライアル中に解約はできますか？"
-                            answer="はい、いつでも可能です。トライアル期間終了までに解約すれば、料金は一切かかりません。ダッシュボードからワンクリックで解約可能です。"
+                            question="2騾ｱ髢薙・辟｡譁吶ヨ繝ｩ繧､繧｢繝ｫ荳ｭ縺ｫ隗｣邏・・縺ｧ縺阪∪縺吶°・・
+                            answer="縺ｯ縺・√＞縺､縺ｧ繧ょ庄閭ｽ縺ｧ縺吶ゅヨ繝ｩ繧､繧｢繝ｫ譛滄俣邨ゆｺ・∪縺ｧ縺ｫ隗｣邏・☆繧後・縲∵侭驥代・荳蛻・°縺九ｊ縺ｾ縺帙ｓ縲ゅム繝・す繝･繝懊・繝峨°繧峨Ρ繝ｳ繧ｯ繝ｪ繝・け縺ｧ隗｣邏・庄閭ｽ縺ｧ縺吶・
                         />
                         <FaqItem
-                            question="AI翻訳の精度はどの程度ですか？"
-                            answer="最新のGemini AIを使用しており、不動産専門用語を含めた自然な3ヶ国語（日・英・泰）を生成します。生成後の手動微調整も可能です。"
+                            question="AI鄙ｻ險ｳ縺ｮ邊ｾ蠎ｦ縺ｯ縺ｩ縺ｮ遞句ｺｦ縺ｧ縺吶°・・
+                            answer="譛譁ｰ縺ｮGemini AI繧剃ｽｿ逕ｨ縺励※縺翫ｊ縲∽ｸ榊虚逕｣蟆る摩逕ｨ隱槭ｒ蜷ｫ繧√◆閾ｪ辟ｶ縺ｪ3繝ｶ蝗ｽ隱橸ｼ域律繝ｻ闍ｱ繝ｻ豕ｰ・峨ｒ逕滓・縺励∪縺吶ら函謌仙ｾ後・謇句虚蠕ｮ隱ｿ謨ｴ繧ょ庄閭ｽ縺ｧ縺吶・
                         />
                         <FaqItem
-                            question="PDFチラシに自分のロゴを入れることはできますか？"
-                            answer="現在、エージェント名とLINE ID、QRコードが自動印字されます。個別ロゴ対応も順次アップデート予定です。"
+                            question="PDF繝√Λ繧ｷ縺ｫ閾ｪ蛻・・繝ｭ繧ｴ繧貞・繧後ｋ縺薙→縺ｯ縺ｧ縺阪∪縺吶°・・
+                            answer="迴ｾ蝨ｨ縲√お繝ｼ繧ｸ繧ｧ繝ｳ繝亥錐縺ｨLINE ID縲＿R繧ｳ繝ｼ繝峨′閾ｪ蜍募魂蟄励＆繧後∪縺吶ょ句挨繝ｭ繧ｴ蟇ｾ蠢懊ｂ鬆・ｬ｡繧｢繝・・繝・・繝井ｺ亥ｮ壹〒縺吶・
                         />
                     </div>
                 </div>
@@ -280,7 +281,7 @@ export default function PricingPage() {
                 {/* Comparison Section */}
                 <div className="mt-32 max-w-5xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-5xl font-black mb-4">機能比較表</h2>
+                        <h2 className="text-3xl md:text-5xl font-black mb-4">讖溯・豈碑ｼ・｡ｨ</h2>
                         <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto" />
                     </div>
 
@@ -288,21 +289,21 @@ export default function PricingPage() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-white/5">
-                                    <th className="p-8 text-sm font-bold text-slate-400 uppercase tracking-widest">機能</th>
+                                    <th className="p-8 text-sm font-bold text-slate-400 uppercase tracking-widest">讖溯・</th>
                                     <th className="p-8 text-sm font-black text-center border-l border-white/5">Standard</th>
                                     <th className="p-8 text-sm font-black text-center text-[#D4AF37] border-l border-white/5 bg-[#D4AF37]/5">Premium</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                <TableRow label="物件掲載（賃貸・売買）" free={true} premium={true} />
-                                <TableRow label="写真アップロード（無制限）" free={true} premium={true} />
-                                <TableRow label="プレセール物件フラグ" free={false} premium={true} />
-                                <TableRow label="AI 3か国語自動翻訳" free={false} premium={true} />
-                                <TableRow label="AI 本文自動生成" free={false} premium={true} />
-                                <TableRow label="プロ仕様PDFチラシ生成" free={false} premium={true} />
-                                <TableRow label="検索結果の上位表示" free={false} premium={true} />
-                                <TableRow label="エージェント認証バッジ" free={false} premium={true} />
-                                <TableRow label="優先チャットサポート" free={false} premium={true} />
+                                <TableRow label="迚ｩ莉ｶ謗ｲ霈会ｼ郁ｳ・ｲｸ繝ｻ螢ｲ雋ｷ・・ free={true} premium={true} />
+                                <TableRow label="蜀咏悄繧｢繝・・繝ｭ繝ｼ繝会ｼ育┌蛻ｶ髯撰ｼ・ free={true} premium={true} />
+                                <TableRow label="繝励Ξ繧ｻ繝ｼ繝ｫ迚ｩ莉ｶ繝輔Λ繧ｰ" free={false} premium={true} />
+                                <TableRow label="AI 3縺句嵜隱櫁・蜍慕ｿｻ險ｳ" free={false} premium={true} />
+                                <TableRow label="AI 譛ｬ譁・・蜍慕函謌・ free={false} premium={true} />
+                                <TableRow label="繝励Ο莉墓ｧ榔DF繝√Λ繧ｷ逕滓・" free={false} premium={true} />
+                                <TableRow label="讀懃ｴ｢邨先棡縺ｮ荳贋ｽ崎｡ｨ遉ｺ" free={false} premium={true} />
+                                <TableRow label="繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝郁ｪ崎ｨｼ繝舌ャ繧ｸ" free={false} premium={true} />
+                                <TableRow label="蜆ｪ蜈医メ繝｣繝・ヨ繧ｵ繝昴・繝・ free={false} premium={true} />
                             </tbody>
                         </table>
                     </div>
@@ -311,14 +312,14 @@ export default function PricingPage() {
                 {/* Final CTA */}
                 <div className="mt-40 text-center pb-20">
                     <h2 className="text-3xl md:text-6xl font-black mb-10 tracking-tight hero-shadow">
-                        プロとしての結果を、<br className="md:hidden" />今ここで。
+                        繝励Ο縺ｨ縺励※縺ｮ邨先棡繧偵・br className="md:hidden" />莉翫％縺薙〒縲・
                     </h2>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <Link
                             href={`/${locale}/dashboard`}
                             className="inline-flex items-center gap-3 px-12 py-5 bg-[#2A4076] hover:bg-[#324D8E] text-white rounded-2xl font-black text-xl transition-all shadow-2xl hover:scale-105 active:scale-95 border-b-4 border-[#1A294A]"
                         >
-                            ダッシュボードに戻る
+                            繝繝・す繝･繝懊・繝峨↓謌ｻ繧・
                         </Link>
                         <button
                             onClick={handleUpgrade}
@@ -328,7 +329,7 @@ export default function PricingPage() {
                             {loading ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />
                             ) : (
-                                '無料トライアルを開始'
+                                '辟｡譁吶ヨ繝ｩ繧､繧｢繝ｫ繧帝幕蟋・
                             )}
                         </button>
                     </div>

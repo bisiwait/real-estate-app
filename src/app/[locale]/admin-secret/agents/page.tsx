@@ -1,3 +1,4 @@
+﻿export const runtime = 'edge';
 'use client'
 
 import { useState } from 'react'
@@ -28,29 +29,29 @@ export default function AgentsManagementPage() {
                             </Link>
                             <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-slate-200">
                                 <LayoutDashboard size={12} className="text-navy-primary" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">管理者ダッシュボード</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">邂｡逅・・ム繝・す繝･繝懊・繝・/span>
                             </div>
                         </div>
 
                         <h2 className="text-4xl font-black text-navy-secondary tracking-tight">
-                            {selectedAgentId ? 'エージェント詳細' : 'エージェント管理'}
+                            {selectedAgentId ? '繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝郁ｩｳ邏ｰ' : '繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝育ｮ｡逅・}
                         </h2>
                         <p className="text-sm font-bold text-slate-400 mt-2">
                             {selectedAgentId
-                                ? '詳細なパフォーマンス分析と管理アクション'
-                                : 'すべてのエージェントの活動状況と成果をモニタリング'}
+                                ? '隧ｳ邏ｰ縺ｪ繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ蛻・梵縺ｨ邂｡逅・い繧ｯ繧ｷ繝ｧ繝ｳ'
+                                : '縺吶∋縺ｦ縺ｮ繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝医・豢ｻ蜍慕憾豕√→謌先棡繧偵Δ繝九ち繝ｪ繝ｳ繧ｰ'}
                         </p>
                     </div>
 
                     <div className="flex gap-3">
                         <button className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl font-black text-sm text-navy-secondary hover:border-navy-primary transition-all shadow-sm">
                             <Download size={16} />
-                            レポート出力
+                            繝ｬ繝昴・繝亥・蜉・
                         </button>
                         {!selectedAgentId && (
                             <button className="flex items-center gap-2 px-6 py-3 bg-navy-primary text-white rounded-2xl font-black text-sm hover:bg-blue-600 transition-all shadow-md">
                                 <Filter size={16} />
-                                詳細フィルタ
+                                隧ｳ邏ｰ繝輔ぅ繝ｫ繧ｿ
                             </button>
                         )}
                     </div>
@@ -64,7 +65,7 @@ export default function AgentsManagementPage() {
                             className="flex items-center gap-2 text-xs font-black text-navy-primary hover:text-blue-600 transition-colors uppercase tracking-widest group"
                         >
                             <ChevronLeft className="group-hover:-translate-x-1 transition-transform" />
-                            エージェント一覧に戻る
+                            繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝井ｸ隕ｧ縺ｫ謌ｻ繧・
                         </button>
 
                         <AgentInsights agentId={selectedAgentId} />
