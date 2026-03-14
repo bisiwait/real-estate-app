@@ -1,4 +1,5 @@
 import { createStaticClient } from '@/lib/supabase/server'
+export const runtime = 'edge';
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, Globe, Award, MapPin, ChevronRight, Projector as Project } from 'lucide-react'

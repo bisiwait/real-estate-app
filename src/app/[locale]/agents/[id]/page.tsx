@@ -20,6 +20,7 @@ import {
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
 export const revalidate = 60
+export const runtime = 'edge'
 
 export async function generateStaticParams() {
     const { createClient } = await import('@supabase/supabase-js')

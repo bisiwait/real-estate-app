@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@/lib/supabase/server';
 import { isPremium } from '@/lib/utils/plan';
 
@@ -56,6 +55,8 @@ export async function POST(req: NextRequest) {
         console.log(`[SNS API Debug] Using API Key: ${maskedKey} (Length: ${apiKey.length})`);
         console.log(`[SNS API Debug] Is using fallback hardcoded key? ${apiKey === fallbackKey ? 'YES' : 'NO'}`);
 
+
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 

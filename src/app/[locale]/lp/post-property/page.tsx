@@ -1,4 +1,4 @@
-
+export const runtime = 'edge';
 import Link from 'next/link'
 import { CheckCircle2, ChevronRight, Rocket, Star, UploadCloud, Users } from 'lucide-react'
 import PricingSection from './PricingSection'

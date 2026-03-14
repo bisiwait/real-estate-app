@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import * as cheerio from 'cheerio';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'edge';
@@ -52,6 +50,9 @@ export async function POST(req: NextRequest) {
             }, { status: response.status });
         }
 
+
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const cheerio = await import('cheerio');
         const html = await response.text();
         const $ = cheerio.load(html);
 

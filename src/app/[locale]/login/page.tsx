@@ -1,4 +1,4 @@
-
+export const runtime = 'edge';
 import { Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
 import { getDictionary } from '@/lib/i18n/get-dictionary'

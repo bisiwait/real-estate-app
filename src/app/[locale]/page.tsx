@@ -1,4 +1,4 @@
-
+export const runtime = 'edge';
 import HeroSection from "@/components/home/HeroSection";
 export const revalidate = 3600;
 
