@@ -3,15 +3,17 @@
 import { useState } from 'react'
 import { CreditCard, RefreshCcw, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { isPremium } from '@/lib/utils/plan'
 
 interface CreditSectionProps {
-    initialCredits: number
-    plan?: string
+    profile: any
 }
 
-export default function CreditSection({ initialCredits, plan = 'free' }: CreditSectionProps) {
-    const [credits, setCredits] = useState(initialCredits)
+export default function CreditSection({ profile }: CreditSectionProps) {
+    const [credits, setCredits] = useState(profile?.available_credits || 0)
     const [loading, setLoading] = useState(false)
+    const isPremiumStatus = isPremium(profile)
+    const isStandard = profile?.plan === 'standard' || profile?.plan_type === 'standard'
 
     const handleSync = async () => {
         setLoading(true)
@@ -38,11 +40,11 @@ export default function CreditSection({ initialCredits, plan = 'free' }: CreditS
             <div className="flex justify-between items-start mb-1 relative z-10">
                 <div className="flex flex-col items-start gap-1.5">
                     <p className="text-sm font-medium text-white/60">現在の保有クレジット</p>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${plan === 'premium' ? 'bg-amber-500 text-white shadow-sm' :
-                            plan === 'standard' ? 'bg-indigo-500 text-white shadow-sm' :
-                                'bg-slate-500 text-white shadow-sm'
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isPremiumStatus ? 'bg-amber-500 text-white shadow-sm' :
+                        isStandard ? 'bg-indigo-500 text-white shadow-sm' :
+                            'bg-slate-500 text-white shadow-sm'
                         } uppercase tracking-wider`}>
-                        {plan === 'premium' ? 'プレミア' : plan === 'standard' ? 'スタンダード' : 'フリー'}プラン
+                        {isPremiumStatus ? 'プレミア' : isStandard ? 'スタンダード' : 'フリー'}プラン
                     </span>
                 </div>
                 <button

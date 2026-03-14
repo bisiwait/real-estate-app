@@ -9,14 +9,15 @@ import { clsx } from 'clsx'
 interface InquiryFormProps {
     propertyId: string
     propertyName: string
+    dict: any
 }
 
-export default function InquiryForm({ propertyId, propertyName }: InquiryFormProps) {
+export default function InquiryForm({ propertyId, propertyName, dict }: InquiryFormProps) {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
-        message: `「${propertyName}」について、詳細を教えてください。`
+        message: dict.property.inquiry_default_message?.replace('{propertyName}', propertyName) || `Regarding "${propertyName}", please give me more details.`
     })
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
@@ -47,19 +48,17 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
         setError(null)
 
         try {
-            // Check if propertyId is a valid UUID (mock data IDs like 'keen-sriracha-v2' will fail DB constraints)
+            // Check if propertyId is a valid UUID
             const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyId)
 
             if (!isUuid) {
                 console.warn('Mock property detected (non-UUID ID). This inquiry will not be saved to the database.')
-                // For mock data, we just simulate success to avoid DB foreign key errors
                 await new Promise(resolve => setTimeout(resolve, 1000))
                 localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
                 setSuccess(true)
                 return
             }
 
-            console.log('Inserting inquiry for property:', propertyId)
             const { error: submitError } = await supabase
                 .from('inquiries')
                 .insert([
@@ -72,14 +71,8 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
                     }
                 ])
 
-            if (submitError) {
-                console.error('Supabase error details:', submitError)
-                throw submitError
-            }
+            if (submitError) throw submitError
 
-            console.log('Inquiry submitted successfully')
-
-            // Set rate limit timestamp
             localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
             setSuccess(true)
         } catch (err: any) {
@@ -96,24 +89,24 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
                 <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                     <CheckCircle className="w-10 h-10 text-emerald-500" />
                 </div>
-                <h3 className="text-xl font-black text-navy-secondary mb-3">送信完了いたしました</h3>
+                <h3 className="text-xl font-black text-navy-secondary mb-3">{dict.property.inquiry_success_title}</h3>
                 <p className="text-slate-600 text-sm leading-relaxed">
-                    お問い合わせありがとうございます。内容を確認次第、担当者よりご連絡させていただきます。
+                    {dict.property.inquiry_success_desc}
                 </p>
             </div>
         )
     }
 
     return (
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-slate-100">
+        <div className="relative overflow-visible">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between lg:cursor-default"
                 disabled={isDesktop}
             >
-                <h3 className="text-xl font-black text-navy-secondary flex items-center">
+                <h3 className="text-lg font-semibold text-navy-secondary flex items-center">
                     <Send className="w-5 h-5 mr-3 text-navy-primary" />
-                    お問い合わせ
+                    {dict.property.inquiry_title}
                 </h3>
                 <div className="lg:hidden text-navy-primary bg-slate-50 p-1 rounded-lg">
                     {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -121,60 +114,60 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
             </button>
 
             <div className={clsx(
-                "transition-all duration-500 ease-in-out overflow-hidden lg:opacity-100 lg:max-h-none lg:mt-6",
+                "transition-all duration-500 ease-in-out lg:opacity-100 lg:max-h-none lg:mt-6 px-0.5",
                 isOpen
-                    ? "mt-6 max-h-[2000px] opacity-100"
-                    : "max-h-0 opacity-0 lg:max-h-none lg:opacity-100"
+                    ? "mt-6 max-h-[2000px] opacity-100 overflow-visible"
+                    : "max-h-0 opacity-0 lg:max-h-none lg:opacity-100 overflow-hidden lg:overflow-visible"
             )}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">お名前 (必須)</label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.name_label} ({dict.common.required})</label>
                         <input
                             type="text"
                             required
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="山田 太郎"
+                            placeholder={dict.labels.name_placeholder}
                             className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('お名前を入力してください')}
+                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity(dict.property.error_name_required)}
                             onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">メールアドレス (必須)</label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.email_label} ({dict.common.required})</label>
                         <input
                             type="email"
                             required
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="yamada@example.com"
+                            placeholder="example@mail.com"
                             className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('メールアドレスを正しく入力してください')}
+                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity(dict.property.error_email_invalid)}
                             onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">電話番号</label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.phone_label}</label>
                         <input
                             type="tel"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            placeholder="090-0000-0000"
+                            placeholder="+66 00 000 0000"
                             className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">お問い合わせ内容</label>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.inquiry_content_label}</label>
                         <textarea
                             rows={4}
                             required
                             value={formData.message}
                             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                             className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none"
-                            onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity('お問い合わせ内容を入力してください')}
+                            onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity(dict.property.error_message_required)}
                             onInput={e => (e.target as HTMLTextAreaElement).setCustomValidity('')}
                         ></textarea>
                     </div>
@@ -192,15 +185,14 @@ export default function InquiryForm({ propertyId, propertyName }: InquiryFormPro
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                             <>
-                                <span>この物件にお問い合わせ</span>
+                                <span>{dict.property.submit_inquiry_btn}</span>
                                 <Send className="w-4 h-4 ml-1" />
                             </>
                         )}
                     </button>
 
-                    <p className="text-[10px] text-slate-400 text-center mt-4">
-                        お問い合わせ内容送信後、担当者よりご連絡いたします。<br />
-                        ※匿名性は維持され、掲載主に直接メールアドレス等が開示されることはありません。
+                    <p className="text-[10px] text-slate-400 text-center mt-4 whitespace-pre-line">
+                        {dict.property.inquiry_footer_note}
                     </p>
                 </form>
             </div>

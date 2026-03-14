@@ -15,9 +15,10 @@ interface RelatedPropertiesProps {
     currentPropertyId: string
     buildingName: string | null
     projectName: string | null
+    dict: any
 }
 
-export default function RelatedProperties({ currentPropertyId, buildingName, projectName }: RelatedPropertiesProps) {
+export default function RelatedProperties({ currentPropertyId, buildingName, projectName, dict }: RelatedPropertiesProps) {
     const [properties, setProperties] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
@@ -29,16 +30,24 @@ export default function RelatedProperties({ currentPropertyId, buildingName, pro
                 return
             }
 
+            // Fetch other units in the same building/project
             let query = supabase
-                .from('active_listings')
-                .select('*')
+                .from('properties')
+                .select(`
+                    *,
+                    area:areas(
+                        name,
+                        region:regions(name)
+                    )
+                `)
                 .neq('id', currentPropertyId)
+                .in('status', ['published', 'under_negotiation', 'contracted'])
                 .limit(6)
 
             // Match by building_name or project_name
             const filters = []
-            if (buildingName) filters.push(`building_name.eq.${buildingName}`)
-            if (projectName) filters.push(`project_name.eq.${projectName}`)
+            if (buildingName) filters.push(`building_name.eq."${buildingName}"`)
+            if (projectName) filters.push(`project_name.eq."${projectName}"`)
 
             if (filters.length > 0) {
                 query = query.or(filters.join(','))
@@ -62,11 +71,11 @@ export default function RelatedProperties({ currentPropertyId, buildingName, pro
 
     if (loading) {
         return (
-            <div className="mt-20 space-y-8">
-                <div className="h-8 w-64 bg-slate-100 animate-pulse rounded-lg" />
+            <div className="mt-12 space-y-6 px-4">
+                <div className="h-6 w-48 bg-slate-100 animate-pulse rounded-lg" />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="h-80 bg-slate-100 animate-pulse rounded-2xl" />
+                        <div key={i} className="h-64 bg-slate-100 animate-pulse rounded-2xl" />
                     ))}
                 </div>
             </div>
@@ -78,19 +87,14 @@ export default function RelatedProperties({ currentPropertyId, buildingName, pro
     }
 
     return (
-        <div className="mt-24 space-y-10">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-navy-secondary mb-2">
-                        この建物の他の物件
-                    </h2>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                        Other units in {buildingName || projectName}
-                    </p>
-                </div>
-                <div className="hidden md:flex space-x-3">
-                    {/* Navigation buttons will be handled by Swiper, but we can style them */}
-                </div>
+        <div className="mt-12 mb-8 space-y-6">
+            <div className="w-full mb-8 px-4">
+                <h2 className="text-lg font-semibold text-navy-secondary leading-tight mb-2">
+                    {dict.property.other_units_title}
+                </h2>
+                <span className="text-xs text-slate-400 uppercase tracking-widest block font-medium">
+                    Other units in {buildingName || projectName}
+                </span>
             </div>
 
             <div className="relative -mx-4 px-4 overflow-visible">
@@ -110,11 +114,18 @@ export default function RelatedProperties({ currentPropertyId, buildingName, pro
                     }}
                     className="pb-14"
                 >
-                    {properties.map((prop) => (
-                        <SwiperSlide key={prop.id}>
-                            <PropertyCard property={prop} />
-                        </SwiperSlide>
-                    ))}
+                    {properties.map((prop) => {
+                        const formattedProp = {
+                            ...prop,
+                            area_name: prop.area?.name,
+                            city_name: prop.area?.region?.name
+                        }
+                        return (
+                            <SwiperSlide key={prop.id}>
+                                <PropertyCard property={formattedProp} dict={dict} />
+                            </SwiperSlide>
+                        )
+                    })}
                 </Swiper>
 
                 {/* Custom Navigation */}

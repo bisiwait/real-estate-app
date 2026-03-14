@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as cheerio from 'cheerio';
 import { createClient } from '@supabase/supabase-js';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 // Initialize Supabase admin client to bypass RLS for image upload
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';

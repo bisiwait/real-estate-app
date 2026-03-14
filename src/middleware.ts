@@ -1,25 +1,78 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { match as matchLocale } from '@formatjs/intl-localematcher'
+import Negotiator from 'negotiator'
 
-export default async function proxy(request: NextRequest) {
+const locales = ['jp', 'en', 'th']
+const defaultLocale = 'jp'
+
+function getLocale(request: NextRequest): string {
+    // 1. Cookie check (NEXT_LOCALE)
+    const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+    if (cookieLocale && locales.includes(cookieLocale)) {
+        return cookieLocale
+    }
+
+    // 2. Accept-Language header
+    const negotiatorHeaders: Record<string, string> = {}
+    request.headers.forEach((value, key) => (negotiatorHeaders[key] = value))
+
+    const languages = new Negotiator({ headers: negotiatorHeaders }).languages()
+
+    try {
+        return matchLocale(languages, locales, defaultLocale)
+    } catch (e) {
+        return defaultLocale
+    }
+}
+
+export default async function middleware(request: NextRequest) {
+    const pathname = request.nextUrl.pathname
+
+    // Skip redirection for API and internal Next.js paths
+    if (
+        pathname.startsWith('/api') ||
+        pathname.startsWith('/_next') ||
+        pathname.includes('favicon.ico') ||
+        pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$/)
+    ) {
+        return (await updateSession(request)).response
+    }
+
+    // Check if there is any supported locale in the pathname
+    const pathnameHasLocale = locales.some(
+        (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    )
+
+    if (!pathnameHasLocale) {
+        const locale = getLocale(request)
+        const url = request.nextUrl.clone()
+        url.pathname = `/${locale}${pathname}`
+        return NextResponse.redirect(url)
+    }
+
+    // Extract current locale from pathname
+    const currentLocale = locales.find(
+        (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    ) || defaultLocale
+
     const { supabase, response } = await updateSession(request)
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    // ロールベースのアクセス制御
+    // Role-based access control (Locale Aware)
     if (user) {
         const url = request.nextUrl.clone()
-        const path = url.pathname
+        const pathWithoutLocale = pathname.replace(`/${currentLocale}`, '') || '/'
 
         // /admin-secret または /dashboard へのアクセスをチェック
-        if (path.startsWith('/admin-secret') || path.startsWith('/dashboard')) {
+        if (pathWithoutLocale.startsWith('/admin-secret') || pathWithoutLocale.startsWith('/dashboard')) {
             let { data: profile, error: profileError } = await supabase
                 .from('profiles')
                 .select('user_role, is_admin, available_credits')
                 .eq('id', user.id)
                 .single()
 
-            // フォールバック: ロールカラムがない場合
             if (profileError) {
                 const { data: fallbackProfile } = await supabase
                     .from('profiles')
@@ -33,27 +86,23 @@ export default async function proxy(request: NextRequest) {
             const hasCredits = (profile?.available_credits || 0) > 0;
             const isAgent = profile?.user_role === 'agent' || hasCredits || (profile?.user_role === undefined && !isAdmin);
 
-            // 管理者でないのに /admin-secret にアクセス
-            if (path.startsWith('/admin-secret') && !isAdmin) {
-                return NextResponse.redirect(new URL('/', request.url))
+            if (pathWithoutLocale.startsWith('/admin-secret') && !isAdmin) {
+                return NextResponse.redirect(new URL(`/${currentLocale}`, request.url))
             }
 
-            // エージェント以上でないのに /dashboard にアクセス
-            if (path.startsWith('/dashboard') && !isAdmin && !isAgent) {
-                return NextResponse.redirect(new URL('/mypage', request.url))
+            if (pathWithoutLocale.startsWith('/dashboard') && !isAdmin && !isAgent) {
+                return NextResponse.redirect(new URL(`/${currentLocale}/mypage`, request.url))
             }
 
-            // 管理者やエージェントが一般マイページやお気に入りにアクセスした場合のリダイレクト
-            if (path.startsWith('/mypage') || path.startsWith('/favorites')) {
+            if (pathWithoutLocale.startsWith('/mypage') || pathWithoutLocale.startsWith('/favorites')) {
                 if (isAdmin) {
-                    return NextResponse.redirect(new URL('/admin-secret', request.url))
+                    return NextResponse.redirect(new URL(`/${currentLocale}/admin-secret`, request.url))
                 }
                 if (isAgent) {
-                    return NextResponse.redirect(new URL('/dashboard', request.url))
+                    return NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, request.url))
                 }
             }
-        } else if (path.startsWith('/mypage') || path.startsWith('/favorites')) {
-            // /mypage や /favorites へのリダイレクト判定（パスのみでチェック）
+        } else if (pathWithoutLocale.startsWith('/mypage') || pathWithoutLocale.startsWith('/favorites')) {
             let { data: profile, error: profileError } = await supabase
                 .from('profiles')
                 .select('user_role, is_admin, available_credits')
@@ -74,10 +123,10 @@ export default async function proxy(request: NextRequest) {
             const isAgent = profile?.user_role === 'agent' || hasCredits || (profile?.user_role === undefined && !isAdmin);
 
             if (isAdmin) {
-                return NextResponse.redirect(new URL('/admin-secret', request.url))
+                return NextResponse.redirect(new URL(`/${currentLocale}/admin-secret`, request.url))
             }
             if (isAgent) {
-                return NextResponse.redirect(new URL('/dashboard', request.url))
+                return NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, request.url))
             }
         }
     }
@@ -87,6 +136,6 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$).*)',
     ],
 }

@@ -11,12 +11,12 @@ interface FavoritesSectionProps {
     favorites: any[];
 }
 
-export default function FavoritesSection({ favorites: initialFavorites }: FavoritesSectionProps) {
+export default function FavoritesSection({ favorites: initialFavorites, dict, locale }: FavoritesSectionProps & { dict: any, locale: string }) {
     const [favorites, setFavorites] = useState(initialFavorites);
     const supabase = createClient();
 
     const handleRemove = async (propertyId: string) => {
-        if (!confirm('お気に入りから削除しますか？')) return;
+        if (!confirm(dict.labels.remove_confirm)) return;
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -33,7 +33,7 @@ export default function FavoritesSection({ favorites: initialFavorites }: Favori
     };
 
     if (!favorites || favorites.length === 0) {
-        return <EmptyState />;
+        return <EmptyState dict={dict} locale={locale} />;
     }
 
     return (
@@ -49,7 +49,7 @@ export default function FavoritesSection({ favorites: initialFavorites }: Favori
                             exit={{ opacity: 0, scale: 0.9 }}
                             className="relative"
                         >
-                            <PropertyCard property={property} />
+                            <PropertyCard property={property} dict={dict} />
                             {/* Overlaid remove button for Dashboard view specifically */}
                             <button
                                 onClick={(e) => {
@@ -68,22 +68,22 @@ export default function FavoritesSection({ favorites: initialFavorites }: Favori
     );
 }
 
-function EmptyState() {
+function EmptyState({ dict, locale }: { dict: any, locale: string }) {
     return (
         <div className="p-20 text-center">
             <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8">
                 <Heart className="w-12 h-12 text-red-200" />
             </div>
-            <h3 className="text-2xl font-black text-navy-secondary mb-4">お気に入りはまだありません</h3>
+            <h3 className="text-2xl font-black text-navy-secondary mb-4">{dict.labels.no_favorites}</h3>
             <p className="text-slate-500 mb-10 text-lg">
-                物件一覧からハートのアイコンをクリックして、気になる物件を保存しましょう。
+                {dict.labels.no_favorites_desc}
             </p>
             <Link
-                href="/properties"
+                href={`/${locale}/properties`}
                 className="inline-flex items-center bg-navy-primary text-white px-10 py-4 rounded-2xl font-black hover:bg-navy-secondary transition-all shadow-xl shadow-navy-primary/20"
             >
                 <Search className="w-5 h-5 mr-3" />
-                物件を探しに行く
+                {dict.labels.go_find_properties}
             </Link>
         </div>
     );

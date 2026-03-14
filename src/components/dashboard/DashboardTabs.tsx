@@ -8,12 +8,12 @@ interface DashboardTabsProps {
     onTabChange: (tab: string) => void;
 }
 
-export default function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
+export default function DashboardTabs({ activeTab, onTabChange, dict }: DashboardTabsProps & { dict: any }) {
     const tabs = [
-        { id: "profile", label: "プロフィール", icon: User },
-        { id: "favorites", label: "お気に入り", icon: Heart },
-        { id: "searches", label: "保存条件", icon: Search },
-        { id: "settings", label: "設定", icon: Settings },
+        { id: "profile", label: dict.labels.profile, icon: User },
+        { id: "favorites", label: dict.labels.favorites, icon: Heart },
+        { id: "searches", label: dict.labels.saved_searches, icon: Search },
+        { id: "settings", label: dict.common.settings, icon: Settings },
     ];
 
     return (

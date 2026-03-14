@@ -1,6 +1,8 @@
+'use client'
 import Link from 'next/link'
 import { MapPin, Bath, Dog, BedDouble } from 'lucide-react'
 import FavoriteButton from './FavoriteButton'
+import { useParams } from 'next/navigation'
 
 interface PropertyCardProps {
     property: {
@@ -26,7 +28,10 @@ interface PropertyCardProps {
 }
 
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({ property, dict }: { property: any, dict: any }) {
+    const params = useParams()
+    const locale = params?.locale as string || 'jp'
+
     return (
         <div className="relative group h-full">
             {/* Favorite Button - Absolute positioned outside the Link to ensure it handles its own clicks */}
@@ -34,33 +39,33 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 <FavoriteButton propertyId={property.id} />
             </div>
 
-            <Link href={`/properties/${property.id}`} className="block h-full transition-transform active:scale-[0.98] duration-200">
+            <Link href={`/${locale}/properties/${property.id}`} className="block h-full transition-transform active:scale-[0.98] duration-200">
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg border border-slate-100 h-full flex flex-col">
                     <div className="relative h-48 w-full overflow-hidden">
                         <img
-                            src={property.images[0]}
+                            src={property.images?.[0] || '/images/placeholder-property.jpg'}
                             alt={property.title}
                             className="w-full h-full object-cover transition-transform duration-500"
                         />
                         <div className="absolute top-4 left-4 right-14 flex flex-wrap gap-2 overflow-hidden max-h-[60px]">
                             {property.status === 'contracted' && (
                                 <span className="bg-purple-600 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
-                                    成約済
+                                    {dict.property.contracted}
                                 </span>
                             )}
                             {property.status === 'under_negotiation' && (
                                 <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
-                                    商談中
+                                    {dict.property.under_negotiation}
                                 </span>
                             )}
                             {property.is_presale && (
                                 <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-sm tracking-wider shrink-0">
-                                    プレセール
+                                    {dict.property.presale}
                                 </span>
                             )}
-                            {property.tags.slice(0, property.is_presale ? 1 : 2).map((tag) => (
+                            {property.tags && Array.isArray(property.tags) && property.tags.slice(0, property.is_presale ? 1 : 2).map((tag: string) => (
                                 <span key={tag} className="bg-white/90 backdrop-blur-sm text-navy-primary text-[10px] font-bold px-2 py-1 rounded-md shadow-sm truncate max-w-[100px] shrink-0">
-                                    {tag}
+                                    {dict.property.tags?.[tag] || tag}
                                 </span>
                             ))}
                         </div>
@@ -69,7 +74,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                         <div>
                             <div className="flex items-center text-slate-500 text-xs mb-2">
                                 <MapPin className="w-3 h-3 mr-1" />
-                                {property.city_name ? `${property.city_name} / ` : ''}{property.area_name}
+                                {property.city_name ? `${dict.property.db_locations[property.city_name] || property.city_name} / ` : ''}
+                                {dict.property.db_locations[property.area_name] || property.area_name}
                             </div>
                             <h3 className="text-lg font-bold text-navy-secondary mb-1 line-clamp-1">{property.title}</h3>
                             <div className="flex items-center space-x-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
@@ -85,14 +91,14 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                             <div className="flex flex-col space-y-1">
                                 {property.is_for_rent && (
                                     <div className="text-lg font-black text-navy-secondary leading-none">
-                                        <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Rent:</span>
-                                        {property.rent_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB / 月</span>
+                                        <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">{dict.property.rent_label}</span>
+                                        {property.rent_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">{dict.property.per_month}</span>
                                     </div>
                                 )}
                                 {property.is_for_sale && (
                                     <div className="space-y-1">
                                         <div className="text-lg font-black text-navy-secondary leading-none">
-                                            <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">Sale:</span>
+                                            <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">{dict.property.sale_label}</span>
                                             {property.sale_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB</span>
                                         </div>
                                         {property.ownership_type && (
@@ -110,12 +116,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                             </div>
                             <div className="flex space-x-2">
                                 {property.has_bathtub && (
-                                    <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100 shadow-sm" title="バスタブあり">
+                                    <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100 shadow-sm" title={dict.property.bathtub}>
                                         <Bath className="w-3.5 h-3.5 text-blue-500" />
                                     </div>
                                 )}
                                 {property.allows_pets && (
-                                    <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center border border-amber-100 shadow-sm" title="ペット可">
+                                    <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center border border-amber-100 shadow-sm" title={dict.property.pets_allowed}>
                                         <Dog className="w-3.5 h-3.5 text-amber-500" />
                                     </div>
                                 )}

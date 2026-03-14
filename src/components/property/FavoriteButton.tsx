@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Heart, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface FavoriteButtonProps {
     propertyId: string;
@@ -19,28 +20,16 @@ export default function FavoriteButton({
     const [isRestricted, setIsRestricted] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const supabase = createClient();
+    const { user, userData, isLoading } = useAuth();
 
     useEffect(() => {
         async function checkStatus() {
-            const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
             // Check if user is restricted (Admin or Agent)
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("user_role, is_admin, available_credits")
-                .eq("id", user.id)
-                .single();
-
-            if (profile) {
-                const isAdmin = profile.is_admin === true || profile.user_role === 'admin';
-                const hasCredits = (profile.available_credits || 0) > 0;
-                const isAgent = profile.user_role === 'agent' || hasCredits || (profile.user_role === undefined && !isAdmin);
-
-                if (isAdmin || isAgent) {
-                    setIsRestricted(true);
-                    return;
-                }
+            if (userData.role === 'admin' || userData.role === 'agent') {
+                setIsRestricted(true);
+                return;
             }
 
             const { data } = await supabase
@@ -53,16 +42,16 @@ export default function FavoriteButton({
             if (data) setIsFavorite(true);
         }
 
-        checkStatus();
-    }, [propertyId, supabase, initialIsFavorite]);
+        if (!isLoading) {
+            checkStatus();
+        }
+    }, [propertyId, supabase, initialIsFavorite, user, userData, isLoading]);
 
-    if (isRestricted) return null;
+    if (isRestricted || isLoading) return null;
 
     const toggleFavorite = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-
-        const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
             setShowToast(true);

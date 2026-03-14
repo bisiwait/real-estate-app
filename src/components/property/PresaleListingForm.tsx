@@ -13,12 +13,16 @@ import {
     Building2,
     Calendar,
     Wallet,
-    Shield
+    Shield,
+    Sparkles,
+    Loader2 as LoaderIcon
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Select from 'react-select'
 import imageCompression from 'browser-image-compression'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Globe } from 'lucide-react'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -123,6 +127,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         'シャトルサービス'
     ]
 
+    const [activeTab, setActiveTab] = useState<'jp' | 'en' | 'th'>('jp')
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false)
+
     const [formData, setFormData] = useState({
         title: initialData?.title || '',
         description: initialData?.description || '',
@@ -162,7 +169,10 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         has_ev_charger: initialData?.has_ev_charger || false,
         has_japanese_tv: initialData?.has_japanese_tv || false,
         // Project facilities
-        project_facilities: initialData?.project_facilities || [] as string[]
+        project_facilities: initialData?.project_facilities || [] as string[],
+        // Multilingual descriptions
+        description_en: initialData?.description_en || '',
+        description_th: initialData?.description_th || ''
     })
 
     useEffect(() => {
@@ -184,7 +194,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         const fetchInitialData = async () => {
             const [areasRes, projectsRes, developersRes] = await Promise.all([
                 supabase.from('areas').select('id, name, region:regions(name)').order('name'),
-                supabase.from('projects').select('*').order('name'),
+                supabase.from('projects').select('*, developers(name)').order('name'),
                 supabase.from('developers').select('id, name').order('name')
             ])
 
@@ -331,7 +341,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         has_washlet: formData.has_washlet,
                         allows_pets: formData.allows_pets,
                         has_japanese_tv: formData.has_japanese_tv,
-                        has_ev_charger: formData.has_ev_charger
+                        has_ev_charger: formData.has_ev_charger,
+                        description_en: formData.description_en,
+                        description_th: formData.description_th
                     })
                     .select()
                     .single()
@@ -382,7 +394,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     has_washlet: formData.has_washlet,
                     allows_pets: formData.allows_pets,
                     has_japanese_tv: formData.has_japanese_tv,
-                    has_ev_charger: formData.has_ev_charger
+                    has_ev_charger: formData.has_ev_charger,
+                    description_en: formData.description_en,
+                    description_th: formData.description_th
                 })
                 .eq('id', propertyId)
                 .eq('user_id', user.id)
@@ -413,6 +427,41 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             setError(err.message)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleGenerateAI = async () => {
+        setIsGeneratingAI(true)
+        try {
+            const res = await fetch('/api/generate-description', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: formData.title,
+                    price: `${formData.sale_price} THB`,
+                    area: areas.find(a => a.id === formData.area_id)?.name || '',
+                    layout: `${formData.bedrooms} BR, ${formData.bathrooms} BA, ${formData.sqm} sqm`,
+                    facilities: [...formData.tags, ...formData.project_facilities].join(', '),
+                    developer: formData.developer
+                })
+            })
+
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'AI紹介文の生成に失敗しました')
+
+            setFormData(prev => ({
+                ...prev,
+                description: data.jp || prev.description,
+                description_en: data.en || prev.description_en,
+                description_th: data.th || prev.description_th
+            }))
+
+            // Move to JP tab after generation
+            setActiveTab('jp')
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setIsGeneratingAI(false)
         }
     }
 
@@ -511,6 +560,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     const val = selectedOption.value
                                     setShowNewProjectForm(false)
                                     const project = projects.find(p => p.id === val)
+                                    // Extract developer name from joined developers table or text field
+                                    const developerName = (project as any)?.developers?.name || project?.developer || ''
+
                                     setFormData({
                                         ...formData,
                                         project_id: val,
@@ -520,7 +572,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                         year_built: project?.year_built || formData.year_built,
                                         total_floors: project?.total_floors?.toString() || formData.total_floors,
                                         total_units: project?.total_units?.toString() || formData.total_units,
-                                        developer: project?.developer || formData.developer,
+                                        developer: developerName || formData.developer,
                                         project_facilities: project?.facilities || [],
                                         title: project?.name || formData.title
                                     })
@@ -555,6 +607,20 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         )}
                     </div>
 
+                    <div>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー名 (Developer)</label>
+                        <input
+                            type="text"
+                            value={formData.developer}
+                            onChange={e => setFormData({ ...formData, developer: e.target.value })}
+                            placeholder="Developer name..."
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
+                        />
+                        <p className="mt-1.5 text-[10px] text-slate-400 font-medium ml-1 italic">
+                            ※ プロジェクト選択時に自動入力されます。AI紹介文に反映させる名前を編集できます。
+                        </p>
+                    </div>
+
                     {showNewProjectForm && (
                         <div className="bg-slate-50 rounded-3xl p-8 border border-navy-primary/10 space-y-6">
                             <div className="flex items-center justify-between mb-2">
@@ -571,7 +637,12 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     <select
                                         required
                                         value={projectForm.developer_id}
-                                        onChange={e => setProjectForm({ ...projectForm, developer_id: e.target.value })}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            const devName = developers.find(d => d.id === val)?.name || '';
+                                            setProjectForm({ ...projectForm, developer_id: val, developer: devName });
+                                            setFormData({ ...formData, developer: devName });
+                                        }}
                                         className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
                                     >
                                         <option value="">デベロッパーを選択</option>
@@ -698,8 +769,95 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     <textarea rows={3} placeholder="例: 予約金10万バーツ、契約時20%、建設中30%、完成時50%。想定利回り7%保証。" value={formData.payment_plan} onChange={e => setFormData({ ...formData, payment_plan: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl resize-none font-medium text-sm" />
                 </div>
                 <div>
-                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">プロジェクトの魅力・アピールポイント <span className="text-red-500">*</span></label>
-                    <textarea rows={4} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl resize-none font-medium" />
+                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
+                        <div className="space-y-1">
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">プロジェクトの魅力・アピールポイント <span className="text-red-500">*</span></label>
+                            <div className="flex p-1 bg-slate-100 rounded-xl w-fit">
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('jp')}
+                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'jp' ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                                >
+                                    日本語 (JP)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('en')}
+                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'en' ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                                >
+                                    English (EN)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('th')}
+                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'th' ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                                >
+                                    Thai (TH)
+                                </button>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleGenerateAI}
+                            disabled={isGeneratingAI}
+                            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-amber-200 transition-all disabled:opacity-50"
+                        >
+                            {isGeneratingAI ? (
+                                <>
+                                    <LoaderIcon className="w-4 h-4 animate-spin" />
+                                    <span>AI執筆中...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-4 h-4" />
+                                    <span>AIで3ヶ国語紹介文を作成</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <div className="relative">
+                        <AnimatePresence mode="wait">
+                            {isGeneratingAI ? (
+                                <motion.div
+                                    key="skeleton"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-3 p-6 bg-slate-50 border border-slate-100 rounded-3xl"
+                                >
+                                    <div className="h-4 bg-slate-200 rounded-full w-3/4 animate-pulse"></div>
+                                    <div className="h-4 bg-slate-200 rounded-full w-full animate-pulse"></div>
+                                    <div className="h-4 bg-slate-200 rounded-full w-5/6 animate-pulse"></div>
+                                    <div className="h-4 bg-slate-200 rounded-full w-2/3 animate-pulse"></div>
+                                    <div className="mt-4 flex items-center text-xs font-bold text-amber-500 animate-pulse">
+                                        <Sparkles className="w-3 h-3 mr-2" />
+                                        AIが魅力的な紹介文を執筆中...
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <textarea
+                                        rows={8}
+                                        value={activeTab === 'jp' ? formData.description : activeTab === 'en' ? formData.description_en : formData.description_th}
+                                        onChange={e => {
+                                            const val = e.target.value
+                                            if (activeTab === 'jp') setFormData({ ...formData, description: val })
+                                            else if (activeTab === 'en') setFormData({ ...formData, description_en: val })
+                                            else if (activeTab === 'th') setFormData({ ...formData, description_th: val })
+                                        }}
+                                        placeholder={activeTab === 'jp' ? "プロジェクトの魅力を入力してください..." : activeTab === 'en' ? "Project description in English..." : "คำอธิบายโครงการภาษาไทย..."}
+                                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl resize-none font-medium focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
 

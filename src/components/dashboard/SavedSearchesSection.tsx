@@ -10,7 +10,7 @@ interface SavedSearchesSectionProps {
     searches: any[];
 }
 
-export default function SavedSearchesSection({ searches: initialSearches }: SavedSearchesSectionProps) {
+export default function SavedSearchesSection({ searches: initialSearches, dict, locale }: SavedSearchesSectionProps & { dict: any, locale: string }) {
     const supabase = createClient();
 
     // Filter duplicates on the client side to ensure a clean display
@@ -39,7 +39,7 @@ export default function SavedSearchesSection({ searches: initialSearches }: Save
     }, [uniqueSearches]);
 
     const handleRemove = async (id: string) => {
-        if (!confirm('この検索条件を削除しますか？')) return;
+        if (!confirm(dict.labels.delete_search_confirm)) return;
 
         const { error } = await supabase
             .from("saved_searches")
@@ -57,9 +57,9 @@ export default function SavedSearchesSection({ searches: initialSearches }: Save
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
                     <Search size={40} />
                 </div>
-                <p className="text-slate-500 font-bold mb-8">保存された検索条件はありません。</p>
-                <Link href="/properties" className="text-navy-primary font-black hover:underline">
-                    探しに行く →
+                <p className="text-slate-500 font-bold mb-8">{dict.labels.no_searches}</p>
+                <Link href={`/${locale}/properties`} className="text-navy-primary font-black hover:underline">
+                    {dict.labels.go_find}
                 </Link>
             </div>
         );
@@ -86,21 +86,25 @@ export default function SavedSearchesSection({ searches: initialSearches }: Save
                                     {search.name}
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
-                                    {Object.entries(search.filters).map(([key, value]: [string, any]) => (
-                                        <span key={key} className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
-                                            {key}: {String(value)}
-                                        </span>
-                                    ))}
+                                    {Object.entries(search.filters).map(([key, value]: [string, any]) => {
+                                        const localizedKey = dict.labels.filters[key] || key;
+                                        const localizedValue = dict.property.db_locations[String(value)] || dict.property.tags[String(value)] || String(value);
+                                        return (
+                                            <span key={key} className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                                                {localizedKey}: {localizedValue}
+                                            </span>
+                                        );
+                                    })}
                                 </div>
                                 <div className="flex items-center mt-3 space-x-4 text-[10px] font-bold text-slate-400">
                                     <div className="flex items-center">
                                         <Calendar size={12} className="mr-1" />
-                                        保存日: {new Date(search.created_at).toLocaleDateString()}
+                                        {dict.labels.saved_date}: {new Date(search.created_at).toLocaleDateString()}
                                     </div>
                                     {search.notifications_enabled && (
                                         <div className="flex items-center text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                                             <Bell size={10} className="mr-1" />
-                                            通知 ON
+                                            {dict.labels.notifications_on}
                                         </div>
                                     )}
                                 </div>
@@ -116,10 +120,10 @@ export default function SavedSearchesSection({ searches: initialSearches }: Save
                                 <Trash2 size={18} />
                             </button>
                             <Link
-                                href={`/properties?${queryParams}`}
+                                href={`/${locale}/properties?${queryParams}`}
                                 className="flex items-center space-x-2 bg-navy-primary/5 text-navy-primary px-6 py-3 rounded-xl font-black hover:bg-navy-primary hover:text-white transition-all group/btn"
                             >
-                                <span>検索を実行</span>
+                                <span>{dict.labels.run_search}</span>
                                 <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
                             </Link>
                         </div>

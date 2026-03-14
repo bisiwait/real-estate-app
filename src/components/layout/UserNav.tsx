@@ -7,86 +7,29 @@ import { createClient } from '@/lib/supabase/client'
 import { User, LogOut, LayoutDashboard, Coins, LogIn, UserPlus, ShieldCheck, Search, Settings, Heart, BarChart3 } from 'lucide-react'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { useAuth } from '@/contexts/AuthContext'
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
-export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMobile?: boolean, onCloseMobileMenu?: () => void }) {
+import { usePathname } from 'next/navigation'
+
+export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: { dict: any, isMobile?: boolean, onCloseMobileMenu?: () => void }) {
     const supabase = createClient()
     const router = useRouter()
-    const [user, setUser] = useState<any>(null)
-    const [userData, setUserData] = useState<{ credits: number | null, isAdmin: boolean, fullName: string | null, role: string }>({
-        credits: null,
-        isAdmin: false,
-        fullName: null,
-        role: 'general'
-    })
-    const [isLoading, setIsLoading] = useState(true)
+    const pathname = usePathname()
+    const segments = pathname.split('/')
+    const currentLocale = ['jp', 'en', 'th'].includes(segments[1]) ? segments[1] : 'jp'
 
-    useEffect(() => {
-        const getInitialSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            setUser(session?.user ?? null)
-            if (session?.user) {
-                fetchUserData(session.user.id)
-            }
-            setIsLoading(false)
-        }
-
-        getInitialSession()
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null)
-            if (session?.user) {
-                fetchUserData(session.user.id)
-            } else {
-                setUserData({ credits: null, isAdmin: false, fullName: null, role: 'general' })
-            }
-        })
-
-        return () => subscription.unsubscribe()
-    }, [])
-
-    const fetchUserData = async (userId: string) => {
-        let { data, error } = await supabase
-            .from('profiles')
-            .select('available_credits, is_admin, full_name, user_role')
-            .eq('id', userId)
-            .single()
-
-        // フォールバック: user_role がない場合
-        if (error) {
-            console.warn('UserNav: Fetch with role failed, falling back:', error)
-            const { data: fallbackData, error: fallbackError } = await supabase
-                .from('profiles')
-                .select('available_credits, is_admin, full_name')
-                .eq('id', userId)
-                .single()
-            data = fallbackData as any
-            error = fallbackError
-        }
-
-        if (!error && data) {
-            const is_admin = data.is_admin === true || (data as any).user_role === 'admin';
-            const is_agent = (data as any).user_role === 'agent' || (data.available_credits || 0) > 0;
-
-            setUserData({
-                credits: data.available_credits,
-                isAdmin: is_admin,
-                fullName: data.full_name || null,
-                role: is_admin ? 'admin' : (is_agent ? 'agent' : 'general')
-            })
-        }
-    }
+    const { user, userData, isLoading } = useAuth()
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
         if (onCloseMobileMenu) onCloseMobileMenu()
-        router.push('/')
+        router.push(`/${currentLocale}`)
         router.refresh()
     }
-
 
     if (isLoading) return <div className="w-8 h-8 rounded-full bg-slate-100 animate-pulse" />
 
@@ -94,24 +37,24 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
         return (
             <div className={cn("flex items-center", isMobile ? "flex-col space-y-4 w-full pt-4" : "space-x-4")}>
                 <Link
-                    href="/login"
+                    href={`/${currentLocale}/login`}
                     onClick={onCloseMobileMenu}
                     className={cn(
                         "text-sm font-bold text-navy-primary hover:text-navy-secondary transition-all active:scale-95",
                         isMobile && "w-full text-center py-3 border border-slate-100 rounded-xl active:bg-slate-50"
                     )}
                 >
-                    ログイン
+                    {dict.common.login}
                 </Link>
                 <Link
-                    href="/login?signup=true"
+                    href={`/${currentLocale}/login?signup=true`}
                     onClick={onCloseMobileMenu}
                     className={cn(
                         "bg-navy-primary text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-navy-secondary transition-all shadow-sm active:scale-95 active:shadow-inner",
                         isMobile && "w-full text-center py-4 rounded-xl"
                     )}
                 >
-                    新規登録
+                    {dict.labels.register}
                 </Link>
             </div>
         )
@@ -134,7 +77,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                 {userData.role === 'general' && (
                     <>
                         <Link
-                            href="/mypage"
+                            href={`/${currentLocale}/mypage`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
@@ -142,10 +85,10 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <User className="w-4 h-4" />
-                            <span>マイページ</span>
+                            <span>{dict.labels.mypage}</span>
                         </Link>
                         <Link
-                            href="/mypage?tab=favorites"
+                            href={`/${currentLocale}/mypage?tab=favorites`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
@@ -153,10 +96,10 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <Heart className="w-4 h-4" />
-                            <span>お気に入り</span>
+                            <span>{dict.labels.favorites}</span>
                         </Link>
                         <Link
-                            href="/mypage?tab=searches"
+                            href={`/${currentLocale}/mypage?tab=searches`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
@@ -164,10 +107,10 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <Search className="w-4 h-4" />
-                            <span>保存した検索</span>
+                            <span>{dict.labels.saved_searches}</span>
                         </Link>
                         <Link
-                            href="/mypage?tab=settings"
+                            href={`/${currentLocale}/mypage?tab=settings`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
@@ -175,7 +118,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <Settings className="w-4 h-4" />
-                            <span>設定</span>
+                            <span>{dict.labels.settings}</span>
                         </Link>
                     </>
                 )}
@@ -183,7 +126,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                 {userData.role === 'agent' && (
                     <>
                         <Link
-                            href="/dashboard"
+                            href={`/${currentLocale}/dashboard`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
@@ -191,10 +134,10 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <LayoutDashboard className="w-4 h-4" />
-                            <span>ダッシュボード</span>
+                            <span>{dict.labels.dashboard}</span>
                         </Link>
                         <Link
-                            href="/dashboard/settings"
+                            href={`/${currentLocale}/dashboard/settings`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
@@ -202,7 +145,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <Settings className="w-4 h-4" />
-                            <span>設定</span>
+                            <span>{dict.labels.settings}</span>
                         </Link>
                     </>
                 )}
@@ -210,7 +153,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                 {userData.role === 'admin' && (
                     <>
                         <Link
-                            href="/admin-secret"
+                            href={`/${currentLocale}/admin-secret`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-navy-primary hover:text-navy-secondary transition-colors",
@@ -218,10 +161,10 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <ShieldCheck className="w-4 h-4" />
-                            <span>管理画面</span>
+                            <span>{dict.labels.admin}</span>
                         </Link>
                         <Link
-                            href="/admin-secret/analytics"
+                            href={`/${currentLocale}/admin-secret/analytics`}
                             onClick={onCloseMobileMenu}
                             className={cn(
                                 "flex items-center space-x-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors",
@@ -229,7 +172,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                             )}
                         >
                             <BarChart3 className="w-4 h-4" />
-                            <span>サイト分析</span>
+                            <span>{dict.labels.analytics}</span>
                         </Link>
                     </>
                 )}
@@ -242,7 +185,7 @@ export default function UserNav({ isMobile = false, onCloseMobileMenu }: { isMob
                     )}
                 >
                     <LogOut className="w-4 h-4" />
-                    <span>ログアウト</span>
+                    <span>{dict.common.logout}</span>
                 </button>
             </div>
         </div>

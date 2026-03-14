@@ -16,9 +16,10 @@ interface PropertyInfo {
 interface StickyContactBarProps {
     property: PropertyInfo
     phoneNumber?: string
+    dict: any
 }
 
-export default function StickyContactBar({ property, phoneNumber }: StickyContactBarProps) {
+export default function StickyContactBar({ property, phoneNumber, dict }: StickyContactBarProps) {
     const scrollToInquiry = () => {
         const element = document.getElementById('inquiry-form-section')
         if (element) {
@@ -47,7 +48,7 @@ export default function StickyContactBar({ property, phoneNumber }: StickyContac
                             className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 text-navy-secondary w-14 h-14 rounded-xl active:scale-95 transition-all flex-shrink-0"
                         >
                             <Phone className="w-5 h-5 mb-0.5" />
-                            <span className="text-[9px] font-black uppercase">Call</span>
+                            <span className="text-[9px] font-black uppercase text-center">{dict.common.call_btn || 'Call'}</span>
                         </a>
                     )}
 
@@ -57,7 +58,7 @@ export default function StickyContactBar({ property, phoneNumber }: StickyContac
                         className="flex-1 flex flex-col items-center justify-center bg-navy-primary text-white h-14 rounded-xl active:scale-95 transition-all shadow-lg shadow-navy-primary/20"
                     >
                         <Mail className="w-5 h-5 mb-0.5" />
-                        <span className="text-[10px] font-black uppercase">Mail</span>
+                        <span className="text-[10px] font-black uppercase text-center">{dict.common.mail_btn || 'Mail'}</span>
                     </button>
 
                     {/* Main Action: LINE Button */}
@@ -65,6 +66,7 @@ export default function StickyContactBar({ property, phoneNumber }: StickyContac
                         property={property}
                         variant="icon"
                         className="flex-1 h-14"
+                        dict={dict}
                     />
                 </div>
 

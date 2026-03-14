@@ -6,6 +6,7 @@ import { Bell, Loader2, Search, Info } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Sheet from "@/components/ui/Sheet";
 import Switch from "@/components/ui/Switch";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SaveSearchButtonProps {
     variant?: "default" | "outline";
@@ -26,6 +27,7 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
     const searchParams = useSearchParams();
     const router = useRouter();
     const supabase = createClient();
+    const { user, userData, isLoading } = useAuth();
 
     // Current filters as object for comparison and saving
     // Normalize filters to ensure consistent comparison regardless of URL param order or extra metadata
@@ -45,32 +47,20 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
     // Consolidated check for restrictions and saved status
     useEffect(() => {
         let isMounted = true;
+        
+        if (isLoading) return;
+
         const timer = setTimeout(async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!isMounted || !user) {
-                    if (!user) {
-                        setSaved(false);
-                        setIsRestricted(false);
-                    }
+                if (!user) {
+                    setSaved(false);
+                    setIsRestricted(false);
                     return;
                 }
 
                 // 1. Check Restrictions
-                const { data: profile } = await supabase
-                    .from("profiles")
-                    .select("user_role, is_admin, available_credits")
-                    .eq("id", user.id)
-                    .single();
-
-                if (profile && isMounted) {
-                    const isAdmin = profile.is_admin === true || profile.user_role === 'admin';
-                    const hasCredits = (profile.available_credits || 0) > 0;
-                    const isAgent = profile.user_role === 'agent' || hasCredits || (profile.user_role === undefined && !isAdmin);
-
-                    if (isAdmin || isAgent) {
-                        setIsRestricted(true);
-                    }
+                if (userData.role === 'admin' || userData.role === 'agent') {
+                    setIsRestricted(true);
                 }
 
                 // 2. Check if Saved
@@ -105,7 +95,7 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
             isMounted = false;
             clearTimeout(timer);
         };
-    }, [currentFilters, supabase]);
+    }, [currentFilters, supabase, user, userData, isLoading]);
 
     // Generate default name and filter list for preview
     const activeFilters = useMemo(() => {
@@ -145,10 +135,9 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
         return activeFilters.map(f => f.value).join(" / ");
     }, [activeFilters]);
 
-    if (isRestricted) return null;
+    if (isRestricted || isLoading) return null;
 
     const handleOpenSheet = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             setIsLoginSheetOpen(true);
             return;
@@ -172,7 +161,6 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
         if (loading) return;
         setLoading(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
             // Final check to prevent race condition

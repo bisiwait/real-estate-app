@@ -5,62 +5,21 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, PlusCircle, Home, Search, Info, Mail, Building2, Heart, ShieldCheck, LayoutDashboard, User } from 'lucide-react'
 import UserNav from '@/components/layout/UserNav'
-import { createClient } from '@/lib/supabase/client'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
-export default function Header() {
+export default function Header({ dict }: { dict: any }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const [userRole, setUserRole] = useState<'admin' | 'agent' | 'general' | null>(null)
     const pathname = usePathname()
-    const supabase = createClient()
 
-    // Fetch user role
-    useEffect(() => {
-        const getUserRole = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) {
-                setUserRole(null)
-                return
-            }
-
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('user_role, is_admin, available_credits')
-                .eq('id', user.id)
-                .single()
-
-            if (profile) {
-                const isAdmin = profile.is_admin === true || profile.user_role === 'admin'
-                const hasCredits = (profile.available_credits || 0) > 0
-                const isAgent = profile.user_role === 'agent' || hasCredits || (profile.user_role === undefined && !isAdmin)
-
-                if (isAdmin) setUserRole('admin')
-                else if (isAgent) setUserRole('agent')
-                else setUserRole('general')
-            }
-        }
-
-        getUserRole()
-
-        // Auth state change listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-            getUserRole()
-        })
-
-        return () => subscription.unsubscribe()
-    }, [supabase])
-
-    // Close menu when route changes
     useEffect(() => {
         setIsMenuOpen(false)
     }, [pathname])
 
-    // Prevent scroll when menu is open
     useEffect(() => {
         if (isMenuOpen) {
             document.body.style.overflow = 'hidden'
@@ -70,17 +29,20 @@ export default function Header() {
         return () => { document.body.style.overflow = 'unset' }
     }, [isMenuOpen])
 
+    const segments = pathname.split('/')
+    const currentLocale = ['jp', 'en', 'th'].includes(segments[1]) ? segments[1] : 'jp'
+
     const navLinks = [
-        { href: '/properties', label: '物件を探す', icon: Search },
+        { href: `/${currentLocale}/properties`, label: dict.common.properties, icon: Search },
     ]
 
     return (
         <header className={cn("border-b border-slate-100 sticky top-0 z-[100] transition-colors duration-300", isMenuOpen ? "bg-white" : "bg-white/80 backdrop-blur-md")}>
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex flex-col relative z-[110] active:scale-95 transition-transform duration-200">
+                <Link href={`/${currentLocale}`} className="flex flex-col relative z-[110] active:scale-95 transition-transform duration-200">
                     <span className="text-2xl font-black text-navy-primary tracking-tighter italic whitespace-nowrap">Chonburi Connect</span>
-                    <span className="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase -mt-1 ml-0.5">Chonburi Real Estate for Japanese</span>
+                    <span className="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase -mt-1 ml-0.5">Pattaya & Sriracha Real Estate</span>
                 </Link>
 
                 {/* Desktop Navigation */}
@@ -103,8 +65,9 @@ export default function Header() {
                 </nav>
 
                 {/* Desktop Auth & Actions */}
-                <div className="hidden lg:flex items-center space-x-8">
-                    <UserNav />
+                <div className="hidden lg:flex items-center space-x-6">
+                    <LanguageSwitcher dict={dict} />
+                    <UserNav dict={dict} />
                 </div>
 
                 {/* Mobile Menu Trigger */}
@@ -125,7 +88,7 @@ export default function Header() {
                         <div className="mt-16 flex flex-col h-full">
                             {/* Navigation Links */}
                             <div className="space-y-2 mb-8">
-                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-4 mb-2 block">Menu</span>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-4 mb-2 block">{dict.common.search}</span>
                                 {navLinks.map((link) => (
                                     <Link
                                         key={link.href}
@@ -147,8 +110,13 @@ export default function Header() {
 
                             {/* Auth Section */}
                             <div className="flex-1">
-                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-4 mb-4 block">Account</span>
-                                <UserNav isMobile onCloseMobileMenu={() => setIsMenuOpen(false)} />
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-4 mb-4 block">{dict.labels.account_and_lang}</span>
+                                <div className="space-y-6">
+                                    <div className="px-4">
+                                        <LanguageSwitcher dict={dict} />
+                                    </div>
+                                    <UserNav dict={dict} isMobile onCloseMobileMenu={() => setIsMenuOpen(false)} />
+                                </div>
                             </div>
 
                             {/* Footer Credit */}

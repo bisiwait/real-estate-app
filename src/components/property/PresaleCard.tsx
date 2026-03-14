@@ -1,5 +1,7 @@
+'use client'
 import Link from "next/link";
 import { Building2, MapPin, Calendar, ArrowRight } from "lucide-react";
+import { useParams } from 'next/navigation'
 
 export interface PresaleProject {
     id: string;
@@ -16,9 +18,12 @@ interface PresaleCardProps {
     project: PresaleProject;
 }
 
-export default function PresaleCard({ project }: PresaleCardProps) {
+export default function PresaleCard({ project, dict }: { project: PresaleProject, dict: any }) {
+    const params = useParams()
+    const locale = params?.locale as string || 'jp'
+
     return (
-        <Link href={`/presale/${project.slug}`} className="group block h-full transition-transform active:scale-[0.98] duration-200">
+        <Link href={`/${locale}/presale/${project.slug}`} className="group block h-full transition-transform active:scale-[0.98] duration-200">
             <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-100 flex flex-col h-full group-hover:-translate-y-1">
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">
@@ -32,11 +37,11 @@ export default function PresaleCard({ project }: PresaleCardProps) {
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                         <span className="bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-                            プレセール
+                            {dict.property.presale}
                         </span>
                         {project.hasJapaneseSupport && (
                             <span className="bg-navy-primary/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shrink-0">
-                                日本人窓口あり
+                                {dict.presale.japanese_support}
                             </span>
                         )}
                     </div>
@@ -55,16 +60,16 @@ export default function PresaleCard({ project }: PresaleCardProps) {
                     <div className="space-y-3 mb-4 flex-grow">
                         <div className="flex items-center text-gray-600 text-sm">
                             <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                            竣工予定: <span className="font-semibold ml-1 text-gray-900">{project.completionYear}</span>
+                            {dict.presale.completion} <span className="font-semibold ml-1 text-gray-900">{project.completionYear}</span>
                         </div>
                         <div className="flex items-center text-gray-600 text-sm">
                             <Building2 className="w-4 h-4 mr-2 text-gray-400" />
-                            価格帯: <span className="font-bold ml-1 text-rose-600 text-base">{project.priceRange}</span>
+                            {dict.presale.price_range} <span className="font-bold ml-1 text-rose-600 text-base">{project.priceRange}</span>
                         </div>
                     </div>
 
                     <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between text-navy-primary font-bold text-sm">
-                        <span>プロジェクト詳細を見る</span>
+                        <span>{dict.presale.view_details}</span>
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                 </div>

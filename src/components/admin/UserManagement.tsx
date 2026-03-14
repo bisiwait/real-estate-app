@@ -100,7 +100,10 @@ export default function AdminUserManagement() {
         try {
             const { error } = await supabase
                 .from('profiles')
-                .update({ plan: newPlan })
+                .update({
+                    plan: newPlan,
+                    plan_type: newPlan
+                })
                 .eq('id', userId)
 
             if (!error) {
