@@ -14,6 +14,7 @@ import {
 import Link from 'next/link'
 import AnalyticsCharts from './AnalyticsCharts'
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic'
 
 export default async function AdminAnalyticsPage() {

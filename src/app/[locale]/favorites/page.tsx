@@ -4,6 +4,7 @@ import PropertyCard from '@/components/property/PropertyCard'
 import { Heart, Home, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic'
 
 import { getDictionary } from '@/lib/i18n/get-dictionary'
