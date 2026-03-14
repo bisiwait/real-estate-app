@@ -2,8 +2,7 @@ import { createStaticClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ChevronRight, Building2, Globe, Award } from 'lucide-react'
 
-
-export const dynamic = 'force-static'
+export const runtime = 'edge';
 export const revalidate = 3600
 
 export default async function DevelopersPage() {
