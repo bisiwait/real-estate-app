@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 'use client'
 
 import dynamic from 'next/dynamic'
