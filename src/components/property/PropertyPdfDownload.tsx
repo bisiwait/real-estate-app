@@ -2,7 +2,6 @@
 
 import Script from 'next/script';
 import React, { useState, useEffect, useRef } from 'react';
-// import { pdf } from '@react-pdf/renderer'; // Removed for bundle optimization
 import { PropertyFlyer } from './PropertyFlyer';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';

@@ -3,8 +3,6 @@
 import Script from 'next/script'
 import React, { useRef, useState, useEffect } from 'react'
 import { X, Copy, Download, Share2, Facebook, MessageCircle, FileText, CheckCircle, Crown, Sparkles, RefreshCw } from 'lucide-react'
-// import html2canvas from 'html2canvas' // Removed for bundle optimization
-// import { QRCodeCanvas } from 'qrcode.react' // Removed for bundle optimization
 import { toast } from 'sonner'
 
 interface SocialShareDialogProps {
@@ -399,11 +397,11 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                            </div>
                         </div>
 
-                        {/* Bottom Right: QR Code */}
-                        <div className="flex flex-col items-center bg-[#FFFFFF] p-5 rounded-3xl shadow-2xl skew-y-0 transform border-4 border-[#fbbf24]">
-                           <div className="bg-[#FFFFFF]">
-                             <div id="preview-qrcode" className="w-[160px] h-[160px] flex items-center justify-center bg-white" />
-                           </div>
+                         {/* Bottom Right: QR Code */}
+                         <div className="flex flex-col items-center bg-[#FFFFFF] p-5 rounded-3xl shadow-2xl skew-y-0 transform border-4 border-[#fbbf24]">
+                            <div className="bg-[#FFFFFF]">
+                              <div id="preview-qrcode" className="w-[160px] h-[160px] flex items-center justify-center bg-white" />
+                            </div>
                            <p className="text-[#2A4076] font-black text-xl mt-3 tracking-widest uppercase text-center w-full bg-[#f1f5f9] py-1.5 rounded-xl">
                              Scan Link
                            </p>
