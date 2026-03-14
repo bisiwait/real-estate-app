@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from 'react'
 import { X, Copy, Download, Share2, Facebook, MessageCircle, FileText, CheckCircle, Crown, Sparkles, RefreshCw } from 'lucide-react'
-import html2canvas from 'html2canvas'
+// import html2canvas from 'html2canvas' // Moved to internal dynamic import for bundle optimization
 import { QRCodeCanvas } from 'qrcode.react'
 import { toast } from 'sonner'
 
@@ -165,6 +165,7 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
       console.log("[SNS Banner] All images resolved. Waiting 300ms for layout stabilization...");
       await new Promise(resolve => setTimeout(resolve, 300));
 
+      const html2canvas = (await import('html2canvas')).default
       console.log("[SNS Banner] Starting html2canvas capture...");
       const canvas = await html2canvas(bannerRef.current, {
         scale: 2, // High resolution

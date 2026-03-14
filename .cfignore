@@ -10,3 +10,14 @@ walkthrough.md
 node_modules/
 .next/
 out/
+
+# Assets & Logs
+build_output.log
+fazwaz-test.html
+clients.txt
+*.mjs
+*.js
+scripts/
+tmp/
+.env*
+!.env.example

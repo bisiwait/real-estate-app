@@ -12,7 +12,11 @@ import {
     ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
-import AnalyticsCharts from './AnalyticsCharts'
+import nextDynamic from 'next/dynamic'
+const AnalyticsCharts = nextDynamic(() => import('./AnalyticsCharts'), {
+    ssr: false,
+    loading: () => <div className="h-[300px] bg-slate-50/50 animate-pulse rounded-2xl" />
+})
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic'

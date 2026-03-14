@@ -6,7 +6,9 @@ import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import { isPremium } from '@/lib/utils/plan'
-import SocialShareDialog from './SocialShareDialog'
+const SocialShareDialog = dynamic(() => import('./SocialShareDialog'), {
+    ssr: false
+})
 
 const PropertyPdfDownload = dynamic(
     () => import('../property/PropertyPdfDownload'),

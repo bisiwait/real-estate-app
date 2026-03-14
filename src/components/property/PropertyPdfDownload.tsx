@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { pdf } from '@react-pdf/renderer';
+// import { pdf } from '@react-pdf/renderer'; // Moved to handleDownload for bundle optimization
 import { PropertyFlyer } from './PropertyFlyer';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -147,6 +147,7 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
                 has_qr: !!flyerData.qrCodeUrl
             });
 
+            const { pdf } = await import('@react-pdf/renderer');
             console.log('Invoking @react-pdf/renderer.pdf().toBlob()...');
             const blob = await pdf(<PropertyFlyer {...flyerData} />).toBlob();
             console.log('PDF Blob generated successfully, size:', blob.size);

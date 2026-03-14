@@ -12,7 +12,11 @@ import {
     LayoutDashboard
 } from 'lucide-react'
 import AgentPerformanceTable from '@/components/admin/AgentPerformanceTable'
-import AgentInsights from '@/components/admin/AgentInsights'
+import nextDynamic from 'next/dynamic'
+const AgentInsights = nextDynamic(() => import('@/components/admin/AgentInsights'), {
+    ssr: false,
+    loading: () => <div className="h-[300px] bg-slate-50/50 animate-pulse rounded-2xl" />
+})
 
 export default function AgentsManagementPage() {
     const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
