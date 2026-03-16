@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
         pathname: '/storage/v1/object/public/**',
       },
     ],
-    unoptimized: true, // Cloudflare Pages doesn't support Next.js Image Optimization natively without extra setup
   },
   // Ensure trailing slashes are consistent for SEO
   trailingSlash: true,

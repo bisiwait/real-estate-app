@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin'
 import BroadcastManager from '@/components/admin/BroadcastManager'
