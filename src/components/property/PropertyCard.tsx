@@ -39,9 +39,9 @@ export default function PropertyCard({ property, dict }: { property: any, dict: 
                 <FavoriteButton propertyId={property.id} />
             </div>
 
-            <Link href={`/${locale}/properties/${property.id}`} className="block h-full transition-transform active:scale-[0.98] duration-200">
+            <Link href={`/${locale}/properties/${property.id}`} prefetch={false} scroll={false} className="block h-full transition-transform active:scale-[0.98] duration-200">
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg border border-slate-100 h-full flex flex-col">
-                    <div className="relative h-48 w-full overflow-hidden">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-100">
                         <img
                             src={property.images?.[0] || '/images/placeholder-property.jpg'}
                             alt={property.title}
