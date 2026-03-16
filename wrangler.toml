@@ -1,7 +1,8 @@
 name = "real-estate-app"
+pages_build_output_dir = ".vercel/output/static"
 compatibility_date = "2024-04-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
 
 [functions]
+# これがPaidプランの100MB制限を有効にする唯一の指定
 limits = { requested_limit = "high" }
