@@ -49,22 +49,22 @@ export default function PropertyCard({ property, dict }: { property: any, dict: 
                         />
                         <div className="absolute top-4 left-4 right-14 flex flex-wrap gap-2 overflow-hidden max-h-[60px]">
                             {property.status === 'contracted' && (
-                                <span className="bg-purple-600 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
+                                <span className="bg-purple-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
                                     {dict.property.contracted}
                                 </span>
                             )}
                             {property.status === 'under_negotiation' && (
-                                <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
+                                <span className="bg-blue-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
                                     {dict.property.under_negotiation}
                                 </span>
                             )}
                             {property.is_presale && (
-                                <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-1 rounded-md shadow-sm tracking-wider shrink-0">
+                                <span className="bg-amber-500 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-sm tracking-wider shrink-0">
                                     {dict.property.presale}
                                 </span>
                             )}
                             {property.tags && Array.isArray(property.tags) && property.tags.slice(0, property.is_presale ? 1 : 2).map((tag: string) => (
-                                <span key={tag} className="bg-white/90 backdrop-blur-sm text-navy-primary text-[10px] font-bold px-2 py-1 rounded-md shadow-sm truncate max-w-[100px] shrink-0">
+                                <span key={tag} className="bg-white/90 backdrop-blur-sm text-navy-primary text-[10px] font-normal px-2 py-1 rounded-md shadow-sm truncate max-w-[100px] shrink-0">
                                     {dict.property.tags?.[tag] || tag}
                                 </span>
                             ))}
@@ -77,8 +77,8 @@ export default function PropertyCard({ property, dict }: { property: any, dict: 
                                 {property.city_name ? `${dict.property.db_locations[property.city_name] || property.city_name} / ` : ''}
                                 {dict.property.db_locations[property.area_name] || property.area_name}
                             </div>
-                            <h3 className="text-lg font-bold text-navy-secondary mb-1 line-clamp-1">{property.title}</h3>
-                            <div className="flex items-center space-x-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
+                            <h3 className="text-lg font-normal text-navy-secondary mb-1 line-clamp-1">{property.title}</h3>
+                            <div className="flex items-center space-x-3 text-[11px] font-normal text-slate-400 uppercase tracking-wider mb-3">
                                 <span>{property.sqm || '--'} sqm</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                                 <div className="flex items-center">
@@ -90,26 +90,26 @@ export default function PropertyCard({ property, dict }: { property: any, dict: 
                         <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-50">
                             <div className="flex flex-col space-y-1">
                                 {property.is_for_rent && (
-                                    <div className="text-lg font-black text-navy-secondary leading-none">
-                                        <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">{dict.property.rent_label}</span>
+                                    <div className="text-lg font-normal text-navy-secondary leading-none">
+                                        <span className="text-[10px] font-normal text-slate-400 mr-1 uppercase">{dict.property.rent_label}</span>
                                         {property.rent_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">{dict.property.per_month}</span>
                                     </div>
                                 )}
-                                {property.is_for_sale && (
+                                 {property.is_for_sale && (
                                     <div className="space-y-1">
-                                        <div className="text-lg font-black text-navy-secondary leading-none">
-                                            <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase">{dict.property.sale_label}</span>
+                                        <div className="text-lg font-normal text-navy-secondary leading-none">
+                                            <span className="text-[10px] font-normal text-slate-400 mr-1 uppercase">{dict.property.sale_label}</span>
                                             {property.sale_price?.toLocaleString()} <span className="text-[10px] font-normal text-slate-500">THB</span>
                                         </div>
                                         {property.ownership_type && (
-                                            <div className="text-[9px] font-bold text-navy-secondary bg-navy-secondary/5 w-fit px-1.5 py-0.5 rounded border border-navy-secondary/10">
+                                            <div className="text-[9px] font-normal text-navy-secondary bg-navy-secondary/5 w-fit px-1.5 py-0.5 rounded border border-navy-secondary/10">
                                                 {property.ownership_type}
                                             </div>
                                         )}
                                     </div>
                                 )}
                                 {!property.is_for_rent && !property.is_for_sale && (
-                                    <div className="text-lg font-black text-navy-secondary">
+                                    <div className="text-lg font-normal text-navy-secondary">
                                         {property.price?.toLocaleString()} <span className="text-xs font-normal text-slate-500">THB</span>
                                     </div>
                                 )}

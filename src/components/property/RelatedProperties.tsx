@@ -89,10 +89,10 @@ export default function RelatedProperties({ currentPropertyId, buildingName, pro
     return (
         <div className="mt-12 mb-8 space-y-6">
             <div className="w-full mb-8 px-4">
-                <h2 className="text-lg font-semibold text-navy-secondary leading-tight mb-2">
+                <h2 className="text-base font-normal text-navy-secondary leading-tight mb-2">
                     {dict.property.other_units_title}
                 </h2>
-                <span className="text-xs text-slate-400 uppercase tracking-widest block font-medium">
+                <span className="text-xs text-slate-400 uppercase tracking-widest block font-normal">
                     Other units in {buildingName || projectName}
                 </span>
             </div>

@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { isPremium } from '@/lib/utils/plan';
 
 export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
+    const checkPremium = (profile: any | null): boolean => {
+        if (!profile) return false;
+        if (profile.is_admin) return true;
+        return profile.plan_type === 'premium' || profile.plan === 'premium';
+    };
+
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const { data: profile } = await supabase
             .from('profiles')
@@ -19,20 +22,20 @@ export async function POST(req: NextRequest) {
             .eq('id', user.id)
             .single();
 
-        if (!isPremium(profile)) {
-            return NextResponse.json({ error: 'Premium plan required for AI features.' }, { status: 403 });
+        if (!checkPremium(profile)) {
+            return NextResponse.json({ error: 'Premium plan required' }, { status: 403 });
         }
 
         const { title, price, area, layout, facilities, developer } = await req.json();
 
-        if (!process.env.GEMINI_API_KEY) {
-            return NextResponse.json({ error: 'GEMINI_API_KEY is not configured.' }, { status: 500 });
+        const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return NextResponse.json({ error: 'GOOGLE_GENERATIVE_AI_API_KEY is not configured.' }, { status: 500 });
         }
 
-
-        const { GoogleGenerativeAI } = await import('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
+        // 1. APIキーの確認（指示通り冒頭3文字のみ表示）
+        console.log("[DESC_GEN] API Key Check:", apiKey?.substring(0, 3));
+        
         const prompt = `
 あなたはパタヤとシラチャの市場に精通した、高級不動産専門のコピーライターです。
 以下の物件情報に基づいて、日本語（JP）、英語（EN）、タイ語（TH）の3ヶ国語で魅力的な紹介文を作成してください。
@@ -66,13 +69,25 @@ export async function POST(req: NextRequest) {
 `;
 
         const tryQuery = async (modelName: string) => {
-            const model = genAI.getGenerativeModel({ model: modelName });
+            console.log("DESC_GEN Standard attempt: gemini-1.5-flash");
             let retryCount = 0;
             const maxRetries = 1;
 
             while (retryCount <= maxRetries) {
                 try {
-                    return await model.generateContent(prompt);
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        const err = new Error(`Gemini API Error: ${errText}`) as any;
+                        err.status = response.status;
+                        throw err;
+                    }
+                    return await response.json();
                 } catch (err: any) {
                     const status = err.status || err.response?.status;
                     const isRateLimit = status === 429 || err.message?.includes('429');
@@ -87,7 +102,7 @@ export async function POST(req: NextRequest) {
             }
         };
 
-        const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
+        const modelsToTry = ["gemini-1.5-flash"];
         let result = null;
         const errorHistory: string[] = [];
 
@@ -118,7 +133,8 @@ export async function POST(req: NextRequest) {
             throw lastError;
         }
 
-        let responseText = result.response.text().trim();
+        let responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        responseText = responseText.trim();
 
         // Remove markdown code blocks if present
         if (responseText.includes('```')) {

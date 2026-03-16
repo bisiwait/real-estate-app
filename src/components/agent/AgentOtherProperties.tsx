@@ -74,10 +74,10 @@ export default function AgentOtherProperties({ agentId, currentPropertyId, agent
     return (
         <div className="mt-12 mb-8 space-y-6">
             <div className="w-full mb-8 px-4">
-                <h2 className="text-lg font-semibold text-navy-secondary leading-tight mb-2">
+                <h2 className="text-base font-normal text-navy-secondary leading-tight mb-2">
                     {dict.property.agent_other_listings}
                 </h2>
-                <span className="text-xs text-slate-400 uppercase tracking-widest block font-medium">
+                <span className="text-xs text-slate-400 uppercase tracking-widest block font-normal">
                     Other properties by {agentName || 'this agent'}
                 </span>
             </div>
@@ -127,7 +127,7 @@ export default function AgentOtherProperties({ agentId, currentPropertyId, agent
             </div>
 
             <div className="mt-4 flex justify-center">
-                <Link href={`/${locale}/agents/${agentId}`} className="text-sm font-black text-navy-primary hover:text-indigo-600 transition-colors flex items-center gap-1 group">
+                <Link href={`/${locale}/agents/${agentId}`} className="text-sm font-normal text-navy-primary hover:text-indigo-600 transition-colors flex items-center gap-1 group">
                     {dict.common.view_all}
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>

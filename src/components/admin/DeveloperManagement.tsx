@@ -301,6 +301,59 @@ export default function AdminDeveloperManagement() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination Controls */}
+                {!loading && totalPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 mt-2">
+                        <span className="text-xs font-bold text-slate-400">
+                            全 {filteredDevelopers.length} 件中 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredDevelopers.length)} 件を表示
+                        </span>
+                        <div className="flex space-x-1">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+
+                            {Array.from({ length: totalPages }).map((_, i) => {
+                                // Show first, last, current, and adjacent pages
+                                if (
+                                    i === 0 ||
+                                    i === totalPages - 1 ||
+                                    Math.abs(i + 1 - currentPage) <= 1
+                                ) {
+                                    return (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCurrentPage(i + 1)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1
+                                                ? 'bg-navy-primary text-white border border-navy-primary'
+                                                : 'border border-slate-200 text-slate-500 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    );
+                                } else if (
+                                    Math.abs(i + 1 - currentPage) === 2
+                                ) {
+                                    return <span key={i} className="px-1 py-1.5 text-slate-400">...</span>;
+                                }
+                                return null;
+                            })}
+
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

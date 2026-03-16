@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Edit3, Trash2, Loader2, Sparkles, Crown, Share2 } from 'lucide-react'
+import { Edit3, Trash2, Loader2, Crown, Share2 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
@@ -68,25 +68,6 @@ export default function DashboardActions({
 
     return (
         <div className="flex items-center space-x-2">
-            {/* AI Generation Entry Point */}
-            {hasPremium ? (
-                <button
-                    onClick={() => router.push(`/dashboard/edit/${propertyId}?tab=ai`)}
-                    className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all border border-indigo-100 shadow-sm"
-                    title="AIで紹介文を生成"
-                >
-                    <Sparkles className="w-5 h-5" />
-                </button>
-            ) : (
-                <button
-                    onClick={() => router.push(premiumLink)}
-                    className="p-2.5 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all border border-amber-200 shadow-sm flex items-center justify-center group"
-                    title="プレミアム会員限定: AI生成"
-                >
-                    <Crown className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
-            )}
-
             {/* PDF Generation Entry Point */}
             {hasPremium ? (
                 <div title="PDFチラシをダウンロード">
@@ -128,15 +109,13 @@ export default function DashboardActions({
                             isForRent: property.is_for_rent,
                             mainImageUrl: property.images?.[0] || '',
                             agentContact: agent?.phone || '',
-                            snsCopyJa: property.sns_copy_ja || '',
-                            snsCopyEn: property.sns_copy_en || '',
-                            snsCopyTh: property.sns_copy_th || '',
                             area: property.area?.name || '',
                             description: property.description_ja || '',
                             amenities: property.amenities || [],
                             facilities: property.facilities || [],
                             sqm: property.sqm || 0,
-                            floor: property.floor || ''
+                            floor: property.floor || '',
+                            layout: property.layout || ''
                         }}
                     />
                 </>

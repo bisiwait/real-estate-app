@@ -1,4 +1,4 @@
-import { createStaticClient } from '@/lib/supabase/server';
+import { createStaticClient } from '@/lib/supabase/static';
 
 export interface Property {
   id: string;

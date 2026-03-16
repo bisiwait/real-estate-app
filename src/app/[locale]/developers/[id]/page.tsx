@@ -1,4 +1,4 @@
-import { createStaticClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/static'
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation'

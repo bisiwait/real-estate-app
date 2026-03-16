@@ -1,8 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
-import { match as matchLocale } from '@formatjs/intl-localematcher'
-import Negotiator from 'negotiator'
-
 const locales = ['jp', 'en', 'th']
 const defaultLocale = 'jp'
 
@@ -13,17 +10,15 @@ function getLocale(request: NextRequest): string {
         return cookieLocale
     }
 
-    // 2. Accept-Language header
-    const negotiatorHeaders: Record<string, string> = {}
-    request.headers.forEach((value, key) => (negotiatorHeaders[key] = value))
-
-    const languages = new Negotiator({ headers: negotiatorHeaders }).languages()
-
-    try {
-        return matchLocale(languages, locales, defaultLocale)
-    } catch (e) {
-        return defaultLocale
+    // 2. Simple Accept-Language header parsing
+    const acceptLanguage = request.headers.get('accept-language')
+    if (acceptLanguage) {
+        if (acceptLanguage.includes('en')) return 'en'
+        if (acceptLanguage.includes('th')) return 'th'
+        if (acceptLanguage.includes('ja')) return 'jp'
     }
+
+    return defaultLocale
 }
 
 export default async function middleware(request: NextRequest) {

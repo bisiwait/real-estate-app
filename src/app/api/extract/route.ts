@@ -51,9 +51,8 @@ export async function POST(req: NextRequest) {
         }
 
 
-        const { GoogleGenerativeAI } = await import('@google/generative-ai');
         const html = await response.text();
-        
+
         // 2. Extract Basic Elements without cheerio
         // Remove scripts, styles etc with regex
         const cleanHtml = html
@@ -77,13 +76,13 @@ export async function POST(req: NextRequest) {
                     if (!images.includes(absoluteUrl)) {
                         images.push(absoluteUrl);
                     }
-                } catch (e) {}
+                } catch (e) { }
             }
             if (images.length > 50) break;
         }
 
-        // 3. Query Gemini with Dual-Model Fallback and Faster Retries
-        const genAI = new GoogleGenerativeAI(apiKey);
+        // 1. APIキーの確認
+        console.log("[EXTRACT_GEN] API Key Check:", apiKey?.substring(0, 3));
 
         const prompt = `
 You are a professional real estate agent helping Japanese expats and investors in Thailand.
@@ -113,9 +112,6 @@ Tasks:
 14. "area": City or area name.
 15. "latitude": Extract the latitude of the property as a FLOAT number if found.
 16. "longitude": Extract the longitude of the property as a FLOAT number if found.
-17. "sns_copy_ja": Create a short, catchy SNS copy in Japanese for this property. Use bullet points, emojis, and hashtags (e.g., #PattayaRealEstate #PattayaProperty). Ensure it appeals to investors or expats.
-18. "sns_copy_en": Create a short, catchy SNS copy in English for this property. Use bullet points, emojis, and hashtags.
-19. "sns_copy_th": Create a short, catchy SNS copy in Thai for this property. Use bullet points, emojis, and hashtags.
 
 Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wrappers.
 {
@@ -134,23 +130,31 @@ Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wra
   "building_name": "...",
   "area": "...",
   "latitude": 0,
-  "longitude": 0,
-  "sns_copy_ja": "...",
-  "sns_copy_en": "...",
-  "sns_copy_th": "..."
+  "longitude": 0
 }
 `;
 
         const tryQuery = async (modelName: string) => {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            console.log("Calling Gemini API with model:", modelName);
+            console.log("EXTRACT_GEN Standard attempt: gemini-1.5-flash");
 
             let retryCount = 0;
             const maxRetries = 1;
 
             while (retryCount <= maxRetries) {
                 try {
-                    return await model.generateContent(prompt);
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        const err = new Error(`Gemini API Error: ${errText}`) as any;
+                        err.status = response.status;
+                        throw err;
+                    }
+                    return await response.json();
                 } catch (err: any) {
                     const status = err.status || err.response?.status;
                     const isRateLimit = status === 429 || err.message?.includes('429');
@@ -167,7 +171,7 @@ Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wra
             throw new Error(`Failed to get response from Gemini model ${modelName} after retries`);
         };
 
-        const modelsToTry = ["gemini-2.0-flash", "gemini-flash-latest", "gemini-2.5-flash"];
+        const modelsToTry = ["gemini-1.5-flash"];
         let result = null;
         const errorHistory: string[] = [];
 
@@ -199,7 +203,8 @@ Respond EXACTLY with valid JSON. Do not include markdown JSON code blocks or wra
             throw lastError;
         }
 
-        let responseText = result.response.text().trim();
+        let responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        responseText = responseText.trim();
 
         if (responseText.includes('```')) {
             responseText = responseText.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();

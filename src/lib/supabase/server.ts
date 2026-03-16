@@ -37,17 +37,6 @@ export async function createClient() {
 }
 
 /**
- * Creates a Supabase client that doesn't use cookies.
- * This is safe for static generation (SSG).
- */
-export function createStaticClient() {
-    return createBaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-}
-
-/**
  * Creates a Supabase client that uses the SERVICE_ROLE_KEY.
  * Use this only in server-side contexts where you need to bypass RLS.
  */

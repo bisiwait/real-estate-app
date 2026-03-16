@@ -89,7 +89,7 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
                 <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                     <CheckCircle className="w-10 h-10 text-emerald-500" />
                 </div>
-                <h3 className="text-xl font-black text-navy-secondary mb-3">{dict.property.inquiry_success_title}</h3>
+                <h3 className="text-lg font-normal text-navy-secondary mb-3">{dict.property.inquiry_success_title}</h3>
                 <p className="text-slate-600 text-sm leading-relaxed">
                     {dict.property.inquiry_success_desc}
                 </p>
@@ -104,7 +104,7 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
                 className="w-full flex items-center justify-between lg:cursor-default"
                 disabled={isDesktop}
             >
-                <h3 className="text-lg font-semibold text-navy-secondary flex items-center">
+                <h3 className="text-base font-normal text-navy-secondary flex items-center">
                     <Send className="w-5 h-5 mr-3 text-navy-primary" />
                     {dict.property.inquiry_title}
                 </h3>
@@ -121,7 +121,7 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
             )}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.name_label} ({dict.common.required})</label>
+                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.name_label} ({dict.common.required})</label>
                         <input
                             type="text"
                             required
@@ -135,7 +135,7 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.email_label} ({dict.common.required})</label>
+                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.email_label} ({dict.common.required})</label>
                         <input
                             type="email"
                             required
@@ -149,7 +149,7 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.phone_label}</label>
+                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.phone_label}</label>
                         <input
                             type="tel"
                             value={formData.phone}
@@ -160,7 +160,7 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.inquiry_content_label}</label>
+                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.inquiry_content_label}</label>
                         <textarea
                             rows={4}
                             required
@@ -173,13 +173,13 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
                     </div>
 
                     {error && (
-                        <div className="text-red-500 text-xs font-bold px-1">{error}</div>
+                        <div className="text-red-500 text-xs font-normal px-1">{error}</div>
                     )}
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-navy-primary text-white py-4 rounded-xl font-black flex items-center justify-center space-x-2 hover:bg-navy-secondary transition-all shadow-lg hover:shadow-xl mt-4"
+                        className="w-full bg-navy-primary text-white py-4 rounded-xl font-normal flex items-center justify-center space-x-2 hover:bg-navy-secondary transition-all shadow-lg hover:shadow-xl mt-4"
                     >
                         {loading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
