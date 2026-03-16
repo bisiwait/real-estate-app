@@ -1,4 +1,5 @@
-'use client'
+"use client";
+export const runtime = 'edge';
 // Removed server-side import from client component
 import { useState } from 'react'
 import Link from 'next/link'

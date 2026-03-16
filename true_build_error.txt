@@ -16,49 +16,920 @@
 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
 
 > Build error occurred
-Error: Turbopack build failed with 3 errors:
-./src/app/api/checkout/route.ts:41:72
-Parsing ecmascript source code failed
-[0m [90m 39 |[39m                         product_data[33m:[39m {
- [90m 40 |[39m                             name[33m:[39m [32m`Chonburi Connect: ${packageId.toUpperCase()} PLAN`[39m[33m,[39m
-[31m[1m>[22m[39m[90m 41 |[39m                             description[33m:[39m [32m`${pkg.credits === 'unlimited' ? '辟｡蛻ｶ髯・ : pkg.credits} 謗ｲ霈峨け繝ｬ繧ｸ繝・ヨ`[39m[33m,[39m
- [90m    |[39m                                                                        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 42 |[39m                         }[33m,[39m
- [90m 43 |[39m                         unit_amount[33m:[39m pkg[33m.[39mprice [33m*[39m [35m100[39m[33m,[39m [90m// THB requires amount in smallest currency unit (satang)[39m
- [90m 44 |[39m                     }[33m,[39m[0m
+Error: Turbopack build failed with 56 errors:
+./src/app/[locale]/about/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m
+ [90m 5 |[39m[0m
 
-Unterminated string constant
-
-
-./src/app/api/webhooks/inquiry/route.ts:81:11
-Parsing ecmascript source code failed
-[0m [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
- [90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
-[31m[1m>[22m[39m[90m 81 |[39m [32m            </tr>[39m
- [90m    |[39m           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 82 |[39m [32m          </table>[39m
- [90m 83 |[39m [32m[39m
- [90m 84 |[39m [32m          <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; font-style: italic; color: #1e293b;">[39m[0m
-
-Unterminated regexp literal
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
 
 
-./src/app/api/webhooks/inquiry/route.ts:80:100
-Parsing ecmascript source code failed
-[0m [90m 78 |[39m [32m            <tr>[39m
- [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
-[31m[1m>[22m[39m[90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
- [90m    |[39m                                                                                                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 81 |[39m [32m            </tr>[39m
- [90m 82 |[39m [32m          </table>[39m
- [90m 83 |[39m [32m[39m[0m
+./src/app/[locale]/admin-secret/agents/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [90m// Removed server-side import from client component[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
 
-Unterminated string constant
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
 
 
-    at <unknown> (./src/app/api/checkout/route.ts:41:72)
-    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:81:11)
-    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:80:100)
+./src/app/[locale]/admin-secret/agents/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m [90m// Removed server-side import from client component[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mChevronLeft[39m[33m,[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/agents/page.tsx:16:23
+Ecmascript file had an error
+[0m [90m 14 |[39m [36mimport[39m [33mAgentPerformanceTable[39m [36mfrom[39m [32m'@/components/admin/AgentPerformanceTable'[39m
+ [90m 15 |[39m [36mimport[39m nextDynamic [36mfrom[39m [32m'next/dynamic'[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mconst[39m [33mAgentInsights[39m [33m=[39m nextDynamic(() [33m=>[39m [36mimport[39m([32m'@/components/admin/AgentInsights'[39m)[33m,[39m {
+ [90m    |[39m                       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 17 |[39m     ssr[33m:[39m [36mfalse[39m[33m,[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 18 |[39m     loading[33m:[39m () [33m=>[39m [33m<[39m[33mdiv[39m className[33m=[39m[32m"h-[300px] bg-slate-50/50 animate-pulse rounded-2xl"[39m [33m/[39m[33m>[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 19 |[39m })
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 20 |[39m
+ [90m 21 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mAgentsManagementPage[39m() {
+ [90m 22 |[39m     [36mconst[39m [selectedAgentId[33m,[39m setSelectedAgentId] [33m=[39m useState[33m<[39m[33mstring[39m [33m|[39m [36mnull[39m[33m>[39m([36mnull[39m)[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:5:20
+Ecmascript file had an error
+[0m [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m
+ [90m 8 |[39m     [33mTrendingUp[39m[33m,[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:5:10
+Ecmascript file had an error
+[0m [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m
+ [90m 8 |[39m     [33mTrendingUp[39m[33m,[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:20:25
+Ecmascript file had an error
+[0m [90m 18 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 19 |[39m [36mimport[39m nextDynamic [36mfrom[39m [32m'next/dynamic'[39m
+[31m[1m>[22m[39m[90m 20 |[39m [36mconst[39m [33mAnalyticsCharts[39m [33m=[39m nextDynamic(() [33m=>[39m [36mimport[39m([32m'./AnalyticsCharts'[39m)[33m,[39m {
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 21 |[39m     ssr[33m:[39m [36mfalse[39m[33m,[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 22 |[39m     loading[33m:[39m () [33m=>[39m [33m<[39m[33mdiv[39m className[33m=[39m[32m"h-[300px] bg-slate-50/50 animate-pulse rounded-2xl"[39m [33m/[39m[33m>[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 23 |[39m })
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 24 |[39m
+ [90m 25 |[39m [36mexport[39m [36mconst[39m dynamic [33m=[39m [32m'force-dynamic'[39m
+ [90m 26 |[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/agents/[id]/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/agents/[id]/page.tsx:6:20
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/agents/[id]/page.tsx:5:20
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/agents/[id]/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/auth/forgot-password/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/auth/forgot-password/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowLeft[39m[33m,[39m [33mSend[39m[33m,[39m [33mCheckCircle2[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 7 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mShieldCheck[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mShieldCheck[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/contact/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mPhone[39m[33m,[39m [33mMapPin[39m[33m,[39m [33mMessageCircle[39m[33m,[39m [33mSend[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/contact/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mPhone[39m[33m,[39m [33mMapPin[39m[33m,[39m [33mMessageCircle[39m[33m,[39m [33mSend[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 6 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 7 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:4:20
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mPresaleListingForm[39m [36mfrom[39m [32m'@/components/property/PresaleListingForm'[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/list-property/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/list-property/page.tsx:4:20
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/list-property/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mListingForm[39m [36mfrom[39m [32m'@/components/property/ListingForm'[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/list-property/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/pricing/page.tsx:4:27
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:5:10
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:5:21
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m                     [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:4:17
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:6:20
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m
+ [90m 9 |[39m [36mimport[39m [33mBreadcrumbUpdater[39m [36mfrom[39m [32m'@/components/layout/BreadcrumbUpdater'[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:5:20
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m
+ [90m 9 |[39m [36mimport[39m [33mBreadcrumbUpdater[39m [36mfrom[39m [32m'@/components/layout/BreadcrumbUpdater'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:11:25
+Ecmascript file had an error
+[0m [90m  9 |[39m [36mimport[39m [33mBreadcrumbUpdater[39m [36mfrom[39m [32m'@/components/layout/BreadcrumbUpdater'[39m
+ [90m 10 |[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mconst[39m [33mPropertyGallery[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/PropertyGallery'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:12:27
+Ecmascript file had an error
+[0m [90m 10 |[39m
+ [90m 11 |[39m [36mconst[39m [33mPropertyGallery[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/PropertyGallery'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+[31m[1m>[22m[39m[90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 15 |[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:13:30
+Ecmascript file had an error
+[0m [90m 11 |[39m [36mconst[39m [33mPropertyGallery[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/PropertyGallery'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+[31m[1m>[22m[39m[90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 15 |[39m
+ [90m 16 |[39m [36mimport[39m [33mPropertyDescription[39m [36mfrom[39m [32m'@/components/property/PropertyDescription'[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:14:21
+Ecmascript file had an error
+[0m [90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+[31m[1m>[22m[39m[90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                     [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m
+ [90m 16 |[39m [36mimport[39m [33mPropertyDescription[39m [36mfrom[39m [32m'@/components/property/PropertyDescription'[39m
+ [90m 17 |[39m [36mimport[39m [33mAgentProfileCard[39m [36mfrom[39m [32m'@/components/agent/AgentProfileCard'[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/register/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/register/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowRight[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/register/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowRight[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/components/admin/AgentInsights.tsx:1:20
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m [33mScript[39m [36mfrom[39m [32m'next/script'[39m
+ [90m 3 |[39m [90m// import { ... } from 'recharts' // Removed for bundle optimization[39m
+ [90m 4 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Edge Server Component:
+    ./src/components/admin/AgentInsights.tsx
+    ./src/app/[locale]/admin-secret/agents/page.tsx
+
+
+./src/components/admin/AgentInsights.tsx:1:10
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m [33mScript[39m [36mfrom[39m [32m'next/script'[39m
+ [90m 3 |[39m [90m// import { ... } from 'recharts' // Removed for bundle optimization[39m
+ [90m 4 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Edge Server Component:
+    ./src/components/admin/AgentInsights.tsx
+    ./src/app/[locale]/admin-secret/agents/page.tsx
+
+
+./src/app/[locale]/pricing
+Invalid import
+'client-only' cannot be imported from a Server Component module. It should only be used from a Client Component.
+The error was caused by using 'styled-jsx'. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+
+
+
+./src/app/[locale]/agents/[id]/page.tsx:5:1
+Export useParams doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
+
+The export useParams was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unstable_rethrow?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/pricing/page.tsx:5:1
+Export useParams doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+The export useParams was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unstable_rethrow?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:5:1
+Export useParams doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m[0m
+
+The export useParams was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unstable_rethrow?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:4:1
+Export useRouter doesn't exist in target module
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mShieldCheck[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mPresaleListingForm[39m [36mfrom[39m [32m'@/components/property/PresaleListingForm'[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/list-property/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mListingForm[39m [36mfrom[39m [32m'@/components/property/ListingForm'[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/pricing/page.tsx:5:1
+Export useRouter doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/register/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowRight[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+    at <unknown> (./src/app/[locale]/about/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/admin-secret/agents/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/admin-secret/agents/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/admin-secret/agents/page.tsx:16:23)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:5:20)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:5:10)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:20:25)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:6:20)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:5:20)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/auth/forgot-password/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/auth/forgot-password/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/contact/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/contact/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:4:20)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:4:20)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:4:27)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:10)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:21)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:4:17)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:6:20)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:5:20)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:11:25)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:12:27)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:13:30)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:14:21)
+    at <unknown> (./src/app/[locale]/register/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/register/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/register/page.tsx:4:10)
+    at <unknown> (./src/components/admin/AgentInsights.tsx:1:20)
+    at <unknown> (./src/components/admin/AgentInsights.tsx:1:10)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:4:1)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:6:1)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:6:1)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:6:1)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/register/page.tsx:6:1)
 
 Command failed: npm run build
 ⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
@@ -68,46 +939,917 @@ Command failed: npm run build
 ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
 
 > Build error occurred
-Error: Turbopack build failed with 3 errors:
-./src/app/api/checkout/route.ts:41:72
-Parsing ecmascript source code failed
-[0m [90m 39 |[39m                         product_data[33m:[39m {
- [90m 40 |[39m                             name[33m:[39m [32m`Chonburi Connect: ${packageId.toUpperCase()} PLAN`[39m[33m,[39m
-[31m[1m>[22m[39m[90m 41 |[39m                             description[33m:[39m [32m`${pkg.credits === 'unlimited' ? '辟｡蛻ｶ髯・ : pkg.credits} 謗ｲ霈峨け繝ｬ繧ｸ繝・ヨ`[39m[33m,[39m
- [90m    |[39m                                                                        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 42 |[39m                         }[33m,[39m
- [90m 43 |[39m                         unit_amount[33m:[39m pkg[33m.[39mprice [33m*[39m [35m100[39m[33m,[39m [90m// THB requires amount in smallest currency unit (satang)[39m
- [90m 44 |[39m                     }[33m,[39m[0m
+Error: Turbopack build failed with 56 errors:
+./src/app/[locale]/about/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m
+ [90m 5 |[39m[0m
 
-Unterminated string constant
-
-
-./src/app/api/webhooks/inquiry/route.ts:81:11
-Parsing ecmascript source code failed
-[0m [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
- [90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
-[31m[1m>[22m[39m[90m 81 |[39m [32m            </tr>[39m
- [90m    |[39m           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 82 |[39m [32m          </table>[39m
- [90m 83 |[39m [32m[39m
- [90m 84 |[39m [32m          <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; font-style: italic; color: #1e293b;">[39m[0m
-
-Unterminated regexp literal
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
 
 
-./src/app/api/webhooks/inquiry/route.ts:80:100
-Parsing ecmascript source code failed
-[0m [90m 78 |[39m [32m            <tr>[39m
- [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
-[31m[1m>[22m[39m[90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
- [90m    |[39m                                                                                                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 81 |[39m [32m            </tr>[39m
- [90m 82 |[39m [32m          </table>[39m
- [90m 83 |[39m [32m[39m[0m
+./src/app/[locale]/admin-secret/agents/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [90m// Removed server-side import from client component[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
 
-Unterminated string constant
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
 
 
-    at <unknown> (./src/app/api/checkout/route.ts:41:72)
-    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:81:11)
-    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:80:100)
+./src/app/[locale]/admin-secret/agents/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m [90m// Removed server-side import from client component[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mChevronLeft[39m[33m,[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/agents/page.tsx:16:23
+Ecmascript file had an error
+[0m [90m 14 |[39m [36mimport[39m [33mAgentPerformanceTable[39m [36mfrom[39m [32m'@/components/admin/AgentPerformanceTable'[39m
+ [90m 15 |[39m [36mimport[39m nextDynamic [36mfrom[39m [32m'next/dynamic'[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mconst[39m [33mAgentInsights[39m [33m=[39m nextDynamic(() [33m=>[39m [36mimport[39m([32m'@/components/admin/AgentInsights'[39m)[33m,[39m {
+ [90m    |[39m                       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 17 |[39m     ssr[33m:[39m [36mfalse[39m[33m,[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 18 |[39m     loading[33m:[39m () [33m=>[39m [33m<[39m[33mdiv[39m className[33m=[39m[32m"h-[300px] bg-slate-50/50 animate-pulse rounded-2xl"[39m [33m/[39m[33m>[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 19 |[39m })
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 20 |[39m
+ [90m 21 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mAgentsManagementPage[39m() {
+ [90m 22 |[39m     [36mconst[39m [selectedAgentId[33m,[39m setSelectedAgentId] [33m=[39m useState[33m<[39m[33mstring[39m [33m|[39m [36mnull[39m[33m>[39m([36mnull[39m)[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:5:20
+Ecmascript file had an error
+[0m [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m
+ [90m 8 |[39m     [33mTrendingUp[39m[33m,[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:5:10
+Ecmascript file had an error
+[0m [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m
+ [90m 8 |[39m     [33mTrendingUp[39m[33m,[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:20:25
+Ecmascript file had an error
+[0m [90m 18 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 19 |[39m [36mimport[39m nextDynamic [36mfrom[39m [32m'next/dynamic'[39m
+[31m[1m>[22m[39m[90m 20 |[39m [36mconst[39m [33mAnalyticsCharts[39m [33m=[39m nextDynamic(() [33m=>[39m [36mimport[39m([32m'./AnalyticsCharts'[39m)[33m,[39m {
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 21 |[39m     ssr[33m:[39m [36mfalse[39m[33m,[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 22 |[39m     loading[33m:[39m () [33m=>[39m [33m<[39m[33mdiv[39m className[33m=[39m[32m"h-[300px] bg-slate-50/50 animate-pulse rounded-2xl"[39m [33m/[39m[33m>[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 23 |[39m })
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 24 |[39m
+ [90m 25 |[39m [36mexport[39m [36mconst[39m dynamic [33m=[39m [32m'force-dynamic'[39m
+ [90m 26 |[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/agents/[id]/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/agents/[id]/page.tsx:6:20
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/agents/[id]/page.tsx:5:20
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/agents/[id]/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/auth/forgot-password/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/auth/forgot-password/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowLeft[39m[33m,[39m [33mSend[39m[33m,[39m [33mCheckCircle2[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 7 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mShieldCheck[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mShieldCheck[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/contact/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mPhone[39m[33m,[39m [33mMapPin[39m[33m,[39m [33mMessageCircle[39m[33m,[39m [33mSend[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/contact/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mPhone[39m[33m,[39m [33mMapPin[39m[33m,[39m [33mMessageCircle[39m[33m,[39m [33mSend[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 6 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 7 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:4:20
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mPresaleListingForm[39m [36mfrom[39m [32m'@/components/property/PresaleListingForm'[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/list-property/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/list-property/page.tsx:4:20
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/list-property/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mListingForm[39m [36mfrom[39m [32m'@/components/property/ListingForm'[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/list-property/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/pricing/page.tsx:4:27
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:5:10
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:5:21
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m                     [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/pricing/page.tsx:4:17
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:6:20
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m
+ [90m 9 |[39m [36mimport[39m [33mBreadcrumbUpdater[39m [36mfrom[39m [32m'@/components/layout/BreadcrumbUpdater'[39m[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:5:20
+Ecmascript file had an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m[0m
+
+You're importing a component that needs `useParams`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m
+ [90m 9 |[39m [36mimport[39m [33mBreadcrumbUpdater[39m [36mfrom[39m [32m'@/components/layout/BreadcrumbUpdater'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/properties/[id]/page.tsx:11:25
+Ecmascript file had an error
+[0m [90m  9 |[39m [36mimport[39m [33mBreadcrumbUpdater[39m [36mfrom[39m [32m'@/components/layout/BreadcrumbUpdater'[39m
+ [90m 10 |[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mconst[39m [33mPropertyGallery[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/PropertyGallery'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:12:27
+Ecmascript file had an error
+[0m [90m 10 |[39m
+ [90m 11 |[39m [36mconst[39m [33mPropertyGallery[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/PropertyGallery'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+[31m[1m>[22m[39m[90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 15 |[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:13:30
+Ecmascript file had an error
+[0m [90m 11 |[39m [36mconst[39m [33mPropertyGallery[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/PropertyGallery'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+[31m[1m>[22m[39m[90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 15 |[39m
+ [90m 16 |[39m [36mimport[39m [33mPropertyDescription[39m [36mfrom[39m [32m'@/components/property/PropertyDescription'[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:14:21
+Ecmascript file had an error
+[0m [90m 12 |[39m [36mconst[39m [33mRelatedProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/RelatedProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m 13 |[39m [36mconst[39m [33mAgentOtherProperties[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/agent/AgentOtherProperties'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+[31m[1m>[22m[39m[90m 14 |[39m [36mconst[39m [33mInquiryForm[39m [33m=[39m dynamic(() [33m=>[39m [36mimport[39m([32m'@/components/property/InquiryForm'[39m)[33m,[39m { ssr[33m:[39m [36mfalse[39m })
+ [90m    |[39m                     [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m
+ [90m 16 |[39m [36mimport[39m [33mPropertyDescription[39m [36mfrom[39m [32m'@/components/property/PropertyDescription'[39m
+ [90m 17 |[39m [36mimport[39m [33mAgentProfileCard[39m [36mfrom[39m [32m'@/components/agent/AgentProfileCard'[39m[0m
+
+`ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+
+
+./src/app/[locale]/register/page.tsx:2:1
+Ecmascript file had an error
+[0m [90m 1 |[39m [36mexport[39m [36mconst[39m runtime [33m=[39m [32m'edge'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 2 |[39m [32m'use client'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m[0m
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+
+./src/app/[locale]/register/page.tsx:6:10
+Ecmascript file had an error
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowRight[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+You're importing a component that needs `useRouter`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/app/[locale]/register/page.tsx:4:10
+Ecmascript file had an error
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+ [90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m 7 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowRight[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+
+./src/components/admin/AgentInsights.tsx:1:20
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m [33mScript[39m [36mfrom[39m [32m'next/script'[39m
+ [90m 3 |[39m [90m// import { ... } from 'recharts' // Removed for bundle optimization[39m
+ [90m 4 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useEffect`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Edge Server Component:
+    ./src/components/admin/AgentInsights.tsx
+    ./src/app/[locale]/admin-secret/agents/page.tsx
+
+
+./src/components/admin/AgentInsights.tsx:1:10
+Ecmascript file had an error
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m   |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m [33mScript[39m [36mfrom[39m [32m'next/script'[39m
+ [90m 3 |[39m [90m// import { ... } from 'recharts' // Removed for bundle optimization[39m
+ [90m 4 |[39m [36mimport[39m {[0m
+
+You're importing a component that needs `useState`. This React Hook only works in a Client Component. To fix, mark the file (or its parent) with the `"use client"` directive.
+
+ Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+
+
+
+Import trace:
+  Edge Server Component:
+    ./src/components/admin/AgentInsights.tsx
+    ./src/app/[locale]/admin-secret/agents/page.tsx
+
+
+./src/app/[locale]/pricing
+Invalid import
+'client-only' cannot be imported from a Server Component module. It should only be used from a Client Component.
+The error was caused by using 'styled-jsx'. It only works in a Client Component but none of its parents are marked with "use client", so they're Server Components by default.
+
+
+
+./src/app/[locale]/agents/[id]/page.tsx:5:1
+Export useParams doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m [33mImage[39m [36mfrom[39m [32m'next/image'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m[0m
+
+The export useParams was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unstable_rethrow?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/pricing/page.tsx:5:1
+Export useParams doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+The export useParams was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unstable_rethrow?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/properties/[id]/page.tsx:5:1
+Export useParams doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { notFound[33m,[39m useParams } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m { useState[33m,[39m useEffect[33m,[39m [33mSuspense[39m } [36mfrom[39m [32m'react'[39m
+ [90m 7 |[39m [36mimport[39m { getDictionary } [36mfrom[39m [32m'@/lib/i18n/get-dictionary'[39m
+ [90m 8 |[39m [36mimport[39m dynamic [36mfrom[39m [32m'next/dynamic'[39m[0m
+
+The export useParams was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unstable_rethrow?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/admin-secret/analytics/page.tsx:4:1
+Export useRouter doesn't exist in target module
+[0m [90m 2 |[39m [32m'use client'[39m
+ [90m 3 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 5 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 6 |[39m [36mimport[39m {
+ [90m 7 |[39m     [33mBarChart3[39m[33m,[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/auth/reset-password/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mCheckCircle2[39m[33m,[39m [33mShieldCheck[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/dashboard/presale/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mBuilding2[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mPresaleListingForm[39m [36mfrom[39m [32m'@/components/property/PresaleListingForm'[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/list-property/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mAlertTriangle[39m[33m,[39m [33mCreditCard[39m[33m,[39m [33mPlusCircle[39m[33m,[39m [33mChevronLeft[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 9 |[39m [36mimport[39m [33mListingForm[39m [36mfrom[39m [32m'@/components/property/ListingForm'[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/pricing/page.tsx:5:1
+Export useRouter doesn't exist in target module
+[0m [90m 3 |[39m
+ [90m 4 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { useParams[33m,[39m useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m'next/link'[39m
+ [90m 7 |[39m [36mimport[39m {
+ [90m 8 |[39m     [33mCrown[39m[33m,[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./src/app/[locale]/register/page.tsx:6:1
+Export useRouter doesn't exist in target module
+[0m [90m 4 |[39m [36mimport[39m { useState } [36mfrom[39m [32m'react'[39m
+ [90m 5 |[39m [36mimport[39m { createClient } [36mfrom[39m [32m'@/lib/supabase/client'[39m
+[31m[1m>[22m[39m[90m 6 |[39m [36mimport[39m { useRouter } [36mfrom[39m [32m'next/navigation'[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 7 |[39m [36mimport[39m { [33mMail[39m[33m,[39m [33mLock[39m[33m,[39m [33mLoader2[39m[33m,[39m [33mArrowRight[39m } [36mfrom[39m [32m'lucide-react'[39m
+ [90m 8 |[39m [36mimport[39m { getErrorMessage } [36mfrom[39m [32m'@/lib/utils/errors'[39m
+ [90m 9 |[39m[0m
+
+The export useRouter was not found in module [project]/node_modules/next/dist/esm/api/navigation.react-server.js [app-edge-rsc] (ecmascript).
+Did you mean to import unauthorized?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+    at <unknown> (./src/app/[locale]/about/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/admin-secret/agents/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/admin-secret/agents/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/admin-secret/agents/page.tsx:16:23)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:5:20)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:5:10)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:20:25)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:6:20)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:5:20)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/auth/forgot-password/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/auth/forgot-password/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/contact/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/contact/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:4:20)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:4:20)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:4:10)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:4:27)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:10)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:21)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:4:17)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:6:20)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:5:20)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:11:25)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:12:27)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:13:30)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:14:21)
+    at <unknown> (./src/app/[locale]/register/page.tsx:2:1)
+    at <unknown> (./src/app/[locale]/register/page.tsx:6:10)
+    at <unknown> (./src/app/[locale]/register/page.tsx:4:10)
+    at <unknown> (./src/components/admin/AgentInsights.tsx:1:20)
+    at <unknown> (./src/components/admin/AgentInsights.tsx:1:10)
+    at <unknown> (./src/app/[locale]/agents/[id]/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/properties/[id]/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/admin-secret/analytics/page.tsx:4:1)
+    at <unknown> (./src/app/[locale]/auth/reset-password/page.tsx:6:1)
+    at <unknown> (./src/app/[locale]/dashboard/presale/page.tsx:6:1)
+    at <unknown> (./src/app/[locale]/list-property/page.tsx:6:1)
+    at <unknown> (./src/app/[locale]/pricing/page.tsx:5:1)
+    at <unknown> (./src/app/[locale]/register/page.tsx:6:1)

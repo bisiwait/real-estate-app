@@ -1,5 +1,5 @@
-'use client'
-
+"use client";
+export const runtime = 'edge';
 import dynamic from 'next/dynamic'
 
 const FadeIn = dynamic(() => import('@/components/animations/FadeIn'), {

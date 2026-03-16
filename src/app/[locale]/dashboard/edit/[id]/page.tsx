@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import ListingForm from '@/components/property/ListingForm'
