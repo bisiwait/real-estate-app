@@ -1,0 +1,6 @@
+name = "real-estate-app"
+compatibility_date = "2024-04-01"
+
+[functions]
+# enable High Limits (Paid plan 100MB size limit)
+limits = { requested_limit = "high" }
