@@ -481,7 +481,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                                 ))}
                             </div>
                         ) : filteredProperties.length > 0 ? (
-                            <div className="space-y-12">
+                            <div className="space-y-12 min-h-[800px]">
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {filteredProperties.map(property => (
                                         <PropertyCard key={property.id} property={property} dict={dict} />
