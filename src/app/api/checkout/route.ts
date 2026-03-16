@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'edge';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
     apiVersion: '2026-01-28.clover',
 })
 
