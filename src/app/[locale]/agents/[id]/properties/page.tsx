@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation'
 import AgentPropertiesList from './AgentPropertiesList'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
 
 export default async function AgentPropertiesPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const { id: agentId } = await params;

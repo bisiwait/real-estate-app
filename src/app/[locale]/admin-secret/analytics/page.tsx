@@ -21,7 +21,6 @@ const AnalyticsCharts = nextDynamic(() => import('./AnalyticsCharts'), {
     loading: () => <div className="h-[300px] bg-slate-50/50 animate-pulse rounded-2xl" />
 })
 
-export const runtime = 'edge';
 export const dynamic = 'force-dynamic'
 
 export default function AdminAnalyticsPage() {

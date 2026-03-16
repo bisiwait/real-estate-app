@@ -1,0 +1,113 @@
+
+> real_estate@0.1.0 build
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+  Creating an optimized production build ...
+
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+> Build error occurred
+Error: Turbopack build failed with 3 errors:
+./src/app/api/checkout/route.ts:41:72
+Parsing ecmascript source code failed
+[0m [90m 39 |[39m                         product_data[33m:[39m {
+ [90m 40 |[39m                             name[33m:[39m [32m`Chonburi Connect: ${packageId.toUpperCase()} PLAN`[39m[33m,[39m
+[31m[1m>[22m[39m[90m 41 |[39m                             description[33m:[39m [32m`${pkg.credits === 'unlimited' ? '辟｡蛻ｶ髯・ : pkg.credits} 謗ｲ霈峨け繝ｬ繧ｸ繝・ヨ`[39m[33m,[39m
+ [90m    |[39m                                                                        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 42 |[39m                         }[33m,[39m
+ [90m 43 |[39m                         unit_amount[33m:[39m pkg[33m.[39mprice [33m*[39m [35m100[39m[33m,[39m [90m// THB requires amount in smallest currency unit (satang)[39m
+ [90m 44 |[39m                     }[33m,[39m[0m
+
+Unterminated string constant
+
+
+./src/app/api/webhooks/inquiry/route.ts:81:11
+Parsing ecmascript source code failed
+[0m [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
+ [90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
+[31m[1m>[22m[39m[90m 81 |[39m [32m            </tr>[39m
+ [90m    |[39m           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 82 |[39m [32m          </table>[39m
+ [90m 83 |[39m [32m[39m
+ [90m 84 |[39m [32m          <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; font-style: italic; color: #1e293b;">[39m[0m
+
+Unterminated regexp literal
+
+
+./src/app/api/webhooks/inquiry/route.ts:80:100
+Parsing ecmascript source code failed
+[0m [90m 78 |[39m [32m            <tr>[39m
+ [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
+[31m[1m>[22m[39m[90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
+ [90m    |[39m                                                                                                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 81 |[39m [32m            </tr>[39m
+ [90m 82 |[39m [32m          </table>[39m
+ [90m 83 |[39m [32m[39m[0m
+
+Unterminated string constant
+
+
+    at <unknown> (./src/app/api/checkout/route.ts:41:72)
+    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:81:11)
+    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:80:100)
+
+Command failed: npm run build
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+> Build error occurred
+Error: Turbopack build failed with 3 errors:
+./src/app/api/checkout/route.ts:41:72
+Parsing ecmascript source code failed
+[0m [90m 39 |[39m                         product_data[33m:[39m {
+ [90m 40 |[39m                             name[33m:[39m [32m`Chonburi Connect: ${packageId.toUpperCase()} PLAN`[39m[33m,[39m
+[31m[1m>[22m[39m[90m 41 |[39m                             description[33m:[39m [32m`${pkg.credits === 'unlimited' ? '辟｡蛻ｶ髯・ : pkg.credits} 謗ｲ霈峨け繝ｬ繧ｸ繝・ヨ`[39m[33m,[39m
+ [90m    |[39m                                                                        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 42 |[39m                         }[33m,[39m
+ [90m 43 |[39m                         unit_amount[33m:[39m pkg[33m.[39mprice [33m*[39m [35m100[39m[33m,[39m [90m// THB requires amount in smallest currency unit (satang)[39m
+ [90m 44 |[39m                     }[33m,[39m[0m
+
+Unterminated string constant
+
+
+./src/app/api/webhooks/inquiry/route.ts:81:11
+Parsing ecmascript source code failed
+[0m [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
+ [90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
+[31m[1m>[22m[39m[90m 81 |[39m [32m            </tr>[39m
+ [90m    |[39m           [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 82 |[39m [32m          </table>[39m
+ [90m 83 |[39m [32m[39m
+ [90m 84 |[39m [32m          <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; font-style: italic; color: #1e293b;">[39m[0m
+
+Unterminated regexp literal
+
+
+./src/app/api/webhooks/inquiry/route.ts:80:100
+Parsing ecmascript source code failed
+[0m [90m 78 |[39m [32m            <tr>[39m
+ [90m 79 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">髮ｻ隧ｱ逡ｪ蜿ｷ</td>[39m
+[31m[1m>[22m[39m[90m 80 |[39m [32m              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${record.inquirer_phone || '縺ｪ縺・}</td>[39m
+ [90m    |[39m                                                                                                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 81 |[39m [32m            </tr>[39m
+ [90m 82 |[39m [32m          </table>[39m
+ [90m 83 |[39m [32m[39m[0m
+
+Unterminated string constant
+
+
+    at <unknown> (./src/app/api/checkout/route.ts:41:72)
+    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:81:11)
+    at <unknown> (./src/app/api/webhooks/inquiry/route.ts:80:100)

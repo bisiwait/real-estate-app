@@ -1,0 +1,110 @@
+
+> real_estate@0.1.0 build
+> next build
+
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · optimizePackageImports
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.8s
+  Skipping validation of types
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/74) ...
+  Generating static pages using 15 workers (18/74) 
+  Generating static pages using 15 workers (36/74) 
+  Generating static pages using 15 workers (55/74) 
+✓ Generating static pages using 15 workers (74/74) in 445.7ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /_not-found
+├ ƒ /[locale]
+├ ● /[locale]/about
+│ ├ /jp/about
+│ ├ /en/about
+│ └ /th/about
+├ ƒ /[locale]/admin-secret
+├ ● /[locale]/admin-secret/agents
+│ ├ /jp/admin-secret/agents
+│ ├ /en/admin-secret/agents
+│ └ /th/admin-secret/agents
+├ ● /[locale]/admin-secret/analytics
+│ ├ /jp/admin-secret/analytics
+│ ├ /en/admin-secret/analytics
+│ └ /th/admin-secret/analytics
+├ ƒ /[locale]/admin-secret/broadcast
+├ ƒ /[locale]/agents/[id]
+├ ƒ /[locale]/agents/[id]/properties
+├ ƒ /[locale]/auth/callback
+├ ● /[locale]/auth/forgot-password
+│ ├ /jp/auth/forgot-password
+│ ├ /en/auth/forgot-password
+│ └ /th/auth/forgot-password
+├ ● /[locale]/auth/reset-password
+│ ├ /jp/auth/reset-password
+│ ├ /en/auth/reset-password
+│ └ /th/auth/reset-password
+├ ● /[locale]/contact
+│ ├ /jp/contact
+│ ├ /en/contact
+│ └ /th/contact
+├ ƒ /[locale]/dashboard
+├ ƒ /[locale]/dashboard/edit/[id]
+├ ƒ /[locale]/dashboard/leads
+├ ● /[locale]/dashboard/presale
+│ ├ /jp/dashboard/presale
+│ ├ /en/dashboard/presale
+│ └ /th/dashboard/presale
+├ ƒ /[locale]/dashboard/settings
+├ ƒ /[locale]/developers
+├ ƒ /[locale]/developers/[id]
+├ ƒ /[locale]/favorites
+├ ● /[locale]/list-property
+│ ├ /jp/list-property
+│ ├ /en/list-property
+│ └ /th/list-property
+├ ● /[locale]/login
+│ ├ /jp/login
+│ ├ /en/login
+│ └ /th/login
+├ ● /[locale]/lp/post-property
+│ ├ /jp/lp/post-property
+│ ├ /en/lp/post-property
+│ └ /th/lp/post-property
+├ ● /[locale]/mypage
+│ ├ /jp/mypage
+│ ├ /en/mypage
+│ └ /th/mypage
+├ ● /[locale]/pricing
+│ ├ /jp/pricing
+│ ├ /en/pricing
+│ └ /th/pricing
+├ ● /[locale]/properties
+│ ├ /jp/properties
+│ ├ /en/properties
+│ └ /th/properties
+├ ƒ /[locale]/properties/[id]
+├ ● /[locale]/register
+│ ├ /jp/register
+│ ├ /en/register
+│ └ /th/register
+├ ƒ /api/checkout
+├ ƒ /api/dev/sync-credits
+├ ƒ /api/translate
+├ ƒ /api/webhook
+└ ƒ /api/webhooks/inquiry
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

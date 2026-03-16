@@ -23,7 +23,6 @@ import {
     Bus, Lock, ShieldCheck, CalendarDays, RefreshCw
 } from 'lucide-react'
 
-export const runtime = 'edge'
 
 const getFeatureIcon = (featureName: string) => {
     const name = featureName.toLowerCase();

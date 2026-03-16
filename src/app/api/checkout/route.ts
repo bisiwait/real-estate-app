@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-export const runtime = 'edge';
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 

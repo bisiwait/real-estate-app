@@ -23,7 +23,6 @@ import {
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
-export const runtime = 'edge'
 
 export default function AgentProfilePage() {
     const params = useParams()

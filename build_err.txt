@@ -1,0 +1,10 @@
+﻿
+> real_estate@0.1.0 build
+> next build
+
+笆ｲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  ﾂｷ optimizePackageImports
+
+  Creating an optimized production build ...

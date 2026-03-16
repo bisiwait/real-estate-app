@@ -1,5 +1,4 @@
 export const dynamic = 'force-dynamic'
-export const runtime = 'edge';
 import HeroSection from "@/components/home/HeroSection";
 
 import SectionHeader from "@/components/ui/SectionHeader";

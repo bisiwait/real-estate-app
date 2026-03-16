@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server'
-export const runtime = 'edge';
+﻿import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
