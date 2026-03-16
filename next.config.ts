@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion', 'swiper'],
   },
+  transpilePackages: ['lucide-react'],
+  productionBrowserSourceMaps: false,
 };
 
 export default nextConfig;
