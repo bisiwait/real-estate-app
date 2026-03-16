@@ -1,5 +1,7 @@
-﻿import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+
+export const runtime = 'edge';
 
 export async function POST() {
     const supabase = await createClient()

@@ -1,6 +1,8 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+
+export const runtime = 'edge';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2026-01-28.clover',
@@ -18,7 +20,7 @@ export async function POST(req: Request) {
     let event: Stripe.Event
 
     try {
-        event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+        event = await stripe.webhooks.constructEventAsync(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
     } catch (err: any) {
         return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
     }
