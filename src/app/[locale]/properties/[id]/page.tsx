@@ -177,8 +177,8 @@ export default function PropertyDetailPage() {
                 </div>
 
                 <div className="mt-16 space-y-16">
+                    <RelatedProperties buildingName={property.building_name} projectName={property.project?.name} currentPropertyId={property.id} dict={dict} />
                     <AgentOtherProperties agentId={property.user_id} currentPropertyId={property.id} agentName={agent?.full_name} locale={locale} dict={dict} />
-                     <RelatedProperties buildingName={property.building_name} projectName={property.project?.name} currentPropertyId={property.id} dict={dict} />
                 </div>
             </div>
             <StickyContactBar property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }} phoneNumber={agent?.phone} dict={dict} />
