@@ -33,8 +33,8 @@ export default function PropertyDescription({ description, descriptionEn, descri
 
     // Format description text
     const getDescription = () => {
-        if (activeLang === 'en' && descriptionEn) return descriptionEn
-        if (activeLang === 'th' && descriptionTh) return descriptionTh
+        if (activeLang === 'en') return descriptionEn
+        if (activeLang === 'th') return descriptionTh
         return description
     }
     const formattedDescription = getDescription()?.replace(/<br\s*\/?>/gi, '\n') || ''
