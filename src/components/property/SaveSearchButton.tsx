@@ -53,41 +53,54 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
         const timer = setTimeout(async () => {
             try {
                 if (!user) {
-                    setSaved(false);
-                    setIsRestricted(false);
+                    if (isMounted) {
+                        setSaved(false);
+                        setIsRestricted(false);
+                    }
                     return;
                 }
 
-                // 1. Check Restrictions
-                if (userData.role === 'admin' || userData.role === 'agent') {
-                    setIsRestricted(true);
+                // 1. Check Restrictions safely
+                if (userData && (userData.role === 'admin' || userData.role === 'agent')) {
+                    if (isMounted) setIsRestricted(true);
                 }
 
-                // 2. Check if Saved
-                const filterCount = Object.keys(currentFilters).length;
+                // 2. Check if Saved safely
+                const safeCurrentFilters = currentFilters || {};
+                const filterCount = Object.keys(safeCurrentFilters).length;
+                
                 if (filterCount === 0) {
-                    setSaved(false);
+                    if (isMounted) setSaved(false);
                 } else {
                     const { data, error } = await supabase
                         .from("saved_searches")
                         .select("id, filters")
                         .eq("user_id", user.id);
 
-                    if (error) throw error;
+                    if (error) {
+                        // Silently handle fetch failures instead of throwing and crashing the sync loop
+                        return;
+                    }
 
-                    if (isMounted) {
-                        const isAlreadySaved = data?.some(item => {
-                            const dbFilters = item.filters || {};
-                            const dbKeys = Object.keys(dbFilters);
-                            const currentKeys = Object.keys(currentFilters);
-                            if (dbKeys.length !== currentKeys.length) return false;
-                            return currentKeys.every(key => dbFilters[key] === currentFilters[key]);
+                    if (isMounted && data) {
+                        const isAlreadySaved = data.some(item => {
+                            try {
+                                const dbFilters = item?.filters;
+                                if (!dbFilters || typeof dbFilters !== 'object') return false;
+                                
+                                const dbKeys = Object.keys(dbFilters);
+                                const currentKeys = Object.keys(safeCurrentFilters);
+                                if (dbKeys.length !== currentKeys.length) return false;
+                                return currentKeys.every(key => dbFilters[key] === safeCurrentFilters[key]);
+                            } catch (e) {
+                                return false; // Ignore corrupted JSON records
+                            }
                         });
                         setSaved(!!isAlreadySaved);
                     }
                 }
             } catch (error) {
-                console.error("SaveSearchButton sync error:", error);
+                // Completely swallow unhandled sync errors so it NEVER affects PropertiesClient rendering
             }
         }, 500); // 500ms debounce
 
@@ -170,11 +183,18 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                 .eq("user_id", user.id);
 
             const isDuplicate = existing?.some(item => {
-                const dbFilters = item.filters || {};
-                const dbKeys = Object.keys(dbFilters);
-                const currentKeys = Object.keys(currentFilters);
-                if (dbKeys.length !== currentKeys.length) return false;
-                return currentKeys.every(key => dbFilters[key] === currentFilters[key]);
+                try {
+                    const dbFilters = item?.filters;
+                    if (!dbFilters || typeof dbFilters !== 'object') return false;
+                    
+                    const safeCurrentFilters = currentFilters || {};
+                    const dbKeys = Object.keys(dbFilters);
+                    const currentKeys = Object.keys(safeCurrentFilters);
+                    if (dbKeys.length !== currentKeys.length) return false;
+                    return currentKeys.every(key => dbFilters[key] === safeCurrentFilters[key]);
+                } catch (e) {
+                    return false;
+                }
             });
 
             if (isDuplicate) {
