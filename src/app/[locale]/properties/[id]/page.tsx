@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/client'
 import { notFound, useParams } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
+import { useAuth } from '@/contexts/AuthContext'
 import dynamic from 'next/dynamic'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
@@ -19,7 +20,7 @@ import {
     MapPin, Building2, Bath, Calendar, Layers, Maximize2, Tag, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Shield, Users, Baby, Tv, ShoppingBag, Wind, Coffee, Utensils,
     Wifi, Refrigerator, ArrowUp, Dog, Zap, CircleDollarSign, Sun, Building, Thermometer,
-    Bus, Lock, ShieldCheck, CalendarDays, RefreshCw
+    Bus, Lock, ShieldCheck, CalendarDays, RefreshCw, Loader2
 } from 'lucide-react'
 
 
@@ -55,6 +56,10 @@ export default function PropertyDetailPage() {
     const [dict, setDict] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [activeLang, setActiveLang] = useState<'jp' | 'en' | 'th'>(locale as any || 'jp')
+    const [translatingTitle, setTranslatingTitle] = useState(false)
+
+    const { user } = useAuth()
+    const isPremium = !!user
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -78,6 +83,41 @@ export default function PropertyDetailPage() {
         if (id) fetchData()
     }, [id, locale])
 
+    // Fetch translation for title if missing
+    useEffect(() => {
+        const translateTitleOnDemand = async () => {
+            if (!property || translatingTitle) return;
+            
+            const needsEn = activeLang === 'en' && !property.title_en;
+            const needsTh = activeLang === 'th' && !property.title_th;
+            
+            if (needsEn || needsTh) {
+                setTranslatingTitle(true);
+                try {
+                    const res = await fetch(`/api/properties/${property.id}/translate-title`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: property.title_ja || property.title })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setProperty((prev: any) => ({
+                            ...prev,
+                            title_en: data.title_en || prev.title_en,
+                            title_th: data.title_th || prev.title_th
+                        }));
+                    }
+                } catch (error) {
+                    console.error("Failed to translate title:", error);
+                } finally {
+                    setTranslatingTitle(false);
+                }
+            }
+        };
+
+        translateTitleOnDemand();
+    }, [activeLang, property?.id, property?.title_en, property?.title_th]);
+
     if (loading || !dict || !property) {
         return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
     }
@@ -87,8 +127,8 @@ export default function PropertyDetailPage() {
     const translateArea = (areaName: string) => (dict.property.db_locations as any)?.[areaName] || areaName;
 
     const getDisplayTitle = () => {
-        if (activeLang === 'en') return property.title_en || property.title_ja || property.title;
-        if (activeLang === 'th') return property.title_th || property.title_ja || property.title;
+        if (activeLang === 'en' && property.title_en) return property.title_en;
+        if (activeLang === 'th' && property.title_th) return property.title_th;
         return property.title_ja || property.title;
     };
     const displayTitle = getDisplayTitle();
@@ -102,7 +142,10 @@ export default function PropertyDetailPage() {
                         <PropertyGallery images={property.images} />
                         <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-slate-50">
                             <div className="space-y-6 mb-10">
-                                <h1 className="text-[20px] md:text-[24px] font-normal text-[#1A2B56] leading-tight tracking-normal">{displayTitle}</h1>
+                                <h1 className="text-[20px] md:text-[24px] font-normal text-[#1A2B56] leading-tight tracking-normal flex items-center gap-3">
+                                    {displayTitle}
+                                    {translatingTitle && <Loader2 className="w-5 h-5 text-slate-300 animate-spin" />}
+                                </h1>
                                 <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
                                     <div className="space-y-4">
                                         <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-slate-500 text-[13px] font-normal">
@@ -133,7 +176,7 @@ export default function PropertyDetailPage() {
                             </div>
                         </div>
  
-                        <PropertyDescription description={property.description} descriptionEn={property.description_en} descriptionTh={property.description_th} dict={dict} activeLang={activeLang} setActiveLang={setActiveLang} />
+                        <PropertyDescription description={property.description} descriptionEn={property.description_en} descriptionTh={property.description_th} dict={dict} activeLang={activeLang} setActiveLang={setActiveLang} isPremium={isPremium} />
 
                         <SectionBox title={translateTag("こだわり設備")} icon={Gem}>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
