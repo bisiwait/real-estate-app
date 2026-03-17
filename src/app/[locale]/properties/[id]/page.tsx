@@ -57,6 +57,7 @@ export default function PropertyDetailPage() {
     const [activeLang, setActiveLang] = useState<'jp' | 'en' | 'th'>(locale as any || 'jp')
 
     useEffect(() => {
+        window.scrollTo(0, 0);
         const fetchData = async () => {
             const supabase = createClient()
             const [d, pRes] = await Promise.all([

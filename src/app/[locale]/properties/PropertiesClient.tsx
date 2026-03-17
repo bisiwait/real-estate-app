@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import MobileSearchBar from '@/components/property/MobileSearchBar'
@@ -22,6 +22,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
     const [page, setPage] = useState(0)
     const [hasMore, setHasMore] = useState(true)
     const [totalCount, setTotalCount] = useState<number>(0)
+    const savedScrollYRef = useRef<number | null>(null)
     const PAGE_SIZE = 9
 
     // Local constants derived from dict
@@ -69,7 +70,10 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
     }, [searchQuery])
 
     const fetchProperties = async (isLoadMore = false) => {
-        if (isLoadMore) setLoadingMore(true)
+        if (isLoadMore) {
+            savedScrollYRef.current = window.scrollY
+            setLoadingMore(true)
+        }
         else {
             setLoading(true)
             setPage(0)
@@ -168,6 +172,13 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                 if (isLoadMore) {
                     setDbProperties(prev => [...prev, ...formatted])
                     setPage(currentPage)
+                    
+                    setTimeout(() => {
+                        if (savedScrollYRef.current !== null) {
+                            window.scrollTo({ top: savedScrollYRef.current, behavior: 'instant' })
+                            savedScrollYRef.current = null
+                        }
+                    }, 50)
                 } else {
                     setDbProperties(formatted)
                 }
@@ -481,7 +492,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                                 ))}
                             </div>
                         ) : filteredProperties.length > 0 ? (
-                            <div className="space-y-12 min-h-[800px]" style={{ overflowAnchor: 'none' }}>
+                            <div className="space-y-12 min-h-[800px] ![overflow-anchor:none]" style={{ overflowAnchor: 'none' }}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {filteredProperties.map(property => (
                                         <PropertyCard key={property.id} property={property} dict={dict} />
