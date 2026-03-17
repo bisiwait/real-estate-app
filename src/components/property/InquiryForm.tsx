@@ -29,7 +29,14 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
         setIsDesktop(window.innerWidth >= 1024)
         const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
         window.addEventListener('resize', handleResize)
-        return () => window.removeEventListener('resize', handleResize)
+        
+        const handleOpenEvent = () => setIsOpen(true)
+        window.addEventListener('open-inquiry-form', handleOpenEvent)
+
+        return () => {
+            window.removeEventListener('resize', handleResize)
+            window.removeEventListener('open-inquiry-form', handleOpenEvent)
+        }
     }, [])
 
     const supabase = createClient()
@@ -98,7 +105,7 @@ export default function InquiryForm({ propertyId, propertyName, dict }: InquiryF
     }
 
     return (
-        <div className="relative overflow-visible">
+        <div id="inquiry-form-section" className="relative overflow-visible scroll-mt-24">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center justify-between lg:cursor-default"

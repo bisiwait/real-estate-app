@@ -21,17 +21,23 @@ interface StickyContactBarProps {
 
 export default function StickyContactBar({ property, phoneNumber, dict }: StickyContactBarProps) {
     const scrollToInquiry = () => {
-        const element = document.getElementById('inquiry-form-section')
-        if (element) {
-            const headerOffset = 100
-            const elementPosition = element.getBoundingClientRect().top
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+        // Dispatch event to open the accordion before calculating dimensions
+        window.dispatchEvent(new CustomEvent('open-inquiry-form'))
+        
+        // Small delay to allow the accordion rendering to begin affecting the DOM height
+        setTimeout(() => {
+            const element = document.getElementById('inquiry-form-section')
+            if (element) {
+                const headerOffset = 100
+                const elementPosition = element.getBoundingClientRect().top
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            })
-        }
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                })
+            }
+        }, 50)
     }
 
     return (
