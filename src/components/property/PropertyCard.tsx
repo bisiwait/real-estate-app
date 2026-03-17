@@ -8,6 +8,8 @@ interface PropertyCardProps {
     property: {
         id: string
         title: string
+        title_en?: string
+        title_th?: string
         price: number
         area_name: string
         city_name?: string
@@ -31,6 +33,12 @@ interface PropertyCardProps {
 export default function PropertyCard({ property, dict }: { property: any, dict: any }) {
     const params = useParams()
     const locale = params?.locale as string || 'jp'
+    
+    const getDisplayTitle = () => {
+        if (locale === 'en' && property.title_en) return property.title_en;
+        if (locale === 'th' && property.title_th) return property.title_th;
+        return property.title;
+    };
 
     return (
         <div className="relative group h-full">
@@ -77,7 +85,7 @@ export default function PropertyCard({ property, dict }: { property: any, dict: 
                                 {property.city_name ? `${dict.property.db_locations[property.city_name] || property.city_name} / ` : ''}
                                 {dict.property.db_locations[property.area_name] || property.area_name}
                             </div>
-                            <h3 className="text-lg font-normal text-navy-secondary mb-1 line-clamp-1">{property.title}</h3>
+                            <h3 className="text-lg font-normal text-navy-secondary mb-1 line-clamp-1">{getDisplayTitle()}</h3>
                             <div className="flex items-center space-x-3 text-[11px] font-normal text-slate-400 uppercase tracking-wider mb-3">
                                 <span>{property.sqm || '--'} sqm</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>

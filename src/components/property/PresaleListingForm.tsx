@@ -433,17 +433,21 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
     const handleGenerateAI = async () => {
         setIsGeneratingAI(true)
         try {
-            const res = await fetch('/api/generate-description', {
+            const textToTranslate = `
+物件名: ${formData.title}
+価格: ${formData.sale_price} THB
+エリア: ${areas.find(a => a.id === formData.area_id)?.name || ''}
+間取り: ${formData.bedrooms} BR, ${formData.bathrooms} BA, ${formData.sqm} sqm
+設備: ${[...formData.tags, ...formData.project_facilities].join(', ')}
+開発業者: ${formData.developer}
+
+上記の情報を元に、魅力的でわかりやすい不動産の紹介文を作成してください。
+`;
+
+            const res = await fetch('/api/translate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: formData.title,
-                    price: `${formData.sale_price} THB`,
-                    area: areas.find(a => a.id === formData.area_id)?.name || '',
-                    layout: `${formData.bedrooms} BR, ${formData.bathrooms} BA, ${formData.sqm} sqm`,
-                    facilities: [...formData.tags, ...formData.project_facilities].join(', '),
-                    developer: formData.developer
-                })
+                body: JSON.stringify({ text: textToTranslate })
             })
 
             const data = await res.json()
@@ -451,7 +455,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
             setFormData(prev => ({
                 ...prev,
-                description: data.jp || prev.description,
+                description: data.ja || prev.description,
                 description_en: data.en || prev.description_en,
                 description_th: data.th || prev.description_th
             }))

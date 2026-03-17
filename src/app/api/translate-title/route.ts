@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest) {
+    console.log("!!! API HIT !!!");
+    console.log("=== TRANSLATE TITLE API CALLED ===");
+    console.log("API Key loaded (GOOGLE):", !!process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+    console.log("API Key loaded (GEMINI):", !!process.env.GEMINI_API_KEY);
+
     try {
-        const id = params.id;
-        const { title } = await req.json();
-        
-        console.log("=== TRANSLATE TITLE API CALLED ===");
-        console.log("API Key loaded (GOOGLE):", !!process.env.GOOGLE_GENERATIVE_AI_API_KEY);
-        console.log("API Key loaded (GEMINI):", !!process.env.GEMINI_API_KEY);
+        const { id, title } = await req.json();
 
         if (!id || !title || typeof title !== 'string') {
             return NextResponse.json({ error: 'Property ID and title are required' }, { status: 400 });

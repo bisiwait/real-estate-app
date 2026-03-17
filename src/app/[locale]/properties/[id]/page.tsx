@@ -94,10 +94,13 @@ export default function PropertyDetailPage() {
             if (needsEn || needsTh) {
                 setTranslatingTitle(true);
                 try {
-                    const res = await fetch(`/api/properties/${property.id}/translate-title`, {
+                    const res = await fetch(`/api/translate`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title: property.title_ja || property.title })
+                        body: JSON.stringify({ 
+                            id: property.id, 
+                            title: property.title_ja || property.title 
+                        })
                     });
                     if (res.ok) {
                         const data = await res.json();
