@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Crown, Loader2, PlusCircle, LayoutDashboard, FileText, Languages, Building2, ArrowRight } from 'lucide-react'
 
-export default function SuccessPage() {
+function SuccessContent() {
     const searchParams = useSearchParams()
     const params = useParams()
     const locale = (params.locale as string) || 'jp'
@@ -124,5 +124,17 @@ export default function SuccessPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function SuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+            </div>
+        }>
+            <SuccessContent />
+        </Suspense>
     )
 }
