@@ -103,7 +103,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || [])
 
     // AI Import states
-    const [importUrl, setImportUrl] = useState('')
+    const [importHtml, setImportHtml] = useState('')
     const [isImporting, setIsImporting] = useState(false)
     const [importError, setImportError] = useState<string | null>(null)
     const [importErrorDetails, setImportErrorDetails] = useState<string | null>(null)
@@ -322,15 +322,15 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     }
 
     const handleImport = async () => {
-        if (!importUrl) return
+        if (!importHtml) return
         setIsImporting(true)
         setImportError(null)
         setImportErrorDetails(null)
         try {
-            const res = await fetch('/api/extract', {
+            const res = await fetch('/api/translate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: importUrl })
+                body: JSON.stringify({ action: 'extract', html: importHtml })
             })
 
             const data = await res.json()
@@ -377,26 +377,32 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             }
 
             setFormData(prev => {
+                const cleanValue = (val: any) => (typeof val === 'string' && val.trim() === '要確認') ? undefined : val;
                 const cleanDescription = (text: string) => text ? text.replace(/<br\s*\/?>/gi, '\n') : '';
-                const extractedDesc = cleanDescription(data.description);
+                const extractedDesc = cleanDescription(cleanValue(data.description) || '');
+
+                const extractedFeatures = (Array.isArray(data.features) ? data.features : [])
+                    .concat(Array.isArray(data.amenities) ? data.amenities : []);
+                const featuresText = extractedFeatures.join(' ');
 
                 const updated = {
                     ...prev,
-                    title: data.title || prev.title,
+                    title: cleanValue(data.title) || prev.title,
                     description: extractedDesc ? (prev.description ? prev.description + '\n\n' + extractedDesc : extractedDesc) : prev.description,
-                    rent_price: data.rent_price ? data.rent_price.toString() : prev.rent_price,
-                    sale_price: data.sale_price ? data.sale_price.toString() : prev.sale_price,
-                    sqm: data.sqm ? data.sqm.toString() : prev.sqm,
-                    floor: data.floor ? data.floor.toString() : prev.floor,
+                    rent_price: cleanValue(data.rent_price) ? String(cleanValue(data.rent_price)) : prev.rent_price,
+                    sale_price: cleanValue(data.sale_price) ? String(cleanValue(data.sale_price)) : prev.sale_price,
+                    sqm: cleanValue(data.sqm) ? String(cleanValue(data.sqm)) : prev.sqm,
+                    floor: cleanValue(data.floor) ? String(cleanValue(data.floor)) : prev.floor,
+                    bedrooms: cleanValue(data.bedrooms) !== undefined ? String(cleanValue(data.bedrooms)) : prev.bedrooms,
                     is_for_rent: data.is_for_rent !== undefined ? data.is_for_rent : prev.is_for_rent,
                     is_for_sale: data.is_for_sale !== undefined ? data.is_for_sale : prev.is_for_sale,
-                    project_facilities: data.facilities || prev.project_facilities,
-                    tags: data.amenities || prev.tags,
-                    has_bathtub: data.amenities?.includes('バスタブあり') || false,
-                    has_washlet: data.amenities?.includes('ウォシュレット完備') || false,
-                    allows_pets: data.amenities?.includes('ペット可') || false,
-                    has_japanese_tv: data.amenities?.includes('日本語TV番組') || false,
-                    has_ev_charger: data.amenities?.includes('EV充電器あり') || false,
+                    project_facilities: cleanValue(data.facilities) || prev.project_facilities,
+                    tags: extractedFeatures.length > 0 ? extractedFeatures : prev.tags,
+                    has_bathtub: featuresText.includes('バスタブ') || false,
+                    has_washlet: featuresText.includes('ウォシュレット') || false,
+                    allows_pets: featuresText.includes('ペット可') || false,
+                    has_japanese_tv: featuresText.includes('日本語TV') || false,
+                    has_ev_charger: featuresText.includes('EV充電') || false,
                 }
 
                 if (matchedProjectId) {
@@ -785,21 +791,20 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
                             <h3 className="text-lg font-black text-indigo-900">AI 物件インポーター</h3>
                         </div>
-                        <p className="text-indigo-700 text-sm font-medium">外部の不動産サイトのURLを入力すると、AIが情報を抽出し、日本語に翻訳してフォームを自動入力します。</p>
-                        <div className="flex space-x-4">
-                            <input
-                                type="url"
-                                placeholder="https://example.com/property/123"
-                                value={importUrl}
-                                onChange={(e) => setImportUrl(e.target.value)}
-                                className="flex-1 px-5 py-3 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+                        <p className="text-indigo-700 text-sm font-medium">外部サイトのブロックを回避するため、取得したい不動産ページの「HTMLソースコード」を全てコピーして以下に貼り付けてください。</p>
+                        <div className="flex flex-col space-y-4">
+                            <textarea
+                                placeholder="<html>...</html>"
+                                value={importHtml}
+                                onChange={(e) => setImportHtml(e.target.value)}
+                                className="w-full h-32 px-5 py-3 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-mono"
                                 disabled={isImporting}
                             />
                             <button
                                 type="button"
                                 onClick={handleImport}
-                                disabled={isImporting || !importUrl}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all flex items-center space-x-2 disabled:opacity-50"
+                                disabled={isImporting || !importHtml}
+                                className="self-end bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all flex items-center space-x-2 disabled:opacity-50"
                             >
                                 {isImporting ? <Loader2 className="animate-spin w-5 h-5" /> : <span>インポート開始</span>}
                             </button>
@@ -807,7 +812,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         {isImporting && (
                             <div className="text-indigo-600 text-sm font-bold flex items-center animate-pulse">
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                URLを解析・翻訳中... ワクワクしながらお待ちください！✨
+                                HTMLを解析・翻訳中... ワクワクしながらお待ちください！✨
                             </div>
                         )}
                         {importError && (
@@ -890,11 +895,28 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     noOptionsMessage={() => "見つかりません。右上の「＋新規登録」から追加してください。"}
                                     options={projects
                                         .filter(p => !formData.area_id || p.area_id === formData.area_id)
-                                        .map(p => ({ value: p.id, label: p.name }))}
+                                        .map(p => ({
+                                            value: p.id,
+                                            label: params.locale === 'jp' && (p as any).name_jp
+                                                ? `${p.name} (${(p as any).name_jp})`
+                                                : p.name,
+                                            // 検索用に正規化された文字列を持たせる（react-selectのデフォルト検索対象）
+                                            searchLabel: `${p.name} ${(p as any).name_jp || ''}`.toLowerCase()
+                                        }))}
                                     value={formData.project_id ? {
                                         value: formData.project_id,
-                                        label: projects.find(p => p.id === formData.project_id)?.name || ''
+                                        label: (() => {
+                                            const p = projects.find(proj => proj.id === formData.project_id);
+                                            if (!p) return '';
+                                            return params.locale === 'jp' && (p as any).name_jp
+                                                ? `${p.name} (${(p as any).name_jp})`
+                                                : p.name;
+                                        })()
                                     } : null}
+                                    filterOption={(option, inputValue) => {
+                                        const searchStr = (option.data as any).searchLabel;
+                                        return searchStr.includes(inputValue.toLowerCase());
+                                    }}
                                     onChange={(selectedOption) => {
                                         if (!selectedOption) {
                                             setFormData({ ...formData, project_id: '', building_name: '', title: '' })

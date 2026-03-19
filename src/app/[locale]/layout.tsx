@@ -7,6 +7,7 @@ import Breadcrumb from "@/components/layout/Breadcrumb";
 import Link from "next/link";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SearchCountProvider } from "@/contexts/SearchCountContext";
 import { Toaster } from 'sonner';
 
 const geistSans = Geist({
@@ -62,13 +63,14 @@ export default async function RootLayout({
     <html lang={htmlLang}>
       <body className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased bg-background`}>
         <AuthProvider>
-          <Header dict={dict} />
-          <main className="min-h-[calc(100vh-80px)]">
-            <Breadcrumb labels={dict.labels as unknown as Record<string, string>} />
-            {children}
-          </main>
-          <Toaster />
-          <footer className="bg-navy-secondary text-white py-16">
+          <SearchCountProvider>
+            <Header dict={dict} />
+            <main className="min-h-[calc(100vh-80px)]">
+              <Breadcrumb labels={dict.labels as unknown as Record<string, string>} />
+              {children}
+            </main>
+            <Toaster />
+            <footer className="bg-navy-secondary text-white py-16">
             <div className="container mx-auto px-3 sm:px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-12 border-b border-white/10 pb-12 text-center md:text-left">
               <div>
@@ -91,6 +93,7 @@ export default async function RootLayout({
             </div>
           </div>
         </footer>
+          </SearchCountProvider>
         </AuthProvider>
       </body>
     </html>

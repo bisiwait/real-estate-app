@@ -297,16 +297,14 @@ export default function AdminUserManagement() {
                                         <>
                                             <td className="px-8 py-6 text-center">
                                                 <select
-                                                    value={user.plan || 'free'}
+                                                    value={user.plan === 'standard' ? 'free' : (user.plan || 'free')}
                                                     onChange={(e) => handlePlanChange(user.id, e.target.value)}
                                                     className={`text-xs font-black px-3 py-1.5 rounded-lg border outline-none transition-all
                                                         ${user.plan === 'premium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                                            user.plan === 'standard' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' :
-                                                                'bg-slate-50 text-slate-600 border-slate-200'}`}
+                                                            'bg-slate-50 text-slate-600 border-slate-200'}`}
                                                 >
-                                                    <option value="free">Free</option>
-                                                    <option value="standard">Standard</option>
-                                                    <option value="premium">Premium</option>
+                                                    <option value="free">フリープラン（Free）</option>
+                                                    <option value="premium">プレミアムプラン（Premium）</option>
                                                 </select>
                                             </td>
                                             <td className="px-4 py-6 text-center">

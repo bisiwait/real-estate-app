@@ -15,9 +15,13 @@ import {
     Wallet,
     Shield,
     Sparkles,
-    Loader2 as LoaderIcon
+    Loader2 as LoaderIcon,
+    ChevronDown,
+    Link2,
+    DollarSign,
+    Settings2
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Select from 'react-select'
 import imageCompression from 'browser-image-compression'
@@ -62,7 +66,14 @@ interface PresaleListingFormProps {
 }
 
 export default function PresaleListingForm({ initialData, mode = 'create' }: PresaleListingFormProps) {
+    const params = useParams()
+    const router = useRouter()
+    const [mounted, setMounted] = useState(false)
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
     const [areas, setAreas] = useState<Area[]>([])
     const [projects, setProjects] = useState<Project[]>([])
     const [developers, setDevelopers] = useState<{ id: string, name: string }[]>([])
@@ -88,7 +99,6 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
     const [success, setSuccess] = useState(false)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || [])
-    const router = useRouter()
     const supabase = createClient()
 
     const JA_TAGS = [
@@ -129,6 +139,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
     const [activeTab, setActiveTab] = useState<'jp' | 'en' | 'th'>('jp')
     const [isGeneratingAI, setIsGeneratingAI] = useState(false)
+    const [showAdvanced, setShowAdvanced] = useState(false)
 
     const [formData, setFormData] = useState({
         title: initialData?.title || '',
@@ -172,7 +183,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         project_facilities: initialData?.project_facilities || [] as string[],
         // Multilingual descriptions
         description_en: initialData?.description_en || '',
-        description_th: initialData?.description_th || ''
+        description_th: initialData?.description_th || '',
+        // Advanced investor fields
+        showroom_map_url: initialData?.showroom_map_url || '',
     })
 
     useEffect(() => {
@@ -343,7 +356,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         has_japanese_tv: formData.has_japanese_tv,
                         has_ev_charger: formData.has_ev_charger,
                         description_en: formData.description_en,
-                        description_th: formData.description_th
+                        description_th: formData.description_th,
+                        showroom_map_url: formData.showroom_map_url || null,
                     })
                     .select()
                     .single()
@@ -396,7 +410,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     has_japanese_tv: formData.has_japanese_tv,
                     has_ev_charger: formData.has_ev_charger,
                     description_en: formData.description_en,
-                    description_th: formData.description_th
+                    description_th: formData.description_th,
+                    showroom_map_url: formData.showroom_map_url || null,
                 })
                 .eq('id', propertyId)
                 .eq('user_id', user.id)
@@ -484,6 +499,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         )
     }
 
+    if (!mounted) return null;
+
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
             {error && (
@@ -554,8 +571,27 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                 isDisabled={!formData.area_id}
                                 placeholder="プロジェクト名で検索..."
                                 noOptionsMessage={() => "見つかりません。右上の「＋新規登録」から追加してください。"}
-                                options={projects.filter(p => !formData.area_id || p.area_id === formData.area_id).map(p => ({ value: p.id, label: p.name }))}
-                                value={formData.project_id ? { value: formData.project_id, label: projects.find(p => p.id === formData.project_id)?.name || '' } : null}
+                                options={projects.filter(p => !formData.area_id || p.area_id === formData.area_id).map(p => ({
+                                    value: p.id,
+                                    label: params.locale === 'jp' && (p as any).name_jp
+                                        ? `${p.name} (${(p as any).name_jp})`
+                                        : p.name,
+                                    searchLabel: `${p.name} ${(p as any).name_jp || ''}`.toLowerCase()
+                                }))}
+                                value={formData.project_id ? {
+                                    value: formData.project_id,
+                                    label: (() => {
+                                        const p = projects.find(proj => proj.id === formData.project_id);
+                                        if (!p) return '';
+                                        return params.locale === 'jp' && (p as any).name_jp
+                                            ? `${p.name} (${(p as any).name_jp})`
+                                            : p.name;
+                                    })()
+                                } : null}
+                                filterOption={(option, inputValue) => {
+                                    const searchStr = (option.data as any).searchLabel;
+                                    return searchStr.includes(inputValue.toLowerCase());
+                                }}
                                 onChange={(selectedOption) => {
                                     if (!selectedOption) {
                                         setFormData({ ...formData, project_id: '', building_name: '', title: '' })
@@ -704,10 +740,24 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             <select value={formData.ownership_type} onChange={e => setFormData({ ...formData, ownership_type: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
                                 <option value="Foreign Quota">外国人クオータ (Foreign Quota)</option>
                                 <option value="Thai Quota">タイ人クオータ (Thai Quota)</option>
-                                <option value="Thai Company">タイ法人名義 (Thai Company)</option>
+                                <option value="Thai Company">タイ法人名義 (Company Name)</option>
                             </select>
                         </div>
                     </div>
+
+                    {/* 平米単価 自動計算表示 */}
+                    {formData.sale_price && formData.sqm && parseFloat(formData.sqm) > 0 && (
+                        <div className="flex items-center gap-3 px-5 py-3 bg-blue-50 border border-blue-100 rounded-2xl">
+                            <DollarSign className="w-4 h-4 text-blue-500 shrink-0" />
+                            <div>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">平米単価（Price per SQM）</span>
+                                <span className="ml-3 text-base font-black text-blue-700 tabular-nums">
+                                    {Math.round(parseFloat(formData.sale_price) / parseFloat(formData.sqm)).toLocaleString()} THB/㎡
+                                </span>
+                            </div>
+                            <span className="ml-auto text-[10px] text-blue-300 font-bold">自動計算</span>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
@@ -865,10 +915,120 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 </div>
             </div>
 
-            {/* Section 3: Image Gallery */}
+            {/* Section 3: Advanced Investor Details (Accordion) */}
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                <button
+                    type="button"
+                    onClick={() => setShowAdvanced(v => !v)}
+                    className="w-full flex items-center justify-between px-10 py-6 hover:bg-slate-50 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center text-navy-primary text-sm font-black">3</span>
+                        <div className="text-left">
+                            <p className="text-xl font-black text-navy-secondary flex items-center gap-2">
+                                <Settings2 className="w-5 h-5 text-slate-400" />
+                                投資家向け詳細設定
+                            </p>
+                            <p className="text-[11px] text-slate-400 font-medium mt-0.5">アメニティ・ショールームURL・Quota詳細（任意）</p>
+                        </div>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showAdvanced && (
+                    <div className="px-10 pb-10 space-y-8 border-t border-slate-100">
+
+                        {/* アメニティ（共有施設）チェックボックス */}
+                        <div className="pt-8">
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
+                                <Shield className="w-3.5 h-3.5" />
+                                共有設備・アメニティ (Amenities)
+                            </label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                {SHARED_FACILITIES.map(facility => {
+                                    const isSelected = formData.project_facilities.includes(facility)
+                                    return (
+                                        <button
+                                            key={facility}
+                                            type="button"
+                                            onClick={() => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    project_facilities: isSelected
+                                                        ? prev.project_facilities.filter((f: string) => f !== facility)
+                                                        : [...prev.project_facilities, facility]
+                                                }))
+                                            }}
+                                            className={`px-3 py-2.5 rounded-xl text-[11px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-500 hover:border-navy-primary/30'}`}
+                                        >
+                                            {facility}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            {formData.project_facilities.length > 0 && (
+                                <p className="mt-3 text-[10px] text-navy-primary font-bold ml-1">
+                                    ✓ {formData.project_facilities.length} 件選択中
+                                </p>
+                            )}
+                        </div>
+
+                        {/* ショールームGoogle Map URL */}
+                        <div>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center gap-2">
+                                <Link2 className="w-3.5 h-3.5" />
+                                ショールームのGoogle Map URL
+                            </label>
+                            <input
+                                type="url"
+                                placeholder="https://maps.google.com/..."
+                                value={formData.showroom_map_url}
+                                onChange={e => setFormData({ ...formData, showroom_map_url: e.target.value })}
+                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
+                            />
+                            <p className="mt-1.5 text-[10px] text-slate-400 font-medium ml-1">
+                                ※ Google マップで「共有」→「リンクをコピー」から取得したURLを貼り付けてください。
+                            </p>
+                        </div>
+
+                        {/* Quota 詳細 */}
+                        <div>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center gap-2">
+                                <Shield className="w-3.5 h-3.5" />
+                                外国人枠（Quota）詳細
+                            </label>
+                            <select
+                                value={formData.ownership_type}
+                                onChange={e => setFormData({ ...formData, ownership_type: e.target.value })}
+                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold focus:ring-2 focus:ring-navy-primary outline-none transition-all"
+                            >
+                                <option value="Foreign Quota">🌏 Foreign Quota（外国人クオータ枠）</option>
+                                <option value="Thai Quota">🇹🇭 Thai Quota（タイ人枠）</option>
+                                <option value="Thai Company">🏢 Company Name（タイ法人名義）</option>
+                            </select>
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] font-bold">
+                                <div className="px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-blue-600">
+                                    <span className="font-black">Foreign Quota</span><br />
+                                    外国人が直接名義取得可。ビル全体の49%まで。
+                                </div>
+                                <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
+                                    <span className="font-black">Thai Quota</span><br />
+                                    タイ人名義または長期リース（30年+30年）。
+                                </div>
+                                <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
+                                    <span className="font-black">Company Name</span><br />
+                                    タイ法人設立で名義取得。税務管理が必要。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Section 4: Image Gallery */}
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
-                    <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">3</span>
+                    <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">4</span>
                     プロジェクト画像（完成予想図・パース等）
                 </h3>
                 <ImageUploader initialImages={existingImages} onImagesChange={(files) => setSelectedFiles(files)} />

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import MobileSearchBar from '@/components/property/MobileSearchBar'
 import { createClient } from '@/lib/supabase/client'
+import { useSearchCount } from '@/contexts/SearchCountContext'
 import { Search, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
@@ -14,6 +15,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const supabase = createClient()
+    const { setPropertiesHitCount } = useSearchCount()
 
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
     const [dbProperties, setDbProperties] = useState<any[]>([])
@@ -202,6 +204,15 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
 
     // Use database properties directly as they are now filtered server-side
     const filteredProperties = dbProperties
+
+    // Mobile drawer should show total results (not just the first page size)
+    const drawerResultsCount = totalCount > 0 ? totalCount : filteredProperties.length
+
+    // Share hit count to header (only meaningful on properties page)
+    useEffect(() => {
+        setPropertiesHitCount(totalCount > 0 ? totalCount : null)
+        return () => setPropertiesHitCount(null)
+    }, [totalCount, setPropertiesHitCount])
 
     // Sync filters to URL
     const updateFilters = (updates: Record<string, string | string[] | null>) => {
@@ -569,7 +580,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                                 onClick={() => setIsFilterDrawerOpen(false)}
                                 className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold shadow-lg hover:bg-navy-secondary transition-all"
                             >
-                                {dict.property.show_results.replace('{count}', filteredProperties.length.toString())}
+                                {dict.property.show_results.replace('{count}', drawerResultsCount.toString())}
                             </button>
                         </div>
                     </div>

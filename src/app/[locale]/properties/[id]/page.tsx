@@ -20,8 +20,9 @@ import {
     MapPin, Building2, Bath, Calendar, Layers, Maximize2, Tag, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Shield, Users, Baby, Tv, ShoppingBag, Wind, Coffee, Utensils,
     Wifi, Refrigerator, ArrowUp, Dog, Zap, CircleDollarSign, Sun, Building, Thermometer,
-    Bus, Lock, ShieldCheck, CalendarDays, RefreshCw, Loader2
+    Bus, Lock, ShieldCheck, CalendarDays, RefreshCw, Loader2, FileDown, AlertCircle
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 
 const getFeatureIcon = (featureName: string) => {
@@ -50,6 +51,8 @@ export default function PropertyDetailPage() {
     const params = useParams()
     const id = params?.id as string
     const locale = (params?.locale as string) || 'jp'
+    const router = useRouter();
+    const { user } = useAuth()
     
     const [property, setProperty] = useState<any>(null)
     const [agent, setAgent] = useState<any>(null)
@@ -57,9 +60,9 @@ export default function PropertyDetailPage() {
     const [loading, setLoading] = useState(true)
     const [activeLang, setActiveLang] = useState<'jp' | 'en' | 'th'>(locale as any || 'jp')
     const [translatingTitle, setTranslatingTitle] = useState(false)
+    const [profile, setProfile] = useState<any>(null)
 
-    const { user } = useAuth()
-    const isPremium = !!user
+    const isPremium = profile?.plan === 'premium' || profile?.plan_type === 'premium'
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -78,10 +81,17 @@ export default function PropertyDetailPage() {
                     setAgent(aData)
                 }
             }
+
+            // ログインユーザーのプロファイルを取得してプランを確認
+            if (user) {
+                const { data: pData } = await supabase.from('profiles').select('plan, plan_type').eq('id', user.id).single()
+                if (pData) setProfile(pData)
+            }
+
             setLoading(false)
         }
         if (id) fetchData()
-    }, [id, locale])
+    }, [id, locale, user])
 
     // Fetch translation for title if missing
     useEffect(() => {
@@ -119,7 +129,7 @@ export default function PropertyDetailPage() {
         };
 
         translateTitleOnDemand();
-    }, [activeLang, property?.id, property?.title_en, property?.title_th]);
+    }, [activeLang, property?.id, property?.title_en, property?.title_th, translatingTitle]);
 
     if (loading || !dict || !property) {
         return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
@@ -135,6 +145,28 @@ export default function PropertyDetailPage() {
         return property.title_ja || property.title;
     };
     const displayTitle = getDisplayTitle();
+
+    const getProjectDisplayName = (proj: any) => {
+        if (!proj) return '-';
+        const name = proj.name || '';
+        const nameJp = proj.name_jp || '';
+        if (locale === 'jp' && name && nameJp) {
+            return `${name} (${nameJp})`;
+        }
+        return name || nameJp || '-';
+    };
+    const projectDisplayName = getProjectDisplayName(property.project);
+
+    const handleGeneratePDF = () => {
+        if (!isPremium) {
+            if (confirm('PDF資料の出力はプレミアムプラン限定機能です。料金ページを確認しますか？')) {
+                router.push(`/${locale}/pricing`);
+            }
+            return;
+        }
+        alert('PDF生成エンジンを準備中です。しばらくお待ちください。');
+        // window.print(); // 代替案
+    };
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20 font-sans tracking-normal">
@@ -152,7 +184,7 @@ export default function PropertyDetailPage() {
                                 <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
                                     <div className="space-y-4">
                                         <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-slate-500 text-[13px] font-normal">
-                                            <div className="flex items-center gap-2.5"><Building2 className="w-4.5 h-4.5 text-blue-500" /> <span className="text-slate-700">{property.building_name || property.project?.name || '-'}</span></div>
+                                            <div className="flex items-center gap-2.5"><Building2 className="w-4.5 h-4.5 text-blue-500" /> <span className="text-slate-700">{property.building_name || projectDisplayName}</span></div>
                                             <div className="flex items-center gap-2.5 uppercase tracking-wide text-[11px]"><MapPin className="w-4.5 h-4.5 text-blue-500" /> <span className="text-[#1A2B56]">{property.area?.region?.name || ''} ・ {translateArea(property.area?.name || '')}</span></div>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-slate-400 text-[11px] font-normal">
@@ -189,7 +221,7 @@ export default function PropertyDetailPage() {
 
                         <SectionBox title={dict.property.building_info_label} icon={Building}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
-                                <InfoItem label={dict.property.building_name_label} value={property.building_name || property.project?.name || '-'} />
+                                <InfoItem label={dict.property.building_name_label} value={property.building_name || projectDisplayName} />
                                 <InfoItem label={dict.property.year_built_title} value={property.year_built || property.project?.year_built || '-'} />
                                 <InfoItem label={dict.property.total_floors_title} value={property.total_floors || property.project?.total_floors ? `${property.total_floors || property.project?.total_floors}${dict.property.floor_suffix}` : '-'} />
                                 <InfoItem label={dict.property.total_units_label} value={property.total_units ? `${property.total_units}戸` : '-'} />
@@ -215,6 +247,32 @@ export default function PropertyDetailPage() {
                          <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
                             <LineContactButton property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8) }} variant="full" dict={dict} />
+                            
+                            <div className="mt-4">
+                                <button
+                                    onClick={handleGeneratePDF}
+                                    className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${
+                                        isPremium 
+                                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                                        : 'bg-slate-100 text-slate-400 border border-slate-200'
+                                    }`}
+                                >
+                                    <FileDown className={`w-5 h-5 ${isPremium ? 'text-white' : 'text-slate-300'}`} />
+                                    <span>PDF資料作成</span>
+                                    {!isPremium && (
+                                        <span className="ml-1 text-[10px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full border border-amber-200">
+                                            プレミアム限定
+                                        </span>
+                                    )}
+                                </button>
+                                {!isPremium && (
+                                    <p className="mt-2 text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
+                                        <AlertCircle className="w-3 h-3" />
+                                        アップグレードでPDF出力が解放されます
+                                    </p>
+                                )}
+                            </div>
+
                             <div className="mt-8 pt-8 border-t border-slate-100">
                                 <InquiryForm propertyId={id} propertyName={displayTitle} dict={dict} />
                             </div>

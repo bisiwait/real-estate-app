@@ -1,73 +1,133 @@
 'use client'
 
-import React from 'react'
-import { Crown, AlertCircle, Clock, ArrowRight } from 'lucide-react'
+import React, { useState } from 'react'
+import { Crown, AlertCircle, ArrowRight, ExternalLink, Loader2, CalendarX2 } from 'lucide-react'
 import Link from 'next/link'
-import { differenceInDays, parseISO } from 'date-fns'
+import { differenceInDays, parseISO, format } from 'date-fns'
 
 interface SubscriptionStatusProps {
     profile: any
 }
 
 export default function SubscriptionStatus({ profile }: SubscriptionStatusProps) {
-    if (!profile || profile.plan_type !== 'premium' || !profile.current_period_end) {
+    const [portalLoading, setPortalLoading] = useState(false)
+    const [portalError, setPortalError] = useState<string | null>(null)
+
+    if (!profile || (profile.plan_type !== 'premium' && profile.plan !== 'premium') || !profile.current_period_end) {
         return null
     }
 
     const expiryDate = parseISO(profile.current_period_end)
     const today = new Date()
     const daysRemaining = differenceInDays(expiryDate, today)
-
-    // Check if it's a trial (auto_renew might be true, but let's assume if it has current_period_end it's trial or paid)
-    // For this implementation, we'll follow the user's logic: 
-    // If they have current_period_end and plan_type is premium, we show status.
-    // If they are "paid", they might not have a trial countdown, but let's assume trial for now as requested.
+    const formattedExpiryDate = format(expiryDate, 'yyyy/MM/dd')
 
     const isExpired = daysRemaining < 0
     const isCrisis = daysRemaining <= 3
-    const isWarning = daysRemaining <= 7
+    // auto_renew が false = 解約予約済み（cancel_at_period_end=true）
+    const isCancelScheduled = profile.auto_renew === false && !isExpired
 
-    const statusColor = isExpired ? 'bg-red-500' : isCrisis ? 'bg-orange-500' : 'bg-amber-500'
-    const textColor = isExpired ? 'text-red-500' : isCrisis ? 'text-orange-600' : 'text-amber-600'
-    const bgColor = isExpired ? 'bg-red-50' : isCrisis ? 'bg-orange-50' : 'bg-amber-50/50'
-    const borderColor = isExpired ? 'border-red-200' : isCrisis ? 'border-orange-200' : 'border-amber-200'
+    const bgColor = isExpired ? 'bg-red-50' : isCrisis ? 'bg-orange-50' : 'bg-slate-50'
+    const borderColor = isExpired ? 'border-red-200' : isCrisis ? 'border-orange-200' : 'border-slate-200'
+    const iconBg = isExpired ? 'bg-red-500' : isCrisis ? 'bg-orange-500' : 'bg-blue-600'
+
+    const handleOpenPortal = async () => {
+        setPortalLoading(true)
+        setPortalError(null)
+        try {
+            const res = await fetch('/api/stripe/create-portal', { method: 'POST' })
+            const data = await res.json() as { url?: string; error?: string }
+            if (!res.ok || !data.url) throw new Error(data.error || 'ポータルURLを取得できませんでした。')
+            window.location.href = data.url
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Unknown error'
+            setPortalError(msg)
+        } finally {
+            setPortalLoading(false)
+        }
+    }
 
     return (
         <div className={`rounded-3xl p-6 border ${borderColor} ${bgColor} shadow-sm mb-6 transition-all hover:shadow-md group`}>
             <div className="flex items-start justify-between mb-4">
-                <div className={`p-2.5 rounded-2xl ${statusColor} text-white`}>
-                    {isExpired ? <AlertCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                <div className={`p-2.5 rounded-2xl ${iconBg} text-white`}>
+                    {isExpired ? <AlertCircle className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
                 </div>
-                {daysRemaining <= 14 && (
-                    <span className="px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[10px] font-black text-slate-400 uppercase tracking-widest border border-white">
-                        Premium Trial
-                    </span>
+                <span className="px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[10px] font-black text-slate-400 uppercase tracking-widest border border-white/60">
+                    {isExpired ? 'Expired' : isCancelScheduled ? 'Cancelling' : 'Premium Active'}
+                </span>
+            </div>
+
+            <div className="space-y-1.5 mb-5">
+                <h3 className={`text-lg font-black ${isExpired ? 'text-red-600' : 'text-slate-900'}`}>
+                    {isExpired ? 'プラン期限切れ' : 'プレミアムプラン利用中'}
+                </h3>
+
+                {/* 解約予約済み: 目立つ通知を表示 */}
+                {isCancelScheduled ? (
+                    <div className="flex items-start gap-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-2xl">
+                        <CalendarX2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <p className="text-xs font-bold text-amber-700 leading-relaxed">
+                            {formattedExpiryDate} にフリープランへ戻ります
+                            <span className="block text-[10px] font-medium text-amber-600 mt-0.5">
+                                解約予約済み — それまでは全機能をご利用いただけます
+                            </span>
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-slate-500">
+                            {isExpired
+                                ? '機能制限を解除するにはプランの更新が必要です。'
+                                : `無料トライアル中（次回請求: ${formattedExpiryDate}）`}
+                        </p>
+                        {!isExpired && (
+                            <p className="text-[10px] font-medium text-blue-600/70">
+                                ※期間内に解約すれば料金はかかりません
+                            </p>
+                        )}
+                    </div>
                 )}
             </div>
 
-            <div className="space-y-1 mb-6">
-                <h3 className={`text-lg font-black ${isExpired ? 'text-red-600' : 'text-navy-secondary'}`}>
-                    {isExpired ? 'トライアル期限切れ' : `プレミアム体験中（残り${daysRemaining}日）`}
-                </h3>
-                <p className="text-xs font-medium text-slate-500 leading-relaxed">
-                    {isExpired
-                        ? '機能制限を解除するにはプランの更新が必要です。'
-                        : isCrisis
-                            ? '間もなくトライアルが終了します。お早めに有料プランへ！'
-                            : '全てのプレミアム機能をご利用いただけます。'}
+            {/* エラー表示 */}
+            {portalError && (
+                <p className="mb-3 text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                    {portalError}
                 </p>
-            </div>
+            )}
 
-            <Link
-                href="/pricing"
-                className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isCrisis
-                        ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-200'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+            {isExpired ? (
+                <Link
+                    href="/pricing"
+                    className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+                >
+                    <span>プランを再開する</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+            ) : (
+                <button
+                    onClick={handleOpenPortal}
+                    disabled={portalLoading}
+                    className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-60 ${
+                        isCrisis
+                            ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-lg shadow-orange-200'
+                            : 'bg-white border-2 border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                     }`}
-            >
-                <span>{isExpired ? 'プランを再開する' : '有料プランへ移行'}</span>
-                <ArrowRight className={`w-4 h-4 transition-transform group-hover:translate-x-1`} />
-            </Link>
+                >
+                    {portalLoading ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>処理中...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>プランの管理・解約</span>
+                            <ExternalLink className="w-4 h-4" />
+                        </>
+                    )}
+                </button>
+            )}
         </div>
     )
 }

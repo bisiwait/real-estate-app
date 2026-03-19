@@ -37,6 +37,7 @@ interface Area {
 interface Project {
     id: string
     name: string
+    name_jp?: string | null
     area_id: string
     property_type: string
     year_built: string
@@ -46,6 +47,7 @@ interface Project {
     latitude: number | null
     longitude: number | null
     developer_id?: string | null
+    average_price_sqm?: number | null
     total_units?: number | null
     facilities?: string[]
 }
@@ -68,6 +70,7 @@ export default function AdminProjectManagement() {
 
     const [formData, setFormData] = useState<Partial<Project>>({
         name: '',
+        name_jp: '',
         area_id: '',
         property_type: 'Condo',
         year_built: '',
@@ -201,6 +204,7 @@ export default function AdminProjectManagement() {
         setIsAdding(false)
         setFormData({
             name: '',
+            name_jp: '',
             area_id: '',
             property_type: 'Condo',
             year_built: '',
@@ -223,6 +227,7 @@ export default function AdminProjectManagement() {
         try {
             const projectData = {
                 name: formData.name,
+                name_jp: formData.name_jp,
                 area_id: formData.area_id,
                 property_type: formData.property_type,
                 year_built: formData.year_built,
@@ -365,6 +370,16 @@ export default function AdminProjectManagement() {
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
                                         className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary"
                                         placeholder="Riviera Jomtien"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">プロジェクト名 (日本語)</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name_jp || ''}
+                                        onChange={e => setFormData({ ...formData, name_jp: e.target.value })}
+                                        className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary"
+                                        placeholder="リビエラ・ジョムティエン"
                                     />
                                 </div>
                                 <div>
@@ -534,7 +549,14 @@ export default function AdminProjectManagement() {
                                                     <Building2 className="w-6 h-6" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-black text-navy-secondary">{project.name}</p>
+                                                    <p className="text-sm font-black text-navy-secondary">
+                                                        {project.name}
+                                                        {project.name_jp && (
+                                                            <span className="ml-2 text-xs font-bold text-slate-400">
+                                                                ({project.name_jp})
+                                                            </span>
+                                                        )}
+                                                    </p>
                                                     <div className="flex flex-wrap gap-2 mt-2">
                                                         <span className="flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
                                                             <MapPin className="w-3 h-3 mr-1" />

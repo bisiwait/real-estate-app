@@ -8,9 +8,10 @@ import { Loader2 } from 'lucide-react'
 interface AgentStatusTogglesProps {
     propertyId: string
     currentStatus: string
+    className?: string
 }
 
-export default function AgentStatusToggles({ propertyId, currentStatus }: AgentStatusTogglesProps) {
+export default function AgentStatusToggles({ propertyId, currentStatus, className }: AgentStatusTogglesProps) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
     const supabase = createClient()
@@ -48,17 +49,17 @@ export default function AgentStatusToggles({ propertyId, currentStatus }: AgentS
     const isContractedOn = currentStatus === 'contracted'
 
     return (
-        <div className="flex items-center space-x-2 ml-2">
+        <div className={`flex flex-wrap items-center gap-2 ${className || ''}`}>
             {loading ? (
-                <div className="px-2 py-0.5 flex items-center">
-                    <Loader2 className="w-3 h-3 animate-spin text-slate-400" />
+                <div className="px-2 py-1.5 flex items-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
                 </div>
             ) : (
                 <>
                     <button
                         onClick={() => handleToggle('under_negotiation')}
                         disabled={loading}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors flex items-center ${isNegotiationOn
+                        className={`px-3 py-2 sm:px-2 sm:py-0.5 rounded-xl sm:rounded text-xs sm:text-[10px] font-bold border transition-colors flex items-center justify-center whitespace-nowrap ${isNegotiationOn
                                 ? 'bg-blue-500 text-white border-blue-600'
                                 : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
                             }`}
@@ -69,7 +70,7 @@ export default function AgentStatusToggles({ propertyId, currentStatus }: AgentS
                     <button
                         onClick={() => handleToggle('contracted')}
                         disabled={loading}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors flex items-center ${isContractedOn
+                        className={`px-3 py-2 sm:px-2 sm:py-0.5 rounded-xl sm:rounded text-xs sm:text-[10px] font-bold border transition-colors flex items-center justify-center whitespace-nowrap ${isContractedOn
                                 ? 'bg-purple-500 text-white border-purple-600'
                                 : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
                             }`}

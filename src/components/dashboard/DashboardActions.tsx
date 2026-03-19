@@ -69,7 +69,7 @@ export default function DashboardActions({
     return (
         <div className="flex items-center space-x-2">
             {/* PDF Generation Entry Point */}
-            {hasPremium ? (
+            {hasPremium && (
                 <div title="PDFチラシをダウンロード">
                     <PropertyPdfDownload
                         property={property}
@@ -78,18 +78,10 @@ export default function DashboardActions({
                         iconOnly={true}
                     />
                 </div>
-            ) : (
-                <button
-                    onClick={() => router.push(premiumLink)}
-                    className="p-2.5 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all border border-amber-200 shadow-sm flex items-center justify-center group"
-                    title="プレミアム会員限定: PDF作成"
-                >
-                    <Crown className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
             )}
 
             {/* SNS Share Entry Point */}
-            {hasPremium ? (
+            {hasPremium && (
                 <>
                     <button
                         onClick={() => setIsShareModalOpen(true)}
@@ -119,14 +111,6 @@ export default function DashboardActions({
                         }}
                     />
                 </>
-            ) : (
-                <button
-                    onClick={() => router.push(premiumLink)}
-                    className="p-2.5 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-all border border-amber-200 shadow-sm flex items-center justify-center group"
-                    title="プレミアム会員限定: SNSシェア画像生成"
-                >
-                    <Crown className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
             )}
 
             <button

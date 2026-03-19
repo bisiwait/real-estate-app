@@ -30,7 +30,11 @@ export default function Breadcrumb({ labels = {} }: { labels?: Record<string, st
     const currentLocale = hasLocale ? pathSegments[0] : 'jp'
     const displaySegments = hasLocale ? pathSegments.slice(1) : pathSegments
 
+    // Skip dashboard subpaths that shouldn't be breadcrumbed or have special handling
     if (pathname === '/' || (hasLocale && displaySegments.length === 0)) return null
+
+    // Special handling for dashboard/edit/[id] to avoid "edit" being a link to 404
+    const isEditPage = displaySegments[0] === 'dashboard' && displaySegments[1] === 'edit'
 
     return (
         <nav aria-label="Breadcrumb" className="bg-slate-50 border-b border-slate-200 py-2 sm:py-3">
@@ -48,16 +52,18 @@ export default function Breadcrumb({ labels = {} }: { labels?: Record<string, st
                         const isLast = index === displaySegments.length - 1
                         let label = labels[segment] || segment
 
+                        // Special case: if we are in dashboard/edit/[id], don't link the "edit" segment
+                        const isEditSegment = isEditPage && segment === 'edit'
+
                         if (segment.length > 20 && segment.includes('-')) {
                             label = labels['detail'] || 'Detail'
                         }
 
-                        // ... rest of the rendering remains same
                         if (label === (labels['detail'] || 'Detail') && !dynamicLabel) {
                             return (
                                 <li key={href} className="hidden sm:flex items-center">
                                     <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mx-0.5 sm:mx-1 text-slate-400 flex-shrink-0" />
-                                    {isLast ? (
+                                    {isLast || isEditSegment ? (
                                         <span className="font-bold text-navy-secondary" aria-current="page">{label}</span>
                                     ) : (
                                         <Link href={href} className="hover:text-navy-primary transition-colors">{label}</Link>
@@ -69,7 +75,7 @@ export default function Breadcrumb({ labels = {} }: { labels?: Record<string, st
                         return (
                             <li key={href} className="flex items-center">
                                 <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mx-0.5 sm:mx-1 text-slate-400 flex-shrink-0" />
-                                {isLast ? (
+                                {isLast || isEditSegment ? (
                                     <span className="font-bold text-navy-secondary truncate max-w-[150px] sm:max-w-none" aria-current="page">
                                         {dynamicLabel || label}
                                     </span>

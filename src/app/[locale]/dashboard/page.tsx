@@ -17,7 +17,8 @@ import {
     Building2,
     Mail,
     RefreshCw,
-    Users
+    Users,
+    Crown
 } from 'lucide-react'
 import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
 import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
@@ -41,7 +42,7 @@ export default async function DashboardPage({
     // Fetch Profile (Credits & Plan)
     const { data: profile } = await supabase
         .from('profiles')
-        .select('available_credits, plan, plan_type, full_name, phone, current_period_end')
+        .select('available_credits, plan, plan_type, full_name, phone, current_period_end, auto_renew')
         .eq('id', user.id)
         .single()
 
@@ -160,14 +161,33 @@ export default async function DashboardPage({
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Stats Sidebar */}
                     <div className="lg:col-span-1 space-y-6">
-                        {/* Subscription Status (Trial countdown) */}
+                        {/* Subscription Status (Trial countdown / Portal link) */}
                         <SubscriptionStatus profile={profile} />
 
-                        {/* Credits Card */}
-                        <CreditSection profile={profile} />
+                        {/* Credits Card (Free users only) */}
+                        {activePlan !== 'premium' && (
+                            <CreditSection profile={profile} />
+                        )}
 
-                        {/* Premium Promo Card */}
-                        <PremiumPromoCard plan={activePlan} />
+                        {/* Premium Promo Card (Free users only) */}
+                        {activePlan !== 'premium' && (
+                            <PremiumPromoCard plan={activePlan} />
+                        )}
+
+                        {/* Simple Premium Label (Premium users only) */}
+                        {activePlan === 'premium' && (
+                            <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                                        <Crown className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">現在のプラン</p>
+                                        <p className="text-sm font-black text-navy-secondary">プレミアムプラン</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Summary List */}
                         <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
@@ -300,24 +320,63 @@ export default async function DashboardPage({
                                                                         <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">#{property.id.slice(0, 8)}</span>
                                                                         <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
                                                                     </div>
-                                                                    <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
+                                                                    <div className="hidden sm:block">
+                                                                        <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
+                                                                    </div>
                                                                 </div>
                                                                 <h4 className="text-sm sm:text-lg font-bold text-navy-secondary mb-0.5 sm:mb-1 truncate">{property.title}</h4>
-                                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs sm:text-sm font-medium">
-                                                                    <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
-                                                                    <div className="flex items-center space-x-3">
+                                                                {/* Mobile-friendly meta layout (keeps desktop as-is via sm:*) */}
+                                                                <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 text-xs sm:text-sm font-medium min-w-0">
+                                                                    {/* Area (mobile: full-width pill, desktop: simple text) */}
+                                                                    <div className="sm:hidden w-full">
+                                                                        <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-3">
+                                                                            <div className="min-w-0">
+                                                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">AREA</div>
+                                                                                <div className="text-sm font-black text-navy-secondary truncate">
+                                                                                    {property.area?.name || 'Unknown Area'}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="shrink-0">
+                                                                                <div className="flex gap-1.5">
+                                                                                    {property.is_presale ? (
+                                                                                        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PRESALE</span>
+                                                                                    ) : (
+                                                                                        <>
+                                                                                            {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">Rent</span>}
+                                                                                            {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">Sale</span>}
+                                                                                        </>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                                                                        <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
+                                                                    </div>
+
+                                                                    {/* Prices */}
+                                                                    <div className="flex flex-wrap items-center gap-3">
                                                                         {property.is_for_rent && (
-                                                                            <span className="text-navy-primary font-bold">
-                                                                                <span className="text-[9px] opacity-50 mr-1 uppercase">Rent</span>
+                                                                            <span className="inline-flex items-baseline gap-1 text-navy-primary font-bold tabular-nums">
+                                                                                <span className="text-[9px] opacity-50 uppercase">Rent</span>
                                                                                 {property.rent_price?.toLocaleString()}
                                                                             </span>
                                                                         )}
                                                                         {property.is_for_sale && (
-                                                                            <span className="text-navy-primary font-bold">
-                                                                                <span className="text-[9px] opacity-50 mr-1 uppercase">Sale</span>
+                                                                            <span className="inline-flex items-baseline gap-1 text-navy-primary font-bold tabular-nums">
+                                                                                <span className="text-[9px] opacity-50 uppercase">Sale</span>
                                                                                 {property.sale_price?.toLocaleString()}
                                                                             </span>
                                                                         )}
+                                                                    </div>
+
+                                                                    {/* Status toggles (mobile: own row, larger buttons) */}
+                                                                    <div className="sm:hidden w-full pt-1">
+                                                                        <AgentStatusToggles
+                                                                            propertyId={property.id}
+                                                                            currentStatus={property.status}
+                                                                            className="w-full justify-start"
+                                                                        />
                                                                     </div>
                                                                 </div>
                                                             </div>

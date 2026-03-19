@@ -60,12 +60,19 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
                     />
                 </div>
 
-                {!isPremium && (
+                {isPremium ? (
+                    <div className="mt-2 p-4 bg-white/5 rounded-2xl border border-white/10">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                        <p className="text-xs font-black text-amber-400">
+                            無料トライアル期間中
+                        </p>
+                    </div>
+                ) : (
                     <Link
                         href={`/${params.locale}/pricing`}
                         className="group mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-200 active:scale-[0.98]"
                     >
-                        プラン詳細を見る
+                        有料プランに移行
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 )}
