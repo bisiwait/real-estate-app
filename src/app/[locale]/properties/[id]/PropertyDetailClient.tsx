@@ -22,8 +22,6 @@ import {
     Wifi, Refrigerator, ArrowUp, Dog, Zap, CircleDollarSign, Sun, Building, Thermometer,
     Bus, Lock, ShieldCheck, CalendarDays, RefreshCw, Loader2
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-
 
 const getFeatureIcon = (featureName: string) => {
     const name = featureName.toLowerCase();
@@ -57,14 +55,18 @@ const getFeatureIcon = (featureName: string) => {
     return Check;
 }
 
-export default function PropertyDetailClient() {
+interface PropertyDetailClientProps {
+    initialProperty: any
+}
+
+export default function PropertyDetailClient({ initialProperty }: PropertyDetailClientProps) {
     const params = useParams()
     const id = params?.id as string
     const locale = (params?.locale as string) || 'jp'
-    const router = useRouter();
     const { user } = useAuth()
     
-    const [property, setProperty] = useState<any>(null)
+    // サーバーから受け取った初期データを使用
+    const [property, setProperty] = useState<any>(initialProperty)
     const [agent, setAgent] = useState<any>(null)
     const [dict, setDict] = useState<any>(null)
     const [loading, setLoading] = useState(true)
@@ -73,26 +75,22 @@ export default function PropertyDetailClient() {
     const [profile, setProfile] = useState<any>(null)
 
     const isPremium = profile?.plan === 'premium' || profile?.plan_type === 'premium'
-    const isOwner = user && property && user.id === property.user_id
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        const fetchData = async () => {
+        const fetchClientData = async () => {
             const supabase = createClient()
-            const [d, pRes] = await Promise.all([
-                getDictionary(locale),
-                supabase.from('properties').select('*, area:areas(name, slug, region:regions(name)), project:projects(*, developers(name)), developers(name)').eq('id', id).single()
-            ])
-            
+            // 辞書と追加データのみクライアントで取得
+            const d = await getDictionary(locale)
             setDict(d)
-            if (pRes.data) {
-                setProperty(pRes.data)
-                if (pRes.data.user_id) {
-                    const { data: aData } = await supabase.from('profiles').select('phone, full_name').eq('id', pRes.data.user_id).single()
-                    setAgent(aData)
-                }
+
+            // エージェント情報の取得
+            if (initialProperty?.user_id) {
+                const { data: aData } = await supabase.from('profiles').select('phone, full_name').eq('id', initialProperty.user_id).single()
+                setAgent(aData)
             }
 
+            // ログインユーザーのプラン確認
             if (user) {
                 const { data: pData } = await supabase.from('profiles').select('plan, plan_type').eq('id', user.id).single()
                 if (pData) setProfile(pData)
@@ -100,8 +98,8 @@ export default function PropertyDetailClient() {
 
             setLoading(false)
         }
-        if (id) fetchData()
-    }, [id, locale, user])
+        fetchClientData()
+    }, [id, locale, user, initialProperty])
 
     useEffect(() => {
         const translateTitleOnDemand = async () => {
@@ -242,7 +240,7 @@ export default function PropertyDetailClient() {
                     </div>
 
                     <div className="lg:col-span-4 space-y-6">
-                         <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
+                        <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
                             <LineContactButton property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8) }} variant="full" dict={dict} />
                             

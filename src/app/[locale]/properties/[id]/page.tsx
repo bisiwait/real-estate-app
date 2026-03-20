@@ -1,8 +1,18 @@
 import { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 
 const BASE_URL = 'https://real-estate-app-sigma-brown.vercel.app'
+
+async function fetchProperty(id: string) {
+    const supabase = createStaticClient()
+    const { data } = await supabase
+        .from('properties')
+        .select('*, area:areas(name, slug, region:regions(name)), project:projects(*, developers(name)), developers(name)')
+        .eq('id', id)
+        .single()
+    return data
+}
 
 export async function generateMetadata(
     { params }: { params: Promise<{ locale: string; id: string }> }
@@ -10,12 +20,7 @@ export async function generateMetadata(
     const { locale, id } = await params
 
     try {
-        const supabase = await createClient()
-        const { data: property } = await supabase
-            .from('properties')
-            .select('title, title_ja, title_en, description, images')
-            .eq('id', id)
-            .single()
+        const property = await fetchProperty(id)
 
         if (!property) {
             return {
@@ -26,7 +31,7 @@ export async function generateMetadata(
 
         const title = property.title_ja || property.title_en || property.title || 'Property'
         const description = property.description
-            ? property.description.replace(/<[^>]+>/g, '').substring(0, 100)
+            ? property.description.replace(/<[^>]+>/g, '').substring(0, 160)
             : 'Pattaya & Sriracha real estate listing on Chonburi Connect.'
 
         let imageUrl = `${BASE_URL}/og-default.png`
@@ -50,14 +55,7 @@ export async function generateMetadata(
                 description,
                 url: pageUrl,
                 siteName: 'Chonburi Connect',
-                images: [
-                    {
-                        url: imageUrl,
-                        width: 1200,
-                        height: 630,
-                        alt: title,
-                    },
-                ],
+                images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
                 locale: locale === 'jp' ? 'ja_JP' : locale === 'th' ? 'th_TH' : 'en_US',
                 type: 'website',
             },
@@ -69,7 +67,7 @@ export async function generateMetadata(
             },
         }
     } catch (error) {
-        console.error('Metadata generation error:', error)
+        console.error('[generateMetadata] error:', error)
         return {
             title: 'Property | Chonburi Connect',
             description: 'Real estate listings in Pattaya & Sriracha.',
@@ -77,7 +75,13 @@ export async function generateMetadata(
     }
 }
 
-export default async function Page({ params }: { params: Promise<{ locale: string; id: string }> }) {
-    // サーバーコンポーネントとして params を受け取り、クライアントコンポーネントに渡す
-    return <PropertyDetailClient />;
+export default async function Page({
+    params,
+}: {
+    params: Promise<{ locale: string; id: string }>
+}) {
+    const { id } = await params
+    const property = await fetchProperty(id)
+
+    return <PropertyDetailClient initialProperty={property} />
 }
