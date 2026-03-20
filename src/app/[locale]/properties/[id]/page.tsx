@@ -55,7 +55,16 @@ export async function generateMetadata(
                 description,
                 url: pageUrl,
                 siteName: 'Chonburi Connect',
-                images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
+                images: [
+                    {
+                        url: imageUrl,
+                        secureUrl: imageUrl,
+                        width: 1200,
+                        height: 630,
+                        alt: title,
+                        type: imageUrl.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg',
+                    },
+                ],
                 locale: locale === 'jp' ? 'ja_JP' : locale === 'th' ? 'th_TH' : 'en_US',
                 type: 'website',
             },
