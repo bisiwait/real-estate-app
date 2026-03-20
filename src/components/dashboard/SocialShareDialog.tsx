@@ -201,13 +201,15 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     
     // プレビュー用のURL（キャッシュ回避パラメータ付き）
     const BASE_URL = 'https://real-estate-app-sigma-brown.vercel.app'
-    // propertyContext.id を使用し、locale は現在の activeLang または 'jp' を使用
     const shareLocale = activeLang === 'ja' ? 'jp' : activeLang
-    const shareUrl = `${BASE_URL}/${shareLocale}/properties/${propertyContext.id}?v=FINAL_FORCE_OGP_09`
+    const shareUrl = `${BASE_URL}/${shareLocale}/properties/${propertyContext.id}?v=FORCE_RELOAD_FINAL_01`
     
-    // text= パラメータに「物件名」「AI紹介文」「物件URL」の順で含める
+    // 物件名、AI紹介文、URLをすべて1つのテキストにまとめ、URLを最後に配置
+    // これにより、LINEは「1つのメッセージ」としてプレビュー付きで送信します
     const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n物件詳細：\n${shareUrl}`
     
+    // social-plugins.line.me ではなく line.me/R/msg/text/ 形式を使い、
+    // かつパラメータを1つに絞ることで、確実に1通にまとめ、余計なURLの混入を防ぎます。
     const finalLineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`
     window.open(finalLineUrl, '_blank', 'width=600,height=500')
   }
