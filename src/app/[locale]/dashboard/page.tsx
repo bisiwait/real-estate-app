@@ -118,43 +118,43 @@ export default async function DashboardPage({
     }
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-20 overflow-x-hidden">
+        <div className="bg-slate-50 min-h-screen pb-20 w-full max-w-[100vw] overflow-x-hidden">
             {/* Header */}
-            <div className="bg-navy-secondary py-10 md:py-12 text-white">
-                <div className="container mx-auto px-3 sm:px-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/20">
-                                <LayoutDashboard className="w-8 h-8 text-white" />
+            <div className="bg-navy-secondary py-8 md:py-12 text-white">
+                <div className="w-full max-w-7xl mx-auto px-3 sm:px-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+                        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                            <div className="bg-white/10 p-3 sm:p-4 rounded-2xl backdrop-blur-md border border-white/20 shrink-0">
+                                <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                             </div>
-                            <div>
-                                <h1 className="text-3xl font-black tracking-tight">掲載主ダッシュボード</h1>
-                                <p className="text-slate-400 text-sm font-medium mt-1 uppercase tracking-widest">Listing Management</p>
+                            <div className="min-w-0">
+                                <h1 className="text-xl sm:text-3xl font-black tracking-tight truncate">ダッシュボード</h1>
+                                <p className="text-slate-400 text-[10px] sm:text-sm font-medium mt-0.5 sm:mt-1 uppercase tracking-widest">Listing Management</p>
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
                             {activePlan === 'premium' && (
                                 <Link
                                     href="/dashboard/presale"
-                                    className="bg-amber-500 text-white px-8 py-3.5 rounded-full font-bold hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 w-full md:w-auto"
+                                    className="bg-amber-500 text-white px-4 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-amber-600 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
                                 >
-                                    <Building2 className="w-5 h-5 flex-shrink-0" />
-                                    <span>プレセール投稿 (Premium)</span>
+                                    <Building2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                    <span>プレセール投稿</span>
                                 </Link>
                             )}
                             <Link
                                 href="/list-property"
-                                className="bg-white text-navy-primary px-8 py-3.5 rounded-full font-bold hover:bg-slate-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 w-full md:w-auto"
+                                className="bg-white text-navy-primary px-4 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-slate-50 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
                             >
-                                <PlusCircle className="w-5 h-5 flex-shrink-0" />
+                                <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                                 <span>物件を新規掲載する</span>
                             </Link>
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="container mx-auto px-3 sm:px-4 -mt-10">
+            <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 -mt-10">
                 {profile_updated === 'true' && (
                     <FlashMessage message="プロフィール情報を更新しました。" duration={3000} />
                 )}
