@@ -44,8 +44,10 @@ export async function generateMetadata(
                 const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`
                 baseImageUrl = `${BASE_URL}${path}`
             }
-            // Supabase Image Transformation parameters for LINE compatibility
-            imageUrl = `${baseImageUrl}?width=1200&height=630&resize=contain&format=jpg`
+            
+            // 1. .webp を .jpg に置換（拡張子の偽装）
+            // 2. Supabase Image Transformation パラメータを付与
+            imageUrl = baseImageUrl.replace(/\.webp$/i, '.jpg') + '?width=1200&height=630&resize=contain&format=jpg'
         }
 
         const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=2026_final`
