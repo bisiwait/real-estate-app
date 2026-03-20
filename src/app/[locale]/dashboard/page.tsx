@@ -291,117 +291,55 @@ export default async function DashboardPage({
                                         <span className="text-xs font-bold text-slate-400 whitespace-nowrap">表示: {filteredProperties.length} / 全: {stats.total} 件</span>
                                     </div>
 
-                                    <div className="overflow-x-auto sm:overflow-visible pb-4">
-                                        <div className="divide-y divide-slate-50 min-w-0 sm:min-w-[1000px]">
-                                            {filteredProperties && filteredProperties.length > 0 ? (
-                                                filteredProperties.map((property) => (
-                                                    <div key={property.id} className="p-4 sm:p-6 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
-                                                        <div className="flex items-center space-x-4 sm:space-x-6 min-w-0 flex-1">
-                                                            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                                                                {property.images?.[0] ? (
-                                                                    <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                                        <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8" />
-                                                                    </div>
-                                                                )}
+                                    {/* Mobile: 2-column card grid / Desktop: horizontal row list */}
+                                    {filteredProperties && filteredProperties.length > 0 ? (<>
+                                        {/* ── MOBILE GRID (< sm) ── */}
+                                        <div className="sm:hidden grid grid-cols-2 gap-3 p-3">
+                                            {filteredProperties.map((property) => (
+                                                <div key={property.id} className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 flex flex-col">
+                                                    {/* Image */}
+                                                    <div className="relative aspect-[4/3] bg-slate-200">
+                                                        {property.images?.[0] ? (
+                                                            <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                                <LayoutDashboard className="w-8 h-8" />
                                                             </div>
-                                                            <div className="min-w-0 flex-1">
-                                                                <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                                        {property.status === 'published' && <span className="bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">公開中</span>}
-                                                                        {property.status === 'pending' && <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">承認待ち</span>}
-                                                                        {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">下書き</span>}
-                                                                        {property.status === 'under_negotiation' && <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">商談中</span>}
-                                                                        {property.status === 'contracted' && <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">成約済</span>}
-                                                                        {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap">期限切れ</span>}
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">#{property.id.slice(0, 8)}</span>
-                                                                        <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
-                                                                    </div>
-                                                                    <div className="hidden sm:block">
-                                                                        <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
-                                                                    </div>
-                                                                </div>
-                                                                <h4 className="text-sm sm:text-lg font-bold text-navy-secondary mb-0.5 sm:mb-1 truncate">{property.title}</h4>
-                                                                {/* Mobile-friendly meta layout (keeps desktop as-is via sm:*) */}
-                                                                <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 text-xs sm:text-sm font-medium min-w-0">
-                                                                    {/* Area (mobile: full-width pill, desktop: simple text) */}
-                                                                    <div className="sm:hidden w-full">
-                                                                        <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-3">
-                                                                            <div className="min-w-0">
-                                                                                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">AREA</div>
-                                                                                <div className="text-sm font-black text-navy-secondary truncate">
-                                                                                    {property.area?.name || 'Unknown Area'}
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="shrink-0">
-                                                                                <div className="flex gap-1.5">
-                                                                                    {property.is_presale ? (
-                                                                                        <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PRESALE</span>
-                                                                                    ) : (
-                                                                                        <>
-                                                                                            {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">Rent</span>}
-                                                                                            {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">Sale</span>}
-                                                                                        </>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                                                                        <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
-                                                                    </div>
-
-                                                                    {/* Prices */}
-                                                                    <div className="flex flex-wrap items-center gap-3">
-                                                                        {property.is_for_rent && (
-                                                                            <span className="inline-flex items-baseline gap-1 text-navy-primary font-bold tabular-nums">
-                                                                                <span className="text-[9px] opacity-50 uppercase">Rent</span>
-                                                                                {property.rent_price?.toLocaleString()}
-                                                                            </span>
-                                                                        )}
-                                                                        {property.is_for_sale && (
-                                                                            <span className="inline-flex items-baseline gap-1 text-navy-primary font-bold tabular-nums">
-                                                                                <span className="text-[9px] opacity-50 uppercase">Sale</span>
-                                                                                {property.sale_price?.toLocaleString()}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {/* Status toggles (mobile: own row, larger buttons) */}
-                                                                    <div className="sm:hidden w-full pt-1">
-                                                                        <AgentStatusToggles
-                                                                            propertyId={property.id}
-                                                                            currentStatus={property.status}
-                                                                            className="w-full justify-start"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                        )}
+                                                        {/* Status badge overlay */}
+                                                        <div className="absolute top-1.5 left-1.5">
+                                                            {property.status === 'published' && <span className="bg-emerald-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-black shadow-sm">公開中</span>}
+                                                            {property.status === 'pending' && <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-black shadow-sm">承認待ち</span>}
+                                                            {property.status === 'draft' && <span className="bg-slate-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-black shadow-sm">下書き</span>}
+                                                            {property.status === 'under_negotiation' && <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-black shadow-sm">商談中</span>}
+                                                            {property.status === 'contracted' && <span className="bg-purple-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-black shadow-sm">成約済</span>}
+                                                            {property.status === 'expired' && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded-md text-[9px] font-black shadow-sm">期限切れ</span>}
                                                         </div>
-
-                                                        <div className="flex items-center justify-between sm:justify-end gap-2 border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0 mt-1 sm:mt-0">
-                                                            <div className="flex gap-1.5">
-                                                                {property.is_presale ? (
-                                                                    <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PRESALE</span>
-                                                                ) : (
-                                                                    <>
-                                                                        {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">Rent</span>}
-                                                                        {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">Sale</span>}
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex items-center gap-1 sm:gap-2">
-                                                                <Link
-                                                                    href={`/properties/${property.id}`}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="p-1 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center"
-                                                                >
-                                                                    <span className="hidden sm:inline">詳細</span>
-                                                                    <ChevronRight className="w-4 h-4 ml-1 sm:ml-0" />
+                                                        {/* Type badge overlay */}
+                                                        <div className="absolute top-1.5 right-1.5 flex gap-1">
+                                                            {property.is_presale && <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded-md text-[8px] font-black shadow-sm">PS</span>}
+                                                            {!property.is_presale && property.is_for_rent && <span className="bg-indigo-500 text-white px-1.5 py-0.5 rounded-md text-[8px] font-black shadow-sm">R</span>}
+                                                            {!property.is_presale && property.is_for_sale && <span className="bg-orange-500 text-white px-1.5 py-0.5 rounded-md text-[8px] font-black shadow-sm">S</span>}
+                                                        </div>
+                                                    </div>
+                                                    {/* Info */}
+                                                    <div className="p-2.5 flex flex-col gap-1.5 flex-1">
+                                                        <p className="text-[11px] font-black text-navy-secondary leading-tight line-clamp-2">{property.title}</p>
+                                                        <p className="text-[10px] text-slate-400 font-medium">{property.area?.name || '—'}</p>
+                                                        <div className="text-[10px] font-black text-navy-primary tabular-nums">
+                                                            {property.is_for_rent && <span>{property.rent_price?.toLocaleString()} ฿</span>}
+                                                            {property.is_for_sale && <span>{property.sale_price?.toLocaleString()} ฿</span>}
+                                                        </div>
+                                                        {/* Freshness */}
+                                                        <div className="mt-auto pt-1">
+                                                            <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
+                                                        </div>
+                                                        {/* Action row */}
+                                                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
+                                                            <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
+                                                            <div className="flex items-center gap-0.5">
+                                                                <Link href={`/properties/${property.id}`} target="_blank" className="p-1 rounded-lg text-slate-400 hover:bg-slate-200 transition-all">
+                                                                    <ChevronRight className="w-3.5 h-3.5" />
                                                                 </Link>
                                                                 <PropertyConfirmButton propertyId={property.id} title={property.title} />
                                                                 <DashboardActions
@@ -409,22 +347,78 @@ export default async function DashboardPage({
                                                                     propertyTitle={property.title}
                                                                     profile={profile}
                                                                     property={property}
-                                                                    agent={{
-                                                                        full_name: profile?.full_name,
-                                                                        phone: profile?.phone
-                                                                    }}
+                                                                    agent={{ full_name: profile?.full_name, phone: profile?.phone }}
                                                                 />
                                                             </div>
                                                         </div>
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <div className="p-20 text-center">
-                                                    <p className="text-slate-400 font-medium">登録されている物件はありません</p>
                                                 </div>
-                                            )}
+                                            ))}
                                         </div>
-                                    </div>
+
+                                        {/* ── DESKTOP ROW LIST (sm+) ── */}
+                                        <div className="hidden sm:block overflow-x-auto pb-4">
+                                            <div className="divide-y divide-slate-50 min-w-[1000px]">
+                                                {filteredProperties.map((property) => (
+                                                    <div key={property.id} className="p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-6">
+                                                        <div className="flex items-center space-x-6 min-w-0 flex-1">
+                                                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                                                                {property.images?.[0] ? (
+                                                                    <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                                        <LayoutDashboard className="w-8 h-8" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                                    {property.status === 'published' && <span className="bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded text-[10px] font-bold">公開中</span>}
+                                                                    {property.status === 'pending' && <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[10px] font-bold">承認待ち</span>}
+                                                                    {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">下書き</span>}
+                                                                    {property.status === 'under_negotiation' && <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold">商談中</span>}
+                                                                    {property.status === 'contracted' && <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px] font-bold">成約済</span>}
+                                                                    {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold">期限切れ</span>}
+                                                                    <span className="text-[10px] text-slate-400 font-medium">#{property.id.slice(0, 8)}</span>
+                                                                    <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
+                                                                    <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
+                                                                </div>
+                                                                <h4 className="text-lg font-bold text-navy-secondary mb-1 truncate">{property.title}</h4>
+                                                                <div className="flex flex-wrap items-center gap-x-3 text-sm font-medium">
+                                                                    <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
+                                                                    {property.is_for_rent && <span className="text-navy-primary font-bold tabular-nums"><span className="text-[9px] opacity-50 uppercase mr-1">Rent</span>{property.rent_price?.toLocaleString()}</span>}
+                                                                    {property.is_for_sale && <span className="text-navy-primary font-bold tabular-nums"><span className="text-[9px] opacity-50 uppercase mr-1">Sale</span>{property.sale_price?.toLocaleString()}</span>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex gap-1.5">
+                                                                {property.is_presale ? <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PRESALE</span> : <>
+                                                                    {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">Rent</span>}
+                                                                    {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">Sale</span>}
+                                                                </>}
+                                                            </div>
+                                                            <Link href={`/properties/${property.id}`} target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center">
+                                                                詳細<ChevronRight className="w-4 h-4" />
+                                                            </Link>
+                                                            <PropertyConfirmButton propertyId={property.id} title={property.title} />
+                                                            <DashboardActions
+                                                                propertyId={property.id}
+                                                                propertyTitle={property.title}
+                                                                profile={profile}
+                                                                property={property}
+                                                                agent={{ full_name: profile?.full_name, phone: profile?.phone }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>) : (
+                                        <div className="p-20 text-center">
+                                            <p className="text-slate-400 font-medium">登録されている物件はありません</p>
+                                        </div>
+                                    )}
                                 </>
                             ) : (
                                 <>{/* Inquiries List View */}
