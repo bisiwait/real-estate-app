@@ -201,12 +201,13 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     
     // プレビュー用のURL（キャッシュ回避パラメータ付き）
     const BASE_URL = 'https://real-estate-app-sigma-brown.vercel.app'
-    const shareUrl = `${BASE_URL}/${locale}/properties/${propertyContext.id}?v=FINAL_FORCE_OGP_08`
+    // propertyContext.id を使用し、locale は現在の activeLang または 'jp' を使用
+    const shareLocale = activeLang === 'ja' ? 'jp' : activeLang
+    const shareUrl = `${BASE_URL}/${shareLocale}/properties/${propertyContext.id}?v=FINAL_FORCE_OGP_09`
     
     // text= パラメータに「物件名」「AI紹介文」「物件URL」の順で含める
     const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n物件詳細：\n${shareUrl}`
     
-    // 確実に動作する形式に修正
     const finalLineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`
     window.open(finalLineUrl, '_blank', 'width=600,height=500')
   }
