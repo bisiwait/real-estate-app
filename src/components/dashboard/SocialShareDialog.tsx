@@ -188,13 +188,15 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
   }
 
   const handleFacebookShare = () => {
-    const url = encodeURIComponent(propertyUrl);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=400');
+    const url = propertyUrl;
+    const encodedUrl = encodeURIComponent(url);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank', 'width=600,height=400');
   }
 
   const handleLineShare = () => {
-    const text = encodeURIComponent(`【${editedProperty.title}】\n詳細を確認: ${propertyUrl}`)
-    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(propertyUrl)}&text=${text}`, '_blank', 'width=600,height=500')
+    const text = `【${editedProperty.title}】\n${translatedText[activeLang] || ''}\n\n詳細を確認: ${propertyUrl}`;
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://line.me/R/msg/text/?${encodedText}`, '_blank', 'width=600,height=500')
   }
 
   // 共通のバナーコンテンツ部分を関数として定義
@@ -492,17 +494,22 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
              </button>
 
              <div className="pt-4 border-t border-slate-200">
-               <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 text-center sm:text-left">ダイレクトシェア</p>
+               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                 <p className="text-xs font-black text-slate-400 uppercase tracking-widest">ダイレクトシェア</p>
+                 <p className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                   ※画像は先に保存してください
+                 </p>
+               </div>
                <div className="grid grid-cols-2 gap-3">
                  <button 
                   onClick={handleFacebookShare}
-                  className="flex items-center justify-center p-3 rounded-xl bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2]/20 font-bold text-sm transition-colors"
+                  className="flex items-center justify-center p-3 rounded-xl bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2]/20 font-bold text-sm transition-all active:scale-95 cursor-pointer"
                  >
                    <Facebook className="w-4 h-4 mr-2" /> Facebook
                  </button>
                  <button 
                   onClick={handleLineShare}
-                  className="flex items-center justify-center p-3 rounded-xl bg-[#06C755]/10 text-[#06C755] hover:bg-[#06C755]/20 font-bold text-sm transition-colors"
+                  className="flex items-center justify-center p-3 rounded-xl bg-[#06C755]/10 text-[#06C755] hover:bg-[#06C755]/20 font-bold text-sm transition-all active:scale-95 cursor-pointer"
                  >
                    <MessageCircle className="w-4 h-4 mr-2" /> LINE
                  </button>
