@@ -29,9 +29,17 @@ export async function generateMetadata(
             ? property.description.replace(/<[^>]+>/g, '').slice(0, 160)
             : 'Pattaya & Sriracha real estate listing on Chonburi Connect.'
 
-        const imageUrl = property.images?.[0]
-            ? (property.images[0].startsWith('http') ? property.images[0] : `${BASE_URL}${property.images[0]}`)
-            : `${BASE_URL}/og-default.png`
+        let imageUrl = `${BASE_URL}/og-default.png`
+        if (property.images?.[0]) {
+            const firstImage = property.images[0]
+            if (firstImage.startsWith('http')) {
+                imageUrl = firstImage
+            } else {
+                // 先頭のスラッシュを確認して結合
+                const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`
+                imageUrl = `${BASE_URL}${path}`
+            }
+        }
 
         const pageUrl = `${BASE_URL}/${locale}/properties/${id}`
 
