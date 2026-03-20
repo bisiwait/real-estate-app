@@ -195,21 +195,20 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
 
   const handleLineShare = () => {
     const aiText = translatedText[activeLang] || ''
-    // LINE share URL has a ~2000 char limit — keep AI text under 300 chars to stay safe, especially for Thai/Unicode
+    // LINE share URL has a ~2000 char limit — keep AI text under 300 chars to stay safe
     const shortText = aiText.substring(0, 300)
     const hasMore = aiText.length > 300
     
     // プレビュー用のURL（キャッシュ回避パラメータ付き）
-    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_05`
-    const encodedUrl = encodeURIComponent(shareUrl)
+    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_06`
     
-    // text= パラメータには物件名とAI紹介文のみを含める
-    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}`
+    // text= パラメータに「物件名」「AI紹介文」「物件URL」の順で含める
+    // これにより、メッセージの最後にURLが配置され、LINEがそれを検知してプレビューを表示します
+    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n物件詳細を見る：\n${shareUrl}`
     const encodedText = encodeURIComponent(shareText)
     
-    // 1. line.me/R/msg/text/ 形式に戻します（これが最も安定して1通で送信されます）
-    // 2. URLを最初、テキストをその後に配置することで、LINEがプレビューを確実に生成し、かつ1通にまとめます
-    const finalLineUrl = `https://line.me/R/msg/text/?${encodedUrl}${encodeURIComponent('\n\n' + shareText)}`
+    // line.me/R/msg/text/ 形式で、textパラメータのみを使用することで確実に1通にまとめます
+    const finalLineUrl = `https://line.me/R/msg/text/?${encodedText}`
     window.open(finalLineUrl, '_blank', 'width=600,height=500')
   }
 
