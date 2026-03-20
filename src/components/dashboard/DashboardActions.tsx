@@ -66,23 +66,69 @@ export default function DashboardActions({
 
     const premiumLink = `/${params.locale}/pricing`
 
-    return (
-        <div className="flex items-center space-x-2">
-            {/* PDF Generation Entry Point */}
-            {hasPremium && (
-                <div title="PDFチラシをダウンロード">
-                    <PropertyPdfDownload
-                        property={property}
-                        agent={agent}
-                        dict={{}}
-                        iconOnly={true}
-                    />
-                </div>
-            )}
+    const shareDialog = hasPremium && (
+        <SocialShareDialog
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            propertyContext={{
+                id: propertyId,
+                title: propertyTitle,
+                price: property.is_for_sale ? property.sale_price : property.rent_price,
+                isForSale: property.is_for_sale,
+                isForRent: property.is_for_rent,
+                mainImageUrl: property.images?.[0] || '',
+                agentContact: agent?.phone || '',
+                area: property.area?.name || '',
+                description: property.description || property.description_ja || '',
+                amenities: property.amenities || [],
+                facilities: property.facilities || [],
+                sqm: property.sqm || 0,
+                floor: property.floor || '',
+                layout: property.layout || ''
+            }}
+        />
+    )
 
-            {/* SNS Share Entry Point */}
-            {hasPremium && (
-                <>
+    return (
+        <>
+            {/* Mobile layout: 編集 + its other actions as a full-width button */}
+            <div className="sm:hidden flex items-stretch w-full">
+                <button
+                    onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
+                    className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold text-navy-primary hover:bg-navy-primary/5 transition-all"
+                >
+                    <Edit3 className="w-3.5 h-3.5" /> 編集
+                </button>
+                {hasPremium && (
+                    <button
+                        onClick={() => setIsShareModalOpen(true)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold text-pink-500 hover:bg-pink-50 border-l border-slate-100 transition-all"
+                    >
+                        <Share2 className="w-3.5 h-3.5" /> SNS
+                    </button>
+                )}
+                {hasPremium && (
+                    <div className="flex-1 flex items-center justify-center border-l border-slate-100">
+                        <PropertyPdfDownload property={property} agent={agent} dict={{}} iconOnly={true} />
+                    </div>
+                )}
+                <button
+                    onClick={handleDelete}
+                    disabled={loading}
+                    className="px-3 flex items-center justify-center text-red-400 hover:bg-red-50 border-l border-slate-100 transition-all disabled:opacity-50"
+                >
+                    {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                </button>
+            </div>
+
+            {/* Desktop layout: icon buttons */}
+            <div className="hidden sm:flex items-center space-x-2">
+                {hasPremium && (
+                    <div title="PDFチラシをダウンロード">
+                        <PropertyPdfDownload property={property} agent={agent} dict={{}} iconOnly={true} />
+                    </div>
+                )}
+                {hasPremium && (
                     <button
                         onClick={() => setIsShareModalOpen(true)}
                         className="p-2.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-600 hover:text-white transition-all border border-pink-100 shadow-sm"
@@ -90,49 +136,24 @@ export default function DashboardActions({
                     >
                         <Share2 className="w-5 h-5" />
                     </button>
-                    <SocialShareDialog
-                        isOpen={isShareModalOpen}
-                        onClose={() => setIsShareModalOpen(false)}
-                            propertyContext={{
-                                id: propertyId,
-                                title: propertyTitle,
-                                price: property.is_for_sale ? property.sale_price : property.rent_price,
-                                isForSale: property.is_for_sale,
-                                isForRent: property.is_for_rent,
-                                mainImageUrl: property.images?.[0] || '',
-                                agentContact: agent?.phone || '',
-                                area: property.area?.name || '',
-                                description: property.description || property.description_ja || '',
-                                amenities: property.amenities || [],
-                                facilities: property.facilities || [],
-                                sqm: property.sqm || 0,
-                                floor: property.floor || '',
-                                layout: property.layout || ''
-                            }}
-                    />
-                </>
-            )}
-
-            <button
-                onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
-                className="p-2.5 rounded-xl bg-slate-50 text-navy-primary hover:bg-navy-primary hover:text-white transition-all border border-slate-100 shadow-sm"
-                title="編集する"
-            >
-                <Edit3 className="w-5 h-5" />
-            </button>
-
-            <button
-                onClick={handleDelete}
-                disabled={loading}
-                className="p-2.5 rounded-xl bg-slate-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-slate-100 disabled:opacity-50 shadow-sm"
-                title="削除する"
-            >
-                {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                    <Trash2 className="w-5 h-5" />
                 )}
-            </button>
-        </div>
+                <button
+                    onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
+                    className="p-2.5 rounded-xl bg-slate-50 text-navy-primary hover:bg-navy-primary hover:text-white transition-all border border-slate-100 shadow-sm"
+                    title="編集する"
+                >
+                    <Edit3 className="w-5 h-5" />
+                </button>
+                <button
+                    onClick={handleDelete}
+                    disabled={loading}
+                    className="p-2.5 rounded-xl bg-slate-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-slate-100 disabled:opacity-50 shadow-sm"
+                    title="削除する"
+                >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                </button>
+            </div>
+            {shareDialog}
+        </>
     )
 }

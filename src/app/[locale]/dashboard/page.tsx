@@ -323,34 +323,38 @@ export default async function DashboardPage({
                                                         </div>
                                                     </div>
                                                     {/* Info */}
-                                                    <div className="p-2.5 flex flex-col gap-1.5 flex-1">
+                                                    <div className="p-2.5 flex flex-col gap-1">
                                                         <p className="text-[11px] font-black text-navy-secondary leading-tight line-clamp-2">{property.title}</p>
                                                         <p className="text-[10px] text-slate-400 font-medium">{property.area?.name || '—'}</p>
                                                         <div className="text-[10px] font-black text-navy-primary tabular-nums">
                                                             {property.is_for_rent && <span>{property.rent_price?.toLocaleString()} ฿</span>}
                                                             {property.is_for_sale && <span>{property.sale_price?.toLocaleString()} ฿</span>}
                                                         </div>
-                                                        {/* Freshness */}
-                                                        <div className="mt-auto pt-1">
+                                                        <div className="flex items-center justify-between mt-0.5">
                                                             <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
+                                                            <PropertyConfirmButton propertyId={property.id} title={property.title} />
                                                         </div>
-                                                        {/* Action row */}
-                                                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
-                                                            <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
-                                                            <div className="flex items-center gap-0.5">
-                                                                <Link href={`/properties/${property.id}`} target="_blank" className="p-1 rounded-lg text-slate-400 hover:bg-slate-200 transition-all">
-                                                                    <ChevronRight className="w-3.5 h-3.5" />
-                                                                </Link>
-                                                                <PropertyConfirmButton propertyId={property.id} title={property.title} />
-                                                                <DashboardActions
-                                                                    propertyId={property.id}
-                                                                    propertyTitle={property.title}
-                                                                    profile={profile}
-                                                                    property={property}
-                                                                    agent={{ full_name: profile?.full_name, phone: profile?.phone }}
-                                                                />
-                                                            </div>
-                                                        </div>
+                                                    </div>
+                                                    {/* Action bar row 1: ステータス変更 */}
+                                                    <div className="px-2 pb-1">
+                                                        <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
+                                                    </div>
+                                                    {/* Action bar row 2: 詳細 / 編集 / その他 */}
+                                                    <div className="grid grid-cols-2 border-t border-slate-100">
+                                                        <Link
+                                                            href={`/properties/${property.id}`}
+                                                            target="_blank"
+                                                            className="flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold text-slate-500 hover:bg-slate-100 border-r border-slate-100 transition-all"
+                                                        >
+                                                            <ChevronRight className="w-3.5 h-3.5" /> 詳細
+                                                        </Link>
+                                                        <DashboardActions
+                                                            propertyId={property.id}
+                                                            propertyTitle={property.title}
+                                                            profile={profile}
+                                                            property={property}
+                                                            agent={{ full_name: profile?.full_name, phone: profile?.phone }}
+                                                        />
                                                     </div>
                                                 </div>
                                             ))}
