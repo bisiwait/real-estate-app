@@ -194,12 +194,17 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
   }
 
   const handleLineShare = () => {
+    const aiText = translatedText[activeLang] || ''
+    // LINE share URL has a ~2000 char limit — keep AI text under 500 chars to stay safe
+    const shortText = aiText.substring(0, 500)
+    const hasMore = aiText.length > 500
+    
     // lineit/share?url= には物件URLのみを渡す（これがプレビューに使われる）
-    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_01`
+    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_02`
     const encodedUrl = encodeURIComponent(shareUrl)
     
-    // text= には物件名のみを渡す
-    const shareText = `【${editedProperty.title}】`
+    // text= には物件名とAI紹介文を渡す
+    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}`
     const encodedText = encodeURIComponent(shareText)
     
     window.open(`https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedText}`, '_blank', 'width=600,height=500')
