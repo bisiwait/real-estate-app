@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import PropertyDetailClient from './PropertyDetailClient'
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://real-estate-app-sigma-brown.vercel.app'
+const BASE_URL = (process.env.NEXT_PUBLIC_BASE_URL || 'https://real-estate-app-sigma-brown.vercel.app').replace(/\/jp$/, '')
 
 export async function generateMetadata(
     { params }: { params: Promise<{ locale: string; id: string }> }
