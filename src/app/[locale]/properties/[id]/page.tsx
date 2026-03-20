@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import PropertyDetailClient from './PropertyDetailClient'
 
-const BASE_URL = (process.env.NEXT_PUBLIC_BASE_URL || 'https://real-estate-app-sigma-brown.vercel.app').replace(/\/jp$/, '')
+const BASE_URL = 'https://real-estate-app-sigma-brown.vercel.app'
 
 export async function generateMetadata(
     { params }: { params: Promise<{ locale: string; id: string }> }
@@ -13,7 +13,7 @@ export async function generateMetadata(
         const supabase = await createClient()
         const { data: property } = await supabase
             .from('properties')
-            .select('title, title_ja, title_en, description, images, area:areas(name, region:regions(name))')
+            .select('title, title_ja, title_en, description, images')
             .eq('id', id)
             .single()
 
@@ -26,7 +26,7 @@ export async function generateMetadata(
 
         const title = property.title_ja || property.title_en || property.title || 'Property'
         const description = property.description
-            ? property.description.replace(/<[^>]+>/g, '').slice(0, 160)
+            ? property.description.replace(/<[^>]+>/g, '').substring(0, 100)
             : 'Pattaya & Sriracha real estate listing on Chonburi Connect.'
 
         let imageUrl = `${BASE_URL}/og-default.png`
@@ -35,7 +35,6 @@ export async function generateMetadata(
             if (firstImage.startsWith('http')) {
                 imageUrl = firstImage
             } else {
-                // 先頭のスラッシュを確認して結合
                 const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`
                 imageUrl = `${BASE_URL}${path}`
             }
@@ -69,7 +68,8 @@ export async function generateMetadata(
                 images: [imageUrl],
             },
         }
-    } catch {
+    } catch (error) {
+        console.error('Metadata generation error:', error)
         return {
             title: 'Property | Chonburi Connect',
             description: 'Real estate listings in Pattaya & Sriracha.',
@@ -77,6 +77,7 @@ export async function generateMetadata(
     }
 }
 
-export default function PropertyDetailPage() {
-    return <PropertyDetailClient />
+export default async function Page({ params }: { params: Promise<{ locale: string; id: string }> }) {
+    // サーバーコンポーネントとして params を受け取り、クライアントコンポーネントに渡す
+    return <PropertyDetailClient />;
 }
