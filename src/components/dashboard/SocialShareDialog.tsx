@@ -200,16 +200,16 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     const hasMore = aiText.length > 300
     
     // プレビュー用のURL（キャッシュ回避パラメータ付き）
-    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_04`
+    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_05`
+    const encodedUrl = encodeURIComponent(shareUrl)
     
-    // text= パラメータに物件名、AI紹介文、URLをすべて含める
-    // これにより、LINEは「1つのメッセージ」としてプレビュー付きで送信します
-    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n物件詳細を見る：${shareUrl}`
+    // text= パラメータには物件名とAI紹介文のみを含める
+    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}`
     const encodedText = encodeURIComponent(shareText)
     
-    // url= パラメータを空にすることで、プレビューの重複（2通送信）を防ぎます
-    // LINEは text 内のURLを自動検知してプレビューを表示してくれます
-    const finalLineUrl = `https://social-plugins.line.me/lineit/share?text=${encodedText}`
+    // 1. line.me/R/msg/text/ 形式に戻します（これが最も安定して1通で送信されます）
+    // 2. URLを最初、テキストをその後に配置することで、LINEがプレビューを確実に生成し、かつ1通にまとめます
+    const finalLineUrl = `https://line.me/R/msg/text/?${encodedUrl}${encodeURIComponent('\n\n' + shareText)}`
     window.open(finalLineUrl, '_blank', 'width=600,height=500')
   }
 
