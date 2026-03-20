@@ -49,7 +49,7 @@ export async function generateMetadata(
             imageUrl = `${baseImageUrl}?format=jpg`
         }
 
-        const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=shared_link_final_check`
+        const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=FINAL_FORCE_OGP_01`
 
         return {
             title: `${title} | Chonburi Connect`,

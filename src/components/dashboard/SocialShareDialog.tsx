@@ -194,10 +194,15 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
   }
 
   const handleLineShare = () => {
-    // Add a completely new cache buster to bypass LINE's cache
-    const shareUrl = `${propertyUrl}?v=shared_link_final_check`
-    const shareText = `【${editedProperty.title}】\n\n物件詳細を見る：${shareUrl}`
-    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`, '_blank', 'width=600,height=500')
+    // lineit/share?url= には物件URLのみを渡す（これがプレビューに使われる）
+    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_01`
+    const encodedUrl = encodeURIComponent(shareUrl)
+    
+    // text= には物件名のみを渡す
+    const shareText = `【${editedProperty.title}】`
+    const encodedText = encodeURIComponent(shareText)
+    
+    window.open(`https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedText}`, '_blank', 'width=600,height=500')
   }
 
   const handleCopyForLine = async () => {
