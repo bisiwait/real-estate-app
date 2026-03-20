@@ -45,9 +45,9 @@ export async function generateMetadata(
                 baseImageUrl = `${BASE_URL}${path}`
             }
             
-            // 1. .webp を .jpg に置換（拡張子の偽装）
-            // 2. Supabase Image Transformation パラメータを付与
-            imageUrl = baseImageUrl.replace(/\.webp$/i, '.jpg') + '?width=1200&height=630&resize=contain&format=jpg'
+            // 1. ファイル名は元の .webp のままにする（replace を削除）
+            // 2. Supabase Image Transformation パラメータを付与してサーバー側で JPG 変換させる
+            imageUrl = `${baseImageUrl}?width=1200&height=630&resize=contain&format=jpg`
         }
 
         const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=2026_final`
