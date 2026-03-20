@@ -45,11 +45,11 @@ export async function generateMetadata(
                 baseImageUrl = `${BASE_URL}${path}`
             }
             
-            // 1. エスケープを防ぐため、バッククォートで生のリテラルとしてURLを組み立てる
-            imageUrl = `${baseImageUrl}?width=1200&height=630&resize=contain&format=jpg`
+            // 1. Next.js の自動エスケープ (& -> &amp;) を避けるため、パラメータを1つ (?format=jpg) に絞る
+            imageUrl = `${baseImageUrl}?format=jpg`
         }
 
-        const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=2026_final`
+        const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=fixed_ogp_final`
 
         return {
             title: `${title} | Chonburi Connect`,
