@@ -241,7 +241,8 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
           </div>
        )}
        
-       <div className="absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-[#2A4076] via-[#2A4076E6] to-transparent"></div>
+       {/* グラデーションオーバーレイを拡大（テキストエリア確保のため）*/}
+       <div className="absolute bottom-0 left-0 right-0 h-[75%] bg-gradient-to-t from-[#1A2B56FA] via-[#2A4076DD] to-transparent"></div>
        
        <div className="absolute top-12 left-12 z-10 text-left">
           <div className="inline-block bg-gradient-to-r from-[#fbbf24] to-[#d97706] text-[#1A2B56] font-black text-3xl px-8 py-3 rounded-tr-3xl rounded-bl-3xl rounded-tl-sm rounded-br-sm shadow-2xl">
@@ -249,13 +250,13 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
           </div>
        </div>
 
-       <div className="absolute bottom-12 left-12 right-12 z-10 flex justify-between items-end">
-          <div className="space-y-3 max-w-[800px]">
-             <h1 className="text-7xl font-black leading-tight text-[#1A2B56]" style={{ textShadow: '1.5px 1.5px 0 #ffffff, -1.5px -1.5px 0 #ffffff, 1.5px -1.5px 0 #ffffff, -1.5px 1.5px 0 #ffffff, 1.5px 0 0 #ffffff, -1.5px 0 0 #ffffff, 0 1.5px 0 #ffffff, 0 -1.5px 0 #ffffff, 4px 4px 8px rgba(0,0,0,0.3)' }}>
+       <div className="absolute bottom-12 left-12 right-12 z-10 flex justify-between items-end gap-8">
+          <div className="flex-1 space-y-3 min-w-0">
+             <h1 className="text-6xl font-black leading-tight text-[#1A2B56]" style={{ textShadow: '1.5px 1.5px 0 #ffffff, -1.5px -1.5px 0 #ffffff, 1.5px -1.5px 0 #ffffff, -1.5px 1.5px 0 #ffffff, 1.5px 0 0 #ffffff, -1.5px 0 0 #ffffff, 0 1.5px 0 #ffffff, 0 -1.5px 0 #ffffff, 4px 4px 8px rgba(0,0,0,0.3)' }}>
                {editedProperty.title}
              </h1>
              
-             <div className="flex items-center space-x-4 mt-2 mb-2" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+             <div className="flex items-center space-x-4" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 {editedProperty.layout && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.layout}</span>}
                 {editedProperty.layout && <span className="text-white text-opacity-70 text-xl">•</span>}
                 {editedProperty.sqm > 0 && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.sqm} Sq.m</span>}
@@ -263,11 +264,11 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                 {editedProperty.floor && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.floor} Floor</span>}
              </div>
              
-             {/* AI Generated Text Overlay */}
+             {/* AI Generated Text Overlay - ハッシュタグを除去して表示 */}
              {translatedText[activeLang] && (
-               <div className="mt-6 max-w-[850px] bg-black bg-opacity-30 p-6 rounded-2xl border border-white border-opacity-10" style={{ backdropFilter: 'blur(8px)' }}>
-                 <p className="text-2xl font-bold text-white leading-relaxed line-clamp-[6] whitespace-pre-wrap" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                   {translatedText[activeLang]}
+               <div className="bg-black bg-opacity-30 p-6 rounded-2xl border border-white border-opacity-10" style={{ backdropFilter: 'blur(8px)' }}>
+                 <p className="text-[22px] font-bold text-white leading-relaxed whitespace-pre-wrap" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                   {translatedText[activeLang].replace(/#\S+/g, '').trim()}
                  </p>
                </div>
              )}
@@ -285,7 +286,7 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
              </div>
           </div>
 
-           <div className="flex flex-col items-center bg-[#FFFFFF] p-5 rounded-3xl shadow-2xl skew-y-0 transform border-4 border-[#fbbf24]">
+           <div className="flex flex-col items-center bg-[#FFFFFF] p-5 rounded-3xl shadow-2xl shrink-0 border-4 border-[#fbbf24]">
               <div className="bg-[#FFFFFF]">
                 <div id={isCapture ? "capture-qrcode" : "preview-qrcode"} className="w-[160px] h-[160px] flex items-center justify-center bg-white" />
               </div>
