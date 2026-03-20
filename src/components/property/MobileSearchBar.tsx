@@ -3,6 +3,7 @@
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 
 interface MobileSearchBarProps {
+    dict: any
     searchQuery: string
     onSearchChange: (value: string) => void
     onFilterClick: () => void
@@ -10,6 +11,7 @@ interface MobileSearchBarProps {
 }
 
 export default function MobileSearchBar({
+    dict,
     searchQuery,
     onSearchChange,
     onFilterClick,
@@ -22,7 +24,7 @@ export default function MobileSearchBar({
                 <input
                     type="text"
                     suppressHydrationWarning
-                    placeholder="物件名・エリアで検索..."
+                    placeholder={dict.property.keyword_placeholder}
                     className="w-full pl-11 pr-4 py-3 sm:py-4 bg-white border border-slate-100 rounded-xl sm:rounded-2xl shadow-sm focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none text-xs sm:text-sm font-bold text-navy-secondary transition-all"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}

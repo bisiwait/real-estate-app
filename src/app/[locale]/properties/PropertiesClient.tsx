@@ -389,7 +389,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
             </div>
 
             <div>
-                <SaveSearchButton variant="outline" fullWidth />
+                <SaveSearchButton dict={dict} variant="outline" fullWidth />
             </div>
 
             {
@@ -423,7 +423,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                             <p className="text-slate-400 text-sm font-medium tracking-wide">{dict.property.luxury_listings}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <SaveSearchButton />
+                            <SaveSearchButton dict={dict} />
                             <div className="text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center shrink-0">
                                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                 {dict.property.found_count.replace('{total}', totalCount.toString()).replace('{count}', filteredProperties.length.toString())}
@@ -471,6 +471,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                             {/* Mobile search bar (Integrated) */}
                             <div className="lg:hidden w-full">
                                 <MobileSearchBar
+                                    dict={dict}
                                     searchQuery={searchQuery}
                                     onSearchChange={(val: string) => updateFilters({ q: val })}
                                     onFilterClick={() => setIsFilterDrawerOpen(true)}

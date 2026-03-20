@@ -43,13 +43,10 @@ export default function PropertyDescription({ description, descriptionEn, descri
 
     if (!hasContent) return null
 
-    const isLocked = !isPremium && activeLang !== 'jp'
+    const isLocked = false
     
     const renderText = () => {
         let text = rawDescription;
-        if (isLocked && text.length > 150) {
-            text = text.slice(0, 150) + '...';
-        }
         return text.replace(/<br\s*\/?>/gi, '\n');
     }
     const formattedDescription = renderText();
@@ -114,19 +111,8 @@ export default function PropertyDescription({ description, descriptionEn, descri
                     ? "mt-6 max-h-[5000px] opacity-100"
                     : "max-h-0 opacity-0 lg:max-h-none lg:opacity-100"
             )}>
-                <div className={clsx("text-slate-600 leading-relaxed whitespace-pre-wrap text-[12px] md:text-[14px]", isLocked && "relative pb-24")}>
+                <div className={clsx("text-slate-600 leading-relaxed whitespace-pre-wrap text-[12px] md:text-[14px]")}>
                     {formattedDescription}
-                    {isLocked && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent flex flex-col items-center justify-end pb-4 z-10 pointer-events-none select-none">
-                            <div className="bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full text-[11px] font-bold mb-3 flex items-center gap-1.5 tracking-wider uppercase border border-amber-200">
-                                <Gem className="w-3.5 h-3.5" />
-                                Premium Feature
-                            </div>
-                            <p className="text-[13px] text-slate-700 font-medium text-center px-4 max-w-[280px]">
-                               {activeLang === 'en' ? 'Upgrade to Premium to view the full translation.' : 'อัปเกรดเพื่อดูคำแปลฉบับเต็ม'}
-                            </p>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

@@ -94,17 +94,28 @@ Return EXACTLY with the following valid JSON format. Do not use markdown wrapper
         
         try {
             const prompt = `
-Translate the following text into Japanese, English, and Thai.
-Ensure the translation is natural and suitable for real estate property descriptions.
+You are an expert "SNS Marketer specialized in Pattaya and Sriracha real estate".
+Based on the provided "Original Text", generate catchy and exciting social media copies in Japanese, English, and Thai.
 
-Text to translate:
+### Rules:
+1. Tone: Catchy, exciting, and optimized for SNS (Instagram/Facebook).
+2. Structure:
+   - Start with an impactful headline (use 【】 and emojis).
+   - List 3 key benefits in bullet points.
+   - End with appropriate hashtags (e.g., #Pattaya #Condo #RealEstate).
+3. Language-specific Focus:
+   - Japanese: Emphasize "Peace of mind and ROI (安心感と利回り)".
+   - English: Emphasize "Lifestyle and Luxury (ライフスタイルとラグジュアリー)".
+   - Thai: Emphasize "Trustworthiness and Location (信頼性と立地)".
+
+### Original Text:
 "${text}"
 
 Return EXACTLY with the following valid JSON format. Do not use markdown wrappers like \`\`\`json.
 {
-  "ja": "Japanese translation here",
-  "en": "English translation here",
-  "th": "Thai translation here"
+  "ja": "Japanese SNS copy here",
+  "en": "English SNS copy here",
+  "th": "Thai SNS copy here"
 }
 `;
             const result = await model.generateContent(prompt);

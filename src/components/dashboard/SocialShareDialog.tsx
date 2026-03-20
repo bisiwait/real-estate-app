@@ -1,9 +1,16 @@
 'use client'
 
-import Script from 'next/script'
 import React, { useRef, useState, useEffect } from 'react'
-import { X, Download, Share2, Facebook, MessageCircle, Crown, FileText, CheckCircle, Copy } from 'lucide-react'
+import Script from 'next/script'
+import { X, Download, Share2, Facebook, MessageCircle, Crown, FileText, CheckCircle, Copy, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+import * as htmlToImage from 'html-to-image'
+
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs))
+}
 
 interface SocialShareDialogProps {
   isOpen: boolean
@@ -28,11 +35,17 @@ interface SocialShareDialogProps {
 
 export default function SocialShareDialog({ isOpen, onClose, propertyContext }: SocialShareDialogProps) {
   const bannerRef = useRef<HTMLDivElement>(null)
+  const captureRef = useRef<HTMLDivElement>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [mounted, setMounted] = useState(false)
   
   // Translation States
-  const [translatedText, setTranslatedText] = useState({ ja: '', en: '', th: '' })
+  const [translatedText, setTranslatedText] = useState({ 
+    ja: '', 
+    en: '', 
+    th: '' 
+  })
+  const [activeLang, setActiveLang] = useState<'ja' | 'en' | 'th'>('ja')
   const [isTranslating, setIsTranslating] = useState(false)
 
   // Property Edit States
@@ -112,63 +125,63 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
   }
 
   const handleDownloadBanner = async () => {
-    if (!bannerRef.current) return
+    if (!captureRef.current) return
     setIsGenerating(true)
     
     try {
-      const images = Array.from(bannerRef.current.querySelectorAll('img'))
-      console.log(`[SNS Banner] Waiting for ${images.length} images to mount...`)
-      
+      // 1. 画像の読み込み完了を待機
+      const images = Array.from(captureRef.current.querySelectorAll('img'))
       await Promise.all(images.map(img => {
-        if (img.complete) {
-            return Promise.resolve();
-        }
+        if (img.complete) return Promise.resolve();
         return new Promise((resolve) => {
           img.onload = () => resolve(null);
           img.onerror = () => resolve(null);
         });
       }));
 
-      await new Promise(resolve => setTimeout(resolve, 300));
-
+      // 2. QRコードの生成（キャプチャ用隠しエリアにも描画）
       if (window.QRCode) {
-        const qrContainer = document.getElementById('banner-qrcode');
-        if (qrContainer) {
-          qrContainer.innerHTML = '';
-          new window.QRCode(qrContainer, {
-            text: propertyUrl,
-            width: 128,
-            height: 128,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: window.QRCode.CorrectLevel.H
-          });
-          await new Promise(resolve => setTimeout(resolve, 100));
+        const qrContainers = [
+          document.getElementById('preview-qrcode'),
+          document.getElementById('capture-qrcode')
+        ];
+        
+        for (const qrContainer of qrContainers) {
+          if (qrContainer) {
+            qrContainer.innerHTML = '';
+            new window.QRCode(qrContainer, {
+              text: propertyUrl,
+              width: 160,
+              height: 160,
+              colorDark: "#2A4076",
+              colorLight: "#ffffff",
+              correctLevel: window.QRCode.CorrectLevel.H
+            });
+          }
         }
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      if (!window.html2canvas) {
-        toast.error("画像を生成するためのライブラリを読み込み中です。数秒待ってお試しください。")
-        return;
-      }
-
-      console.log("[SNS Banner] Starting html2canvas capture...");
-      const canvas = await window.html2canvas(bannerRef.current, {
-        scale: 2, 
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#2A4076',
-        logging: true,
-      } as any)
+      // 3. html-to-image を使用してキャプチャ
+      const dataUrl = await htmlToImage.toPng(captureRef.current, {
+        width: 1080,
+        height: 1080,
+        cacheBust: true,
+        pixelRatio: 2, // 高解像度
+      });
       
-      const image = canvas.toDataURL('image/png')
+      // 4. ダウンロード実行
       const link = document.createElement('a')
-      link.href = image
-      link.download = `property_${propertyContext.id}_sns.png`
+      link.href = dataUrl
+      link.download = `ChonburiConnect_${editedProperty.title.replace(/\s+/g, '_')}_SNS.png`
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
+      
+      toast.success('画像を保存しました！')
     } catch (err) {
       console.error('Error generating banner:', err)
-      alert("画像の生成に失敗しました。")
+      toast.error("画像の保存に失敗しました。")
     } finally {
       setIsGenerating(false)
     }
@@ -184,8 +197,90 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(propertyUrl)}&text=${text}`, '_blank', 'width=600,height=500')
   }
 
+  // 共通のバナーコンテンツ部分を関数として定義
+  const renderBannerContent = (isCapture: boolean = false) => (
+    <div 
+      className="absolute inset-0 bg-[#2A4076] text-[#FFFFFF] overflow-hidden"
+      style={{ width: '1080px', height: '1080px' }}
+    >
+       {propertyContext.mainImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img 
+            src={propertyContext.mainImageUrl} 
+            alt="Banner BG" 
+            className="absolute inset-0 w-full h-full object-cover"
+            crossOrigin="anonymous"
+          />
+       ) : (
+          <div className="absolute inset-0 bg-[#2A4076] flex items-center justify-center">
+             <span className="text-5xl font-bold text-[#FFFFFF80]">NO IMAGE</span>
+          </div>
+       )}
+       
+       <div className="absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-[#2A4076] via-[#2A4076E6] to-transparent"></div>
+       
+       <div className="absolute top-12 left-12 z-10 text-left">
+          <div className="inline-block bg-gradient-to-r from-[#fbbf24] to-[#d97706] text-[#1A2B56] font-black text-3xl px-8 py-3 rounded-tr-3xl rounded-bl-3xl rounded-tl-sm rounded-br-sm shadow-2xl">
+            {actionLabel}
+          </div>
+       </div>
+
+       <div className="absolute bottom-12 left-12 right-12 z-10 flex justify-between items-end">
+          <div className="space-y-3 max-w-[800px]">
+             <h1 className="text-7xl font-black leading-tight text-[#1A2B56]" style={{ textShadow: '1.5px 1.5px 0 #ffffff, -1.5px -1.5px 0 #ffffff, 1.5px -1.5px 0 #ffffff, -1.5px 1.5px 0 #ffffff, 1.5px 0 0 #ffffff, -1.5px 0 0 #ffffff, 0 1.5px 0 #ffffff, 0 -1.5px 0 #ffffff, 4px 4px 8px rgba(0,0,0,0.3)' }}>
+               {editedProperty.title}
+             </h1>
+             
+             <div className="flex items-center space-x-4 mt-2 mb-2" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                {editedProperty.layout && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.layout}</span>}
+                {editedProperty.layout && <span className="text-white text-opacity-70 text-xl">•</span>}
+                {editedProperty.sqm > 0 && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.sqm} Sq.m</span>}
+                {editedProperty.sqm > 0 && <span className="text-white text-opacity-70 text-xl">•</span>}
+                {editedProperty.floor && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.floor} Floor</span>}
+             </div>
+             
+             {/* AI Generated Text Overlay */}
+             {translatedText[activeLang] && (
+               <div className="mt-6 max-w-[850px] bg-black bg-opacity-30 p-6 rounded-2xl border border-white border-opacity-10" style={{ backdropFilter: 'blur(8px)' }}>
+                 <p className="text-2xl font-bold text-white leading-relaxed line-clamp-[6] whitespace-pre-wrap" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                   {translatedText[activeLang]}
+                 </p>
+               </div>
+             )}
+
+             <p className="text-5xl font-black text-[#fbbf24] drop-shadow-lg pb-2">
+               {displayPrice} <span className="text-3xl font-bold text-[#FFFFFF] ml-2 drop-shadow-md">THB</span>
+             </p>
+             <div className="pt-2 flex items-center space-x-3 opacity-95">
+                <div className="w-10 h-10 bg-[#f59e0b] rounded-full flex items-center justify-center shadow-lg">
+                   <span className="text-[#2A4076] font-black text-xl">C</span>
+                </div>
+                <span className="text-2xl font-black tracking-widest text-[#FFFFFFE6] uppercase shadow-sm">
+                  Chonburi Connect
+                </span>
+             </div>
+          </div>
+
+           <div className="flex flex-col items-center bg-[#FFFFFF] p-5 rounded-3xl shadow-2xl skew-y-0 transform border-4 border-[#fbbf24]">
+              <div className="bg-[#FFFFFF]">
+                <div id={isCapture ? "capture-qrcode" : "preview-qrcode"} className="w-[160px] h-[160px] flex items-center justify-center bg-white" />
+              </div>
+             <p className="text-[#2A4076] font-black text-xl mt-3 tracking-widest uppercase text-center w-full bg-[#f1f5f9] py-1.5 rounded-xl">
+               Scan Link
+             </p>
+          </div>
+       </div>
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 lg:p-6 bg-navy-primary/90 backdrop-blur-md animate-in fade-in duration-200">
+      {/* キャプチャ用の隠しコンテナ（画面外に配置） */}
+      <div className="fixed -left-[2000px] -top-[2000px]">
+        <div ref={captureRef} style={{ width: '1080px', height: '1080px', position: 'relative' }}>
+          {renderBannerContent(true)}
+        </div>
+      </div>
       <div 
         className="bg-slate-50 rounded-t-3xl sm:rounded-3xl w-full max-w-6xl max-h-[90vh] sm:max-h-[95vh] overflow-y-auto custom-scrollbar shadow-2xl overflow-hidden relative border border-amber-400/20"
         onClick={e => e.stopPropagation()}
@@ -241,20 +336,23 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-               <h3 className="text-base sm:text-lg font-black text-navy-primary flex items-center">
-                 <FileText className="w-5 h-5 mr-2 text-amber-500" />
-                 説明文の編集とAI翻訳
-               </h3>
+               <div className="flex flex-col">
+                 <h3 className="text-base sm:text-lg font-black text-navy-primary flex items-center">
+                   <FileText className="w-5 h-5 mr-2 text-amber-500" />
+                   説明文の編集とAI翻訳
+                 </h3>
+                 <p className="text-[10px] text-slate-400 font-bold ml-7">※SNS投稿用にキャッチーな文章に翻訳します</p>
+               </div>
                
                <button 
                 onClick={handleTranslate}
                 disabled={isTranslating || !editedProperty.description}
-                className="w-full sm:w-auto flex justify-center items-center text-sm font-black text-navy-secondary bg-gradient-to-r from-amber-300 to-amber-500 px-6 py-2 rounded-xl hover:from-amber-400 hover:to-amber-600 transition-all shadow-md hover:shadow-lg active:scale-95 border border-amber-200 disabled:opacity-50 disabled:grayscale"
+                className="w-full sm:w-auto flex justify-center items-center text-sm font-black text-navy-secondary bg-gradient-to-r from-amber-300 to-amber-500 px-6 py-2.5 rounded-xl hover:from-amber-400 hover:to-amber-600 transition-all shadow-md hover:shadow-lg active:scale-95 border border-amber-200 disabled:opacity-50 disabled:grayscale"
                >
                  {isTranslating ? (
                    <><span className="animate-spin mr-2 border-2 border-navy-primary/20 border-t-navy-primary w-4 h-4 rounded-full"></span>翻訳中...</>
                  ) : (
-                   '翻訳する'
+                   'SNS用翻訳'
                  )}
                </button>
             </div>
@@ -266,48 +364,84 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                     value={editedProperty.description}
                     onChange={e => setEditedProperty({...editedProperty, description: e.target.value})}
                     placeholder="説明文を入力してください..."
-                    className="w-full text-sm p-3 bg-white border border-slate-200 rounded-xl max-h-40 min-h-[100px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
+                    className="w-full text-[13px] leading-relaxed p-3 bg-white border border-slate-200 rounded-xl max-h-60 min-h-[160px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
                  />
               </div>
 
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 {/* JA */}
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                     <label className="text-xs font-black text-navy-primary">日本語 (Japanese)</label>
-                     <button onClick={() => handleCopy(translatedText.ja)} className="text-slate-400 hover:text-navy-primary transition-colors p-1"><Copy className="w-4 h-4" /></button>
+                <div className={cn("transition-all duration-200", activeLang === 'ja' ? "ring-2 ring-amber-400 rounded-2xl p-1" : "")}>
+                  <div className="flex justify-between items-center mb-1 px-1">
+                     <label className="text-xs font-black text-navy-primary flex items-center">
+                       日本語 (Japanese)
+                       {activeLang === 'ja' && <span className="ml-2 text-[9px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full uppercase">Previewing</span>}
+                     </label>
+                     <div className="flex items-center space-x-1">
+                       <button 
+                        onClick={() => setActiveLang('ja')}
+                        className={cn("text-[10px] font-bold px-2 py-0.5 rounded-lg transition-colors", activeLang === 'ja' ? "bg-amber-400 text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200")}
+                       >
+                         プレビュー
+                       </button>
+                       <button onClick={() => handleCopy(translatedText.ja)} className="text-slate-400 hover:text-navy-primary transition-colors p-1"><Copy className="w-4 h-4" /></button>
+                     </div>
                   </div>
                   <textarea 
                     value={translatedText.ja}
                     onChange={e => setTranslatedText({ ...translatedText, ja: e.target.value })}
+                    onFocus={() => setActiveLang('ja')}
                     placeholder="翻訳結果がここに表示されます"
-                    className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-32 min-h-[80px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
+                    className="w-full text-[13px] leading-relaxed p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-52 min-h-[140px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
                   />
                 </div>
                 {/* EN */}
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                     <label className="text-xs font-black text-navy-primary">英語 (English)</label>
-                     <button onClick={() => handleCopy(translatedText.en)} className="text-slate-400 hover:text-navy-primary transition-colors p-1"><Copy className="w-4 h-4" /></button>
+                <div className={cn("transition-all duration-200", activeLang === 'en' ? "ring-2 ring-amber-400 rounded-2xl p-1" : "")}>
+                  <div className="flex justify-between items-center mb-1 px-1">
+                     <label className="text-xs font-black text-navy-primary flex items-center">
+                       英語 (English)
+                       {activeLang === 'en' && <span className="ml-2 text-[9px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full uppercase">Previewing</span>}
+                     </label>
+                     <div className="flex items-center space-x-1">
+                       <button 
+                        onClick={() => setActiveLang('en')}
+                        className={cn("text-[10px] font-bold px-2 py-0.5 rounded-lg transition-colors", activeLang === 'en' ? "bg-amber-400 text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200")}
+                       >
+                         プレビュー
+                       </button>
+                       <button onClick={() => handleCopy(translatedText.en)} className="text-slate-400 hover:text-navy-primary transition-colors p-1"><Copy className="w-4 h-4" /></button>
+                     </div>
                   </div>
                   <textarea 
                     value={translatedText.en}
                     onChange={e => setTranslatedText({ ...translatedText, en: e.target.value })}
+                    onFocus={() => setActiveLang('en')}
                     placeholder="English translation will appear here"
-                    className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-32 min-h-[80px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
+                    className="w-full text-[13px] leading-relaxed p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-52 min-h-[140px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
                   />
                 </div>
                 {/* TH */}
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                     <label className="text-xs font-black text-navy-primary">タイ語 (Thai)</label>
-                     <button onClick={() => handleCopy(translatedText.th)} className="text-slate-400 hover:text-navy-primary transition-colors p-1"><Copy className="w-4 h-4" /></button>
+                <div className={cn("transition-all duration-200", activeLang === 'th' ? "ring-2 ring-amber-400 rounded-2xl p-1" : "")}>
+                  <div className="flex justify-between items-center mb-1 px-1">
+                     <label className="text-xs font-black text-navy-primary flex items-center">
+                       タイ語 (Thai)
+                       {activeLang === 'th' && <span className="ml-2 text-[9px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full uppercase">Previewing</span>}
+                     </label>
+                     <div className="flex items-center space-x-1">
+                       <button 
+                        onClick={() => setActiveLang('th')}
+                        className={cn("text-[10px] font-bold px-2 py-0.5 rounded-lg transition-colors", activeLang === 'th' ? "bg-amber-400 text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200")}
+                       >
+                         プレビュー
+                       </button>
+                       <button onClick={() => handleCopy(translatedText.th)} className="text-slate-400 hover:text-navy-primary transition-colors p-1"><Copy className="w-4 h-4" /></button>
+                     </div>
                   </div>
                   <textarea 
                     value={translatedText.th}
                     onChange={e => setTranslatedText({ ...translatedText, th: e.target.value })}
+                    onFocus={() => setActiveLang('th')}
                     placeholder="ผลลัพธ์การแปลจะแสดงที่นี่"
-                    className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-32 min-h-[80px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
+                    className="w-full text-[13px] leading-relaxed p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-52 min-h-[140px] focus:ring-2 focus:ring-amber-400 focus:outline-none transition-all resize-y" 
                   />
                 </div>
               </div>
@@ -340,65 +474,7 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                     className="absolute inset-0 bg-[#2A4076] text-[#FFFFFF] overflow-hidden"
                     style={{ width: '1080px', height: '1080px', transform: 'scale(0.37037)', transformOrigin: 'top left' }}
                   >
-                     {propertyContext.mainImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img 
-                          src={propertyContext.mainImageUrl} 
-                          alt="Banner BG" 
-                          className="absolute inset-0 w-full h-full object-cover"
-                          crossOrigin="anonymous"
-                          onError={(e) => {
-                             e.currentTarget.src = 'https://placehold.co/1080x1080/2A4076/ffffff?text=No+Image'
-                          }}
-                        />
-                     ) : (
-                        <div className="absolute inset-0 bg-[#2A4076] flex items-center justify-center">
-                           <span className="text-5xl font-bold text-[#FFFFFF80]">NO IMAGE</span>
-                        </div>
-                     )}
-                     
-                     <div className="absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-[#2A4076] via-[#2A4076E6] to-[#00000000]"></div>
-                     
-                     <div className="absolute top-12 left-12 z-10 text-left">
-                        <div className="inline-block bg-gradient-to-r from-[#fbbf24] to-[#d97706] text-[#2A4076] font-black text-3xl px-8 py-3 rounded-tr-3xl rounded-bl-3xl rounded-tl-sm rounded-br-sm shadow-2xl">
-                          {actionLabel}
-                        </div>
-                     </div>
-
-                     <div className="absolute bottom-12 left-12 right-12 z-10 flex justify-between items-end">
-                        <div className="space-y-3 max-w-[700px]">
-                           <h1 className="text-5xl font-black leading-tight text-[#FFFFFF] drop-shadow-2xl line-clamp-2">
-                             {editedProperty.title}
-                           </h1>
-                           <div className="flex items-center space-x-4 bg-[#2A4076]/80 px-4 py-2 rounded-xl backdrop-blur-sm w-fit border border-[#FFFFFF]/20 mt-2 mb-2">
-                              {editedProperty.layout && <span className="text-xl font-bold text-white">{editedProperty.layout}</span>}
-                              {editedProperty.layout && <span className="text-white/50">•</span>}
-                              {editedProperty.sqm > 0 && <span className="text-xl font-bold text-white">{editedProperty.sqm} Sq.m</span>}
-                              {editedProperty.sqm > 0 && <span className="text-white/50">•</span>}
-                              {editedProperty.floor && <span className="text-xl font-bold text-white">{editedProperty.floor} Floor</span>}
-                           </div>
-                           <p className="text-5xl font-black text-[#fbbf24] drop-shadow-lg pb-2">
-                             {displayPrice} <span className="text-3xl font-bold text-[#FFFFFF] ml-2 drop-shadow-md">THB</span>
-                           </p>
-                           <div className="pt-2 flex items-center space-x-3 opacity-95">
-                              <div className="w-10 h-10 bg-[#f59e0b] rounded-full flex items-center justify-center shadow-lg">
-                                 <span className="text-[#2A4076] font-black text-xl">C</span>
-                              </div>
-                              <span className="text-2xl font-black tracking-widest text-[#FFFFFFE6] uppercase shadow-sm">
-                                Chonburi Connect
-                              </span>
-                           </div>
-                        </div>
-
-                         <div className="flex flex-col items-center bg-[#FFFFFF] p-5 rounded-3xl shadow-2xl skew-y-0 transform border-4 border-[#fbbf24]">
-                            <div className="bg-[#FFFFFF]">
-                              <div id="preview-qrcode" className="w-[160px] h-[160px] flex items-center justify-center bg-white" />
-                            </div>
-                           <p className="text-[#2A4076] font-black text-xl mt-3 tracking-widest uppercase text-center w-full bg-[#f1f5f9] py-1.5 rounded-xl">
-                             Scan Link
-                           </p>
-                        </div>
-                     </div>
+                    {renderBannerContent(false)}
                   </div>
                </div>
              </div>
@@ -436,7 +512,6 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
           </div>
         </div>
       </div>
-      <Script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js" strategy="lazyOnload" />
       <Script 
         src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" 
         strategy="lazyOnload"

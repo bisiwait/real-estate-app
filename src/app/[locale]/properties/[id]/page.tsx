@@ -28,14 +28,14 @@ import { useRouter } from 'next/navigation'
 const getFeatureIcon = (featureName: string) => {
     const name = featureName.toLowerCase();
     if (name.includes('プール') || name.includes('pool')) return Waves;
-    if (name.includes('ジム') || name.includes('fitness') || name.includes('gym')) return Dumbbell;
+    if (name.includes('ジム') || name.includes('fitness') || name.includes('gym') || name.includes('フィットネス')) return Dumbbell;
     if (name.includes('サウナ') || name.includes('sauna')) return Thermometer;
     if (name.includes('駐車場') || name.includes('parking')) return Car;
     if (name.includes('セキュリティ') || name.includes('security')) return ShieldCheck;
     if (name.includes('シャトル') || name.includes('shuttle')) return Bus;
     if (name.includes('オートロック') || name.includes('auto lock')) return Lock;
     if (name.includes('キッズ') || name.includes('kids')) return Baby;
-    if (name.includes('ラウンジ') || name.includes('lounge')) return Users;
+    if (name.includes('ラウンジ') || name.includes('lounge') || name.includes('多目的')) return Users;
     if (name.includes('テレビ') || name.includes('tv')) return Tv;
     if (name.includes('洗濯機') || name.includes('washing')) return Sparkles;
     if (name.includes('冷蔵庫') || name.includes('refrigerator')) return Refrigerator;
@@ -44,6 +44,16 @@ const getFeatureIcon = (featureName: string) => {
     if (name.includes('ev充電') || name.includes('ev charger')) return Zap;
     if (name.includes('高級') || name.includes('luxury')) return Gem;
     if (name.includes('オーシャン') || name.includes('ocean')) return Waves;
+    if (name.includes('バスタブ') || name.includes('bathtub')) return Bath;
+    if (name.includes('ウォシュレット') || name.includes('washlet')) return Sparkles;
+    if (name.includes('ペット') || name.includes('pet')) return Dog;
+    if (name.includes('バルコニー') || name.includes('balcony')) return Sun;
+    if (name.includes('格安') || name.includes('value')) return CircleDollarSign;
+    if (name.includes('高層') || name.includes('high floor')) return ArrowUp;
+    if (name.includes('シティービュー') || name.includes('city view')) return Building;
+    if (name.includes('築浅') || name.includes('new')) return Sparkles;
+    if (name.includes('コンシェルジュ') || name.includes('concierge')) return ShieldCheck;
+    if (name.includes('レストラン') || name.includes('restaurant')) return Utensils;
     return Check;
 }
 
@@ -63,6 +73,7 @@ export default function PropertyDetailPage() {
     const [profile, setProfile] = useState<any>(null)
 
     const isPremium = profile?.plan === 'premium' || profile?.plan_type === 'premium'
+    const isOwner = user && property && user.id === property.user_id
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -224,7 +235,7 @@ export default function PropertyDetailPage() {
                                 <InfoItem label={dict.property.building_name_label} value={property.building_name || projectDisplayName} />
                                 <InfoItem label={dict.property.year_built_title} value={property.year_built || property.project?.year_built || '-'} />
                                 <InfoItem label={dict.property.total_floors_title} value={property.total_floors || property.project?.total_floors ? `${property.total_floors || property.project?.total_floors}${dict.property.floor_suffix}` : '-'} />
-                                <InfoItem label={dict.property.total_units_label} value={property.total_units ? `${property.total_units}戸` : '-'} />
+                                <InfoItem label={dict.property.total_units_label} value={property.total_units || property.project?.total_units ? `${property.total_units || property.project?.total_units}${locale === 'jp' ? '戸' : ' Units'}` : '-'} />
                                 <InfoItem label={dict.property.developer_label} value={property.developer || property.project?.developers?.name || '-'} />
                                 <InfoItem label={dict.property.area_title} value={translateArea(property.area?.name || 'Area')} />
                             </div>
@@ -248,31 +259,6 @@ export default function PropertyDetailPage() {
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
                             <LineContactButton property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8) }} variant="full" dict={dict} />
                             
-                            <div className="mt-4">
-                                <button
-                                    onClick={handleGeneratePDF}
-                                    className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${
-                                        isPremium 
-                                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                                        : 'bg-slate-100 text-slate-400 border border-slate-200'
-                                    }`}
-                                >
-                                    <FileDown className={`w-5 h-5 ${isPremium ? 'text-white' : 'text-slate-300'}`} />
-                                    <span>PDF資料作成</span>
-                                    {!isPremium && (
-                                        <span className="ml-1 text-[10px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full border border-amber-200">
-                                            プレミアム限定
-                                        </span>
-                                    )}
-                                </button>
-                                {!isPremium && (
-                                    <p className="mt-2 text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
-                                        <AlertCircle className="w-3 h-3" />
-                                        アップグレードでPDF出力が解放されます
-                                    </p>
-                                )}
-                            </div>
-
                             <div className="mt-8 pt-8 border-t border-slate-100">
                                 <InquiryForm propertyId={id} propertyName={displayTitle} dict={dict} />
                             </div>

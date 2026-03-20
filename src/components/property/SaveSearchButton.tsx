@@ -9,11 +9,12 @@ import Switch from "@/components/ui/Switch";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface SaveSearchButtonProps {
+    dict: any;
     variant?: "default" | "outline";
     fullWidth?: boolean;
 }
 
-export default function SaveSearchButton({ variant = "default", fullWidth = false }: SaveSearchButtonProps) {
+export default function SaveSearchButton({ dict, variant = "default", fullWidth = false }: SaveSearchButtonProps) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isLoginSheetOpen, setIsLoginSheetOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -120,33 +121,37 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
         const propType = searchParams.get("property_type");
         const q = searchParams.get("q");
 
-        if (region) filters.push({ label: "都市", value: region });
-        if (area) filters.push({ label: "エリア", value: area });
+        if (region) filters.push({ label: dict.labels.filters.region, value: region });
+        if (area) filters.push({ label: dict.labels.filters.area, value: area });
         if (type && type !== "all") {
-            const typeLabels: Record<string, string> = { rent: "賃貸", sell: "売買", presale: "プレセール" };
-            filters.push({ label: "種別", value: typeLabels[type] || type });
+            const typeLabels: Record<string, string> = { 
+                rent: dict.labels.rent, 
+                sell: dict.labels.sell, 
+                presale: dict.labels.presale 
+            };
+            filters.push({ label: dict.labels.filters.type, value: typeLabels[type] || type });
         }
         if (propType) {
             const propLabels: Record<string, string> = {
-                Condo: "コンドミニアム",
-                House: "一軒家・ヴィラ",
-                Townhouse: "タウンハウス"
+                Condo: dict.property.condo,
+                House: dict.property.house,
+                Townhouse: dict.property.townhouse
             };
-            filters.push({ label: "タイプ", value: propLabels[propType] || propType });
+            filters.push({ label: dict.labels.filters.property_type, value: propLabels[propType] || propType });
         }
         if (price) {
             const [min, max] = price.split("-");
-            filters.push({ label: "予算", value: `${min.toLocaleString()}〜${max.toLocaleString()} ฿` });
+            filters.push({ label: dict.labels.filters.price, value: `${Number(min).toLocaleString()}〜${Number(max).toLocaleString()} ฿` });
         }
-        if (q) filters.push({ label: "検索", value: q });
+        if (q) filters.push({ label: dict.labels.filters.q, value: q });
 
         return filters;
-    }, [searchParams]);
+    }, [searchParams, dict]);
 
     const defaultName = useMemo(() => {
-        if (activeFilters.length === 0) return "すべての物件";
+        if (activeFilters.length === 0) return dict.labels.all;
         return activeFilters.map(f => f.value).join(" / ");
-    }, [activeFilters]);
+    }, [activeFilters, dict]);
 
     if (isRestricted || isLoading) return null;
 
@@ -157,12 +162,11 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
         }
 
         if (activeFilters.length === 0) {
-            alert("検索条件が設定されていません。フィルターを適用してから保存してください。");
+            alert(dict.labels.no_results_desc);
             return;
         }
 
         if (saved) {
-            alert("この検索条件は既に保存されています。");
             return;
         }
 
@@ -198,7 +202,6 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
             });
 
             if (isDuplicate) {
-                alert("この検索条件は既に保存されています。");
                 setIsSheetOpen(false);
                 setSaved(true);
                 return;
@@ -218,10 +221,8 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
             setSaved(true);
             setIsSheetOpen(false);
 
-            alert("検索条件をマイページに保存しました！");
         } catch (error) {
             console.error("Save search error:", error);
-            alert("保存に失敗しました。");
         } finally {
             setLoading(false);
         }
@@ -246,22 +247,22 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                 ) : (
                     <Bell size={16} className={saved ? "animate-bounce" : ""} />
                 )}
-                <span>{saved ? "条件保存済み" : "検索条件を保存"}</span>
+                <span>{saved ? dict.labels.saved_date : dict.auth.benefit_search_label}</span>
             </button>
 
             {/* Save Search Panel */}
             <Sheet
                 isOpen={isSheetOpen}
                 onClose={() => setIsSheetOpen(false)}
-                title="検索条件を保存"
-                description="この条件に一致する新しい物件が掲載された際にお知らせします。"
+                title={dict.auth.benefit_search_label}
+                description={dict.auth.benefit_search_desc}
             >
                 <div className="space-y-8 pb-32">
                     {/* Filter Preview */}
                     <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
                             <Search size={14} className="mr-2" />
-                            現在のフィルター
+                            {dict.labels.filters.q}
                         </h4>
                         <div className="flex flex-wrap gap-2">
                             {activeFilters.length > 0 ? activeFilters.map((filter, i) => (
@@ -270,20 +271,20 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                                     <span className="text-xs font-black text-navy-secondary">{filter.value}</span>
                                 </div>
                             )) : (
-                                <p className="text-xs text-slate-400 font-bold">フィルターなし</p>
+                                <p className="text-xs text-slate-400 font-bold">{dict.labels.no_results}</p>
                             )}
                         </div>
                     </div>
 
                     {/* Name Input */}
                     <div className="space-y-3">
-                        <label className="text-xs font-black text-navy-secondary uppercase tracking-widest ml-1">保存する名前</label>
+                        <label className="text-xs font-black text-navy-secondary uppercase tracking-widest ml-1">{dict.labels.name_label}</label>
                         <input
                             type="text"
                             suppressHydrationWarning
                             value={searchName}
                             onChange={(e) => setSearchName(e.target.value)}
-                            placeholder="例: パタヤ 500万バーツ以下"
+                            placeholder={dict.header.search_placeholder}
                             className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-navy-primary focus:bg-white outline-none transition-all"
                         />
                     </div>
@@ -293,11 +294,8 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                         <Switch
                             checked={notificationsEnabled}
                             onCheckedChange={setNotificationsEnabled}
-                            label="新着物件の通知を受け取る"
+                            label={dict.labels.notifications_on}
                         />
-                        <p className="text-[11px] text-slate-400 font-bold mt-3 leading-relaxed">
-                            ※ 条件にマッチする物件が新しく追加された際、登録済みのメールアドレスへ通知を送信します。
-                        </p>
                     </div>
 
                     {/* Actions */}
@@ -309,14 +307,14 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
                             className="w-full py-5 bg-navy-primary text-white rounded-2xl font-black text-sm hover:bg-navy-secondary transition-all shadow-xl shadow-navy-primary/20 flex items-center justify-center space-x-2"
                         >
                             {loading && <Loader2 size={18} className="animate-spin" />}
-                            <span>この条件で保存する</span>
+                            <span>{dict.auth.benefit_search_label}</span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setIsSheetOpen(false)}
                             className="w-full py-5 bg-white text-slate-400 border border-slate-100 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all"
                         >
-                            キャンセル
+                            {dict.labels.back_to_top}
                         </button>
                     </div>
                 </div>
@@ -326,30 +324,29 @@ export default function SaveSearchButton({ variant = "default", fullWidth = fals
             <Sheet
                 isOpen={isLoginSheetOpen}
                 onClose={() => setIsLoginSheetOpen(false)}
-                title="ログインが必要です"
+                title={dict.common.login}
             >
                 <div className="text-center py-10">
                     <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8 text-amber-500">
                         <Info size={48} />
                     </div>
                     <p className="text-slate-600 font-bold text-lg mb-10 leading-relaxed">
-                        検索条件を保存して新着通知を受け取るには、<br />
-                        アカウントへのログインが必要です。
+                        {dict.auth.benefit_search_desc}
                     </p>
                     <div className="flex flex-col space-y-4">
                         <button
                             type="button"
-                            onClick={() => router.push("/login")}
+                            onClick={() => router.push(`/${locale}/login`)}
                             className="w-full py-5 bg-navy-primary text-white rounded-2xl font-black text-sm hover:bg-navy-secondary transition-all shadow-xl shadow-navy-primary/20"
                         >
-                            ログイン・新規登録画面へ
+                            {dict.common.login}
                         </button>
                         <button
                             type="button"
                             onClick={() => setIsLoginSheetOpen(false)}
                             className="w-full py-5 bg-white text-slate-400 border border-slate-100 rounded-2xl font-black text-sm hover:bg-slate-50 transition-all"
                         >
-                            閉じる
+                            {dict.labels.back_to_top}
                         </button>
                     </div>
                 </div>

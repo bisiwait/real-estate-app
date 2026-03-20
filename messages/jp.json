@@ -71,6 +71,7 @@
         "benefit_fav_desc": "気になった物件をいつでもチェック",
         "benefit_search_label": "検索条件を保存",
         "benefit_search_desc": "条件に合う新着を見逃さない",
+        "save_search": "検索条件を保存",
         "benefit_support_label": "安心のサポート",
         "benefit_support_desc": "エージェントとチャットでスムーズに相談",
         "confirm_sent": "確認メールを送信しました。受信トレイをご確認ください。"
@@ -159,7 +160,7 @@
         "luxury_listings": "PATTAYA LUXURY LISTINGS",
         "found_count": "{total}件中 {count}件を表示",
         "keyword_search": "キーワードで探す",
-        "keyword_placeholder": "物件名、設備など...",
+        "keyword_placeholder": "物件名、エリアなど...",
         "city": "都市",
         "area": "エリア",
         "all_areas": "すべてのエリア",

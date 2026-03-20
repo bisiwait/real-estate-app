@@ -93,22 +93,22 @@ export default function DashboardActions({
                     <SocialShareDialog
                         isOpen={isShareModalOpen}
                         onClose={() => setIsShareModalOpen(false)}
-                        propertyContext={{
-                            id: propertyId,
-                            title: propertyTitle,
-                            price: property.is_for_sale ? property.sale_price : property.rent_price,
-                            isForSale: property.is_for_sale,
-                            isForRent: property.is_for_rent,
-                            mainImageUrl: property.images?.[0] || '',
-                            agentContact: agent?.phone || '',
-                            area: property.area?.name || '',
-                            description: property.description_ja || '',
-                            amenities: property.amenities || [],
-                            facilities: property.facilities || [],
-                            sqm: property.sqm || 0,
-                            floor: property.floor || '',
-                            layout: property.layout || ''
-                        }}
+                            propertyContext={{
+                                id: propertyId,
+                                title: propertyTitle,
+                                price: property.is_for_sale ? property.sale_price : property.rent_price,
+                                isForSale: property.is_for_sale,
+                                isForRent: property.is_for_rent,
+                                mainImageUrl: property.images?.[0] || '',
+                                agentContact: agent?.phone || '',
+                                area: property.area?.name || '',
+                                description: property.description || property.description_ja || '',
+                                amenities: property.amenities || [],
+                                facilities: property.facilities || [],
+                                sqm: property.sqm || 0,
+                                floor: property.floor || '',
+                                layout: property.layout || ''
+                            }}
                     />
                 </>
             )}

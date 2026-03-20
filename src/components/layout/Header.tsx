@@ -71,7 +71,9 @@ export default function Header({ dict }: { dict: any }) {
                     <div className="hidden sm:block">
                         <LanguageSwitcher dict={dict} />
                     </div>
-                    <UserNav dict={dict} />
+                    <div className="hidden lg:block">
+                        <UserNav dict={dict} />
+                    </div>
                     
                     {/* Mobile Menu Trigger */}
                     <button
@@ -87,9 +89,16 @@ export default function Header({ dict }: { dict: any }) {
             {/* Mobile Navigation Drawer - Simplified Full Width Dropdown */}
             <div className={cn(
                 "lg:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-100 shadow-2xl transition-all duration-300 origin-top overflow-hidden z-[90]",
-                isMenuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+                isMenuOpen ? "max-h-[90vh] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
             )}>
-                <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(80vh-40px)]">
+                <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-40px)]">
+                    {/* User Navigation for Mobile (Login/Register or User Menu) */}
+                    <div className="lg:hidden">
+                        <UserNav dict={dict} isMobile={true} onCloseMobileMenu={() => setIsMenuOpen(false)} />
+                    </div>
+
+                    <div className="h-px bg-slate-100 w-full" />
+
                     {/* Navigation Links */}
                     <div className="space-y-1">
                         {navLinks.map((link) => (
