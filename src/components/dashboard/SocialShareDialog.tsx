@@ -198,15 +198,15 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     // LINE share URL has a ~2000 char limit — keep AI text under 200 chars to stay safe
     const shortText = aiText.substring(0, 200)
     const hasMore = aiText.length > 200
-    // Add cache buster to URL for testing
-    const shareUrl = `${propertyUrl}?v=2026_final`
+    // Add a completely new cache buster to bypass LINE's cache
+    const shareUrl = `${propertyUrl}?v=GOD_SPEED_01`
     const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n${shareUrl}`
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`, '_blank', 'width=600,height=500')
   }
 
   const handleCopyForLine = async () => {
     const aiText = translatedText[activeLang] || ''
-    const shareUrl = `${propertyUrl}?v=2026_final`
+    const shareUrl = `${propertyUrl}?v=GOD_SPEED_01`
     const fullText = `【${editedProperty.title}】\n${aiText}\n\n${shareUrl}`
     await handleCopy(fullText)
   }

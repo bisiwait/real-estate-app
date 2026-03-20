@@ -45,8 +45,7 @@ export async function generateMetadata(
                 baseImageUrl = `${BASE_URL}${path}`
             }
             
-            // 1. ファイル名は元の .webp のままにする（replace を削除）
-            // 2. Supabase Image Transformation パラメータを付与してサーバー側で JPG 変換させる
+            // 1. エスケープを防ぐため、バッククォートで生のリテラルとしてURLを組み立てる
             imageUrl = `${baseImageUrl}?width=1200&height=630&resize=contain&format=jpg`
         }
 
