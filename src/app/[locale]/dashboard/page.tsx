@@ -118,7 +118,7 @@ export default async function DashboardPage({
     }
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-20">
+        <div className="bg-slate-50 min-h-screen pb-20 overflow-x-hidden">
             {/* Header */}
             <div className="bg-navy-secondary py-10 md:py-12 text-white">
                 <div className="container mx-auto px-3 sm:px-4">
@@ -277,11 +277,11 @@ export default async function DashboardPage({
                                             />
                                         </div>
                                         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto w-full sm:w-auto">
-                                                <Link href={`?tab=properties&filter=all&status=${status}`} prefetch={false} className={`whitespace-nowrap px-6 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center min-w-[80px] ${filter === 'all' ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'}`}>すべて</Link>
-                                                <Link href={`?tab=properties&filter=rent&status=${status}`} prefetch={false} className={`whitespace-nowrap px-6 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center min-w-[100px] ${filter === 'rent' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>賃貸 (RENT)</Link>
-                                                <Link href={`?tab=properties&filter=sale&status=${status}`} prefetch={false} className={`whitespace-nowrap px-6 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center min-w-[100px] ${filter === 'sale' ? 'bg-white shadow-sm text-orange-600' : 'text-slate-500 hover:text-orange-600'}`}>売買 (SALE)</Link>
-                                                <Link href={`?tab=properties&filter=presale&status=${status}`} prefetch={false} className={`whitespace-nowrap px-6 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center min-w-[100px] ${filter === 'presale' ? 'bg-amber-500 shadow-sm text-white' : 'text-slate-500 hover:text-amber-600'}`}>プレセール</Link>
+                                            <div className="grid grid-cols-4 sm:flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
+                                                <Link href={`?tab=properties&filter=all&status=${status}`} prefetch={false} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'all' ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'}`}>すべて</Link>
+                                                <Link href={`?tab=properties&filter=rent&status=${status}`} prefetch={false} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'rent' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>賃貸</Link>
+                                                <Link href={`?tab=properties&filter=sale&status=${status}`} prefetch={false} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'sale' ? 'bg-white shadow-sm text-orange-600' : 'text-slate-500 hover:text-orange-600'}`}>売買</Link>
+                                                <Link href={`?tab=properties&filter=presale&status=${status}`} prefetch={false} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'presale' ? 'bg-amber-500 shadow-sm text-white' : 'text-slate-500 hover:text-amber-600'}`}>プレセール</Link>
                                             </div>
 
                                             <div className="w-full sm:w-36">
