@@ -199,16 +199,17 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     const shortText = aiText.substring(0, 300)
     const hasMore = aiText.length > 300
     
-    // lineit/share?url= には物件URLのみを渡す（これがプレビューに使われる）
-    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_03`
-    const encodedUrl = encodeURIComponent(shareUrl)
+    // プレビュー用のURL（キャッシュ回避パラメータ付き）
+    const shareUrl = `${propertyUrl}?v=FINAL_FORCE_OGP_04`
     
-    // text= には物件名とAI紹介文を渡す
-    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}`
+    // text= パラメータに物件名、AI紹介文、URLをすべて含める
+    // これにより、LINEは「1つのメッセージ」としてプレビュー付きで送信します
+    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n物件詳細を見る：${shareUrl}`
     const encodedText = encodeURIComponent(shareText)
     
-    // URLの全長が長すぎるとエラーになるため、安全な長さに制限して開く
-    const finalLineUrl = `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedText}`
+    // url= パラメータを空にすることで、プレビューの重複（2通送信）を防ぎます
+    // LINEは text 内のURLを自動検知してプレビューを表示してくれます
+    const finalLineUrl = `https://social-plugins.line.me/lineit/share?text=${encodedText}`
     window.open(finalLineUrl, '_blank', 'width=600,height=500')
   }
 
