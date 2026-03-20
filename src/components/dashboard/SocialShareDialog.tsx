@@ -532,15 +532,6 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                    <MessageCircle className="w-4 h-4 mr-2" /> LINE
                  </button>
                </div>
-               {translatedText[activeLang] && translatedText[activeLang].length > 200 && (
-                 <button
-                   onClick={handleCopyForLine}
-                   className="mt-3 w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 font-bold text-xs transition-all active:scale-95 cursor-pointer border border-slate-200"
-                 >
-                   <Copy className="w-3.5 h-3.5" />
-                   LINE用の全文をコピー（LINEで貼り付けてください）
-                 </button>
-               )}
              </div>
 
           </div>
