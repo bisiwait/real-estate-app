@@ -37,15 +37,18 @@ export async function generateMetadata(
         let imageUrl = `${BASE_URL}/og-default.png`
         if (property.images?.[0]) {
             const firstImage = property.images[0]
+            let baseImageUrl = ''
             if (firstImage.startsWith('http')) {
-                imageUrl = firstImage
+                baseImageUrl = firstImage
             } else {
                 const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`
-                imageUrl = `${BASE_URL}${path}`
+                baseImageUrl = `${BASE_URL}${path}`
             }
+            // Supabase Image Transformation parameters for LINE compatibility
+            imageUrl = `${baseImageUrl}?width=1200&height=630&resize=contain&format=jpg`
         }
 
-        const pageUrl = `${BASE_URL}/${locale}/properties/${id}`
+        const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=2026_final`
 
         return {
             title: `${title} | Chonburi Connect`,
@@ -62,7 +65,7 @@ export async function generateMetadata(
                         width: 1200,
                         height: 630,
                         alt: title,
-                        type: imageUrl.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg',
+                        type: 'image/jpeg',
                     },
                 ],
                 locale: locale === 'jp' ? 'ja_JP' : locale === 'th' ? 'th_TH' : 'en_US',

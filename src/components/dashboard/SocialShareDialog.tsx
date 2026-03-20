@@ -194,9 +194,21 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
   }
 
   const handleLineShare = () => {
-    const text = `【${editedProperty.title}】\n${translatedText[activeLang] || ''}\n\n詳細を確認: ${propertyUrl}`;
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://line.me/R/msg/text/?${encodedText}`, '_blank', 'width=600,height=500')
+    const aiText = translatedText[activeLang] || ''
+    // LINE share URL has a ~2000 char limit — keep AI text under 200 chars to stay safe
+    const shortText = aiText.substring(0, 200)
+    const hasMore = aiText.length > 200
+    // Add cache buster to URL for testing
+    const shareUrl = `${propertyUrl}?v=2026_final`
+    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n${shareUrl}`
+    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`, '_blank', 'width=600,height=500')
+  }
+
+  const handleCopyForLine = async () => {
+    const aiText = translatedText[activeLang] || ''
+    const shareUrl = `${propertyUrl}?v=2026_final`
+    const fullText = `【${editedProperty.title}】\n${aiText}\n\n${shareUrl}`
+    await handleCopy(fullText)
   }
 
   // 共通のバナーコンテンツ部分を関数として定義
@@ -514,6 +526,15 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                    <MessageCircle className="w-4 h-4 mr-2" /> LINE
                  </button>
                </div>
+               {translatedText[activeLang] && translatedText[activeLang].length > 200 && (
+                 <button
+                   onClick={handleCopyForLine}
+                   className="mt-3 w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 font-bold text-xs transition-all active:scale-95 cursor-pointer border border-slate-200"
+                 >
+                   <Copy className="w-3.5 h-3.5" />
+                   LINE用の全文をコピー（LINEで貼り付けてください）
+                 </button>
+               )}
              </div>
 
           </div>
