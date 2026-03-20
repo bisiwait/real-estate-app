@@ -228,38 +228,38 @@ export default async function DashboardPage({
                     {/* Main area */}
                     <div className="lg:col-span-3 space-y-6">
                         {/* Tab Switcher */}
-                        <div className="bg-white p-2 rounded-2xl shadow-md border border-slate-100 flex space-x-2">
+                        <div className="bg-white p-1.5 sm:p-2 rounded-2xl shadow-md border border-slate-100 grid grid-cols-3 gap-1">
                             <Link
                                 href="?tab=properties"
-                                className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all ${tab === 'properties'
+                                className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all text-center ${tab === 'properties'
                                     ? 'bg-navy-primary text-white shadow-lg'
                                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                                     }`}
                             >
-                                <Building2 className="w-4 h-4" />
-                                <span>掲載物件 ({stats.total})</span>
+                                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                                <span>物件 ({stats.total})</span>
                             </Link>
                             <Link
                                 href="?tab=inquiries"
-                                className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all relative ${tab === 'inquiries'
+                                className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all relative text-center ${tab === 'inquiries'
                                     ? 'bg-navy-primary text-white shadow-lg'
                                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                                     }`}
                             >
-                                <Mail className="w-4 h-4" />
-                                <span>メール問い合わせ ({inquiries?.length || 0})</span>
+                                <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                                <span>メール ({inquiries?.length || 0})</span>
                                 {stats.unreadInquiries > 0 && (
-                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white ring-2 ring-white">
+                                    <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[8px] sm:text-[10px] text-white ring-2 ring-white">
                                         {stats.unreadInquiries}
                                     </span>
                                 )}
                             </Link>
                             <Link
                                 href="/dashboard/leads"
-                                className="flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl font-bold transition-all text-slate-400 hover:text-navy-primary hover:bg-slate-50 border border-transparent hover:border-navy-primary/10"
+                                className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all text-center text-slate-400 hover:text-navy-primary hover:bg-slate-50`}
                             >
-                                <Users className="w-4 h-4" />
-                                <span>LINE問い合わせ ({stats.leadsCount})</span>
+                                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                                <span>LINE ({stats.leadsCount})</span>
                             </Link>
                         </div>
 
