@@ -200,14 +200,14 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     const hasMore = aiText.length > 200
     // Add a completely new cache buster to bypass LINE's cache
     const shareUrl = `${propertyUrl}?v=shared_link_final_check`
-    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n${shareUrl}`
+    const shareText = `【${editedProperty.title}】\n${shortText}${hasMore ? '…' : ''}\n\n物件詳細を見る：${shareUrl}`
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(shareText)}`, '_blank', 'width=600,height=500')
   }
 
   const handleCopyForLine = async () => {
     const aiText = translatedText[activeLang] || ''
     const shareUrl = `${propertyUrl}?v=shared_link_final_check`
-    const fullText = `【${editedProperty.title}】\n${aiText}\n\n${shareUrl}`
+    const fullText = `【${editedProperty.title}】\n${aiText}\n\n物件詳細を見る：${shareUrl}`
     await handleCopy(fullText)
   }
 
