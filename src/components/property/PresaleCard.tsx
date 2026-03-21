@@ -23,7 +23,7 @@ export default function PresaleCard({ project, dict }: { project: PresaleProject
     const locale = params?.locale as string || 'jp'
 
     return (
-        <Link href={`/${locale}/presale/${project.slug}`} className="group block h-full transition-transform active:scale-[0.98] duration-200">
+        <Link href={`/${locale}/properties/${project.id}`} className="group block h-full transition-transform active:scale-[0.98] duration-200">
             <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-100 flex flex-col h-full group-hover:-translate-y-1">
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">

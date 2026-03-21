@@ -45,7 +45,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             title={dict.home.presale_title}
             subtitle={dict.home.presale_subtitle}
             action={
-              <Link href={`/${locale}/properties?filter=presale`} className="text-navy-primary font-bold hover:text-navy-secondary flex items-center group text-sm">
+              <Link href={`/${locale}/properties?type=presale&region=Pattaya&price=0-30000000`} className="text-navy-primary font-bold hover:text-navy-secondary flex items-center group text-sm">
                 {dict.home.presale_all}
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Link>
