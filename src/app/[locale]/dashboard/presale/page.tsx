@@ -122,13 +122,6 @@ export default function PresalePropertyPage() {
                             <h1 className="text-3xl font-black text-navy-secondary mb-2">プレセール物件を投稿する</h1>
                             <p className="text-slate-500">新築や建設中の投資用プロジェクト情報を公開しましょう。</p>
                         </div>
-                        <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-3">
-                            <Building2 className="text-navy-primary w-5 h-5" />
-                            <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">保持クレジット</div>
-                                <div className="text-xl font-black text-navy-primary leading-none">{credits}</div>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Presale Listing Form */}

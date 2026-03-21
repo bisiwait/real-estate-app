@@ -1375,11 +1375,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 </div>
 
                 {/* Submit */}
-                <div className="flex items-center justify-between p-10 bg-navy-secondary rounded-3xl text-white shadow-2xl flex-col md:flex-row gap-6">
-                    <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center"><TagIcon className="w-6 h-6 text-white" /></div>
-                        <div><p className="text-xs font-bold text-slate-400 uppercase tracking-widest">掲載コスト</p><p className="text-xl font-black">1 クレジット / 物件</p></div>
-                    </div>
+                <div className="flex items-center justify-end p-10 bg-navy-secondary rounded-3xl text-white shadow-2xl flex-col md:flex-row gap-6">
                     <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full md:w-auto">
                         <button
                             type="button"

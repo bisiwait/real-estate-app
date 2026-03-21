@@ -99,13 +99,6 @@ export default function ListPropertyPage() {
                             <h1 className="text-3xl font-black text-navy-secondary mb-2">物件を掲載する</h1>
                             <p className="text-slate-500">詳細情報を入力して、物件を公開しましょう。</p>
                         </div>
-                        <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-3">
-                            <PlusCircle className="text-navy-primary w-5 h-5" />
-                            <div>
-                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">保持クレジット</div>
-                                <div className="text-xl font-black text-navy-primary leading-none">{credits}</div>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Actual Listing Form */}
