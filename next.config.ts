@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion', 'swiper'],
-  },
-  transpilePackages: ['lucide-react'],
   productionBrowserSourceMaps: false,
 };
 
