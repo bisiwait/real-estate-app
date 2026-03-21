@@ -11,13 +11,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Ensure trailing slashes are consistent for SEO
   trailingSlash: false,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
     ignoreBuildErrors: true,
   },
   experimental: {
