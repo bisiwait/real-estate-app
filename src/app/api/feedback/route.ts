@@ -26,8 +26,12 @@ export async function POST(req: Request) {
 
         const userIdentifier = profile?.full_name || user.email
 
-        // content の先頭にユーザー情報を付与して保存（カラム不足によるエラーを回避）
+        // テーブルが存在しない、または権限エラーの可能性があるため、
+        // 最終手段として content の先頭にユーザー情報を付与して保存
         const enrichedContent = `【送信者: ${userIdentifier}】\n\n${content}`
+
+        // デバッグ用にログを出力（Vercelのログで確認可能）
+        console.log('Attempting to save feedback:', { title, priority, user_id: user.id });
 
         const { error } = await supabase
             .from('feedback')
@@ -41,7 +45,12 @@ export async function POST(req: Request) {
                 }
             ])
 
-        if (error) throw error
+        if (error) {
+            console.error('Supabase insert error details:', error);
+            // feedbackテーブル自体が存在しない可能性を考慮し、
+            // 失敗した場合はエラーを投げて catch ブロックで処理
+            throw error
+        }
 
         return NextResponse.json({ success: true })
     } catch (error: any) {
