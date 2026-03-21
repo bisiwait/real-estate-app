@@ -38,7 +38,7 @@ export default function AdminFeedbackManagement() {
         
         let query = supabase
             .from('feedback')
-            .select('*')
+            .select('*, profile:profiles(full_name, email)')
             .order('created_at', { ascending: false })
 
         if (statusFilter !== 'all') {
@@ -157,9 +157,12 @@ export default function AdminFeedbackManagement() {
                                 
                                 <div className="shrink-0 flex items-center gap-4">
                                     <div className="hidden md:flex flex-col items-end">
-                                        <div className="flex items-center gap-1 text-xs font-bold text-slate-500">
+                                        <div className="flex items-center gap-1 text-xs font-bold text-navy-primary">
                                             <User className="w-3 h-3" />
-                                            ID: {item.user_id?.slice(0, 8)}
+                                            {item.profile?.full_name || '名前未設定'}
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 font-medium">
+                                            {item.profile?.email || 'メール不明'}
                                         </div>
                                     </div>
                                     {expandedId === item.id ? <ChevronUp className="w-5 h-5 text-slate-300" /> : <ChevronDown className="w-5 h-5 text-slate-300" />}

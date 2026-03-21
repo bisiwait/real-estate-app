@@ -15,8 +15,7 @@ export default function FeedbackForm() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
         title: '',
-        content: '',
-        priority: 'medium'
+        content: ''
     })
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -31,13 +30,16 @@ export default function FeedbackForm() {
             const res = await fetch('/api/feedback', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    ...formData,
+                    priority: 'medium' // 内部的にデフォルト値を送信
+                })
             })
 
             if (!res.ok) throw new Error('送信に失敗しました')
 
             toast.success('貴重なご意見ありがとうございます！開発チームで検討いたします')
-            setFormData({ title: '', content: '', priority: 'medium' })
+            setFormData({ title: '', content: '' })
             setIsOpen(false)
         } catch (error) {
             console.error(error)
@@ -83,27 +85,6 @@ export default function FeedbackForm() {
                                     placeholder="例：物件一覧の並び替え機能について"
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-400 focus:outline-none font-medium text-sm transition-all"
                                 />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">優先度</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['low', 'medium', 'high'].map((p) => (
-                                        <button
-                                            key={p}
-                                            type="button"
-                                            onClick={() => setFormData({ ...formData, priority: p })}
-                                            className={cn(
-                                                "py-2 rounded-xl text-xs font-bold border transition-all capitalize",
-                                                formData.priority === p 
-                                                    ? "bg-navy-primary text-white border-navy-primary shadow-md" 
-                                                    : "bg-white text-slate-400 border-slate-200 hover:border-slate-300"
-                                            )}
-                                        >
-                                            {p === 'low' ? '低' : p === 'medium' ? '中' : '高'}
-                                        </button>
-                                    ))}
-                                </div>
                             </div>
 
                             <div>
