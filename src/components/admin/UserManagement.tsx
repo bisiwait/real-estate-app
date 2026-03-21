@@ -180,7 +180,7 @@ export default function AdminUserManagement() {
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-100 p-8">
+            <div className="bg-slate-50 border-b border-slate-100 p-4 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                     <div className="flex items-center space-x-4">
                         <div className="p-3 bg-navy-primary/10 rounded-2xl text-navy-primary">
@@ -236,7 +236,7 @@ export default function AdminUserManagement() {
                 </div>
             </div>
 
-            <div className="divide-y divide-slate-100">
+            <div className="p-4 md:p-8">
                 {errorMessage && (
                     <div className="px-4 py-3 bg-red-50 text-red-600 text-xs font-bold text-center">
                         エラーが発生しました: {errorMessage}

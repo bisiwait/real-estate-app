@@ -248,7 +248,7 @@ export default function AdminPropertyManagement() {
                 </div>
             </div>
 
-            <div className="divide-y divide-slate-100">
+            <div className="p-4 md:p-8">
                 {errorMessage && (
                     <div className="px-4 py-3 bg-red-50 text-red-600 text-xs font-bold text-center">
                         エラーが発生しました: {errorMessage}

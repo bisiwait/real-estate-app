@@ -344,7 +344,7 @@ export default function AdminProjectManagement() {
                 )}
             </div>
 
-            <div className="p-8">
+            <div className="p-4 md:p-8">
                 {errorMessage && (
                     <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl flex items-center space-x-3 text-xs font-bold mb-6">
                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
