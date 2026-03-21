@@ -57,7 +57,7 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                                     }`}
                             >
                                 <span>{dict.home.hero_buy}</span>
-                                <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（SELL）</span>
+                                <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（BUY）</span>
                                 {activeTab === 'buy' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-navy-primary pointer-events-none z-30" />
                                 )}
@@ -70,6 +70,7 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                                     }`}
                             >
                                 <span className="pt-1 sm:pt-0">{dict.home.hero_presale}</span>
+                                <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（PRESALE）</span>
                                 {activeTab === 'presale' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-amber-500 pointer-events-none z-30" />
                                 )}
