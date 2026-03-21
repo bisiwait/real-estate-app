@@ -79,11 +79,12 @@ export default async function DashboardPage({
     }
 
 
-    // Fetch Leads Count
-    const { count: leadsCount } = await supabase
+    // Fetch Leads
+    const { data: leads } = await supabase
         .from('inquiry_logs')
-        .select('*', { count: 'exact', head: true })
+        .select('*, property:properties(title, id), profile:user_id(full_name, email)')
         .eq('agent_id', user.id)
+        .order('created_at', { ascending: false })
 
     const stats = {
         total: properties?.length || 0,
@@ -195,7 +196,8 @@ export default async function DashboardPage({
                         profile={profile}
                         initialProperties={properties || []}
                         initialInquiries={inquiries}
-                        leadsCount={leadsCount || 0}
+                        leadsCount={leads?.length || 0}
+                        initialLeads={leads || []}
                         locale={tab} // This will be updated by the client component
                     />
                 </div>

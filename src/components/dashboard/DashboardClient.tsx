@@ -1,14 +1,17 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import React, { useState } from 'react'
 import { 
-    PlusCircle,
     Building2,
     Mail,
     Users,
     ChevronRight,
-    LayoutDashboard
+    LayoutDashboard,
+    MessageCircle,
+    Phone,
+    FileText,
+    User,
+    Home
 } from 'lucide-react'
 import Link from 'next/link'
 import BulkConfirmButton from '@/components/dashboard/BulkConfirmButton'
@@ -26,6 +29,7 @@ interface DashboardClientProps {
     profile: any
     initialProperties: any[]
     initialInquiries: any[]
+    initialLeads: any[]
     leadsCount: number
     locale: string
 }
@@ -37,16 +41,16 @@ export default function DashboardClient({
     profile,
     initialProperties,
     initialInquiries,
+    initialLeads,
     leadsCount,
     locale
 }: DashboardClientProps) {
     const [tab, setTab] = useState(initialTab)
     const [filter, setFilter] = useState(initialFilter)
     const [status, setStatus] = useState(initialStatus)
-    const [properties, setProperties] = useState(initialProperties)
-    const [inquiries, setInquiries] = useState(initialInquiries)
-    const [isLoading, setIsLoading] = useState(false)
-    const supabase = createClient()
+    const [properties] = useState(initialProperties)
+    const [inquiries] = useState(initialInquiries)
+    const [leads] = useState(initialLeads || [])
 
     // フィルタリング処理（クライアント側で行う）
     const getFilteredProperties = () => {
@@ -102,18 +106,23 @@ export default function DashboardClient({
                         </span>
                     )}
                 </button>
-                <Link
-                    href="/dashboard/leads"
-                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all text-center text-slate-400 hover:text-navy-primary hover:bg-slate-50`}
+                <button
+                    onClick={() => setTab('leads')}
+                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all text-center ${tab === 'leads'
+                        ? 'bg-[#06C755] text-white shadow-lg'
+                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                        }`}
                 >
                     <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                     <span>LINE ({leadsCount})</span>
-                </Link>
+                </button>
             </div>
 
             {/* Content Area */}
             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-                {tab === 'properties' ? (
+                {tab === 'leads' ? (
+                    <LeadsView leads={leads} />
+                ) : tab === 'properties' ? (
                     <>
                         <div className="p-4 sm:p-8 border-b border-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex flex-col gap-1">
@@ -271,6 +280,118 @@ export default function DashboardClient({
                 ) : (
                     <InquiryList initialInquiries={inquiries || []} />
                 )}
+            </div>
+        </div>
+    )
+}
+
+function LeadsView({ leads }: { leads: any[] }) {
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'new': return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">新規</span>
+            case 'contacted': return <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold">対応中</span>
+            case 'closed': return <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">成約</span>
+            default: return <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded-full text-[10px] font-bold">{status}</span>
+        }
+    }
+
+    const getTypeIcon = (type: string) => {
+        switch (type) {
+            case 'line': return <MessageCircle className="w-4 h-4 text-[#06C755]" />
+            case 'phone': return <Phone className="w-4 h-4 text-blue-500" />
+            case 'form': return <FileText className="w-4 h-4 text-slate-500" />
+            default: return <MessageCircle className="w-4 h-4 text-slate-400" />
+        }
+    }
+
+    if (!leads || leads.length === 0) {
+        return (
+            <div className="p-20 text-center flex flex-col items-center gap-2 text-slate-400">
+                <Users className="w-12 h-12 opacity-20" />
+                <p className="text-sm font-bold">まだリード情報がありません。</p>
+            </div>
+        )
+    }
+
+    return (
+        <div>
+            <div className="p-4 sm:p-6 border-b border-slate-50">
+                <h3 className="text-lg sm:text-xl font-black text-navy-secondary">リード（見込み客）管理</h3>
+                <p className="text-slate-500 text-xs font-bold mt-1">物件に興味を持ったユーザーのアクション履歴</p>
+            </div>
+            {/* Mobile */}
+            <div className="sm:hidden divide-y divide-slate-100">
+                {leads.map((lead) => (
+                    <div key={lead.id} className="p-4 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                {getTypeIcon(lead.inquiry_type)}
+                                <span className="text-xs font-bold text-slate-600 capitalize">{lead.inquiry_type}</span>
+                            </div>
+                            {getStatusBadge(lead.status)}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Home className="w-3 h-3 text-navy-primary" />
+                            <span className="text-xs font-bold text-navy-primary truncate">{lead.property?.title || '—'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <User className="w-3 h-3 text-slate-400" />
+                            <div>
+                                <span className="text-xs font-bold text-navy-secondary">{lead.profile?.full_name || 'ゲスト'}</span>
+                                {lead.profile?.email && <span className="text-[10px] text-slate-400 ml-1">({lead.profile.email})</span>}
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-slate-400">
+                            {new Date(lead.created_at).toLocaleString('ja-JP', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                    </div>
+                ))}
+            </div>
+            {/* Desktop */}
+            <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">日時</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">種別</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">問い合わせ物件</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ユーザー</th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ステータス</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                        {leads.map((lead) => (
+                            <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-6 py-4 text-xs font-bold text-navy-secondary whitespace-nowrap">
+                                    {new Date(lead.created_at).toLocaleString('ja-JP', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        {getTypeIcon(lead.inquiry_type)}
+                                        <span className="text-xs font-bold text-slate-600 capitalize">{lead.inquiry_type}</span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <Link href={`/properties/${lead.property_id}`} className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1">
+                                        <Home className="w-3 h-3" />{lead.property?.title}
+                                    </Link>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
+                                            <User className="w-3.5 h-3.5 text-slate-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-navy-secondary">{lead.profile?.full_name || 'ゲスト（未ログイン）'}</p>
+                                            <p className="text-[10px] text-slate-400">{lead.profile?.email || '—'}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4">{getStatusBadge(lead.status)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     )
