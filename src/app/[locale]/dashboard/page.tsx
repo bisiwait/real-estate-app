@@ -2,26 +2,17 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import CreditSection from '@/components/dashboard/CreditSection'
-import DashboardActions from '@/components/dashboard/DashboardActions'
-import InquiryList from '@/components/dashboard/InquiryList'
 import FlashMessage from '@/components/dashboard/FlashMessage'
-import StatusFilter from '@/components/dashboard/StatusFilter'
-import AgentStatusToggles from '@/components/dashboard/AgentStatusToggles'
 import {
     PlusCircle,
-    CheckCircle2,
-    Clock,
-    AlertCircle,
-    ChevronRight,
     LayoutDashboard,
     Building2,
     Mail,
-    RefreshCw,
-    Users,
-    Crown
+    Clock,
+    AlertCircle,
+    CheckCircle2
 } from 'lucide-react'
-import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
-import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
+import PremiumPromoCard from '@/components/dashboard/PremiumPromoCard'
 import SubscriptionStatus from '@/components/dashboard/SubscriptionStatus'
 import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
@@ -205,13 +196,8 @@ export default async function DashboardPage({
                         initialProperties={properties || []}
                         initialInquiries={inquiries}
                         leadsCount={leadsCount || 0}
-                        locale={['jp', 'en', 'th'].includes(tab) ? tab : 'jp'} // This is a bit of a hack, better to pass locale properly
+                        locale={tab} // This will be updated by the client component
                     />
-                </div>
-            </div>
-        </div >
-    )
-}
                 </div>
             </div>
         </div >
