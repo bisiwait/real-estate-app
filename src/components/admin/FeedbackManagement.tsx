@@ -34,12 +34,15 @@ export default function AdminFeedbackManagement() {
 
     const fetchFeedbacks = async () => {
         setLoading(true)
+        console.log('Fetching feedbacks with status filter:', statusFilter)
+        
         let query = supabase
             .from('feedback')
             .select('*')
             .order('created_at', { ascending: false })
 
         if (statusFilter !== 'all') {
+            // 'new' フィルタが選択されている場合、DB上の 'new' を検索
             query = query.eq('status', statusFilter)
         }
 
@@ -47,12 +50,14 @@ export default function AdminFeedbackManagement() {
         if (error) {
             console.error('Error fetching feedbacks:', error)
         } else {
+            console.log('Fetched feedbacks count:', data?.length)
             setFeedbacks(data || [])
         }
         setLoading(false)
     }
 
     const updateStatus = async (id: string, newStatus: string) => {
+        console.log('Updating feedback status:', id, newStatus)
         const { error } = await supabase
             .from('feedback')
             .update({ status: newStatus })
