@@ -40,9 +40,9 @@ export async function getRecommendedPresales(limit = 3) {
     .from('properties')
     .select(`
       *,
-      area:areas!inner (
+      area:areas (
         name,
-        region:regions!inner (
+        region:regions (
           name
         )
       ),
