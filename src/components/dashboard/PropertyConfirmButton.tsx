@@ -52,7 +52,7 @@ export default function PropertyConfirmButton({ propertyId, title }: PropertyCon
         <button
             onClick={handleConfirm}
             disabled={loading || confirmed}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl font-black text-[11px] sm:text-sm transition-all shadow-md active:scale-95 whitespace-nowrap min-w-0 flex-1 ${confirmed
+            className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-2xl font-black text-[11px] sm:text-sm transition-all shadow-md active:scale-95 whitespace-nowrap min-w-0 w-full ${confirmed
                 ? 'bg-emerald-500 text-white cursor-default'
                 : 'bg-white text-navy-primary border border-slate-100 hover:border-navy-primary hover:bg-slate-50'
                 }`}

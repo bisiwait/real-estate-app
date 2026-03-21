@@ -197,9 +197,15 @@ export default function DashboardClient({
                                                 />
                                             </div>
                                         </div>
-                                        <div className="mt-2 flex items-center justify-between px-1">
-                                            <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
-                                            <PropertyConfirmButton propertyId={property.id} title={property.title} />
+                                        <div className="mt-2 flex items-center gap-2 px-1">
+                                            <AgentStatusToggles 
+                                                propertyId={property.id} 
+                                                currentStatus={property.status} 
+                                                className="flex-1"
+                                            />
+                                            <div className="flex-1 flex">
+                                                <PropertyConfirmButton propertyId={property.id} title={property.title} />
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

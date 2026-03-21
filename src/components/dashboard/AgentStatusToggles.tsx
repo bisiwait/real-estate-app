@@ -49,9 +49,9 @@ export default function AgentStatusToggles({ propertyId, currentStatus, classNam
     const isContractedOn = currentStatus === 'contracted'
 
     return (
-        <div className={`flex flex-wrap items-center gap-2 ${className || ''}`}>
+        <div className={`flex items-center gap-2 ${className || ''}`}>
             {loading ? (
-                <div className="px-2 py-1.5 flex items-center">
+                <div className="flex-1 px-2 py-1.5 flex items-center justify-center">
                     <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
                 </div>
             ) : (
@@ -59,22 +59,20 @@ export default function AgentStatusToggles({ propertyId, currentStatus, classNam
                     <button
                         onClick={() => handleToggle('under_negotiation')}
                         disabled={loading}
-                        className={`px-3 py-2 sm:px-2 sm:py-0.5 rounded-xl sm:rounded text-xs sm:text-[10px] font-bold border transition-colors flex items-center justify-center whitespace-nowrap ${isNegotiationOn
+                        className={`flex-1 px-2 py-2.5 rounded-2xl text-[11px] font-black border transition-all shadow-md active:scale-95 flex items-center justify-center whitespace-nowrap ${isNegotiationOn
                                 ? 'bg-blue-500 text-white border-blue-600'
-                                : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                                : 'bg-white text-navy-primary border-slate-100 hover:bg-slate-50'
                             }`}
-                        title="クリックして商談中のON/OFFを切り替え"
                     >
                         商談中: {isNegotiationOn ? 'ON' : 'OFF'}
                     </button>
                     <button
                         onClick={() => handleToggle('contracted')}
                         disabled={loading}
-                        className={`px-3 py-2 sm:px-2 sm:py-0.5 rounded-xl sm:rounded text-xs sm:text-[10px] font-bold border transition-colors flex items-center justify-center whitespace-nowrap ${isContractedOn
+                        className={`flex-1 px-2 py-2.5 rounded-2xl text-[11px] font-black border transition-all shadow-md active:scale-95 flex items-center justify-center whitespace-nowrap ${isContractedOn
                                 ? 'bg-purple-500 text-white border-purple-600'
-                                : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                                : 'bg-white text-navy-primary border-slate-100 hover:bg-slate-50'
                             }`}
-                        title="クリックして成約済みのON/OFFを切り替え"
                     >
                         成約済: {isContractedOn ? 'ON' : 'OFF'}
                     </button>
