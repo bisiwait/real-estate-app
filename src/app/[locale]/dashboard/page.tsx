@@ -154,7 +154,7 @@ export default async function DashboardPage({
                     </div>
                 </div>
             </div>
-            <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 -mt-10">
+            <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 mt-6 sm:-mt-10">
                 {profile_updated === 'true' && (
                     <FlashMessage message="プロフィール情報を更新しました。" duration={3000} />
                 )}
