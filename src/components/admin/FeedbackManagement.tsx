@@ -222,5 +222,4 @@ export default function AdminFeedbackManagement() {
             </div>
         </div>
     );
-    )
 }
