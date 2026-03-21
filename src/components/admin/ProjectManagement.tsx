@@ -288,39 +288,39 @@ export default function AdminProjectManagement() {
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden mb-12">
-            <div className="bg-slate-50 border-b border-slate-100 p-6 md:p-8 flex items-center justify-between">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-black text-navy-secondary">プロジェクト情報管理（建物マスター）</h2>
+            <div className="bg-slate-50 border-b border-slate-100 p-4 md:p-8">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex items-center gap-2 md:gap-3">
+                        <h2 className="min-w-0 whitespace-nowrap text-base font-black text-navy-secondary md:text-xl">プロジェクト情報管理（建物マスター）</h2>
                         {!loading && (
-                            <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-xs font-bold">
+                            <span className="shrink-0 rounded-full bg-navy-primary/10 px-2.5 py-1 text-[11px] font-bold text-navy-primary md:px-3 md:text-xs">
                                 {filteredProjects.length}件
                             </span>
                         )}
                     </div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Project Master Management</p>
+                    <p className="hidden text-[10px] font-bold uppercase tracking-widest text-slate-400 md:block">Project Master Management</p>
                 </div>
                 {!isAdding && !editingId && (
-                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4 md:mt-0">
+                    <div className="mt-3 flex items-center gap-2 md:mt-4 md:flex-wrap md:gap-4">
                         <button
                             onClick={() => setFilterMissingInfo(!filterMissingInfo)}
-                            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${filterMissingInfo
+                            className={`flex shrink-0 items-center justify-center space-x-1 rounded-xl border px-3 py-2 text-[11px] font-bold transition-all md:space-x-2 md:px-4 md:text-xs ${filterMissingInfo
                                 ? 'bg-amber-50 text-amber-600 border-amber-200 shadow-sm'
                                 : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-navy-secondary'
                                 }`}
                             title="築年数または階数が未設定の建物を抽出"
                         >
-                            <Filter className="w-4 h-4" />
-                            <span className="hidden sm:inline">未記入抽出</span>
+                            <Filter className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                            <span>未記入抽出</span>
                         </button>
-                        <div className="relative w-full sm:w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <div className="relative min-w-0 flex-1 md:w-64 md:flex-none">
+                            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 md:h-4 md:w-4" />
                             <input
                                 type="text"
                                 placeholder="プロジェクト名で検索..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
+                                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-8 text-[11px] font-bold text-navy-secondary transition-all focus:outline-none focus:ring-2 focus:ring-navy-primary/20 md:pl-9 md:pr-4 md:text-xs"
                             />
                             {searchQuery && (
                                 <button
@@ -333,9 +333,9 @@ export default function AdminProjectManagement() {
                         </div>
                         <button
                             onClick={() => setIsAdding(true)}
-                            className="flex items-center space-x-2 bg-navy-primary text-white px-6 py-2.5 rounded-xl text-xs font-black hover:bg-navy-secondary transition-all shadow-lg shadow-navy-primary/20 w-full sm:w-auto justify-center"
+                            className="flex shrink-0 items-center justify-center space-x-1 rounded-xl bg-navy-primary px-3 py-2 text-[11px] font-black text-white shadow-lg shadow-navy-primary/20 transition-all hover:bg-navy-secondary md:space-x-2 md:px-6 md:py-2.5 md:text-xs"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
                             <span>新規登録</span>
                         </button>
                     </div>
