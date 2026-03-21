@@ -37,42 +37,32 @@ export async function getRecommendedPresales(limit = 3) {
   const supabase = createStaticClient();
 
   // Fetch all properties with is_presale = true to debug
+  // Removing all filters and joins to see if data exists at all
   const { data, error } = await supabase
     .from('properties')
-    .select(`
-      *,
-      area:areas (
-        name,
-        region:regions (
-          name
-        )
-      ),
-      project:projects (
-        name,
-        completion_year,
-        price_range,
-        has_japanese_support
-      )
-    `)
-    .eq('is_presale', true)
-    .order('created_at', { ascending: false });
+    .select('*')
+    .eq('is_presale', true);
 
   if (error) {
     console.error('Error fetching recommended presales:', error);
     return [];
   }
 
-  // Filter in memory to see what's going on if needed, but for now just return all up to limit
-  const result = data.slice(0, limit);
+  console.log('Raw presale data from Supabase:', data?.length, data);
 
-  return result.map(p => ({
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // Map the raw data to the expected format
+  return data.slice(0, limit).map(p => ({
     id: p.id,
-    name: p.project?.name || p.title,
-    area: p.area?.name || 'Unknown',
-    completionYear: p.project?.completion_year || 'TBA',
-    priceRange: p.project?.price_range || `${p.sale_price?.toLocaleString() || 'TBA'} THB`,
+    name: p.title, // Use title directly for now
+    area: 'Pattaya', // Fallback for debug
+    completionYear: 'TBA',
+    priceRange: `${p.sale_price?.toLocaleString() || 'TBA'} THB`,
     imageUrl: p.images?.[0] || '',
-    hasJapaneseSupport: p.project?.has_japanese_support || false,
+    hasJapaneseSupport: false,
     slug: p.id,
   })) as PresaleProject[];
 }
