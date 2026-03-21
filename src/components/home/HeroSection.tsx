@@ -22,12 +22,12 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
             </div>
 
-            <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
-                <div className="mx-auto max-w-3xl text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <div className="mx-auto max-w-7xl px-6 py-12 sm:py-32 lg:px-8 lg:py-40">
+                <div className="mx-auto max-w-3xl text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                     <h1 className="text-2xl font-bold tracking-tight text-white !text-white sm:text-6xl drop-shadow-lg whitespace-pre-wrap">
                         {dict.home.hero_title}
                     </h1>
-                    <p className="mt-6 text-base sm:text-lg leading-8 text-white drop-shadow-md font-medium">
+                    <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-8 text-white drop-shadow-md font-medium">
                         {dict.home.hero_subtitle}
                     </p>
                 </div>
