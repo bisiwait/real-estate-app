@@ -27,9 +27,9 @@ export default function SubscriptionStatus({ profile }: SubscriptionStatusProps)
     // auto_renew が false = 解約予約済み（cancel_at_period_end=true）
     const isCancelScheduled = profile.auto_renew === false && !isExpired
 
-    const bgColor = isExpired ? 'bg-red-50' : isCrisis ? 'bg-orange-50' : 'bg-slate-50'
-    const borderColor = isExpired ? 'border-red-200' : isCrisis ? 'border-orange-200' : 'border-slate-200'
-    const iconBg = isExpired ? 'bg-red-500' : isCrisis ? 'bg-orange-500' : 'bg-blue-600'
+    const bgColor = isExpired ? 'bg-red-50' : isCrisis ? 'bg-orange-50' : 'bg-white'
+    const borderColor = isExpired ? 'border-red-200' : isCrisis ? 'border-orange-200' : 'border-slate-100'
+    const iconBg = isExpired ? 'bg-red-500' : isCrisis ? 'bg-orange-500' : 'bg-amber-400'
 
     const handleOpenPortal = async () => {
         setPortalLoading(true)
@@ -48,18 +48,18 @@ export default function SubscriptionStatus({ profile }: SubscriptionStatusProps)
     }
 
     return (
-        <div className={`rounded-3xl p-6 border ${borderColor} ${bgColor} shadow-sm mb-6 transition-all hover:shadow-md group`}>
-            <div className="flex items-start justify-between mb-4">
-                <div className={`p-2.5 rounded-2xl ${iconBg} text-white`}>
+        <div className={`rounded-3xl p-6 border ${borderColor} ${bgColor} shadow-xl mb-6 transition-all hover:shadow-2xl group`}>
+            <div className="flex items-start justify-between mb-6">
+                <div className={`p-2.5 rounded-2xl ${iconBg} text-white shadow-lg shadow-amber-200/50`}>
                     {isExpired ? <AlertCircle className="w-5 h-5" /> : <Crown className="w-5 h-5" />}
                 </div>
-                <span className="px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-[10px] font-black text-slate-400 uppercase tracking-widest border border-white/60">
+                <span className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
                     {isExpired ? 'Expired' : isCancelScheduled ? 'Cancelling' : 'Premium Active'}
                 </span>
             </div>
 
-            <div className="space-y-1.5 mb-5">
-                <h3 className={`text-lg font-black ${isExpired ? 'text-red-600' : 'text-slate-900'}`}>
+            <div className="space-y-2 mb-6">
+                <h3 className={`text-xl font-black ${isExpired ? 'text-red-600' : 'text-navy-secondary'}`}>
                     {isExpired ? 'プラン期限切れ' : 'プレミアムプラン利用中'}
                 </h3>
 

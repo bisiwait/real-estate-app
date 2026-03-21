@@ -174,21 +174,6 @@ export default async function DashboardPage({
                             <PremiumPromoCard plan={activePlan} />
                         )}
 
-                        {/* Simple Premium Label (Premium users only) */}
-                        {activePlan === 'premium' && (
-                            <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-                                        <Crown className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">現在のプラン</p>
-                                        <p className="text-sm font-black text-navy-secondary">プレミアムプラン</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Summary List */}
                         <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 px-2">概要</h3>
