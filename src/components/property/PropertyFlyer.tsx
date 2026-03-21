@@ -156,21 +156,23 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
             <div style={{
                 width: '100%',
                 background: 'linear-gradient(135deg, #1e3a8a 0%, #2A4076 100%)',
-                padding: '4mm 6mm',
+                padding: '4mm 0',
                 borderRadius: '6px',
                 marginBottom: '5mm',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justifyContent: 'center',
+                gap: '1mm'
             }}>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center' }}>
                     {ICONS.price}&nbsp;{property.is_for_rent ? 'MONTHLY RENT（賃料/月）' : 'SALE PRICE（販売価格）'}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                    <span style={{ fontSize: '40px', color: '#fbbf24', fontWeight: '900', lineHeight: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '42px', color: '#fbbf24', fontWeight: '900', lineHeight: 1 }}>
                         {property.price?.toLocaleString()}
                     </span>
-                    <span style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 'bold' }}>
+                    <span style={{ fontSize: '16px', color: '#e2e8f0', fontWeight: 'bold' }}>
                         THB{property.is_for_rent ? ' / mo.' : ''}
                     </span>
                 </div>
@@ -283,18 +285,22 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
 const InfoItem = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
     <div style={{
         backgroundColor: '#F8FAFF',
-        padding: '2.5mm 4mm',
+        padding: '2.5mm 0',
         borderRadius: '5px',
         border: '1px solid #e2e8f0',
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: '1mm',
+        height: '14mm',
+        boxSizing: 'border-box'
     }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-            <span style={{ fontSize: '12px' }}>{icon}</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', width: '100%' }}>
+            <span style={{ fontSize: '11px' }}>{icon}</span>
             <span style={{ fontSize: '8px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>{label}</span>
         </div>
-        <div style={{ fontSize: '13px', color: '#2A4076', fontWeight: '900' }}>{value}</div>
+        <div style={{ fontSize: '13px', color: '#2A4076', fontWeight: '900', textAlign: 'center', width: '100%' }}>{value}</div>
     </div>
 );
 
