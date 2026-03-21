@@ -67,7 +67,7 @@ export default function LanguageSwitcher({ dict }: { dict: any }) {
                 className="flex items-center justify-center space-x-2 px-3 md:px-4 py-2.5 md:py-2 min-h-[44px] md:min-h-0 rounded-xl border border-slate-100 bg-white shadow-sm hover:bg-slate-50 transition-all active:scale-95"
             >
                 <img src={currentLang.flagSvg} alt="" className="w-5 h-auto shadow-sm rounded-[2px]" aria-hidden="true" />
-                <span className="text-xs md:text-sm font-bold text-navy-secondary hidden sm:inline-block uppercase">{currentLang.code}</span>
+                <span className="text-xs md:text-sm font-bold text-navy-secondary uppercase">{currentLang.code}</span>
                 <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", isOpen && "rotate-180")} aria-hidden="true" />
             </button>
 
