@@ -13,12 +13,6 @@ const nextConfig: NextConfig = {
   },
   // Ensure trailing slashes are consistent for SEO
   trailingSlash: false,
-  // @ts-expect-error - Next.js valid config
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
