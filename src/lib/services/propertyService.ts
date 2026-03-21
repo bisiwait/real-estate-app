@@ -53,8 +53,6 @@ export async function getRecommendedPresales(limit = 3) {
         has_japanese_support
       )
     `)
-    .eq('status', 'published')
-    .eq('is_approved', true)
     .eq('is_presale', true)
     .order('created_at', { ascending: false })
     .limit(limit);
