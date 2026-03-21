@@ -141,7 +141,8 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                     position: 'absolute', top: '8px', left: '8px',
                     backgroundColor: property.is_for_rent ? '#2563eb' : '#dc2626',
                     color: '#fff', fontSize: '11px', fontWeight: '900',
-                    padding: '3px 10px', borderRadius: '4px', letterSpacing: '0.08em'
+                    padding: '3px 10px', borderRadius: '4px', letterSpacing: '0.08em',
+                    lineHeight: '1.2', display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                     {property.is_for_rent ? 'FOR RENT' : 'FOR SALE'}
                 </div>
@@ -163,7 +164,8 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                padding: 0
             }}>
                 <div style={{ 
                     fontSize: '11px', 
@@ -172,22 +174,25 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                     textTransform: 'uppercase', 
                     letterSpacing: '0.12em', 
                     textAlign: 'center',
-                    marginBottom: '2mm',
-                    lineHeight: 1
+                    marginBottom: '1mm',
+                    lineHeight: '1.2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                 }}>
                     {ICONS.price}&nbsp;{property.is_for_rent ? 'MONTHLY RENT（賃料/月）' : 'SALE PRICE（販売価格）'}
                 </div>
                 <div style={{ 
                     display: 'flex', 
-                    alignItems: 'baseline', 
+                    alignItems: 'center', 
                     justifyContent: 'center', 
                     gap: '8px',
-                    lineHeight: 1
+                    lineHeight: '1.2'
                 }}>
                     <span style={{ fontSize: '46px', color: '#fbbf24', fontWeight: '900', letterSpacing: '-0.02em' }}>
                         {property.price?.toLocaleString()}
                     </span>
-                    <span style={{ fontSize: '18px', color: '#e2e8f0', fontWeight: 'bold' }}>
+                    <span style={{ fontSize: '18px', color: '#e2e8f0', fontWeight: 'bold', alignSelf: 'flex-end', marginBottom: '8px' }}>
                         THB{property.is_for_rent ? ' / mo.' : ''}
                     </span>
                 </div>
@@ -215,13 +220,14 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2mm', marginTop: '2mm' }}>
                             {allHighlights.map((item, idx) => (
                                 <div key={idx} style={{
-                                    display: 'flex', alignItems: 'center',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: '10px', fontWeight: 'bold', color: '#1e40af',
                                     backgroundColor: '#eff6ff',
-                                    padding: '2px 7px', borderRadius: '20px',
-                                    border: '1px solid #bfdbfe', gap: '3px'
+                                    padding: '3px 8px', borderRadius: '20px',
+                                    border: '1px solid #bfdbfe', gap: '3px',
+                                    lineHeight: '1.2'
                                 }}>
-                                    <span style={{ color: '#3b82f6', fontSize: '9px' }}>{ICONS.tag}</span>
+                                    <span style={{ color: '#3b82f6', fontSize: '9px', display: 'flex', alignItems: 'center' }}>{ICONS.tag}</span>
                                     {item}
                                 </div>
                             ))}
@@ -235,9 +241,11 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                             {mainFacilities.map((facility, idx) => (
                                 <span key={idx} style={{
                                     fontSize: '10px', backgroundColor: '#f1f5f9',
-                                    padding: '2px 7px', borderRadius: '20px',
+                                    padding: '3px 8px', borderRadius: '20px',
                                     fontWeight: 'bold', color: '#475569',
-                                    border: '1px solid #e2e8f0'
+                                    border: '1px solid #e2e8f0',
+                                    lineHeight: '1.2',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}>
                                     {ICONS.facility} {facility}
                                 </span>
@@ -318,16 +326,17 @@ const InfoItem = ({ icon, label, value }: { icon: string; label: string; value: 
             justifyContent: 'center', 
             gap: '4px', 
             width: '100%',
-            marginBottom: '1mm'
+            marginBottom: '1mm',
+            lineHeight: '1.2'
         }}>
-            <span style={{ fontSize: '12px', lineHeight: 1 }}>{icon}</span>
+            <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center' }}>{icon}</span>
             <span style={{ 
                 fontSize: '8px', 
                 color: '#94a3b8', 
                 textTransform: 'uppercase', 
                 fontWeight: '800', 
                 letterSpacing: '0.05em',
-                lineHeight: 1
+                lineHeight: '1.2'
             }}>{label}</span>
         </div>
         <div style={{ 
@@ -335,7 +344,10 @@ const InfoItem = ({ icon, label, value }: { icon: string; label: string; value: 
             color: '#2A4076', 
             fontWeight: '900', 
             width: '100%',
-            lineHeight: 1.2
+            lineHeight: '1.2',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
         }}>{value}</div>
     </div>
 );
