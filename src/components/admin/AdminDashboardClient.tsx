@@ -78,25 +78,25 @@ export default function AdminDashboardClient({
             </div>
 
             {/* Tab Navigation */}
-            <div className="bg-white p-1 rounded-2xl shadow-md border border-slate-100 grid grid-cols-3 sm:flex sm:flex-wrap gap-1 mb-6 sm:mb-10">
-                <button onClick={() => setTab('overview')} className={tabClass('overview')}>
+            <div className="bg-white p-1 rounded-2xl shadow-md border border-slate-100 grid grid-cols-3 sm:flex sm:flex-nowrap gap-1 mb-6 sm:mb-10">
+                <button onClick={() => setTab('overview')} className={`${tabClass('overview')} sm:flex-1`}>
                     <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">概要</span>
                 </button>
                 {/* 分析は外部ページなので Link のまま */}
-                <Link href="/admin-secret/analytics" className="flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all text-slate-400 hover:text-navy-secondary hover:bg-slate-50">
+                <Link href="/admin-secret/analytics" className="flex-1 flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all text-slate-400 hover:text-navy-secondary hover:bg-slate-50">
                     <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-500" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">分析</span>
                 </Link>
-                <button onClick={() => setTab('projects')} className={tabClass('projects')}>
+                <button onClick={() => setTab('projects')} className={`${tabClass('projects')} sm:flex-1`}>
                     <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">PJ</span>
                 </button>
-                <button onClick={() => setTab('developers')} className={tabClass('developers')}>
+                <button onClick={() => setTab('developers')} className={`${tabClass('developers')} sm:flex-1`}>
                     <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">開発</span>
                 </button>
-                <button onClick={() => setTab('properties')} className={tabClass('properties')}>
+                <button onClick={() => setTab('properties')} className={`${tabClass('properties')} sm:flex-1`}>
                     <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">承認</span>
                     {pendingCount > 0 && (
@@ -105,11 +105,11 @@ export default function AdminDashboardClient({
                         </span>
                     )}
                 </button>
-                <button onClick={() => setTab('users')} className={tabClass('users')}>
+                <button onClick={() => setTab('users')} className={`${tabClass('users')} sm:flex-1`}>
                     <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">会員</span>
                 </button>
-                <button onClick={() => setTab('feedback')} className={tabClass('feedback')}>
+                <button onClick={() => setTab('feedback')} className={`${tabClass('feedback')} sm:flex-1`}>
                     <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">要望</span>
                     {newFeedbackCount > 0 && (
