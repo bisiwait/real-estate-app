@@ -141,6 +141,16 @@ export default function DashboardActions({
 
             {/* Desktop layout: icon buttons */}
             <div className="hidden sm:flex items-center space-x-2">
+                <Link 
+                    href={`/properties/${propertyId}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all border border-slate-100 shadow-sm flex items-center gap-1.5 px-4"
+                    title="詳細を見る"
+                >
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="text-xs font-bold">詳細</span>
+                </Link>
                 {hasPremium && (
                     <div title="PDFチラシをダウンロード">
                         <PropertyPdfDownload property={property} agent={agent} dict={{}} iconOnly={true} />

@@ -253,7 +253,7 @@ export default function DashboardClient({
                                                         {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">S</span>}
                                                     </>}
                                                 </div>
-                                                <Link href={`/properties/${property.id}`} target="_blank" rel="noopener noreferrer" className="px-2 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center">
+                                                <Link href={`/properties/${property.id}`} target="_blank" rel="noopener noreferrer" className="px-2 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center hidden">
                                                     <span className="hidden lg:inline">詳細</span><ChevronRight className="w-4 h-4" />
                                                 </Link>
                                                 <PropertyConfirmButton propertyId={property.id} title={property.title} />
