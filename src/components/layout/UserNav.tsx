@@ -65,29 +65,29 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
     // User is logged in
     if (isMobile) {
         return (
-            <div className="flex flex-col space-y-6 w-full">
-                <div className="flex items-center space-x-4 px-4 py-4 bg-navy-primary/5 rounded-2xl border border-navy-primary/10">
-                    <div className="w-12 h-12 rounded-full bg-navy-primary flex items-center justify-center text-white shadow-lg">
-                        <User className="w-6 h-6" />
+            <div className="flex flex-col space-y-4 w-full">
+                <div className="flex items-center space-x-4 px-4 py-3 bg-navy-primary/5 rounded-2xl border border-navy-primary/10">
+                    <div className="w-10 h-10 rounded-full bg-navy-primary flex items-center justify-center text-white shadow-lg shrink-0">
+                        <User className="w-5 h-5" />
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] font-black text-navy-primary/40 uppercase tracking-widest block">Logged in as</span>
-                        <span className="text-lg font-black text-navy-primary truncate">
+                        <span className="text-[9px] font-black text-navy-primary/40 uppercase tracking-widest block">Logged in as</span>
+                        <span className="text-base font-black text-navy-primary truncate">
                             {userData.role === 'agent'
                                 ? (userData.fullName || user?.email)
                                 : (user?.email || userData.fullName || 'Anonymous')}
                         </span>
-                        <span className="text-[11px] font-bold text-slate-400 truncate">{user?.email}</span>
+                        <span className="text-[10px] font-bold text-slate-400 truncate">{user?.email}</span>
                     </div>
                 </div>
 
-                <div className="flex flex-col space-y-2 w-full">
+                <div className="flex flex-col space-y-0.5 w-full">
                     {userData.role === 'general' && (
                         <>
                             <Link
                                 href={`/${currentLocale}/mypage`}
                                 onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-4 hover:bg-slate-50 rounded-2xl text-lg font-black text-navy-primary transition-all active:scale-[0.98]"
+                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
                             >
                                 <User className="w-5 h-5 text-slate-400" />
                                 <span>{dict.labels.mypage}</span>
@@ -95,7 +95,7 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
                             <Link
                                 href={`/${currentLocale}/mypage?tab=favorites`}
                                 onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-4 hover:bg-slate-50 rounded-2xl text-lg font-black text-navy-primary transition-all active:scale-[0.98]"
+                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
                             >
                                 <Heart className="w-5 h-5 text-slate-400" />
                                 <span>{dict.labels.favorites}</span>
@@ -103,7 +103,7 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
                             <Link
                                 href={`/${currentLocale}/mypage?tab=settings`}
                                 onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-4 hover:bg-slate-50 rounded-2xl text-lg font-black text-navy-primary transition-all active:scale-[0.98]"
+                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
                             >
                                 <Settings className="w-5 h-5 text-slate-400" />
                                 <span>{dict.labels.settings}</span>
@@ -116,7 +116,7 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
                             <Link
                                 href={`/${currentLocale}/dashboard`}
                                 onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-4 hover:bg-slate-50 rounded-2xl text-lg font-black text-navy-primary transition-all active:scale-[0.98]"
+                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
                             >
                                 <LayoutDashboard className="w-5 h-5 text-slate-400" />
                                 <span>{dict.labels.dashboard}</span>
@@ -124,7 +124,7 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
                             <Link
                                 href={`/${currentLocale}/dashboard/settings`}
                                 onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-4 hover:bg-slate-50 rounded-2xl text-lg font-black text-navy-primary transition-all active:scale-[0.98]"
+                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
                             >
                                 <Settings className="w-5 h-5 text-slate-400" />
                                 <span>{dict.labels.settings}</span>
@@ -137,7 +137,7 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
                             <Link
                                 href={`/${currentLocale}/admin-secret`}
                                 onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-4 hover:bg-slate-50 rounded-2xl text-lg font-black text-navy-primary transition-all active:scale-[0.98]"
+                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
                             >
                                 <ShieldCheck className="w-5 h-5 text-slate-400" />
                                 <span>{dict.labels.admin}</span>
@@ -147,7 +147,7 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
 
                     <button
                         onClick={handleLogout}
-                        className="flex items-center space-x-4 px-4 py-4 text-lg font-black text-red-500 hover:bg-red-50 rounded-2xl transition-all active:scale-[0.98]"
+                        className="flex items-center space-x-4 px-4 py-3 text-base font-black text-red-500 hover:bg-red-50 rounded-2xl transition-all active:scale-[0.98]"
                     >
                         <LogOut className="w-5 h-5" />
                         <span>{dict.common.logout}</span>

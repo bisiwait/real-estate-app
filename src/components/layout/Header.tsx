@@ -100,14 +100,14 @@ export default function Header({ dict }: { dict: any }) {
                     <div className="h-px bg-slate-100 w-full" />
 
                     {/* Navigation Links */}
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.href}
                                 href={link.href}
                                 onClick={() => setIsMenuOpen(false)}
                                 className={cn(
-                                    "flex items-center justify-between px-4 py-4 rounded-2xl text-lg font-black transition-all",
+                                    "flex items-center justify-between px-4 py-3 rounded-2xl text-base font-black transition-all",
                                     pathname === link.href ? "bg-navy-primary/5 text-navy-primary" : "text-slate-600 active:bg-slate-50"
                                 )}
                             >
