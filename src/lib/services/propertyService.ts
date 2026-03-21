@@ -36,6 +36,7 @@ export interface PresaleProject {
 export async function getRecommendedPresales(limit = 3) {
   const supabase = createStaticClient();
 
+  // Fetch all properties with is_presale = true to debug
   const { data, error } = await supabase
     .from('properties')
     .select(`
@@ -54,15 +55,17 @@ export async function getRecommendedPresales(limit = 3) {
       )
     `)
     .eq('is_presale', true)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching recommended presales:', error);
     return [];
   }
 
-  return data.map(p => ({
+  // Filter in memory to see what's going on if needed, but for now just return all up to limit
+  const result = data.slice(0, limit);
+
+  return result.map(p => ({
     id: p.id,
     name: p.project?.name || p.title,
     area: p.area?.name || 'Unknown',
@@ -70,7 +73,7 @@ export async function getRecommendedPresales(limit = 3) {
     priceRange: p.project?.price_range || `${p.sale_price?.toLocaleString() || 'TBA'} THB`,
     imageUrl: p.images?.[0] || '',
     hasJapaneseSupport: p.project?.has_japanese_support || false,
-    slug: p.id, // Using ID as slug if no slug field
+    slug: p.id,
   })) as PresaleProject[];
 }
 

@@ -16,6 +16,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
   // Fetch real data from service
   const presales = await getRecommendedPresales();
+  console.log('Fetched presales count:', presales.length);
   const rentals = await getRecommendedRentals();
   const sales = await getRecommendedSales();
 
