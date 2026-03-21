@@ -346,17 +346,17 @@ export default async function DashboardPage({
                                         </div>
 
                                         {/* ── DESKTOP ROW LIST (sm+) ── */}
-                                        <div className="hidden sm:block overflow-x-auto pb-4">
-                                            <div className="divide-y divide-slate-50 min-w-[1000px]">
+                                        <div className="hidden sm:block overflow-x-hidden pb-4">
+                                            <div className="divide-y divide-slate-50 w-full">
                                                 {filteredProperties.map((property) => (
-                                                    <div key={property.id} className="p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-6">
-                                                        <div className="flex items-center space-x-6 min-w-0 flex-1">
-                                                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                                                    <div key={property.id} className="p-4 lg:p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 lg:gap-6">
+                                                        <div className="flex items-center space-x-4 lg:space-x-6 min-w-0 flex-1">
+                                                            <div className="w-16 h-16 lg:w-24 lg:h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
                                                                 {property.images?.[0] ? (
                                                                     <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                                        <LayoutDashboard className="w-8 h-8" />
+                                                                        <LayoutDashboard className="w-6 h-6 lg:w-8 lg:h-8" />
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -368,27 +368,27 @@ export default async function DashboardPage({
                                                                     {property.status === 'under_negotiation' && <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold">商談中</span>}
                                                                     {property.status === 'contracted' && <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px] font-bold">成約済</span>}
                                                                     {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold">期限切れ</span>}
-                                                                    <span className="text-[10px] text-slate-400 font-medium">#{property.id.slice(0, 8)}</span>
+                                                                    <span className="text-[10px] text-slate-400 font-medium hidden lg:inline">#{property.id.slice(0, 8)}</span>
                                                                     <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
                                                                     <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
                                                                 </div>
-                                                                <h4 className="text-lg font-bold text-navy-secondary mb-1 truncate">{property.title}</h4>
-                                                                <div className="flex flex-wrap items-center gap-x-3 text-sm font-medium">
+                                                                <h4 className="text-sm lg:text-lg font-bold text-navy-secondary mb-1 truncate">{property.title}</h4>
+                                                                <div className="flex flex-wrap items-center gap-x-3 text-xs lg:text-sm font-medium">
                                                                     <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
                                                                     {property.is_for_rent && <span className="text-navy-primary font-bold tabular-nums"><span className="text-[9px] opacity-50 uppercase mr-1">Rent</span>{property.rent_price?.toLocaleString()}</span>}
                                                                     {property.is_for_sale && <span className="text-navy-primary font-bold tabular-nums"><span className="text-[9px] opacity-50 uppercase mr-1">Sale</span>{property.sale_price?.toLocaleString()}</span>}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="flex gap-1.5">
-                                                                {property.is_presale ? <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PRESALE</span> : <>
-                                                                    {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">Rent</span>}
-                                                                    {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">Sale</span>}
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            <div className="flex gap-1">
+                                                                {property.is_presale ? <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PS</span> : <>
+                                                                    {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">R</span>}
+                                                                    {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">S</span>}
                                                                 </>}
                                                             </div>
-                                                            <Link href={`/properties/${property.id}`} target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center">
-                                                                詳細<ChevronRight className="w-4 h-4" />
+                                                            <Link href={`/properties/${property.id}`} target="_blank" rel="noopener noreferrer" className="px-2 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center">
+                                                                <span className="hidden lg:inline">詳細</span><ChevronRight className="w-4 h-4" />
                                                             </Link>
                                                             <PropertyConfirmButton propertyId={property.id} title={property.title} />
                                                             <DashboardActions
