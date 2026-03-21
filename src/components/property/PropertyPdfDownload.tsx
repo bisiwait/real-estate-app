@@ -261,7 +261,9 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
                         useCORS: true,
                         allowTaint: false, // Essential to prevent security errors causing rendering stops
                         logging: true, // Output debug logs from html2canvas
-                        backgroundColor: '#ffffff'
+                        backgroundColor: '#ffffff',
+                        width: 793.7, // 210mm in pixels at 96dpi
+                        height: 1122.5 // 297mm in pixels at 96dpi
                     });
                     
                     if (canvas) {
@@ -313,7 +315,15 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
     };
 
     const flyerDOM = (
-        <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
+        <div 
+            style={{ 
+                position: 'fixed', 
+                top: '-10000px', 
+                left: '-10000px', 
+                zIndex: -9999,
+                pointerEvents: 'none'
+            }}
+        >
             <div ref={flyerRef} style={{ width: '210mm', height: '297mm', backgroundColor: 'white' }}>
                 <PropertyFlyer {...flyerData} />
             </div>
