@@ -182,29 +182,29 @@ export default function AdminPropertyManagement() {
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-100 p-6 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+            <div className="bg-slate-50 border-b border-slate-100 p-4 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4 md:gap-6">
                 <div>
                     <div className="flex items-center gap-3">
-                        <h2 className="text-xl font-black text-navy-secondary">物件承認・管理</h2>
+                        <h2 className="text-lg md:text-xl font-black text-navy-secondary">物件承認・管理</h2>
                         {!loading && (
-                            <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-xs font-bold">
+                            <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
                                 {filteredProperties.length}件
                             </span>
                         )}
                     </div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Property Management</p>
+                    <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Property Management</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full xl:w-auto">
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full xl:w-auto">
                     {/* Search Bar */}
                     <div className="relative w-full md:w-64 flex-shrink-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <input
                             type="text"
                             placeholder="物件名・担当者で検索..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
+                            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] md:text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
                         />
                         {searchQuery && (
                             <button
@@ -217,29 +217,29 @@ export default function AdminPropertyManagement() {
                     </div>
 
                     {/* Filter Tabs */}
-                    <div className="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
-                        <div className="flex bg-white p-1 rounded-xl border border-slate-200">
+                    <div className="flex items-center w-full md:w-auto overflow-hidden">
+                        <div className="flex bg-white p-1 rounded-xl border border-slate-200 w-full md:w-auto">
                             <button
                                 onClick={() => setFilter('all')}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'all' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'all' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
                             >
                                 すべて
                             </button>
                             <button
                                 onClick={() => setFilter('pending')}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-amber-500'}`}
+                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-amber-500'}`}
                             >
                                 承認待ち
                             </button>
                             <button
                                 onClick={() => setFilter('active')}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'active' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-500'}`}
+                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'active' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-500'}`}
                             >
                                 公開中
                             </button>
                             <button
                                 onClick={() => setFilter('expired')}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filter === 'expired' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-500 hover:text-red-500'}`}
+                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'expired' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-500 hover:text-red-500'}`}
                             >
                                 期限切れ
                             </button>
@@ -248,8 +248,8 @@ export default function AdminPropertyManagement() {
                 </div>
             </div>
 
-            <div className="overflow-x-auto pb-4">
-                <table className="w-full text-left min-w-[1000px]">
+            <div className="overflow-x-auto pb-4 custom-scrollbar">
+                <table className="w-full text-left min-w-[800px] md:min-w-[1000px]">
                     <thead>
                         <tr className="bg-slate-50/50 border-b border-slate-100">
                             <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">物件情報</th>

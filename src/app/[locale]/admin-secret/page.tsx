@@ -57,7 +57,7 @@ export default async function AdminSecretDashboard({
         <div className="bg-slate-50 min-h-screen pb-20 pt-24">
             <div className="container mx-auto px-4">
                 {/* Minimal Identification & Actions */}
-                <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
                     <div className="flex items-center space-x-2">
                         <div className="bg-amber-500 text-navy-secondary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest leading-none">
                             Secret Mode
@@ -65,97 +65,97 @@ export default async function AdminSecretDashboard({
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Admin Access Only</span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4">
-                        <Link href="/admin-secret/analytics" className="flex items-center space-x-2 bg-indigo-50 border border-indigo-100 hover:border-indigo-300 text-indigo-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md">
-                            <BarChart3 className="w-4 h-4" />
-                            <span>サイト統計・分析</span>
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4">
+                        <Link href="/admin-secret/analytics" className="flex items-center justify-center space-x-2 bg-indigo-50 border border-indigo-100 hover:border-indigo-300 text-indigo-700 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-sm">
+                            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span>統計・分析</span>
                         </Link>
-                        <Link href="/admin-secret/broadcast" className="flex items-center space-x-2 bg-white border border-slate-200 hover:border-navy-primary text-navy-secondary px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md">
-                            <Bell className="w-4 h-4 text-navy-primary" />
-                            <span>一斉通知を配信</span>
+                        <Link href="/admin-secret/broadcast" className="flex items-center justify-center space-x-2 bg-white border border-slate-200 hover:border-navy-primary text-navy-secondary px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-sm">
+                            <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-navy-primary" />
+                            <span>一斉通知</span>
                         </Link>
-                        <Link href="/list-property" className="flex items-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                            <Sparkles className="w-4 h-4 text-amber-300" />
+                        <Link href="/list-property" className="col-span-2 flex items-center justify-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-md">
+                            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />
                             <span>AIで物件を取り込む</span>
                         </Link>
                     </div>
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="bg-white p-1.5 sm:p-2 rounded-2xl shadow-md border border-slate-100 flex flex-wrap gap-1.5 sm:gap-2 mb-10">
+                <div className="bg-white p-1 rounded-2xl shadow-md border border-slate-100 grid grid-cols-3 sm:flex sm:flex-wrap gap-1 mb-6 sm:mb-10">
                     <Link
                         href="?tab=overview"
-                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'overview'
+                        className={`flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'overview'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
                         <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="text-[10px] sm:text-sm whitespace-nowrap">概要</span>
+                        <span className="text-[9px] sm:text-sm whitespace-nowrap">概要</span>
                     </Link>
                     <Link
                         href="/admin-secret/analytics"
-                        className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all text-slate-400 hover:text-navy-secondary hover:bg-slate-50"
+                        className="flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all text-slate-400 hover:text-navy-secondary hover:bg-slate-50"
                     >
                         <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-500" />
-                        <span className="text-[10px] sm:text-sm whitespace-nowrap">サイト分析</span>
+                        <span className="text-[9px] sm:text-sm whitespace-nowrap">分析</span>
                     </Link>
                     <Link
                         href="?tab=projects"
-                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'projects'
+                        className={`flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'projects'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
                         <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="text-[10px] sm:text-sm whitespace-nowrap">プロジェクト</span>
+                        <span className="text-[9px] sm:text-sm whitespace-nowrap">PJ</span>
                     </Link>
                     <Link
                         href="?tab=developers"
-                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'developers'
+                        className={`flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'developers'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
                         <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="text-[10px] sm:text-sm whitespace-nowrap">デベロッパー</span>
+                        <span className="text-[9px] sm:text-sm whitespace-nowrap">開発</span>
                     </Link>
                     <Link
                         href="?tab=properties"
-                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'properties'
+                        className={`flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'properties'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
                         <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="text-[10px] sm:text-sm whitespace-nowrap">物件承認</span>
+                        <span className="text-[9px] sm:text-sm whitespace-nowrap">承認</span>
                         {pendingCount > 0 && (
-                            <span className="bg-red-500 text-white text-[8px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full ml-1 min-w-[1.2rem] sm:min-w-[1.5rem] text-center">
+                            <span className="bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ml-1 min-w-[1.2rem] text-center">
                                 {pendingCount}
                             </span>
                         )}
                     </Link>
                     <Link
                         href="?tab=users"
-                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'users'
+                        className={`flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'users'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
                         <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="text-[10px] sm:text-sm whitespace-nowrap">ユーザー</span>
+                        <span className="text-[9px] sm:text-sm whitespace-nowrap">会員</span>
                     </Link>
                     <Link
                         href="?tab=feedback"
-                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'feedback'
+                        className={`flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'feedback'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
                         <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="text-[10px] sm:text-sm whitespace-nowrap">要望・改善</span>
+                        <span className="text-[9px] sm:text-sm whitespace-nowrap">要望</span>
                         {newFeedbackCount > 0 && (
-                            <span className="bg-amber-500 text-white text-[8px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full ml-1 min-w-[1.2rem] sm:min-w-[1.5rem] text-center">
+                            <span className="bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ml-1 min-w-[1.2rem] text-center">
                                 {newFeedbackCount}
                             </span>
                         )}
