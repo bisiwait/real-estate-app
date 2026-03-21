@@ -326,13 +326,15 @@ export default async function DashboardPage({
                                                             <ChevronRight className="w-3.5 h-3.5" /> 詳細
                                                         </Link>
                                                         <div className="w-px bg-slate-200" />
-                                                        <DashboardActions
-                                                            propertyId={property.id}
-                                                            propertyTitle={property.title}
-                                                            profile={profile}
-                                                            property={property}
-                                                            agent={{ full_name: profile?.full_name, phone: profile?.phone }}
-                                                        />
+                                                        <div className="flex-1 flex items-center justify-center">
+                                                            <DashboardActions
+                                                                propertyId={property.id}
+                                                                propertyTitle={property.title}
+                                                                profile={profile}
+                                                                property={property}
+                                                                agent={{ full_name: profile?.full_name, phone: profile?.phone }}
+                                                            />
+                                                        </div>
                                                     </div>
                                                     {/* Status toggles: separate row below */}
                                                     <div className="mt-2 flex items-center justify-between px-1">

@@ -72,7 +72,7 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
                     ? '更新中...'
                     : status === 'success'
                         ? 'すべて更新完了'
-                        : 'すべての公開中物件を掲載継続'}
+                        : '全ての公開物件を掲載継続'}
             </span>
         </button>
     )
