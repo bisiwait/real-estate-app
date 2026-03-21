@@ -182,7 +182,7 @@ export default function AdminPropertyManagement() {
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-100 p-4 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4 md:gap-6">
+            <div className="bg-slate-50 border-b border-slate-100 p-2 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4 md:gap-6">
                 <div>
                     <div className="flex items-center gap-3">
                         <h2 className="text-lg md:text-xl font-black text-navy-secondary">物件承認・管理</h2>
@@ -248,7 +248,7 @@ export default function AdminPropertyManagement() {
                 </div>
             </div>
 
-            <div className="p-4 md:p-8">
+            <div className="p-2 md:p-8">
                 {errorMessage && (
                     <div className="px-4 py-3 bg-red-50 text-red-600 text-xs font-bold text-center">
                         エラーが発生しました: {errorMessage}

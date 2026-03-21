@@ -288,7 +288,7 @@ export default function AdminProjectManagement() {
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden mb-12">
-            <div className="bg-slate-50 border-b border-slate-100 p-4 md:p-8">
+            <div className="bg-slate-50 border-b border-slate-100 p-2 md:p-8">
                 <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex items-center gap-2 md:gap-3">
                         <h2 className="min-w-0 whitespace-nowrap text-base font-black text-navy-secondary md:text-xl">
@@ -344,7 +344,7 @@ export default function AdminProjectManagement() {
                 )}
             </div>
 
-            <div className="p-4 md:p-8">
+            <div className="p-2 md:p-8">
                 {errorMessage && (
                     <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl flex items-center space-x-3 text-xs font-bold mb-6">
                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
