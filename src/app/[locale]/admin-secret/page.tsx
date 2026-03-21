@@ -24,7 +24,7 @@ export default async function AdminSecretDashboard() {
     const recentInquiries = contacts?.filter(c => c.created_at >= oneDayAgo).length || 0
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-20 pt-24">
+        <div className="bg-slate-50 min-h-screen pb-20 pt-16 md:pt-24">
             <div className="container mx-auto px-4">
                 <AdminDashboardClient
                     pendingCount={pendingCount}

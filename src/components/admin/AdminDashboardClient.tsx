@@ -53,7 +53,7 @@ export default function AdminDashboardClient({
     return (
         <>
             {/* Header Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-8 gap-4">
                 <div className="flex items-center space-x-2">
                     <div className="bg-amber-500 text-navy-secondary text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest leading-none">
                         Secret Mode
