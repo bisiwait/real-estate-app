@@ -25,6 +25,7 @@ import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
 import BulkConfirmButton from '@/components/dashboard/BulkConfirmButton'
 import PremiumPromoCard from '@/components/dashboard/PremiumPromoCard'
 import SubscriptionStatus from '@/components/dashboard/SubscriptionStatus'
+import FeedbackForm from '@/components/dashboard/FeedbackForm'
 
 export default async function DashboardPage({
     searchParams,
@@ -208,6 +209,9 @@ export default async function DashboardPage({
                                 </div>
                             </div>
                         </div>
+
+                        {/* Feedback Form */}
+                        <FeedbackForm />
                     </div>
 
                     {/* Main area */}
