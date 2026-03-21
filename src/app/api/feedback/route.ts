@@ -17,11 +17,21 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Title and content are required' }, { status: 400 })
         }
 
+        // ユーザー情報を取得して保存
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single()
+
+        const userIdentifier = profile?.full_name || user.email
+
         const { error } = await supabase
             .from('feedback')
             .insert([
                 {
                     user_id: user.id,
+                    user_info: userIdentifier, // 保存用のカラム（事前にテーブル定義に含まれている前提、または動的追加）
                     title,
                     content,
                     priority: priority || 'medium',
