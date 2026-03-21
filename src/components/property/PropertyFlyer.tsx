@@ -63,7 +63,7 @@ function generateHighlights(property: PropertyFlyerProps['property']): string[] 
     if (property.sqm >= 50) result.push(`${property.sqm}㎡以上の広々空間`);
     if (Number(property.floor) >= 10) result.push('高層階・眺望抜群');
     if (property.bedrooms === '1') result.push('1LDK コンパクト暮らし');
-    if (property.bedrooms === '2' || property.bedrooms === '3') result.push(`${property.bedrooms}ベッドルーム・広々');
+    if (property.bedrooms === '2' || property.bedrooms === '3') result.push(`${property.bedrooms}ベッドルーム・広々`);
 
     // エリアベース
     if (/パタヤ|Pattaya/i.test(areaName) || /パタヤ/i.test(title)) result.push('パタヤ人気エリア');
