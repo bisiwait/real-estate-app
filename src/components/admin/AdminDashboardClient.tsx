@@ -16,13 +16,11 @@ import {
     Lightbulb
 } from 'lucide-react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
-
-const AdminPropertyManagement = dynamic(() => import('./PropertyManagement'), { ssr: false })
-const AdminUserManagement = dynamic(() => import('./UserManagement'), { ssr: false })
-const AdminProjectManagement = dynamic(() => import('./ProjectManagement'), { ssr: false })
-const AdminDeveloperManagement = dynamic(() => import('./DeveloperManagement'), { ssr: false })
-const AdminFeedbackManagement = dynamic(() => import('./FeedbackManagement'), { ssr: false })
+import AdminPropertyManagement from './PropertyManagement'
+import AdminUserManagement from './UserManagement'
+import AdminProjectManagement from './ProjectManagement'
+import AdminDeveloperManagement from './DeveloperManagement'
+import AdminFeedbackManagement from './FeedbackManagement'
 
 type TabId = 'overview' | 'projects' | 'developers' | 'properties' | 'users' | 'feedback'
 
