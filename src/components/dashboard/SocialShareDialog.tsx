@@ -36,8 +36,10 @@ interface SocialShareDialogProps {
 export default function SocialShareDialog({ isOpen, onClose, propertyContext }: SocialShareDialogProps) {
   const bannerRef = useRef<HTMLDivElement>(null)
   const captureRef = useRef<HTMLDivElement>(null)
+  const previewContainerRef = useRef<HTMLDivElement>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [previewScale, setPreviewScale] = useState(0.37037)
   
   // Translation States
   const [translatedText, setTranslatedText] = useState({ 
@@ -73,6 +75,20 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const updateScale = () => {
+      if (previewContainerRef.current) {
+        const w = previewContainerRef.current.offsetWidth
+        if (w > 0) setPreviewScale(w / 1080)
+      }
+    }
+    // 少し遅延させてモーダルのレイアウト確定を待つ
+    const t = setTimeout(updateScale, 50)
+    window.addEventListener('resize', updateScale)
+    return () => { clearTimeout(t); window.removeEventListener('resize', updateScale) }
+  }, [isOpen])
 
   if (!isOpen || !mounted) return null
 
@@ -491,15 +507,16 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                )}
 
                <div 
-                  className="relative aspect-square w-full max-w-[400px] overflow-hidden bg-white shadow-xl flex items-center justify-center"
+                  ref={previewContainerRef}
+                  className="relative w-full aspect-square overflow-hidden bg-white shadow-xl"
                >
                   <div 
                     ref={bannerRef}
-                    className="bg-[#2A4076] text-[#FFFFFF] overflow-hidden shrink-0"
+                    className="overflow-hidden"
                     style={{ 
                       width: '1080px', 
                       height: '1080px', 
-                      transform: 'scale(0.37037)', 
+                      transform: `scale(${previewScale})`,
                       transformOrigin: 'top left',
                       position: 'absolute',
                       top: 0,
