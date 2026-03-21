@@ -95,14 +95,14 @@ export default function DashboardActions({
             <div className="sm:hidden flex items-stretch w-full">
                 <button
                     onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
-                    className="flex-1 flex items-center justify-center gap-1 py-3 text-[11px] font-bold text-navy-primary active:bg-navy-primary/5 active:scale-[0.97] transition-all"
+                    className="flex-[1.2] flex items-center justify-center gap-1 py-3 text-[10px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.97] transition-all"
                 >
                     <Edit3 className="w-3.5 h-3.5" /> 編集
                 </button>
                 {hasPremium && (
                     <button
                         onClick={() => setIsShareModalOpen(true)}
-                        className="flex-1 flex items-center justify-center gap-1 py-3 text-[11px] font-bold text-pink-500 active:bg-pink-50 active:scale-[0.97] border-l border-slate-100 transition-all"
+                        className="flex-1 flex items-center justify-center py-3 text-[10px] font-black text-pink-500 active:bg-pink-50 active:scale-[0.97] border-l border-slate-100 transition-all"
                     >
                         <Share2 className="w-3.5 h-3.5" /> SNS
                     </button>
@@ -115,7 +115,7 @@ export default function DashboardActions({
                 <button
                     onClick={handleDelete}
                     disabled={loading}
-                    className="px-4 flex items-center justify-center text-red-400 active:bg-red-50 active:scale-[0.97] border-l border-slate-100 transition-all disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center text-red-400 active:bg-red-50 active:scale-[0.97] border-l border-slate-100 transition-all disabled:opacity-50"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                 </button>
