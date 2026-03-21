@@ -97,6 +97,7 @@ export default function DashboardActions({
                 <Link
                     href={`/properties/${propertyId}`}
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-slate-500 active:bg-slate-50 active:scale-[0.95] transition-all"
                 >
                     <ExternalLink className="w-3.5 h-3.5" />
