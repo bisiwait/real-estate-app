@@ -156,23 +156,38 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
             <div style={{
                 width: '100%',
                 background: 'linear-gradient(135deg, #1e3a8a 0%, #2A4076 100%)',
-                padding: '4mm 0',
+                height: '24mm',
                 borderRadius: '6px',
-                marginBottom: '5mm',
+                marginBottom: '6mm',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '1mm'
+                boxSizing: 'border-box'
             }}>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center' }}>
+                <div style={{ 
+                    fontSize: '11px', 
+                    fontWeight: 'bold', 
+                    color: '#93c5fd', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.12em', 
+                    textAlign: 'center',
+                    marginBottom: '2mm',
+                    lineHeight: 1
+                }}>
                     {ICONS.price}&nbsp;{property.is_for_rent ? 'MONTHLY RENT（賃料/月）' : 'SALE PRICE（販売価格）'}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '42px', color: '#fbbf24', fontWeight: '900', lineHeight: 1 }}>
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'baseline', 
+                    justifyContent: 'center', 
+                    gap: '8px',
+                    lineHeight: 1
+                }}>
+                    <span style={{ fontSize: '46px', color: '#fbbf24', fontWeight: '900', letterSpacing: '-0.02em' }}>
                         {property.price?.toLocaleString()}
                     </span>
-                    <span style={{ fontSize: '16px', color: '#e2e8f0', fontWeight: 'bold' }}>
+                    <span style={{ fontSize: '18px', color: '#e2e8f0', fontWeight: 'bold' }}>
                         THB{property.is_for_rent ? ' / mo.' : ''}
                     </span>
                 </div>
@@ -182,8 +197,9 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '3mm',
-                marginBottom: '5mm'
+                gap: '4mm',
+                marginBottom: '6mm',
+                width: '100%'
             }}>
                 <InfoItem icon={ICONS.type}  label="TYPE"  value={property.property_type || '—'} />
                 <InfoItem icon={ICONS.size}  label="SIZE"  value={`${property.sqm || '—'} m²`} />
@@ -285,22 +301,42 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
 const InfoItem = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
     <div style={{
         backgroundColor: '#F8FAFF',
-        padding: '2.5mm 0',
+        padding: '0',
         borderRadius: '5px',
         border: '1px solid #e2e8f0',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '1mm',
-        height: '14mm',
-        boxSizing: 'border-box'
+        height: '16mm',
+        boxSizing: 'border-box',
+        textAlign: 'center'
     }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', width: '100%' }}>
-            <span style={{ fontSize: '11px' }}>{icon}</span>
-            <span style={{ fontSize: '8px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.05em' }}>{label}</span>
+        <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: '4px', 
+            width: '100%',
+            marginBottom: '1mm'
+        }}>
+            <span style={{ fontSize: '12px', lineHeight: 1 }}>{icon}</span>
+            <span style={{ 
+                fontSize: '8px', 
+                color: '#94a3b8', 
+                textTransform: 'uppercase', 
+                fontWeight: '800', 
+                letterSpacing: '0.05em',
+                lineHeight: 1
+            }}>{label}</span>
         </div>
-        <div style={{ fontSize: '13px', color: '#2A4076', fontWeight: '900', textAlign: 'center', width: '100%' }}>{value}</div>
+        <div style={{ 
+            fontSize: '14px', 
+            color: '#2A4076', 
+            fontWeight: '900', 
+            width: '100%',
+            lineHeight: 1.2
+        }}>{value}</div>
     </div>
 );
 
