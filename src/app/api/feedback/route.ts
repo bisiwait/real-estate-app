@@ -26,14 +26,16 @@ export async function POST(req: Request) {
 
         const userIdentifier = profile?.full_name || user.email
 
+        // content の先頭にユーザー情報を付与して保存（カラム不足によるエラーを回避）
+        const enrichedContent = `【送信者: ${userIdentifier}】\n\n${content}`
+
         const { error } = await supabase
             .from('feedback')
             .insert([
                 {
                     user_id: user.id,
-                    user_info: userIdentifier, // 保存用のカラム（事前にテーブル定義に含まれている前提、または動的追加）
                     title,
-                    content,
+                    content: enrichedContent,
                     priority: priority || 'medium',
                     status: 'new'
                 }
