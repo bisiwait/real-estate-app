@@ -187,14 +187,6 @@ export default function DashboardClient({
                                             </div>
                                         </div>
                                         <div className="mt-2 flex items-stretch bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                                            <Link
-                                                href={`/properties/${property.id}`}
-                                                target="_blank"
-                                                className="flex-1 flex items-center justify-center gap-1 py-3 text-[11px] font-bold text-slate-500 active:bg-slate-100 active:scale-[0.97] transition-all"
-                                            >
-                                                <ChevronRight className="w-3.5 h-3.5" /> 詳細
-                                            </Link>
-                                            <div className="w-px bg-slate-200" />
                                             <div className="flex-1 flex items-center justify-center">
                                                 <DashboardActions
                                                     propertyId={property.id}

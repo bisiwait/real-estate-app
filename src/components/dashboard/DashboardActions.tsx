@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Edit3, Trash2, Loader2, Crown, Share2 } from 'lucide-react'
+import { Edit3, Trash2, Loader2, Share2, ExternalLink, FileText } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import { isPremium } from '@/lib/utils/plan'
@@ -91,33 +92,49 @@ export default function DashboardActions({
 
     return (
         <>
-            {/* Mobile layout: 編集 + its other actions as a full-width button */}
-            <div className="sm:hidden flex items-stretch w-full">
+            {/* Mobile layout: 詳細, 編集, SNS, PDF, 削除 を均等に配置 */}
+            <div className="sm:hidden flex items-stretch w-full divide-x divide-slate-100">
+                <Link
+                    href={`/properties/${propertyId}`}
+                    target="_blank"
+                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-slate-500 active:bg-slate-50 active:scale-[0.95] transition-all"
+                >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>詳細</span>
+                </Link>
+
                 <button
                     onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
-                    className="flex-[1.2] flex items-center justify-center gap-1 py-3 text-[10px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.97] transition-all"
+                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.95] transition-all"
                 >
-                    <Edit3 className="w-3.5 h-3.5" /> 編集
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>編集</span>
                 </button>
+
                 {hasPremium && (
                     <button
                         onClick={() => setIsShareModalOpen(true)}
-                        className="flex-1 flex items-center justify-center py-3 text-[10px] font-black text-pink-500 active:bg-pink-50 active:scale-[0.97] border-l border-slate-100 transition-all"
+                        className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-pink-500 active:bg-pink-50 active:scale-[0.95] transition-all"
                     >
-                        <Share2 className="w-3.5 h-3.5" /> SNS
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>SNS</span>
                     </button>
                 )}
+
                 {hasPremium && (
-                    <div className="flex-1 flex items-center justify-center border-l border-slate-100 active:bg-slate-50 active:scale-[0.97] transition-all">
+                    <div className="flex-1 flex flex-col items-center justify-center py-2.5 active:bg-slate-50 active:scale-[0.95] transition-all">
                         <PropertyPdfDownload property={property} agent={agent} dict={{}} iconOnly={true} />
+                        <span className="text-[9px] font-black text-slate-500 mt-1">PDF</span>
                     </div>
                 )}
+
                 <button
                     onClick={handleDelete}
                     disabled={loading}
-                    className="flex-1 flex items-center justify-center text-red-400 active:bg-red-50 active:scale-[0.97] border-l border-slate-100 transition-all disabled:opacity-50"
+                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-red-400 active:bg-red-50 active:scale-[0.95] transition-all disabled:opacity-50"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    <span>削除</span>
                 </button>
             </div>
 
