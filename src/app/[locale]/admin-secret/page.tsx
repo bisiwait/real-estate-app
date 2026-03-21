@@ -82,80 +82,80 @@ export default async function AdminSecretDashboard({
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="bg-white p-2 rounded-2xl shadow-md border border-slate-100 flex flex-wrap gap-2 mb-10">
+                <div className="bg-white p-1.5 sm:p-2 rounded-2xl shadow-md border border-slate-100 flex flex-wrap gap-1.5 sm:gap-2 mb-10">
                     <Link
                         href="?tab=overview"
-                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'overview'
+                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'overview'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
-                        <BarChart3 className="w-4 h-4" />
-                        <span>概要</span>
+                        <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-[10px] sm:text-sm whitespace-nowrap">概要</span>
                     </Link>
                     <Link
                         href="/admin-secret/analytics"
-                        className="flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all text-slate-400 hover:text-navy-secondary hover:bg-slate-50"
+                        className="flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all text-slate-400 hover:text-navy-secondary hover:bg-slate-50"
                     >
-                        <BarChart3 className="w-4 h-4 text-indigo-500" />
-                        <span>サイト分析</span>
+                        <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-500" />
+                        <span className="text-[10px] sm:text-sm whitespace-nowrap">サイト分析</span>
                     </Link>
                     <Link
                         href="?tab=projects"
-                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'projects'
+                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'projects'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
-                        <Building2 className="w-4 h-4" />
-                        <span>プロジェクト</span>
+                        <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-[10px] sm:text-sm whitespace-nowrap">プロジェクト</span>
                     </Link>
                     <Link
                         href="?tab=developers"
-                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'developers'
+                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'developers'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
-                        <Building2 className="w-4 h-4" />
-                        <span>デベロッパー</span>
+                        <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-[10px] sm:text-sm whitespace-nowrap">デベロッパー</span>
                     </Link>
                     <Link
                         href="?tab=properties"
-                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'properties'
+                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'properties'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
-                        <Home className="w-4 h-4" />
-                        <span>物件承認</span>
+                        <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-[10px] sm:text-sm whitespace-nowrap">物件承認</span>
                         {pendingCount > 0 && (
-                            <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full ml-1 min-w-[1.5rem] text-center">
+                            <span className="bg-red-500 text-white text-[8px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full ml-1 min-w-[1.2rem] sm:min-w-[1.5rem] text-center">
                                 {pendingCount}
                             </span>
                         )}
                     </Link>
                     <Link
                         href="?tab=users"
-                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'users'
+                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'users'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
-                        <Users className="w-4 h-4" />
-                        <span>エージェント・ユーザ</span>
+                        <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-[10px] sm:text-sm whitespace-nowrap">ユーザー</span>
                     </Link>
                     <Link
                         href="?tab=feedback"
-                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'feedback'
+                        className={`flex-1 min-w-[100px] sm:min-w-[140px] flex items-center justify-center space-x-1.5 sm:space-x-2 py-2.5 sm:py-3.5 rounded-xl font-black transition-all ${tab === 'feedback'
                             ? 'bg-navy-primary text-white shadow-lg'
                             : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
                             }`}
                     >
-                        <Lightbulb className="w-4 h-4" />
-                        <span>要望・改善</span>
+                        <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-[10px] sm:text-sm whitespace-nowrap">要望・改善</span>
                         {newFeedbackCount > 0 && (
-                            <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full ml-1 min-w-[1.5rem] text-center">
+                            <span className="bg-amber-500 text-white text-[8px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full ml-1 min-w-[1.2rem] sm:min-w-[1.5rem] text-center">
                                 {newFeedbackCount}
                             </span>
                         )}
