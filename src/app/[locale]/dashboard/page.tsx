@@ -281,10 +281,10 @@ export default async function DashboardPage({
                                         {/* ── MOBILE LIST (< sm) ── */}
                                         <div className="sm:hidden divide-y divide-slate-100">
                                             {filteredProperties.map((property) => (
-                                                <div key={property.id} className="p-3">
+                                                <div key={property.id} className="p-3 active:bg-slate-50 transition-colors">
                                                     {/* Top row: image + info */}
                                                     <div className="flex gap-3">
-                                                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0">
+                                                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0 shadow-sm">
                                                             {property.images?.[0] ? (
                                                                 <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
                                                             ) : (
@@ -293,19 +293,19 @@ export default async function DashboardPage({
                                                                 </div>
                                                             )}
                                                             <div className="absolute top-1 left-1">
-                                                                {property.status === 'published' && <span className="bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black">公開</span>}
-                                                                {property.status === 'pending' && <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black">待ち</span>}
-                                                                {property.status === 'draft' && <span className="bg-slate-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black">下書</span>}
-                                                                {property.status === 'under_negotiation' && <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black">商談</span>}
-                                                                {property.status === 'contracted' && <span className="bg-purple-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black">成約</span>}
-                                                                {property.status === 'expired' && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black">期限切</span>}
+                                                                {property.status === 'published' && <span className="bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">公開</span>}
+                                                                {property.status === 'pending' && <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">待ち</span>}
+                                                                {property.status === 'draft' && <span className="bg-slate-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">下書</span>}
+                                                                {property.status === 'under_negotiation' && <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">商談</span>}
+                                                                {property.status === 'contracted' && <span className="bg-purple-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">成約</span>}
+                                                                {property.status === 'expired' && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">期限切</span>}
                                                             </div>
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="flex items-center gap-1.5 mb-1">
-                                                                {property.is_presale && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[9px] font-black">PRESALE</span>}
-                                                                {!property.is_presale && property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-black">RENT</span>}
-                                                                {!property.is_presale && property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded text-[9px] font-black">SALE</span>}
+                                                                {property.is_presale && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[9px] font-black border border-amber-200">PRESALE</span>}
+                                                                {!property.is_presale && property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-black border border-indigo-100">RENT</span>}
+                                                                {!property.is_presale && property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded text-[9px] font-black border border-orange-100">SALE</span>}
                                                                 <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
                                                             </div>
                                                             <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2">{property.title}</p>
@@ -317,11 +317,11 @@ export default async function DashboardPage({
                                                         </div>
                                                     </div>
                                                     {/* Action bar: full-width, clearly tappable buttons */}
-                                                    <div className="mt-2 flex items-stretch bg-slate-50 rounded-xl overflow-hidden border border-slate-100">
+                                                    <div className="mt-2 flex items-stretch bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                                                         <Link
                                                             href={`/properties/${property.id}`}
                                                             target="_blank"
-                                                            className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold text-slate-500 active:bg-slate-200 transition-all"
+                                                            className="flex-1 flex items-center justify-center gap-1 py-3 text-[11px] font-bold text-slate-500 active:bg-slate-100 active:scale-[0.97] transition-all"
                                                         >
                                                             <ChevronRight className="w-3.5 h-3.5" /> 詳細
                                                         </Link>
@@ -335,7 +335,7 @@ export default async function DashboardPage({
                                                         />
                                                     </div>
                                                     {/* Status toggles: separate row below */}
-                                                    <div className="mt-2 flex items-center justify-between">
+                                                    <div className="mt-2 flex items-center justify-between px-1">
                                                         <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
                                                         <PropertyConfirmButton propertyId={property.id} title={property.title} />
                                                     </div>
