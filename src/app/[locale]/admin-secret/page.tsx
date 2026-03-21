@@ -14,7 +14,8 @@ import {
     Sparkles,
     Bell,
     ChevronRight,
-    Building2
+    Building2,
+    Lightbulb
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -22,6 +23,7 @@ import AdminPropertyManagement from '@/components/admin/PropertyManagement'
 import AdminUserManagement from '@/components/admin/UserManagement'
 import AdminProjectManagement from '@/components/admin/ProjectManagement'
 import AdminDeveloperManagement from '@/components/admin/DeveloperManagement'
+import AdminFeedbackManagement from '@/components/admin/FeedbackManagement'
 
 export default async function AdminSecretDashboard({
     searchParams,
@@ -41,9 +43,11 @@ export default async function AdminSecretDashboard({
     // Fetch summary stats
     const { data: properties } = await supabase.from('properties').select('status, is_approved')
     const { data: contacts } = await supabase.from('inquiries').select('id, created_at')
+    const { data: feedbacks } = await supabase.from('feedback').select('id, status')
 
     const pendingCount = properties?.filter(p => !p.is_approved).length || 0
     const activeCount = properties?.filter(p => p.is_approved && p.status === 'published').length || 0
+    const newFeedbackCount = feedbacks?.filter(f => f.status === 'new').length || 0
 
     // Inquiries in last 24h
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -141,6 +145,21 @@ export default async function AdminSecretDashboard({
                         <Users className="w-4 h-4" />
                         <span>エージェント・ユーザ</span>
                     </Link>
+                    <Link
+                        href="?tab=feedback"
+                        className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-3.5 rounded-xl font-black transition-all ${tab === 'feedback'
+                            ? 'bg-navy-primary text-white shadow-lg'
+                            : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
+                            }`}
+                    >
+                        <Lightbulb className="w-4 h-4" />
+                        <span>要望・改善</span>
+                        {newFeedbackCount > 0 && (
+                            <span className="bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full ml-1 min-w-[1.5rem] text-center">
+                                {newFeedbackCount}
+                            </span>
+                        )}
+                    </Link>
                 </div>
 
                 {/* Summary Grid - Only on Overview */}
@@ -202,6 +221,7 @@ export default async function AdminSecretDashboard({
                     {tab === 'developers' && <AdminDeveloperManagement />}
                     {tab === 'properties' && <AdminPropertyManagement />}
                     {tab === 'users' && <AdminUserManagement />}
+                    {tab === 'feedback' && <AdminFeedbackManagement />}
 
                     {tab === 'overview' && (
                         <div className="bg-white rounded-3xl p-12 shadow-xl border border-slate-100 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
