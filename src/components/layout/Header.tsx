@@ -92,14 +92,7 @@ export default function Header({ dict }: { dict: any }) {
                 isMenuOpen ? "max-h-[90vh] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
             )}>
                 <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-40px)]">
-                    {/* User Navigation for Mobile (Login/Register or User Menu) */}
-                    <div className="lg:hidden">
-                        <UserNav dict={dict} isMobile={true} onCloseMobileMenu={() => setIsMenuOpen(false)} />
-                    </div>
-
-                    <div className="h-px bg-slate-100 w-full" />
-
-                    {/* Navigation Links */}
+                    {/* Navigation Links - Moved above UserNav for mobile as requested */}
                     <div className="space-y-0.5">
                         {navLinks.map((link) => (
                             <Link
@@ -126,6 +119,13 @@ export default function Header({ dict }: { dict: any }) {
                     </div>
 
                     <div className="h-px bg-slate-100 w-full" />
+
+                    {/* User Navigation for Mobile (Login/Register or User Menu) */}
+                    <div className="lg:hidden">
+                        <UserNav dict={dict} isMobile={true} onCloseMobileMenu={() => setIsMenuOpen(false)} />
+                    </div>
+
+                    <div className="h-px bg-slate-100 w-full sm:hidden" />
 
                     {/* Language Switcher for Mobile */}
                     <div className="px-4 py-2 sm:hidden">
