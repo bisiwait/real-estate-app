@@ -224,7 +224,7 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
   // 共通のバナーコンテンツ部分を関数として定義
   const renderBannerContent = (isCapture: boolean = false) => (
     <div 
-      className="absolute inset-0 bg-[#2A4076] text-[#FFFFFF] overflow-hidden"
+      className="relative bg-[#2A4076] text-[#FFFFFF] overflow-hidden"
       style={{ width: '1080px', height: '1080px' }}
     >
        {propertyContext.mainImageUrl ? (
@@ -251,12 +251,12 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
        </div>
 
        <div className="absolute bottom-12 left-12 right-12 z-10 flex justify-between items-end gap-8">
-          <div className="flex-1 space-y-3 min-w-0">
-             <h1 className="text-6xl font-black leading-tight text-[#1A2B56]" style={{ textShadow: '1.5px 1.5px 0 #ffffff, -1.5px -1.5px 0 #ffffff, 1.5px -1.5px 0 #ffffff, -1.5px 1.5px 0 #ffffff, 1.5px 0 0 #ffffff, -1.5px 0 0 #ffffff, 0 1.5px 0 #ffffff, 0 -1.5px 0 #ffffff, 4px 4px 8px rgba(0,0,0,0.3)' }}>
+          <div className="flex-1 space-y-3 min-w-0 flex flex-col items-start">
+             <h1 className="text-6xl font-black leading-tight text-[#1A2B56] w-full" style={{ textShadow: '1.5px 1.5px 0 #ffffff, -1.5px -1.5px 0 #ffffff, 1.5px -1.5px 0 #ffffff, -1.5px 1.5px 0 #ffffff, 1.5px 0 0 #ffffff, -1.5px 0 0 #ffffff, 0 1.5px 0 #ffffff, 0 -1.5px 0 #ffffff, 4px 4px 8px rgba(0,0,0,0.3)' }}>
                {editedProperty.title}
              </h1>
              
-             <div className="flex items-center space-x-4" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+             <div className="flex items-center space-x-4 w-full" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 {editedProperty.layout && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.layout}</span>}
                 {editedProperty.layout && <span className="text-white text-opacity-70 text-xl">•</span>}
                 {editedProperty.sqm > 0 && <span className="text-2xl font-bold text-white" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{editedProperty.sqm} Sq.m</span>}
@@ -266,17 +266,17 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
              
              {/* AI Generated Text Overlay - ハッシュタグを除去して表示 */}
              {translatedText[activeLang] && (
-               <div className="bg-black bg-opacity-30 p-6 rounded-2xl border border-white border-opacity-10" style={{ backdropFilter: 'blur(8px)' }}>
+               <div className="bg-black bg-opacity-30 p-6 rounded-2xl border border-white border-opacity-10 w-full" style={{ backdropFilter: 'blur(8px)' }}>
                  <p className="text-[22px] font-bold text-white leading-relaxed whitespace-pre-wrap" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                    {translatedText[activeLang].replace(/#\S+/g, '').trim()}
                  </p>
                </div>
              )}
 
-             <p className="text-5xl font-black text-[#fbbf24] drop-shadow-lg pb-2">
+             <p className="text-5xl font-black text-[#fbbf24] drop-shadow-lg pb-2 w-full">
                {displayPrice} <span className="text-3xl font-bold text-[#FFFFFF] ml-2 drop-shadow-md">THB</span>
              </p>
-             <div className="pt-2 flex items-center space-x-3 opacity-95">
+             <div className="pt-2 flex items-center space-x-3 opacity-95 w-full">
                 <div className="w-10 h-10 bg-[#f59e0b] rounded-full flex items-center justify-center shadow-lg">
                    <span className="text-[#2A4076] font-black text-xl">C</span>
                 </div>
@@ -491,13 +491,20 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                )}
 
                <div 
-                  className="relative aspect-square w-full max-w-[400px] overflow-hidden bg-white shadow-xl"
-                  style={{ transformOrigin: 'top left' }}
+                  className="relative aspect-square w-full max-w-[400px] overflow-hidden bg-white shadow-xl flex items-center justify-center"
                >
                   <div 
                     ref={bannerRef}
-                    className="absolute inset-0 bg-[#2A4076] text-[#FFFFFF] overflow-hidden"
-                    style={{ width: '1080px', height: '1080px', transform: 'scale(0.37037)', transformOrigin: 'top left' }}
+                    className="bg-[#2A4076] text-[#FFFFFF] overflow-hidden shrink-0"
+                    style={{ 
+                      width: '1080px', 
+                      height: '1080px', 
+                      transform: 'scale(0.37037)', 
+                      transformOrigin: 'top left',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0
+                    }}
                   >
                     {renderBannerContent(false)}
                   </div>
