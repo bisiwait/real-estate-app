@@ -22,6 +22,60 @@ export interface Property {
   ownership_type?: string;
 }
 
+export interface PresaleProject {
+  id: string;
+  name: string;
+  area: string;
+  completionYear: string;
+  priceRange: string;
+  imageUrl: string;
+  hasJapaneseSupport: boolean;
+  slug: string;
+}
+
+export async function getRecommendedPresales(limit = 3) {
+  const supabase = createStaticClient();
+
+  const { data, error } = await supabase
+    .from('properties')
+    .select(`
+      *,
+      area:areas!inner (
+        name,
+        region:regions!inner (
+          name
+        )
+      ),
+      project:projects (
+        name,
+        completion_year,
+        price_range,
+        has_japanese_support
+      )
+    `)
+    .eq('status', 'published')
+    .eq('is_approved', true)
+    .eq('is_presale', true)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching recommended presales:', error);
+    return [];
+  }
+
+  return data.map(p => ({
+    id: p.id,
+    name: p.project?.name || p.title,
+    area: p.area?.name || 'Unknown',
+    completionYear: p.project?.completion_year || 'TBA',
+    priceRange: p.project?.price_range || `${p.sale_price?.toLocaleString() || 'TBA'} THB`,
+    imageUrl: p.images?.[0] || '',
+    hasJapaneseSupport: p.project?.has_japanese_support || false,
+    slug: p.id, // Using ID as slug if no slug field
+  })) as PresaleProject[];
+}
+
 export async function getRecommendedRentals(limit = 4) {
   const supabase = createStaticClient();
 

@@ -2,53 +2,20 @@ export const dynamic = 'force-dynamic'
 import HeroSection from "@/components/home/HeroSection";
 
 import SectionHeader from "@/components/ui/SectionHeader";
-import PresaleCard, { PresaleProject } from "@/components/property/PresaleCard";
+import PresaleCard from "@/components/property/PresaleCard";
 import PropertyCard from "@/components/property/PropertyCard";
 import LifeSupportBanners from "@/components/home/LifeSupportBanners";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { getRecommendedRentals, getRecommendedSales } from "@/lib/services/propertyService";
+import { getRecommendedRentals, getRecommendedSales, getRecommendedPresales } from "@/lib/services/propertyService";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const dict = await getDictionary(locale);
 
-  // Mock Data for Presale Projects
-  const mockPresaleProjects: PresaleProject[] = [
-    {
-      id: "p1",
-      name: "The Riviera Malibu Hotel & Residence",
-      area: "Pratumnak",
-      completionYear: "2026年",
-      priceRange: "3.5M 〜 12M THB",
-      imageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=800",
-      hasJapaneseSupport: true,
-      slug: "riviera-malibu",
-    },
-    {
-      id: "p2",
-      name: "Arom Jomtien",
-      area: "Jomtien Beach",
-      completionYear: "2026年Q4",
-      priceRange: "4.2M 〜 22M THB",
-      imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800",
-      hasJapaneseSupport: true,
-      slug: "arom-jomtien",
-    },
-    {
-      id: "p3",
-      name: "Copacabana Coral Reef",
-      area: "Jomtien",
-      completionYear: "2028年",
-      priceRange: "2.9M 〜 15M THB",
-      imageUrl: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=800",
-      hasJapaneseSupport: false,
-      slug: "copacabana-coral",
-    }
-  ];
-
   // Fetch real data from service
+  const presales = await getRecommendedPresales();
   const rentals = await getRecommendedRentals();
   const sales = await getRecommendedSales();
 
@@ -77,7 +44,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             title={dict.home.presale_title}
             subtitle={dict.home.presale_subtitle}
             action={
-              <Link href={`/${locale}/presale`} className="text-navy-primary font-bold hover:text-navy-secondary flex items-center group text-sm">
+              <Link href={`/${locale}/properties?filter=presale`} className="text-navy-primary font-bold hover:text-navy-secondary flex items-center group text-sm">
                 {dict.home.presale_all}
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -85,11 +52,16 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           />
           {/* 横スクロール対応のコンテナ (モバイル向け) */}
           <div className="flex overflow-x-auto pb-8 -mx-4 px-4 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pb-0 md:px-0 md:mx-0 snap-x snap-mandatory hide-scrollbar">
-            {mockPresaleProjects.map((project) => (
+            {presales.map((project) => (
               <div key={project.id} className="min-w-[85vw] sm:min-w-[400px] md:min-w-0 pr-4 md:pr-0 snap-center md:snap-align-none">
                 <PresaleCard project={project} dict={dict} />
               </div>
             ))}
+            {presales.length === 0 && (
+              <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 w-full">
+                現在、注目のプレセール物件はありません。
+              </div>
+            )}
           </div>
         </section>
 
