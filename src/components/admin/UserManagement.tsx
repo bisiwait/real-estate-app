@@ -4,20 +4,20 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
     Users,
-    ChevronRight,
-    Coins,
-    Plus,
-    Minus,
     Loader2,
     ShieldCheck,
     Search,
     ChevronLeft,
+    ChevronRight,
     UserCircle,
-    Building2
+    Building2,
+    KeyRound,
+    Eye,
+    EyeOff,
+    X
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { adminResetPassword } from '@/app/actions/adminAuth'
-import { KeyRound, Eye, EyeOff } from 'lucide-react'
 
 type UserRoleFilter = 'agent' | 'general';
 
@@ -25,9 +25,7 @@ export default function AdminUserManagement() {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
-    const [adjusting, setAdjusting] = useState<string | null>(null)
     const [resettingPassword, setResettingPassword] = useState<string | null>(null)
-    const [amount, setAmount] = useState(1)
     const [newPassword, setNewPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [roleFilter, setRoleFilter] = useState<UserRoleFilter>('agent')
@@ -70,30 +68,6 @@ export default function AdminUserManagement() {
     useEffect(() => {
         fetchUsers()
     }, [])
-
-    const handleCreditAdjust = async (userId: string, currentCredits: number, type: 'add' | 'remove') => {
-        const newCredits = type === 'add' ? currentCredits + amount : Math.max(0, currentCredits - amount)
-
-        setLoading(true)
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({ available_credits: newCredits })
-                .eq('id', userId)
-
-            if (!error) {
-                await fetchUsers()
-                setAdjusting(null)
-            } else {
-                throw error
-            }
-        } catch (err: any) {
-            console.error('Credit adjustment error:', err)
-            alert(getErrorMessage(err))
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const handlePlanChange = async (userId: string, newPlan: string) => {
         setLoading(true)
@@ -151,7 +125,7 @@ export default function AdminUserManagement() {
 
         // エージェント判定ロジック
         const isAgentRole = user.user_role === 'agent' ||
-            (user.available_credits !== undefined && user.available_credits > 0);
+            (user.property_count !== undefined && user.property_count > 0);
 
         // Step 1: Role Filter
         if (roleFilter === 'agent') {
@@ -181,58 +155,58 @@ export default function AdminUserManagement() {
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
             <div className="bg-slate-50 border-b border-slate-100 p-2 md:p-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <div className="flex items-center space-x-4">
-                        <div className="p-3 bg-navy-primary/10 rounded-2xl text-navy-primary">
-                            {roleFilter === 'agent' ? <Building2 className="w-6 h-6" /> : <UserCircle className="w-6 h-6" />}
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-black text-navy-secondary">
-                                {roleFilter === 'agent' ? 'エージェント・クレジット管理' : '一般ユーザー管理'}
-                                <span className="ml-3 text-sm font-bold text-slate-400 bg-white px-3 py-1 rounded-full border border-slate-200">
-                                    {filteredUsers.length} 件
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg md:text-xl font-black text-navy-secondary">エージェント・ユーザー管理</h2>
+                            {!loading && (
+                                <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
+                                    {filteredUsers.length}件
                                 </span>
-                            </h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                                {roleFilter === 'agent' ? 'Agent & Credit Management' : 'General User Management'}
-                            </p>
+                            )}
+                        </div>
+                        <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">User Management</p>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+                        {/* Search Bar */}
+                        <div className="relative w-full md:w-64 flex-shrink-0">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="名前、メールで検索..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] md:text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Tab UI */}
+                        <div className="flex items-center w-full md:w-auto overflow-hidden">
+                            <div className="flex bg-white p-1 rounded-xl border border-slate-200 w-full md:w-auto">
+                                <button
+                                    onClick={() => setRoleFilter('agent')}
+                                    className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${roleFilter === 'agent' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                                >
+                                    エージェント
+                                </button>
+                                <button
+                                    onClick={() => setRoleFilter('general')}
+                                    className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${roleFilter === 'general' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                                >
+                                    一般ユーザー
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <div className="relative w-full md:w-72">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="名前、メールで検索..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-navy-secondary focus:ring-2 focus:ring-navy-primary outline-none transition-all placeholder:text-slate-300 shadow-sm"
-                        />
-                    </div>
-                </div>
-
-                {/* Tab UI */}
-                <div className="flex space-x-1 bg-slate-200/50 p-1 rounded-2xl w-fit">
-                    <button
-                        onClick={() => setRoleFilter('agent')}
-                        className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${roleFilter === 'agent'
-                            ? 'bg-white text-navy-primary shadow-sm'
-                            : 'text-slate-500 hover:text-navy-primary'
-                            }`}
-                    >
-                        <Building2 size={14} />
-                        <span>エージェント</span>
-                    </button>
-                    <button
-                        onClick={() => setRoleFilter('general')}
-                        className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${roleFilter === 'general'
-                            ? 'bg-white text-navy-primary shadow-sm'
-                            : 'text-slate-500 hover:text-navy-primary'
-                            }`}
-                    >
-                        <UserCircle size={14} />
-                        <span>一般ユーザー</span>
-                    </button>
                 </div>
             </div>
 
@@ -278,12 +252,6 @@ export default function AdminUserManagement() {
                                     {roleFilter === 'agent' && (
                                         <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                             <div className="flex items-center gap-1">
-                                                <Coins className="w-3.5 h-3.5 text-amber-500" />
-                                                <span className="text-sm font-black text-navy-secondary">{user.available_credits || 0}</span>
-                                                <span className="text-[10px] text-slate-400 font-bold">Cr.</span>
-                                            </div>
-                                            <span className="text-[10px] text-slate-400">|</span>
-                                            <div className="flex items-center gap-1">
                                                 <span className="text-[10px] font-bold text-navy-primary">{user.property_count || 0}</span>
                                                 <span className="text-[10px] text-slate-400">物件</span>
                                             </div>
@@ -301,24 +269,7 @@ export default function AdminUserManagement() {
                                 </div>
                                 {/* Actions */}
                                 <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                    {adjusting === user.id ? (
-                                        <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                                            <input
-                                                type="number"
-                                                value={amount}
-                                                onChange={(e) => setAmount(Number(e.target.value))}
-                                                className="w-14 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-black outline-none"
-                                                min="1"
-                                            />
-                                            <button onClick={() => handleCreditAdjust(user.id, user.available_credits || 0, 'add')} className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all" title="付与">
-                                                <Plus className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => handleCreditAdjust(user.id, user.available_credits || 0, 'remove')} className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all" title="減算">
-                                                <Minus className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => setAdjusting(null)} className="text-[10px] font-black text-slate-400">✕</button>
-                                        </div>
-                                    ) : resettingPassword === user.id ? (
+                                    {resettingPassword === user.id ? (
                                         <div className="flex items-center gap-1.5 flex-wrap justify-end">
                                             <div className="relative">
                                                 <input
@@ -338,21 +289,12 @@ export default function AdminUserManagement() {
                                     ) : (
                                         <div className="flex items-center gap-1.5">
                                             <button
-                                                onClick={() => { setResettingPassword(user.id); setAdjusting(null); setNewPassword('') }}
+                                                onClick={() => { setResettingPassword(user.id); setNewPassword('') }}
                                                 className="p-2 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-100 transition-all"
                                                 title="PW変更"
                                             >
                                                 <KeyRound className="w-3.5 h-3.5" />
                                             </button>
-                                            {roleFilter === 'agent' && (
-                                                <button
-                                                    onClick={() => { setAdjusting(user.id); setResettingPassword(null); setAmount(1) }}
-                                                    className="flex items-center gap-1 px-2.5 py-2 bg-amber-50 text-amber-600 rounded-xl text-[10px] font-black hover:bg-amber-100 transition-all"
-                                                >
-                                                    <Coins className="w-3.5 h-3.5" />
-                                                    <span className="hidden sm:inline">Cr.</span>
-                                                </button>
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -414,7 +356,7 @@ export default function AdminUserManagement() {
 
             <div className="bg-slate-50 p-6 border-t border-slate-100">
                 <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
-                    ※ ユーザーの役割（エージェント/一般）は、クレジットの有無や物件の投稿履歴に基づいて自動的に分類されます。<br />
+                    ※ ユーザーの役割（エージェント/一般）は、物件の投稿履歴に基づいて自動的に分類されます。<br />
                     不審な操作はログを確認し、必要に応じてプロフィールを一時停止してください。
                 </p>
             </div>
