@@ -15,8 +15,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // @ts-expect-error - disable Turbopack, use webpack
-  turbopack: false,
   transpilePackages: ['lucide-react'],
   productionBrowserSourceMaps: false,
 };
