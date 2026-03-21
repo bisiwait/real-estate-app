@@ -2,14 +2,22 @@
 
 import { useRouter } from 'next/navigation'
 
-export default function StatusFilter({ filter, status }: { filter: string, status: string }) {
+export default function StatusFilter({ filter, status, onChange }: { filter: string, status: string, onChange?: (status: string) => void }) {
     const router = useRouter()
+
+    const handleStatusChange = (newStatus: string) => {
+        if (onChange) {
+            onChange(newStatus)
+        } else {
+            router.push(`?tab=properties&filter=${filter}&status=${newStatus}`)
+        }
+    }
 
     return (
         <div className="flex relative items-center w-full">
             <select
                 value={status}
-                onChange={(e) => router.push(`?tab=properties&filter=${filter}&status=${e.target.value}`)}
+                onChange={(e) => handleStatusChange(e.target.value)}
                 className="appearance-none bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-xl px-4 py-2 pr-8 hover:border-navy-primary transition-colors focus:outline-none focus:ring-2 focus:ring-navy-primary/20 cursor-pointer shadow-sm w-full"
             >
                 <option value="all">全ステータス</option>
