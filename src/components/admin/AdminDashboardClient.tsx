@@ -171,7 +171,7 @@ export default function AdminDashboardClient({
             {/* Main Management Section */}
             <div className="grid grid-cols-1 gap-12">
                 {tab === 'overview' && (
-                    <div className="bg-white rounded-3xl p-12 shadow-xl border border-slate-100 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="hidden md:block bg-white rounded-3xl p-12 shadow-xl border border-slate-100 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <Sparkles className="w-16 h-16 text-navy-primary/10 mx-auto mb-6" />
                         <h3 className="text-2xl font-black text-navy-secondary mb-4">管理者ダッシュボードへようこそ</h3>
                         <p className="text-slate-500 max-w-lg mx-auto leading-relaxed">
