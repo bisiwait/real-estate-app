@@ -248,127 +248,88 @@ export default function AdminPropertyManagement() {
                 </div>
             </div>
 
-            <div className="overflow-x-auto pb-4 custom-scrollbar">
-                <table className="w-full text-left min-w-[800px] md:min-w-[1000px]">
-                    <thead>
-                        <tr className="bg-slate-50/50 border-b border-slate-100">
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">物件情報</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">投稿者</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ステータス</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">アクション</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {errorMessage && (
-                            <tr>
-                                <td colSpan={4} className="px-6 py-4 bg-red-50 text-red-600 text-xs font-bold text-center">
-                                    エラーが発生しました: {errorMessage}
-                                </td>
-                            </tr>
-                        )}
-                        {loading && properties.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className="px-6 py-20 text-center">
-                                    <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mx-auto mb-4" />
-                                    <p className="text-slate-400 font-medium font-bold">読み込み中...</p>
-                                </td>
-                            </tr>
-                        ) : filteredProperties.length === 0 ? (
-                            <tr>
-                                <td colSpan={4} className="px-6 py-20 text-center font-bold text-slate-400">
-                                    <div className="flex flex-col items-center justify-center">
-                                        <Filter className="w-10 h-10 text-slate-200 mb-4" />
-                                        <p>表示する物件がありません</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        ) : (
-                            paginatedProperties.map((property) => (
-                                <tr key={property.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center space-x-4">
-                                            {property.images?.[0] ? (
-                                                <img src={property.images[0]} className="w-12 h-12 rounded-lg object-cover shadow-sm" alt="" />
-                                            ) : (
-                                                <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-300">
-                                                    <AlertCircle className="w-5 h-5" />
-                                                </div>
-                                            )}
-                                            <div>
-                                                <p className="text-sm font-black text-navy-secondary line-clamp-1">{property.title}</p>
-                                                <div className="flex gap-1 mt-1 mb-1">
-                                                    {property.is_presale && (
-                                                        <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest border border-amber-200">
-                                                            PRESALE
-                                                        </span>
-                                                    )}
-                                                    {property.is_for_rent && (
-                                                        <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest border border-indigo-100">
-                                                            RENT
-                                                        </span>
-                                                    )}
-                                                    {property.is_for_sale && (
-                                                        <span className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest border border-orange-100">
-                                                            SALE
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex flex-col space-y-1 mt-1">
-                                                    {property.is_for_rent && property.rent_price && (
-                                                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-tighter w-fit">
-                                                            Rent: {property.rent_price.toLocaleString()} THB
-                                                        </span>
-                                                    )}
-                                                    {property.is_for_sale && property.sale_price && (
-                                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded uppercase tracking-tighter w-fit">
-                                                            Sale: {property.sale_price.toLocaleString()} THB
-                                                        </span>
-                                                    )}
-                                                    {!property.is_for_rent && !property.is_for_sale && property.price && (
-                                                        <span className="text-[10px] font-bold text-navy-primary bg-navy-primary/5 px-2 py-0.5 rounded uppercase tracking-tighter w-fit">
-                                                            {property.price.toLocaleString()} THB
-                                                        </span>
-                                                    )}
-                                                    <Link href={`/properties/${property.id}`} target="_blank" className="text-slate-400 hover:text-navy-primary transition-colors flex items-center text-[10px] mt-1 font-bold">
-                                                        <ExternalLink className="w-3 h-3 mr-1" /> 詳細を見る
-                                                    </Link>
-                                                </div>
+            <div className="divide-y divide-slate-100">
+                {errorMessage && (
+                    <div className="px-4 py-3 bg-red-50 text-red-600 text-xs font-bold text-center">
+                        エラーが発生しました: {errorMessage}
+                    </div>
+                )}
+                {loading && properties.length === 0 ? (
+                    <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                        <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mb-4" />
+                        <p className="font-bold">読み込み中...</p>
+                    </div>
+                ) : filteredProperties.length === 0 ? (
+                    <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                        <Filter className="w-10 h-10 text-slate-200 mb-4" />
+                        <p className="font-bold">表示する物件がありません</p>
+                    </div>
+                ) : (
+                    paginatedProperties.map((property) => {
+                        const currentStatus = selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status
+                        return (
+                            <div key={property.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors">
+                                {/* Mobile & Desktop unified layout */}
+                                <div className="flex gap-3 md:gap-4">
+                                    {/* Image */}
+                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm">
+                                        {property.images?.[0] ? (
+                                            <img src={property.images[0]} className="w-full h-full object-cover" alt="" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                <AlertCircle className="w-5 h-5" />
                                             </div>
+                                        )}
+                                    </div>
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex flex-wrap items-center gap-1 mb-1">
+                                            {property.is_presale && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[8px] font-black border border-amber-200">PRESALE</span>}
+                                            {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[8px] font-black border border-indigo-100">RENT</span>}
+                                            {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded text-[8px] font-black border border-orange-100">SALE</span>}
+                                            {/* Status badge */}
+                                            {property.status === 'published' && <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-black">公開中</span>}
+                                            {property.status === 'pending' && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[8px] font-black">承認待ち</span>}
+                                            {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[8px] font-black">下書き</span>}
+                                            {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[8px] font-black">期限切れ</span>}
+                                            {property.status === 'under_negotiation' && <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[8px] font-black">商談中</span>}
+                                            {property.status === 'contracted' && <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[8px] font-black">成約済</span>}
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center space-x-2">
+                                        <p className="text-sm font-black text-navy-secondary truncate">{property.title}</p>
+                                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                                            {property.is_for_rent && property.rent_price && (
+                                                <span className="text-[10px] font-bold text-indigo-600">{property.rent_price.toLocaleString()} ฿/月</span>
+                                            )}
+                                            {property.is_for_sale && property.sale_price && (
+                                                <span className="text-[10px] font-bold text-orange-600">{property.sale_price.toLocaleString()} ฿</span>
+                                            )}
+                                            <span className="text-[10px] text-slate-400">{property.profile?.full_name || property.profile?.email || '未割当'}</span>
+                                        </div>
+                                    </div>
+                                    {/* Actions - Desktop */}
+                                    <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+                                        <div className="flex items-center gap-1">
                                             <select
                                                 value={selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || '')}
                                                 onChange={(e) => setSelectedUsers(prev => ({ ...prev, [property.id]: e.target.value }))}
-                                                className="text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded px-2 py-1 w-full max-w-[130px] outline-none focus:ring-1 focus:ring-navy-primary"
+                                                className="text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-navy-primary max-w-[120px]"
                                             >
-                                                <option value="">担当者を選択...</option>
+                                                <option value="">担当者...</option>
                                                 {users.map(u => (
-                                                    <option key={u.id} value={u.id}>{u.full_name || u.email || '名前未設定'}</option>
+                                                    <option key={u.id} value={u.id}>{u.full_name || u.email || '未設定'}</option>
                                                 ))}
                                             </select>
                                             <button
                                                 onClick={() => handleAssignUser(property.id, selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || ''))}
                                                 disabled={selectedUsers[property.id] === undefined || selectedUsers[property.id] === (property.user_id || '')}
-                                                className="px-2 py-1 bg-navy-primary text-white text-[10px] font-bold rounded hover:bg-navy-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                            >
-                                                変更
-                                            </button>
+                                                className="px-2 py-1.5 bg-slate-100 text-navy-primary text-[10px] font-bold rounded-lg hover:bg-navy-primary hover:text-white transition-all disabled:opacity-30"
+                                            >変更</button>
                                         </div>
-                                        <p className="text-[10px] text-slate-400 mt-1">ID: {property.user_id ? `${property.user_id.substring(0, 8)}...` : '未登録'}</p>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center space-x-2">
+                                        <div className="flex items-center gap-1">
                                             <select
-                                                value={selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status}
+                                                value={currentStatus}
                                                 onChange={(e) => setSelectedStatuses(prev => ({ ...prev, [property.id]: e.target.value }))}
-                                                className={`text-xs font-bold rounded px-2 py-1.5 w-full max-w-[110px] outline-none focus:ring-1 focus:ring-navy-primary cursor-pointer transition-colors ${['published', 'under_negotiation', 'contracted'].includes(selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status)
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                                    : (selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status) === 'pending'
-                                                        ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                                                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                                                    }`}
+                                                className="text-[10px] font-bold rounded-lg px-2 py-1.5 outline-none border bg-white max-w-[100px]"
                                             >
                                                 <option value="draft">下書き</option>
                                                 <option value="pending">承認待ち</option>
@@ -378,30 +339,68 @@ export default function AdminPropertyManagement() {
                                                 <option value="expired">期限切れ</option>
                                             </select>
                                             <button
-                                                onClick={() => handleStatusChange(property.id, selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status)}
+                                                onClick={() => handleStatusChange(property.id, currentStatus)}
                                                 disabled={selectedStatuses[property.id] === undefined || selectedStatuses[property.id] === property.status}
-                                                className="px-2 py-1.5 bg-navy-primary text-white text-[10px] font-bold rounded hover:bg-navy-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                            >
-                                                変更
-                                            </button>
+                                                className="px-2 py-1.5 bg-navy-primary text-white text-[10px] font-bold rounded-lg hover:bg-navy-secondary transition-all disabled:opacity-30"
+                                            >変更</button>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-5 text-right">
-                                        <div className="flex items-center justify-end space-x-2">
-                                            <button
-                                                onClick={() => handleAction(property.id, 'delete')}
-                                                className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-500 hover:text-white transition-all"
-                                                title="削除する"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                                        <Link href={`/properties/${property.id}`} target="_blank" className="p-2 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all" title="詳細">
+                                            <ExternalLink className="w-4 h-4" />
+                                        </Link>
+                                        <button onClick={() => handleAction(property.id, 'delete')} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all" title="削除">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                                {/* Actions - Mobile */}
+                                <div className="md:hidden mt-3 flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || '')}
+                                            onChange={(e) => setSelectedUsers(prev => ({ ...prev, [property.id]: e.target.value }))}
+                                            className="flex-1 text-[10px] font-bold bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 outline-none"
+                                        >
+                                            <option value="">担当者...</option>
+                                            {users.map(u => (
+                                                <option key={u.id} value={u.id}>{u.full_name || u.email || '未設定'}</option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={() => handleAssignUser(property.id, selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || ''))}
+                                            disabled={selectedUsers[property.id] === undefined || selectedUsers[property.id] === (property.user_id || '')}
+                                            className="px-3 py-2 bg-navy-primary text-white text-[10px] font-bold rounded-lg disabled:opacity-30"
+                                        >変更</button>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={currentStatus}
+                                            onChange={(e) => setSelectedStatuses(prev => ({ ...prev, [property.id]: e.target.value }))}
+                                            className="flex-1 text-[10px] font-bold bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 outline-none"
+                                        >
+                                            <option value="draft">下書き</option>
+                                            <option value="pending">承認待ち</option>
+                                            <option value="published">公開中</option>
+                                            <option value="under_negotiation">商談中</option>
+                                            <option value="contracted">成約済</option>
+                                            <option value="expired">期限切れ</option>
+                                        </select>
+                                        <button
+                                            onClick={() => handleStatusChange(property.id, currentStatus)}
+                                            disabled={selectedStatuses[property.id] === undefined || selectedStatuses[property.id] === property.status}
+                                            className="px-3 py-2 bg-navy-primary text-white text-[10px] font-bold rounded-lg disabled:opacity-30"
+                                        >変更</button>
+                                        <Link href={`/properties/${property.id}`} target="_blank" className="p-2 rounded-lg bg-slate-50 text-slate-500">
+                                            <ExternalLink className="w-4 h-4" />
+                                        </Link>
+                                        <button onClick={() => handleAction(property.id, 'delete')} className="p-2 bg-red-50 text-red-500 rounded-lg">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })
+                )}
             </div>
 
             {/* Pagination Controls */}

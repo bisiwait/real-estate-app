@@ -518,104 +518,84 @@ export default function AdminProjectManagement() {
                     </div>
                 )}
 
-                <div className="overflow-x-auto pb-4">
-                    <table className="w-full text-left min-w-[800px]">
-                        <thead>
-                            <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">プロジェクト基本情報</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">アクション</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {loading && projects.length === 0 ? (
-                                <tr>
-                                    <td colSpan={2} className="px-6 py-20 text-center">
-                                        <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mx-auto mb-4" />
-                                        <p className="text-slate-400 font-bold">読み込み中...</p>
-                                    </td>
-                                </tr>
-                            ) : projects.length === 0 ? (
-                                <tr>
-                                    <td colSpan={2} className="px-6 py-20 text-center font-bold text-slate-300">
-                                        プロジェクトが見つかりません
-                                    </td>
-                                </tr>
-                            ) : (
-                                paginatedProjects.map((project) => (
-                                    <tr key={project.id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-start space-x-4">
-                                                <div className="w-12 h-12 rounded-xl bg-navy-primary/5 flex items-center justify-center text-navy-primary">
-                                                    <Building2 className="w-6 h-6" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-black text-navy-secondary">
-                                                        {project.name}
-                                                        {project.name_jp && (
-                                                            <span className="ml-2 text-xs font-bold text-slate-400">
-                                                                ({project.name_jp})
-                                                            </span>
-                                                        )}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-2 mt-2">
-                                                        <span className="flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
-                                                            <MapPin className="w-3 h-3 mr-1" />
-                                                            {areas.find(a => a.id === project.area_id)?.name || 'Unknown Area'}
-                                                        </span>
-                                                        <span className="flex items-center text-[10px] font-bold text-navy-primary bg-navy-primary/5 px-2.5 py-1 rounded-full">
-                                                            <Layers className="w-3 h-3 mr-1" />
-                                                            {project.property_type}
-                                                        </span>
-                                                        {project.year_built && (
-                                                            <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                                                                <Calendar className="w-3 h-3 mr-1" />
-                                                                {project.year_built}年
-                                                            </span>
-                                                        )}
-                                                        {project.total_floors && (
-                                                            <span className="flex items-center text-[10px] font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
-                                                                地上{project.total_floors}階
-                                                            </span>
-                                                        )}
-                                                        {(project as any).developer_id && (
-                                                            <span className="flex items-center text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
-                                                                <Building2 className="w-3 h-3 mr-1" />
-                                                                {developers.find(d => d.id === (project as any).developer_id)?.name || 'Unknown Developer'}
-                                                            </span>
-                                                        )}
-                                                        {project.facilities && project.facilities.length > 0 && (
-                                                            <span className="flex items-center text-[10px] font-bold text-navy-primary bg-navy-primary/5 px-2.5 py-1 rounded-full">
-                                                                <Shield className="w-3 h-3 mr-1" />
-                                                                共有施設 {project.facilities.length}件
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <div className="flex items-center justify-end space-x-2">
-                                                <button
-                                                    onClick={() => handleEdit(project)}
-                                                    className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-navy-primary hover:text-white transition-all group"
-                                                    title="詳細を編集"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(project.id)}
-                                                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-500 hover:text-white transition-all"
-                                                    title="削除"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                <div className="divide-y divide-slate-100">
+                    {loading && projects.length === 0 ? (
+                        <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                            <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mb-4" />
+                            <p className="font-bold">読み込み中...</p>
+                        </div>
+                    ) : projects.length === 0 ? (
+                        <div className="py-20 flex flex-col items-center justify-center text-slate-300">
+                            <Building2 className="w-10 h-10 mb-4" />
+                            <p className="font-bold">プロジェクトが見つかりません</p>
+                        </div>
+                    ) : (
+                        paginatedProjects.map((project) => (
+                            <div key={project.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors flex items-start gap-3 md:gap-4">
+                                {/* Icon / Thumbnail */}
+                                <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl flex-shrink-0 overflow-hidden bg-navy-primary/5 flex items-center justify-center">
+                                    {project.image_url ? (
+                                        <img src={project.image_url} alt={project.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Building2 className="w-7 h-7 text-navy-primary/30" />
+                                    )}
+                                </div>
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-black text-navy-secondary truncate">
+                                        {project.name}
+                                        {project.name_jp && <span className="ml-2 text-xs font-bold text-slate-400">({project.name_jp})</span>}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                        <span className="flex items-center text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                            <MapPin className="w-3 h-3 mr-0.5" />{areas.find(a => a.id === project.area_id)?.name || '—'}
+                                        </span>
+                                        <span className="flex items-center text-[10px] font-bold text-navy-primary bg-navy-primary/5 px-2 py-0.5 rounded-full">
+                                            <Layers className="w-3 h-3 mr-0.5" />{project.property_type}
+                                        </span>
+                                        {project.year_built && (
+                                            <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                <Calendar className="w-3 h-3 mr-0.5" />{project.year_built}年
+                                            </span>
+                                        )}
+                                        {project.total_floors && (
+                                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                                                地上{project.total_floors}階
+                                            </span>
+                                        )}
+                                        {(project as any).developer_id && (
+                                            <span className="flex items-center text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                                <Building2 className="w-3 h-3 mr-0.5" />
+                                                {developers.find(d => d.id === (project as any).developer_id)?.name || '—'}
+                                            </span>
+                                        )}
+                                        {project.facilities && project.facilities.length > 0 && (
+                                            <span className="flex items-center text-[10px] font-bold text-navy-primary bg-navy-primary/5 px-2 py-0.5 rounded-full">
+                                                <Shield className="w-3 h-3 mr-0.5" />共有施設 {project.facilities.length}件
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* Actions */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <button
+                                        onClick={() => handleEdit(project)}
+                                        className="p-2 md:p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-navy-primary hover:text-white transition-all"
+                                        title="編集"
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(project.id)}
+                                        className="p-2 md:p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                                        title="削除"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 {/* Pagination Controls */}
