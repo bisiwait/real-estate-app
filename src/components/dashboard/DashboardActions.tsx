@@ -98,7 +98,7 @@ export default function DashboardActions({
                     href={`/properties/${propertyId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-slate-500 active:bg-slate-50 active:scale-[0.95] transition-all"
+                    className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-slate-500 active:bg-slate-50 active:scale-[0.95] transition-all whitespace-nowrap"
                 >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>詳細</span>
@@ -106,7 +106,7 @@ export default function DashboardActions({
 
                 <button
                     onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
-                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.95] transition-all"
+                    className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.95] transition-all whitespace-nowrap"
                 >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>編集</span>
@@ -115,7 +115,7 @@ export default function DashboardActions({
                 {hasPremium && (
                     <button
                         onClick={() => setIsShareModalOpen(true)}
-                        className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-pink-500 active:bg-pink-50 active:scale-[0.95] transition-all"
+                        className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-pink-500 active:bg-pink-50 active:scale-[0.95] transition-all whitespace-nowrap"
                     >
                         <Share2 className="w-3.5 h-3.5" />
                         <span>SNS</span>
@@ -123,16 +123,16 @@ export default function DashboardActions({
                 )}
 
                 {hasPremium && (
-                    <div className="flex-1 flex flex-col items-center justify-center py-2.5 active:bg-slate-50 active:scale-[0.95] transition-all">
+                    <div className="flex-1 flex items-center justify-center gap-1 py-2.5 active:bg-slate-50 active:scale-[0.95] transition-all whitespace-nowrap">
                         <PropertyPdfDownload property={property} agent={agent} dict={{}} iconOnly={true} />
-                        <span className="text-[9px] font-black text-slate-500 mt-1">PDF</span>
+                        <span className="text-[9px] font-black text-slate-500">PDF</span>
                     </div>
                 )}
 
                 <button
                     onClick={handleDelete}
                     disabled={loading}
-                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-red-400 active:bg-red-50 active:scale-[0.95] transition-all disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-red-400 active:bg-red-50 active:scale-[0.95] transition-all disabled:opacity-50 whitespace-nowrap"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                     <span>削除</span>
