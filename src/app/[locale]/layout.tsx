@@ -81,7 +81,7 @@ export default async function RootLayout({
                 <Link href={`/${locale}/about`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.about || 'About'}</Link>
                 <Link href={`/${locale}/properties`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.properties || 'Properties'}</Link>
                 <Link href={`/${locale}/developers`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.common as any)?.developers || 'Developers'}</Link>
-                <Link href={`/${locale}/lp/post-property`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center">
+                <Link href={`/${locale}/pricing`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors flex items-center">
                   {(dict.labels as any)?.['list-property'] || 'List Property'}
                   <span className="ml-2 px-1.5 py-0.5 bg-navy-primary/20 text-[9px] text-navy-primary font-black uppercase tracking-widest rounded shadow-sm border border-navy-primary/30">Partner</span>
                 </Link>
