@@ -98,7 +98,7 @@ export default function DashboardActions({
                     href={`/properties/${propertyId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-slate-500 active:bg-slate-50 active:scale-[0.95] transition-all whitespace-nowrap"
+                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-slate-500 active:bg-slate-50 active:scale-[0.95] transition-all"
                 >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>詳細</span>
@@ -106,7 +106,7 @@ export default function DashboardActions({
 
                 <button
                     onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
-                    className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.95] transition-all whitespace-nowrap"
+                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.95] transition-all"
                 >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>編集</span>
@@ -115,7 +115,7 @@ export default function DashboardActions({
                 {hasPremium && (
                     <button
                         onClick={() => setIsShareModalOpen(true)}
-                        className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-pink-500 active:bg-pink-50 active:scale-[0.95] transition-all whitespace-nowrap"
+                        className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-pink-500 active:bg-pink-50 active:scale-[0.95] transition-all"
                     >
                         <Share2 className="w-3.5 h-3.5" />
                         <span>SNS</span>
@@ -123,16 +123,16 @@ export default function DashboardActions({
                 )}
 
                 {hasPremium && (
-                    <div className="flex-1 flex items-center justify-center gap-1 py-2.5 active:bg-slate-50 active:scale-[0.95] transition-all whitespace-nowrap">
+                    <div className="flex-1 flex flex-col items-center justify-center py-2.5 active:bg-slate-50 active:scale-[0.95] transition-all">
                         <PropertyPdfDownload property={property} agent={agent} dict={{}} iconOnly={true} />
-                        <span className="text-[9px] font-black text-slate-500">PDF</span>
+                        <span className="text-[9px] font-black text-slate-500 mt-1">PDF</span>
                     </div>
                 )}
 
                 <button
                     onClick={handleDelete}
                     disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-1 py-2.5 text-[9px] font-black text-red-400 active:bg-red-50 active:scale-[0.95] transition-all disabled:opacity-50 whitespace-nowrap"
+                    className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-red-400 active:bg-red-50 active:scale-[0.95] transition-all disabled:opacity-50"
                 >
                     {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                     <span>削除</span>
@@ -140,45 +140,45 @@ export default function DashboardActions({
             </div>
 
             {/* Desktop layout: icon buttons */}
-            <div className="hidden sm:flex items-center space-x-2">
+            <div className="hidden sm:flex items-center space-x-1 lg:space-x-2">
                 <Link 
                     href={`/properties/${propertyId}`} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all border border-slate-100 shadow-sm flex items-center gap-1.5 px-4"
+                    className="p-1.5 lg:p-2.5 rounded-lg lg:rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all border border-slate-100 shadow-sm flex items-center gap-1 lg:gap-1.5 px-2 lg:px-4 whitespace-nowrap"
                     title="詳細を見る"
                 >
-                    <ExternalLink className="w-4 h-4" />
-                    <span className="text-xs font-bold">詳細</span>
+                    <ExternalLink className="w-3.5 h-3.5 lg:w-4 h-4" />
+                    <span className="text-[10px] lg:text-xs font-bold">詳細</span>
                 </Link>
                 {hasPremium && (
-                    <div title="PDFチラシをダウンロード">
+                    <div title="PDFチラシをダウンロード" className="scale-90 lg:scale-100">
                         <PropertyPdfDownload property={property} agent={agent} dict={{}} iconOnly={true} />
                     </div>
                 )}
                 {hasPremium && (
                     <button
                         onClick={() => setIsShareModalOpen(true)}
-                        className="p-2.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-600 hover:text-white transition-all border border-pink-100 shadow-sm"
+                        className="p-1.5 lg:p-2.5 rounded-lg lg:rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-600 hover:text-white transition-all border border-pink-100 shadow-sm"
                         title="SNS用コピー&バナー画像を生成"
                     >
-                        <Share2 className="w-5 h-5" />
+                        <Share2 className="w-4 h-4 lg:w-5 h-5" />
                     </button>
                 )}
                 <button
                     onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
-                    className="p-2.5 rounded-xl bg-slate-50 text-navy-primary hover:bg-navy-primary hover:text-white transition-all border border-slate-100 shadow-sm"
+                    className="p-1.5 lg:p-2.5 rounded-lg lg:rounded-xl bg-slate-50 text-navy-primary hover:bg-navy-primary hover:text-white transition-all border border-slate-100 shadow-sm"
                     title="編集する"
                 >
-                    <Edit3 className="w-5 h-5" />
+                    <Edit3 className="w-4 h-4 lg:w-5 h-5" />
                 </button>
                 <button
                     onClick={handleDelete}
                     disabled={loading}
-                    className="p-2.5 rounded-xl bg-slate-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-slate-100 disabled:opacity-50 shadow-sm"
+                    className="p-1.5 lg:p-2.5 rounded-lg lg:rounded-xl bg-slate-50 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-slate-100 disabled:opacity-50 shadow-sm"
                     title="削除する"
                 >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                    {loading ? <Loader2 className="w-4 h-4 lg:w-5 h-5 animate-spin" /> : <Trash2 className="w-4 h-4 lg:w-5 h-5" />}
                 </button>
             </div>
             {shareDialog}
