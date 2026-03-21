@@ -152,28 +152,45 @@ export default function AdminDeveloperManagement() {
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden mb-12">
-            <div className="bg-slate-50 border-b border-slate-100 p-6 md:p-8 flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-black text-navy-secondary">デベロッパー・管理会社マスター</h2>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Developer Management</p>
+            <div className="bg-slate-50 border-b border-slate-100 p-4 md:p-8">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex items-center gap-2 md:gap-3">
+                        <h2 className="min-w-0 whitespace-nowrap text-base font-black text-navy-secondary md:text-xl">
+                            デベロッパーマスター<span className="hidden md:inline">・管理会社マスター</span>
+                        </h2>
+                        {!loading && (
+                            <span className="shrink-0 rounded-full bg-navy-primary/10 px-2.5 py-1 text-[11px] font-bold text-navy-primary md:px-3 md:text-xs">
+                                {filteredDevelopers.length}件
+                            </span>
+                        )}
+                    </div>
+                    <p className="hidden text-[10px] font-bold uppercase tracking-widest text-slate-400 md:block">Developer Management</p>
                 </div>
                 {!isAdding && !editingId && (
-                    <div className="flex items-center gap-4">
-                        <div className="relative w-64">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <div className="mt-3 flex items-center gap-2 md:mt-4 md:flex-wrap md:gap-4">
+                        <div className="relative min-w-0 flex-1 md:w-64 md:flex-none">
+                            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 md:h-4 md:w-4" />
                             <input
                                 type="text"
                                 placeholder="名前で検索..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold"
+                                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-8 pr-8 text-[11px] font-bold text-navy-secondary transition-all focus:outline-none focus:ring-2 focus:ring-navy-primary/20 md:pl-9 md:pr-4 md:text-xs"
                             />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            )}
                         </div>
                         <button
                             onClick={() => setIsAdding(true)}
-                            className="flex items-center space-x-2 bg-navy-primary text-white px-6 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-navy-primary/20"
+                            className="flex shrink-0 items-center justify-center space-x-1 rounded-xl bg-navy-primary px-3 py-2 text-[11px] font-black text-white shadow-lg shadow-navy-primary/20 transition-all hover:bg-navy-secondary md:space-x-2 md:px-6 md:py-2.5 md:text-xs"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
                             <span>新規登録</span>
                         </button>
                     </div>
@@ -278,7 +295,7 @@ export default function AdminDeveloperManagement() {
                                 </div>
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-black text-navy-secondary truncate">{dev.name}</p>
+                                    <p className="text-sm font-black text-navy-secondary">{dev.name}</p>
                                     <div className="flex items-center gap-3 mt-1">
                                         {dev.website_url ? (
                                             <a href={dev.website_url} target="_blank" className="text-[10px] font-bold text-navy-primary flex items-center gap-0.5 hover:underline">
