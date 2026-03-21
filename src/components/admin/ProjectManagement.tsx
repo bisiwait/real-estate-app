@@ -291,7 +291,9 @@ export default function AdminProjectManagement() {
             <div className="bg-slate-50 border-b border-slate-100 p-4 md:p-8">
                 <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex items-center gap-2 md:gap-3">
-                        <h2 className="min-w-0 whitespace-nowrap text-base font-black text-navy-secondary md:text-xl">プロジェクト情報管理（建物マスター）</h2>
+                        <h2 className="min-w-0 whitespace-nowrap text-base font-black text-navy-secondary md:text-xl">
+                            プロジェクト情報管理<span className="hidden md:inline">（建物マスター）</span>
+                        </h2>
                         {!loading && (
                             <span className="shrink-0 rounded-full bg-navy-primary/10 px-2.5 py-1 text-[11px] font-bold text-navy-primary md:px-3 md:text-xs">
                                 {filteredProjects.length}件
@@ -311,7 +313,7 @@ export default function AdminProjectManagement() {
                             title="築年数または階数が未設定の建物を抽出"
                         >
                             <Filter className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span>未記入抽出</span>
+                            <span><span className="md:hidden">未記入</span><span className="hidden md:inline">未記入抽出</span></span>
                         </button>
                         <div className="relative min-w-0 flex-1 md:w-64 md:flex-none">
                             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 md:h-4 md:w-4" />
