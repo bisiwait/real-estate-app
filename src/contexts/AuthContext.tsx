@@ -7,7 +7,6 @@ import { User, Session } from '@supabase/supabase-js'
 export type UserRole = 'admin' | 'agent' | 'general'
 
 export interface UserData {
-    credits: number | null
     isAdmin: boolean
     fullName: string | null
     role: UserRole
@@ -24,7 +23,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
     user: null,
     session: null,
-    userData: { credits: null, isAdmin: false, fullName: null, role: 'general' },
+    userData: { isAdmin: false, fullName: null, role: 'general' },
     isLoading: true,
     refreshUser: async () => {},
 })
@@ -36,7 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [session, setSession] = useState<Session | null>(null)
     const [userData, setUserData] = useState<UserData>({
-        credits: null,
         isAdmin: false,
         fullName: null,
         role: 'general'
@@ -46,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const fetchUserData = async (userId: string) => {
         let { data, error } = await supabase
             .from('profiles')
-            .select('available_credits, is_admin, full_name, user_role')
+            .select('is_admin, full_name, user_role')
             .eq('id', userId)
             .single()
 
@@ -54,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.warn('AuthProvider: Fetch with role failed, falling back:', error)
             const { data: fallbackData, error: fallbackError } = await supabase
                 .from('profiles')
-                .select('available_credits, is_admin, full_name')
+                .select('is_admin, full_name')
                 .eq('id', userId)
                 .single()
             data = fallbackData as any
@@ -63,16 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!error && data) {
             const is_admin = data.is_admin === true || (data as any).user_role === 'admin'
-            const is_agent = (data as any).user_role === 'agent' || (data.available_credits || 0) > 0
+            const is_agent = (data as any).user_role === 'agent'
 
             setUserData({
-                credits: data.available_credits,
                 isAdmin: is_admin,
                 fullName: data.full_name || null,
                 role: is_admin ? 'admin' : (is_agent ? 'agent' : 'general')
             })
         } else {
-            setUserData({ credits: null, isAdmin: false, fullName: null, role: 'general' })
+            setUserData({ isAdmin: false, fullName: null, role: 'general' })
         }
     }
 
@@ -84,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
             await fetchUserData(session.user.id)
         } else {
-             setUserData({ credits: null, isAdmin: false, fullName: null, role: 'general' })
+             setUserData({ isAdmin: false, fullName: null, role: 'general' })
         }
         setIsLoading(false)
     }
@@ -98,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (session?.user) {
                 fetchUserData(session.user.id)
             } else {
-                setUserData({ credits: null, isAdmin: false, fullName: null, role: 'general' })
+                setUserData({ isAdmin: false, fullName: null, role: 'general' })
             }
         })
 

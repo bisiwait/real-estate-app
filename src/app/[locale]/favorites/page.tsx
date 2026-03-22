@@ -22,13 +22,12 @@ export default async function FavoritesPage({ params }: { params: { locale: stri
     // Role check for admins and agents
     const { data: profile } = await supabase
         .from('profiles')
-        .select('user_role, is_admin, available_credits')
+        .select('user_role, is_admin')
         .eq('id', user.id)
         .single()
 
     const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
-    const hasCredits = (profile?.available_credits || 0) > 0
-    const isAgent = profile?.user_role === 'agent' || hasCredits || (profile?.user_role === undefined && !isAdmin)
+    const isAgent = profile?.user_role === 'agent'
 
     if (isAdmin) {
         redirect(`/${locale}/admin-secret`)

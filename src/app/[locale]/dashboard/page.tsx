@@ -30,10 +30,10 @@ export default async function DashboardPage({
         redirect('/login')
     }
 
-    // Fetch Profile (Credits & Plan)
+    // Fetch Profile (plan / subscription fields)
     const { data: profile } = await supabase
         .from('profiles')
-        .select('available_credits, plan, plan_type, full_name, phone, current_period_end, auto_renew')
+        .select('plan, plan_type, full_name, phone, current_period_end, auto_renew')
         .eq('id', user.id)
         .single()
 
@@ -139,7 +139,7 @@ export default async function DashboardPage({
                         {/* Subscription Status (Trial countdown / Portal link) */}
                         <SubscriptionStatus profile={profile} />
 
-                        {/* Credits Card (Free users only) */}
+                        {/* プラン表示（フリープラン時のみ。プレミアムは別カード） */}
                         {activePlan !== 'premium' && (
                             <CreditSection profile={profile} />
                         )}

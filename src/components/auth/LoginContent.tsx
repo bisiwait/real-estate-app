@@ -70,14 +70,14 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
                     let { data: profile, error: profileError } = await supabase
                         .from('profiles')
-                        .select('user_role, is_admin, available_credits')
+                        .select('user_role, is_admin')
                         .eq('id', user.id)
                         .single()
 
                     if (profileError) {
                         const { data: fallbackProfile } = await supabase
                             .from('profiles')
-                            .select('is_admin, available_credits, user_role')
+                            .select('is_admin, user_role')
                             .eq('id', user.id)
                             .single()
                         profile = fallbackProfile as any
@@ -86,12 +86,11 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     router.refresh()
 
                     const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
-                    const hasCredits = (profile?.available_credits || 0) > 0
                     const isAgent = profile?.user_role === 'agent'
 
                     if (isAdmin) {
                         router.push(`/${locale}/admin-secret`)
-                    } else if (isAgent || hasCredits) {
+                    } else if (isAgent) {
                         router.push(`/${locale}/dashboard`)
                     } else {
                         router.push(`/${locale}/mypage`)
@@ -117,14 +116,14 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
                     let { data: profile, error: profileError } = await supabase
                         .from('profiles')
-                        .select('user_role, is_admin, available_credits')
+                        .select('user_role, is_admin')
                         .eq('id', user.id)
                         .single()
 
                     if (profileError) {
                         const { data: fallbackProfile } = await supabase
                             .from('profiles')
-                            .select('is_admin, available_credits, user_role')
+                            .select('is_admin, user_role')
                             .eq('id', user.id)
                             .single()
                         profile = fallbackProfile as any
@@ -133,12 +132,11 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     router.refresh()
 
                     const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
-                    const hasCredits = (profile?.available_credits || 0) > 0
                     const isAgent = profile?.user_role === 'agent'
 
                     if (isAdmin) {
                         router.push(`/${locale}/admin-secret`)
-                    } else if (isAgent || hasCredits) {
+                    } else if (isAgent) {
                         router.push(`/${locale}/dashboard`)
                     } else {
                         router.push(`/${locale}/mypage`)
