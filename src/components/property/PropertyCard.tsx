@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { MapPin, Bath, Dog, BedDouble } from 'lucide-react'
 import FavoriteButton from './FavoriteButton'
 import { useParams } from 'next/navigation'
@@ -29,8 +30,18 @@ interface PropertyCardProps {
     }
 }
 
+const CARD_IMAGE_SIZES =
+    '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw'
 
-export default function PropertyCard({ property, dict }: { property: any, dict: any }) {
+export default function PropertyCard({
+    property,
+    dict,
+    imagePriority = false,
+}: {
+    property: any
+    dict: any
+    imagePriority?: boolean
+}) {
     const params = useParams()
     const locale = params?.locale as string || 'jp'
     
@@ -50,10 +61,13 @@ export default function PropertyCard({ property, dict }: { property: any, dict: 
             <Link href={`/${locale}/properties/${property.id}`} prefetch={false} className="block h-full transition-transform active:scale-[0.98] duration-200">
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg border border-slate-100 h-full flex flex-col">
                     <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-100">
-                        <img
+                        <Image
                             src={property.images?.[0] || '/images/placeholder-property.jpg'}
                             alt={property.title}
-                            className="w-full h-full object-cover transition-transform duration-500"
+                            fill
+                            sizes={CARD_IMAGE_SIZES}
+                            priority={imagePriority}
+                            className="object-cover transition-transform duration-500"
                         />
                         <div className="absolute top-4 left-4 right-14 flex flex-wrap gap-2 overflow-hidden max-h-[60px]">
                             {property.status === 'contracted' && (

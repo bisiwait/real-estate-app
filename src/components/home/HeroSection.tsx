@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HeroSection({ dict, locale }: { dict: any, locale: string }) {
     const [activeTab, setActiveTab] = useState<'rent' | 'buy' | 'presale'>('rent');
@@ -13,10 +14,13 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
         <div className="relative isolate pt-14">
             {/* Background image */}
             <div className="absolute inset-0 -z-10">
-                <img
+                <Image
                     src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=1920"
                     alt="Pattaya/Sriracha View"
-                    className="absolute inset-0 h-full w-full object-cover"
+                    fill
+                    priority
+                    sizes="100vw"
+                    className="object-cover"
                 />
                 {/* Gradient overlay for better readability */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />

@@ -48,8 +48,6 @@ export async function getRecommendedPresales(limit = 3) {
     return [];
   }
 
-  console.log('Raw presale data from Supabase:', data?.length, data);
-
   if (!data || data.length === 0) {
     return [];
   }

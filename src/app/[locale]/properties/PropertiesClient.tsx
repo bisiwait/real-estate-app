@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import MobileSearchBar from '@/components/property/MobileSearchBar'
@@ -9,8 +9,31 @@ import { useSearchCount } from '@/contexts/SearchCountContext'
 import { Search, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
+import {
+    executePropertyListQuery,
+    formatPropertyListRows,
+    parsePropertyListFiltersFromURLSearchParams,
+    PROPERTY_LIST_PAGE_SIZE,
+} from '@/lib/services/propertyListQuery'
 
-export default function PropertiesClient({ dict, locale }: { dict: any, locale: string }) {
+type PropertiesClientProps = {
+    dict: any
+    locale: string
+    initialProperties?: any[]
+    initialTotalCount?: number
+    initialHasMore?: boolean
+    /** サーバーでキャッシュ済みの初回データがあるとき、マウント直後の重複フェッチを避ける */
+    skipInitialClientFetch?: boolean
+}
+
+export default function PropertiesClient({
+    dict,
+    locale,
+    initialProperties = [],
+    initialTotalCount = 0,
+    initialHasMore = true,
+    skipInitialClientFetch = false,
+}: PropertiesClientProps) {
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -18,14 +41,14 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
     const { setPropertiesHitCount } = useSearchCount()
 
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
-    const [dbProperties, setDbProperties] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
+    const [dbProperties, setDbProperties] = useState<any[]>(initialProperties)
+    const [loading, setLoading] = useState(!skipInitialClientFetch)
     const [loadingMore, setLoadingMore] = useState(false)
     const [page, setPage] = useState(0)
-    const [hasMore, setHasMore] = useState(true)
-    const [totalCount, setTotalCount] = useState<number>(0)
+    const [hasMore, setHasMore] = useState(initialHasMore)
+    const [totalCount, setTotalCount] = useState<number>(initialTotalCount)
     const savedScrollYRef = useRef<number | null>(null)
-    const PAGE_SIZE = 9
+    const skipDuplicateFetchRef = useRef(skipInitialClientFetch)
 
     // Local constants derived from dict
     const CITIES = [
@@ -83,80 +106,13 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
 
         try {
             const currentPage = isLoadMore ? page + 1 : 0
-            const from = currentPage * PAGE_SIZE
-            const to = from + PAGE_SIZE - 1
+            const from = currentPage * PROPERTY_LIST_PAGE_SIZE
 
-            let query = supabase
-                .from('properties')
-                .select(`
-                    *,
-                    area:areas!inner (
-                        name,
-                        region:regions!inner (
-                            name
-                        )
-                    )
-                `, { count: 'exact' })
-                .in('status', ['published', 'under_negotiation', 'contracted'])
-                .eq('is_approved', true)
+            const filters = parsePropertyListFiltersFromURLSearchParams(
+                new URLSearchParams(searchParams.toString())
+            )
 
-            // apply filters to query
-            if (selectedCity) {
-                query = query.eq('area.region.name', selectedCity)
-            }
-            if (selectedArea) {
-                query = query.eq('area.name', selectedArea)
-            }
-            if (selectedPropertyType) {
-                query = query.eq('property_type', selectedPropertyType)
-            }
-
-            // bathtub and pets filters
-            if (bathtubFilter) query = query.eq('has_bathtub', true)
-            if (petsFilter) query = query.eq('allows_pets', true)
-
-            // type filters
-            if (listingType === 'rent') {
-                query = query.eq('is_for_rent', true).eq('is_presale', false)
-            } else if (listingType === 'sell') {
-                query = query.eq('is_for_sale', true).eq('is_presale', false)
-            } else if (listingType === 'presale') {
-                query = query.eq('is_presale', true)
-            }
-
-            // Price filter
-            if (selectedPrice) {
-                const [min, max] = selectedPrice.split('-').map(Number)
-                const isMaxLimitRent = max >= 80000;
-                const isMaxLimitSale = max >= 30000000;
-
-                if (listingType !== 'all') {
-                    const priceCol = listingType === 'rent' ? 'rent_price' : 'sale_price'
-                    query = query.gte(priceCol, min)
-                    const isMaxLimit = listingType === 'rent' ? isMaxLimitRent : isMaxLimitSale
-                    if (!isMaxLimit) {
-                        query = query.lte(priceCol, max)
-                    }
-                }
-            }
-
-            // Tags match (logical AND on server)
-            if (selectedTags.length > 0) {
-                query = query.contains('tags', selectedTags)
-            }
-
-            // Search query...
-            if (searchQuery) {
-                query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
-            }
-
-            // Order and Range...
-            query = query
-                .order('status', { ascending: true })
-                .order('last_confirmed_at', { ascending: false })
-                .range(from, to)
-
-            const { data, error, count } = await query
+            const { data, error, count } = await executePropertyListQuery(supabase, filters, currentPage)
 
             if (error) {
                 console.error('Supabase Error Details:', error)
@@ -165,11 +121,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
             if (count !== null) setTotalCount(count)
 
             if (data) {
-                const formatted = data.map(p => ({
-                    ...p,
-                    city_name: p.area?.region?.name || 'Pattaya',
-                    area_name: p.area?.name || 'Unknown'
-                }))
+                const formatted = formatPropertyListRows(data)
 
                 if (isLoadMore) {
                     setDbProperties(prev => [...prev, ...formatted])
@@ -185,7 +137,7 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                     setDbProperties(formatted)
                 }
 
-                const hasMoreData = count ? (from + formatted.length) < count : formatted.length === PAGE_SIZE
+                const hasMoreData = count ? (from + formatted.length) < count : formatted.length === PROPERTY_LIST_PAGE_SIZE
                 setHasMore(hasMoreData)
             }
         } catch (err: any) {
@@ -199,6 +151,10 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
     const tagsRaw = searchParams.get('tags') || ''
 
     useEffect(() => {
+        if (skipDuplicateFetchRef.current) {
+            skipDuplicateFetchRef.current = false
+            return
+        }
         fetchProperties()
     }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, searchQuery, listingType, bathtubFilter, petsFilter])
 
@@ -506,8 +462,13 @@ export default function PropertiesClient({ dict, locale }: { dict: any, locale: 
                         ) : filteredProperties.length > 0 ? (
                             <div className="space-y-12 min-h-[800px] ![overflow-anchor:none]" style={{ overflowAnchor: 'none' }}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {filteredProperties.map(property => (
-                                        <PropertyCard key={property.id} property={property} dict={dict} />
+                                    {filteredProperties.map((property, idx) => (
+                                        <PropertyCard
+                                            key={property.id}
+                                            property={property}
+                                            dict={dict}
+                                            imagePriority={idx < 6}
+                                        />
                                     ))}
                                 </div>
 

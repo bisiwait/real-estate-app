@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
+
 import HeroSection from "@/components/home/HeroSection";
 
 import SectionHeader from "@/components/ui/SectionHeader";
@@ -15,7 +16,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
   // Fetch real data from service
   const presales = await getRecommendedPresales();
-  console.log('Fetched presales count:', presales.length);
   const rentals = await getRecommendedRentals();
   const sales = await getRecommendedSales();
 
@@ -52,9 +52,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           />
           {/* 横スクロール対応のコンテナ (モバイル向け) */}
           <div className="flex overflow-x-auto pb-8 -mx-4 px-4 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pb-0 md:px-0 md:mx-0 snap-x snap-mandatory hide-scrollbar">
-            {presales.map((project) => (
+            {presales.map((project, idx) => (
               <div key={project.id} className="min-w-[85vw] sm:min-w-[400px] md:min-w-0 pr-4 md:pr-0 snap-center md:snap-align-none">
-                <PresaleCard project={project} dict={dict} />
+                <PresaleCard project={project} dict={dict} imagePriority={idx === 0} />
               </div>
             ))}
             {presales.length === 0 && (
@@ -78,9 +78,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             }
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {rentalProperties.map((prop) => (
+            {rentalProperties.map((prop, idx) => (
               <div key={prop.id} className="h-full">
-                <PropertyCard property={prop} dict={dict} />
+                <PropertyCard property={prop} dict={dict} imagePriority={idx < 4} />
               </div>
             ))}
             {rentalProperties.length === 0 && (
@@ -104,9 +104,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             }
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {saleProperties.map((prop) => (
+            {saleProperties.map((prop, idx) => (
               <div key={prop.id} className="h-full">
-                <PropertyCard property={prop} dict={dict} />
+                <PropertyCard property={prop} dict={dict} imagePriority={idx < 4} />
               </div>
             ))}
             {saleProperties.length === 0 && (

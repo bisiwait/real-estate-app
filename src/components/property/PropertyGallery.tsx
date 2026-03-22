@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { createPortal } from 'react-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination, Autoplay, Zoom } from 'swiper/modules'
@@ -12,7 +13,12 @@ import 'swiper/css/zoom'
 
 interface PropertyGalleryProps {
   images: string[]
+  /** 物件詳細のメインビジュアル：先頭スライドを最優先読み込み */
+  priority?: boolean
 }
+
+const MAIN_GALLERY_SIZES =
+  '(max-width: 640px) 100vw, (max-width: 1024px) 100vw, min(896px, 66vw)'
 
 export default function PropertyGallery({ images }: PropertyGalleryProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -74,14 +80,16 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
           {images.map((image, index) => (
             <SwiperSlide key={index}>
               <div
-                className="w-full h-full cursor-pointer"
+                className="relative w-full h-full min-h-[280px] sm:min-h-[360px] cursor-pointer"
                 onClick={() => openFullscreen(index)}
               >
-                <img
+                <Image
                   src={image}
                   alt={`Property image ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  loading="eager"
+                  fill
+                  sizes={MAIN_GALLERY_SIZES}
+                  priority={priority && index === 0}
+                  className="object-cover"
                 />
               </div>
             </SwiperSlide>
@@ -164,11 +172,13 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
               >
                 {images.map((image, index) => (
                   <SwiperSlide key={index} className="flex items-center justify-center">
-                    <div className="swiper-zoom-container flex items-center justify-center w-full h-full">
-                      <img
+                    <div className="swiper-zoom-container relative flex items-center justify-center w-full h-full min-h-[50vh]">
+                      <Image
                         src={image}
                         alt={`Fullscreen ${index + 1}`}
-                        className="max-w-full max-h-full object-contain"
+                        fill
+                        sizes="100vw"
+                        className="object-contain"
                       />
                     </div>
                   </SwiperSlide>

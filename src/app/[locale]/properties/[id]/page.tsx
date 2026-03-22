@@ -1,6 +1,9 @@
 import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { createStaticClient } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
+
+export const revalidate = 60
 
 const BASE_URL = 'https://real-estate-app-sigma-brown.vercel.app'
 
@@ -95,6 +98,10 @@ export default async function Page({
 }) {
     const { id } = await params
     const property = await fetchProperty(id)
+
+    if (!property) {
+        notFound()
+    }
 
     return <PropertyDetailClient initialProperty={property} />
 }
