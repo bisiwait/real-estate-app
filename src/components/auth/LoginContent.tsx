@@ -55,7 +55,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`,
+                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success`)}`,
                     },
                 })
                 if (error) throw error
@@ -93,7 +93,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     } else if (isAgent) {
                         router.push(`/${locale}/dashboard`)
                     } else {
-                        router.push(`/${locale}/mypage`)
+                        router.push(`/${locale}/signup/success`)
                     }
                     return
                 }

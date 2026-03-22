@@ -33,6 +33,9 @@ export default function Breadcrumb({ labels = {} }: { labels?: Record<string, st
     // Skip dashboard subpaths that shouldn't be breadcrumbed or have special handling
     if (pathname === '/' || (hasLocale && displaySegments.length === 0)) return null
 
+    // サンクスページはパンくず非表示（レイアウトをシンプルに）
+    if (displaySegments[0] === 'signup' && displaySegments[1] === 'success') return null
+
     // Special handling for dashboard/edit/[id] to avoid "edit" being a link to 404
     const isEditPage = displaySegments[0] === 'dashboard' && displaySegments[1] === 'edit'
 

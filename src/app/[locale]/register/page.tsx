@@ -28,13 +28,43 @@ export default function RegisterPage() {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`,
+                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success`)}`,
                     },
                 })
                 if (error) throw error
                 if (signUpResult.session) {
+                    await fetch('/api/auth/sync-agent-profile', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                    }).catch(() => {})
+
+                    let { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('user_role, is_admin')
+                        .eq('id', signUpResult.session.user.id)
+                        .single()
+
+                    if (profileError) {
+                        const { data: fallbackProfile } = await supabase
+                            .from('profiles')
+                            .select('is_admin, user_role')
+                            .eq('id', signUpResult.session.user.id)
+                            .single()
+                        profile = fallbackProfile as typeof profile
+                    }
+
                     router.refresh()
-                    router.push(`/${locale}/mypage`)
+
+                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
+                    const isAgent = profile?.user_role === 'agent'
+
+                    if (isAdmin) {
+                        router.push(`/${locale}/admin-secret`)
+                    } else if (isAgent) {
+                        router.push(`/${locale}/dashboard`)
+                    } else {
+                        router.push(`/${locale}/signup/success`)
+                    }
                     return
                 }
                 setIsSignUp(false)
@@ -46,18 +76,37 @@ export default function RegisterPage() {
                 if (signInError) throw signInError
 
                 if (user) {
-                    const { data: profile } = await supabase
+                    await fetch('/api/auth/sync-agent-profile', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                    }).catch(() => {})
+
+                    let { data: profile, error: profileError } = await supabase
                         .from('profiles')
-                        .select('is_admin')
+                        .select('user_role, is_admin')
                         .eq('id', user.id)
                         .single()
 
+                    if (profileError) {
+                        const { data: fallbackProfile } = await supabase
+                            .from('profiles')
+                            .select('is_admin, user_role')
+                            .eq('id', user.id)
+                            .single()
+                        profile = fallbackProfile as typeof profile
+                    }
+
                     router.refresh()
 
-                    if (profile?.is_admin) {
-                        router.push('/admin-secret')
+                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
+                    const isAgent = profile?.user_role === 'agent'
+
+                    if (isAdmin) {
+                        router.push(`/${locale}/admin-secret`)
+                    } else if (isAgent) {
+                        router.push(`/${locale}/dashboard`)
                     } else {
-                        router.push('/dashboard')
+                        router.push(`/${locale}/mypage`)
                     }
                 }
 
