@@ -4,7 +4,6 @@ import HeroSection from "@/components/home/HeroSection";
 import SectionHeader from "@/components/ui/SectionHeader";
 import PresaleCard from "@/components/property/PresaleCard";
 import PropertyCard from "@/components/property/PropertyCard";
-import LifeSupportBanners from "@/components/home/LifeSupportBanners";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getRecommendedRentals, getRecommendedSales, getRecommendedPresales } from "@/lib/services/propertyService";
@@ -115,17 +114,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 {dict.home.no_sales || '現在、おすすめの売買物件はありません。'}
               </div>
             )}
-          </div>
-        </section>
-
-        {/* Life Support Banners Section */}
-        <section className="scroll-mt-24 pt-8" id="support">
-          <div className="bg-slate-50 rounded-3xl p-8 lg:p-12 mb-12">
-            <SectionHeader
-              title={dict.home.support_title || 'パタヤ・シラチャ生活サポート'}
-              subtitle={dict.home.support_subtitle || 'タイでの生活をより快適に。信頼できる弊社提携パートナーをご紹介します'}
-            />
-            <LifeSupportBanners />
           </div>
         </section>
 
