@@ -20,11 +20,15 @@ interface PropertyGalleryProps {
 const MAIN_GALLERY_SIZES =
   '(max-width: 640px) 100vw, (max-width: 1024px) 100vw, min(896px, 66vw)'
 
-export default function PropertyGallery({ images }: PropertyGalleryProps) {
+export default function PropertyGallery({ images, priority = true }: PropertyGalleryProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [initialSlide, setInitialSlide] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
   const [mounted, setMounted] = useState(false)
+
+  const safeImages = (images ?? []).filter(
+    (src): src is string => typeof src === 'string' && src.trim().length > 0
+  )
 
   useEffect(() => {
     setMounted(true)
@@ -41,7 +45,7 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
     }
   }, [isFullscreen])
 
-  if (!images || images.length === 0) {
+  if (safeImages.length === 0) {
     return (
       <div className="w-full h-[300px] md:h-[500px] bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400">
         No images available
@@ -63,7 +67,7 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
       <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden shadow-xl bg-slate-100 aspect-square sm:aspect-[4/3] md:aspect-[3/2] lg:h-[550px] lg:aspect-auto group">
         {/* Image Counter Overlay */}
         <div className="absolute top-4 left-4 z-20 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-[10px] font-black tracking-widest pointer-events-none">
-          {activeIndex + 1} / {images.length}
+          {activeIndex + 1} / {safeImages.length}
         </div>
 
         <Swiper
@@ -77,8 +81,8 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
           onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
           className="w-full h-full cursor-zoom-in"
         >
-          {images.map((image, index) => (
-            <SwiperSlide key={index}>
+          {safeImages.map((image, index) => (
+            <SwiperSlide key={`${image}-${index}`}>
               <div
                 className="relative w-full h-full min-h-[280px] sm:min-h-[360px] cursor-pointer"
                 onClick={() => openFullscreen(index)}
@@ -170,8 +174,8 @@ export default function PropertyGallery({ images }: PropertyGalleryProps) {
                 zoom={true}
                 className="w-full h-full"
               >
-                {images.map((image, index) => (
-                  <SwiperSlide key={index} className="flex items-center justify-center">
+                {safeImages.map((image, index) => (
+                  <SwiperSlide key={`fs-${image}-${index}`} className="flex items-center justify-center">
                     <div className="swiper-zoom-container relative flex items-center justify-center w-full h-full min-h-[50vh]">
                       <Image
                         src={image}
