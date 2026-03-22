@@ -10,8 +10,26 @@ export async function GET(request: Request) {
 
     if (code) {
         const supabase = await createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!error && data.user) {
+            const user = data.user
+            const metadata = user.user_metadata
+
+            // If this was an agent signup, ensure the profile has the agent role
+            if (metadata.user_role === 'agent') {
+                await supabase
+                    .from('profiles')
+                    .update({ 
+                        user_role: 'agent',
+                        full_name: metadata.full_name,
+                        company_name: metadata.company_name,
+                        phone_number: metadata.phone_number,
+                        line_id: metadata.line_id,
+                        target_area: metadata.target_area
+                    })
+                    .eq('id', user.id)
+            }
+
             return NextResponse.redirect(`${origin}${next}`)
         }
     }
