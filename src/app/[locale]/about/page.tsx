@@ -8,7 +8,6 @@ const FadeIn = dynamic(() => import('@/components/animations/FadeIn'), {
 import {
     CheckCircle2,
     ShieldCheck,
-    Home,
     Users,
     ArrowRight,
     Zap,
@@ -105,21 +104,12 @@ export default function AboutPage() {
                             </div>
                         </FadeIn>
                         <FadeIn delay={0.2}>
-                            <div className="aspect-square rounded-[3rem] bg-slate-100 overflow-hidden shadow-2xl rotate-3">
+                            <div className="aspect-square rounded-[3rem] bg-slate-100 overflow-hidden shadow-2xl">
                                 <img
                                     src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1000"
                                     alt="Luxury Condo"
                                     className="w-full h-full object-cover"
                                 />
-                            </div>
-                            <div className="absolute -bottom-8 -left-8 bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 max-w-[280px]">
-                                <div className="flex items-center space-x-3 mb-4 text-emerald-500">
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    <span className="font-black text-sm uppercase">Verification System</span>
-                                </div>
-                                <p className="text-xs font-bold text-navy-secondary leading-relaxed">
-                                    全掲載物件は、プラットフォーム独自の基準で定期的に情報が確認されています。
-                                </p>
                             </div>
                         </FadeIn>
                     </div>
@@ -156,13 +146,7 @@ export default function AboutPage() {
                             </div>
                         </FadeIn>
                         <FadeIn>
-                            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">For Agents</h2>
-                            <h3 className="text-3xl md:text-4xl font-black mb-8 leading-tight">
-                                質の高い顧客と、<br />スマートに繋がる。
-                            </h3>
-                            <p className="text-slate-400 font-medium leading-relaxed mb-8">
-                                成約意欲の高い日本人層に特化した集客プラットフォームです。無駄な広告費をかけず、お問い合わせベースの効率的なマーケティングを可能にします。
-                            </p>
+                            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6">For Agents</h2>
                             <ul className="space-y-4 mb-10">
                                 <li className="flex items-center space-x-3">
                                     <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -221,7 +205,7 @@ export default function AboutPage() {
                 <div className="container mx-auto px-4 max-w-5xl">
                     <div className="bg-slate-900 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-navy-primary/20 to-transparent pointer-events-none"></div>
-                        <h3 className="text-3xl md:text-4xl font-black text-white mb-8 relative z-10">理想のタイ暮らしを、ここから見つけよう。</h3>
+                        <h3 className="text-3xl md:text-4xl font-black text-slate-400 mb-8 relative z-10">理想のタイ暮らしを、ここから見つけよう。</h3>
                         <div className="flex flex-col md:flex-row items-center justify-center gap-6 relative z-10">
                             <Link
                                 href="/properties"
