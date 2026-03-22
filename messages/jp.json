@@ -107,11 +107,14 @@
         "description": "パタヤ、シラチャなどチョンブリ県に特化した日本人向け不動産マーケットプレイス。正確な位置情報と日本基準のサポートでタイ生活を応援します。"
     },
     "signup_success_page": {
-        "title": "登録が完了しました！",
-        "welcome_brand": "Welcome to Chonburi Connect!",
+        "main_headline": "登録が完了しました！ Welcome to Chonburi Connect!",
         "subtitle": "ご登録ありがとうございます。理想の物件探しをお手伝いします。",
+        "favorites_card_title": "お気に入り",
+        "favorites_card_body": "気になる物件は ❤️ マークを押して保存できます。自分だけのリストを作ってじっくり比較しましょう！",
+        "line_cta": "最新の未公開物件をLINEで受け取る",
+        "line_placeholder_note": "※本番では NEXT_PUBLIC_LINE_ADD_FRIEND_URL に公式LINEの友だち追加URLを設定してください。",
         "cta_properties": "物件を探しに行く",
-        "cta_profile": "プロフィールを設定する"
+        "cta_profile": "プロフィール設定"
     },
     "header": {
         "search_placeholder": "エリア・物件名で検索...",

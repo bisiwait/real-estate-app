@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
 
 export default function RegisterPage() {
     const params = useParams()
@@ -28,7 +29,7 @@ export default function RegisterPage() {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success`)}`,
+                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
                     },
                 })
                 if (error) throw error
@@ -38,7 +39,8 @@ export default function RegisterPage() {
                         method: 'POST',
                         credentials: 'same-origin',
                     }).catch(() => {})
-                    router.replace(`/${locale}/signup/success`)
+                    setSignupWelcomeCookie()
+                    router.replace(`/${locale}/signup/success?new=1`)
                     return
                 }
                 setIsSignUp(false)

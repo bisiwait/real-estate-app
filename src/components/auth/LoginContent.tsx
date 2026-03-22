@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Loader2, ArrowRight, Chrome, ShieldCheck, Heart, Search, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface LoginContentProps {
@@ -55,7 +56,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success`)}`,
+                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
                     },
                 })
                 if (error) throw error
@@ -79,7 +80,8 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                         method: 'POST',
                         credentials: 'same-origin',
                     }).catch(() => {})
-                    router.replace(`/${locale}/signup/success`)
+                    setSignupWelcomeCookie()
+                    router.replace(`/${locale}/signup/success?new=1`)
                     return
                 }
 
@@ -138,7 +140,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
     const handleSocialLogin = async (provider: 'google') => {
         try {
             const nextAfterAuth = isSignUp
-                ? `/${locale}/signup/success`
+                ? `/${locale}/signup/success?new=1`
                 : `/${locale}/mypage`
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,

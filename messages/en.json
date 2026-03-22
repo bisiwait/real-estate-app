@@ -81,9 +81,12 @@
         "description": "Real estate marketplace specialized in Chonburi province (Pattaya, Sriracha) for Japanese. Supporting your Thai life with accurate location data and Japanese standards."
     },
     "signup_success_page": {
-        "title": "Welcome to Chonburi Connect!",
-        "welcome_brand": "You're all set!",
+        "main_headline": "Registration complete! Welcome to Chonburi Connect!",
         "subtitle": "Thank you for signing up. We're here to help you find your ideal property.",
+        "favorites_card_title": "Favorites",
+        "favorites_card_body": "Tap the ❤️ on any listing to save it. Build your own shortlist and compare at your own pace!",
+        "line_cta": "Get off-market picks via our official LINE",
+        "line_placeholder_note": "Set NEXT_PUBLIC_LINE_ADD_FRIEND_URL to your official LINE add-friend URL for production.",
         "cta_properties": "Browse properties",
         "cta_profile": "Set up your profile"
     },
