@@ -77,7 +77,8 @@
         "save_search": "検索条件を保存",
         "benefit_support_label": "安心のサポート",
         "benefit_support_desc": "エージェントとチャットでスムーズに相談",
-        "confirm_sent": "確認メールを送信しました。受信トレイをご確認ください。",
+        "confirm_sent": "登録が完了しました。",
+        "signup_complete": "登録が完了しました。ログインしてお進みください。",
         "agent_welcome_title": "物件を掲載したいエージェントの方へ",
         "agent_welcome_subtitle": "パタヤ・シラチャ最大の日本人向けプラットフォームで、成約率を最大化しましょう。",
         "agent_benefit_1_title": "掲載料・成約手数料 0円",
@@ -101,7 +102,7 @@
         "agree_to_terms_prefix": "",
         "agree_to_terms_link": "利用規約",
         "agree_to_terms_suffix": "に同意します。",
-        "signup_success": "エージェント登録を受け付けました。確認メールを送信しましたので、認証を完了させてください。"
+        "signup_success": "エージェント登録を受け付けました。ログインしてダッシュボードをご利用ください。"
     },
     "metadata": {
         "title": "Chonburi Connect | チョンブリ県の日本人向け不動産ポータル",

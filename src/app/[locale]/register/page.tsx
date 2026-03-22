@@ -1,11 +1,13 @@
 "use client";
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 
 export default function RegisterPage() {
+    const params = useParams()
+    const locale = (params?.locale as string) || 'jp'
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
@@ -22,15 +24,20 @@ export default function RegisterPage() {
 
         try {
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({
+                const { data: signUpResult, error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/auth/callback`,
+                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`,
                     },
                 })
                 if (error) throw error
-                setMessage({ type: 'success', text: '確認メールを送信しました。メールボックスを確認してください。' })
+                if (signUpResult.session) {
+                    router.refresh()
+                    router.push(`/${locale}/mypage`)
+                    return
+                }
+                setIsSignUp(false)
             } else {
                 const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
                     email,

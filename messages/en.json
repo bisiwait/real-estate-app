@@ -74,7 +74,9 @@
         "save_search": "Save Search",
         "benefit_support_label": "Reliable Support",
         "benefit_support_desc": "Smooth chat consultation with agents",
-        "confirm_sent": "Confirmation email sent. Please check your inbox."
+        "confirm_sent": "Registration completed.",
+        "signup_complete": "Registration completed. Please sign in to continue.",
+        "signup_success": "Agent registration completed. Sign in to use your dashboard."
     },
     "metadata": {
         "title": "Chonburi Connect | Real Estate Platform for Japanese in Chonburi",

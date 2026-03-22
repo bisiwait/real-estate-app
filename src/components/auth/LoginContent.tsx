@@ -51,7 +51,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                 if (!agreeTerms) {
                     throw new Error(dict.auth.agree_terms_required || "Please agree to the terms of service.")
                 }
-                const { error } = await supabase.auth.signUp({
+                const { data: signUpResult, error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
@@ -59,8 +59,48 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     },
                 })
                 if (error) throw error
-                // Localized confirm sent message
-                setMessage({ type: 'success', text: dict.auth.confirm_sent || "Confirmation email sent." })
+
+                // メール確認OFFのときはセッション付与 → そのままログイン扱いで遷移（メッセージは出さない）
+                if (signUpResult.session?.user) {
+                    const user = signUpResult.session.user
+                    await fetch('/api/auth/sync-agent-profile', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                    }).catch(() => {})
+
+                    let { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('user_role, is_admin, available_credits')
+                        .eq('id', user.id)
+                        .single()
+
+                    if (profileError) {
+                        const { data: fallbackProfile } = await supabase
+                            .from('profiles')
+                            .select('is_admin, available_credits, user_role')
+                            .eq('id', user.id)
+                            .single()
+                        profile = fallbackProfile as any
+                    }
+
+                    router.refresh()
+
+                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
+                    const hasCredits = (profile?.available_credits || 0) > 0
+                    const isAgent = profile?.user_role === 'agent'
+
+                    if (isAdmin) {
+                        router.push(`/${locale}/admin-secret`)
+                    } else if (isAgent || hasCredits) {
+                        router.push(`/${locale}/dashboard`)
+                    } else {
+                        router.push(`/${locale}/mypage`)
+                    }
+                    return
+                }
+
+                // メール確認ONの環境: 緑の成功文は出さず、ログインタブへ誘導
+                handleTabChange(false)
             } else {
                 const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
                     email,

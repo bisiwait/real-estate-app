@@ -72,7 +72,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                 return
             }
 
-            setMessage({ type: 'success', text: dict.auth.signup_success })
+            router.push(`/${locale}/login`)
         } catch (error: any) {
             setMessage({ type: 'error', text: getErrorMessage(error) })
         } finally {
