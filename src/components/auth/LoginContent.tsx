@@ -17,12 +17,26 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
     const searchParams = useSearchParams()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [agreeTerms, setAgreeTerms] = useState(false)
     const [loading, setLoading] = useState(false)
     const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true')
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
     const router = useRouter()
     const supabase = createClient()
+
+    const handleTabChange = (signUp: boolean) => {
+        setIsSignUp(signUp)
+        setMessage(null)
+        const params = new URLSearchParams(searchParams.toString())
+        if (signUp) {
+            params.set('signup', 'true')
+        } else {
+            params.delete('signup')
+        }
+        router.push(`/${locale}/login?${params.toString()}`)
+    }
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -31,6 +45,12 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
         try {
             if (isSignUp) {
+                if (password !== confirmPassword) {
+                    throw new Error(dict.auth.password_mismatch || "Passwords do not match.")
+                }
+                if (!agreeTerms) {
+                    throw new Error(dict.auth.agree_terms_required || "Please agree to the terms of service.")
+                }
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -133,9 +153,34 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                 {/* Right Side: Auth Form */}
                 <div className="w-full md:w-7/12 p-8 md:p-16 flex flex-col justify-center">
                     <div className="max-w-md mx-auto w-full">
+                        {/* Segmented Control Tabs */}
+                        <div className="mb-10 p-1 bg-slate-100 rounded-2xl flex relative overflow-hidden">
+                            <motion.div
+                                className="absolute top-1 bottom-1 left-1 bg-white rounded-xl shadow-sm z-0"
+                                initial={false}
+                                animate={{
+                                    x: isSignUp ? '100%' : '0%',
+                                    width: 'calc(50% - 4px)'
+                                }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            />
+                            <button
+                                onClick={() => handleTabChange(false)}
+                                className={`flex-1 py-3 text-sm font-black relative z-10 transition-colors ${!isSignUp ? 'text-navy-primary' : 'text-slate-400'}`}
+                            >
+                                {dict.common.login}
+                            </button>
+                            <button
+                                onClick={() => handleTabChange(true)}
+                                className={`flex-1 py-3 text-sm font-black relative z-10 transition-colors ${isSignUp ? 'text-navy-primary' : 'text-slate-400'}`}
+                            >
+                                {dict.common.register}
+                            </button>
+                        </div>
+
                         <div className="mb-10 text-center md:text-left">
                             <h1 className="text-3xl font-black text-navy-secondary mb-3">
-                                {isSignUp ? dict.auth.get_started : dict.auth.welcome_back}
+                                {isSignUp ? (dict.auth.get_started || "アカウント作成") : (dict.auth.welcome_back || "ログイン")}
                             </h1>
                             <p className="text-slate-400 font-medium">{dict.auth.sns_desc}</p>
                         </div>
@@ -204,12 +249,48 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                                                 required
                                             />
                                         </div>
-                                        <div className="flex justify-end mt-2">
-                                            <Link href={`/${locale}/auth/forgot-password`} className="text-xs font-bold text-navy-primary hover:text-navy-secondary transition-colors">
-                                                {dict.auth.forgot_password}
-                                            </Link>
-                                        </div>
+                                        {!isSignUp && (
+                                            <div className="flex justify-end mt-2">
+                                                <Link href={`/${locale}/auth/forgot-password`} className="text-xs font-bold text-navy-primary hover:text-navy-secondary transition-colors">
+                                                    {dict.auth.forgot_password}
+                                                </Link>
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {isSignUp && (
+                                        <>
+                                            <div>
+                                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{dict.auth.confirm_password || "パスワード（確認用）"}</label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                                    <input
+                                                        type="password"
+                                                        value={confirmPassword}
+                                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                                        placeholder="••••••••"
+                                                        className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-navy-primary/5 focus:border-navy-primary outline-none transition-all font-medium"
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-start space-x-3 pt-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id="agreeTerms"
+                                                    checked={agreeTerms}
+                                                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                                                    className="mt-1 w-4 h-4 text-navy-primary border-slate-200 rounded focus:ring-navy-primary transition-all"
+                                                    required
+                                                />
+                                                <label htmlFor="agreeTerms" className="text-xs font-medium text-slate-500 leading-relaxed">
+                                                    <Link href={`/${locale}/terms`} className="text-navy-primary hover:underline">{dict.common.terms_of_service || "利用規約"}</Link>
+                                                    {dict.auth.agree_to_terms || "に同意します。"}
+                                                </label>
+                                            </div>
+                                        </>
+                                    )}
 
                                     <button
                                         type="submit"
@@ -220,7 +301,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                                             <Loader2 className="w-5 h-5 animate-spin" />
                                         ) : (
                                             <>
-                                                <span>{isSignUp ? dict.common.register : dict.common.login}</span>
+                                                <span>{isSignUp ? (dict.auth.register_btn || "無料で登録する") : (dict.auth.login_btn || "ログインする")}</span>
                                                 <ArrowRight className="w-5 h-5" />
                                             </>
                                         )}
@@ -231,7 +312,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
                         <div className="mt-12 text-center">
                             <button
-                                onClick={() => setIsSignUp(!isSignUp)}
+                                onClick={() => handleTabChange(!isSignUp)}
                                 className="text-sm font-black text-navy-primary hover:text-navy-secondary transition-colors underline underline-offset-8 decoration-navy-primary/20"
                             >
                                 {isSignUp ? dict.auth.already_have_account : dict.auth.dont_have_account}
