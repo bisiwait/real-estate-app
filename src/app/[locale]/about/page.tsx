@@ -122,9 +122,11 @@ export default function AboutPage() {
             {/* Bottom CTA */}
             <section className="pb-20">
                 <div className="container mx-auto px-4 max-w-5xl">
-                    <div className="bg-slate-900 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden group">
+                    <div className="rounded-[3rem] bg-navy-secondary p-12 md:p-20 text-center relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-navy-primary/20 to-transparent pointer-events-none"></div>
-                        <h3 className="text-3xl md:text-4xl font-black text-slate-400 mb-8 relative z-10">理想のタイ暮らしを、ここから見つけよう。</h3>
+                        <h3 className="text-3xl md:text-4xl font-bold text-slate-400 mb-8 relative z-10">
+                            理想のタイ暮らしを、ここから見つけよう。
+                        </h3>
                         <div className="flex flex-col md:flex-row items-center justify-center gap-6 relative z-10">
                             <Link
                                 href="/properties"
