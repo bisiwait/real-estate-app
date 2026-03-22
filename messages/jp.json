@@ -22,7 +22,10 @@
         "required": "必須",
         "en": "英語",
         "jp": "日本語",
-        "th": "タイ語"
+        "th": "タイ語",
+        "optional": "任意",
+        "password": "パスワード",
+        "terms_of_service": "利用規約"
     },
     "home": {
         "hero_title": "パタヤ・シラチャで、\n理想の暮らしを見つけよう。",

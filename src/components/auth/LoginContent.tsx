@@ -55,7 +55,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/auth/callback`,
+                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`,
                     },
                 })
                 if (error) throw error
@@ -69,6 +69,12 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                 if (signInError) throw signInError
 
                 if (user) {
+                    // エージェント登録メタデータを profiles に同期（RLS で弾かれた場合の救済）
+                    await fetch('/api/auth/sync-agent-profile', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                    }).catch(() => {})
+
                     let { data: profile, error: profileError } = await supabase
                         .from('profiles')
                         .select('user_role, is_admin, available_credits')
@@ -78,7 +84,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     if (profileError) {
                         const { data: fallbackProfile } = await supabase
                             .from('profiles')
-                            .select('is_admin, available_credits')
+                            .select('is_admin, available_credits, user_role')
                             .eq('id', user.id)
                             .single()
                         profile = fallbackProfile as any
@@ -86,12 +92,13 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
                     router.refresh()
 
-                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin';
-                    const hasCredits = (profile?.available_credits || 0) > 0;
+                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
+                    const hasCredits = (profile?.available_credits || 0) > 0
+                    const isAgent = profile?.user_role === 'agent'
 
                     if (isAdmin) {
                         router.push(`/${locale}/admin-secret`)
-                    } else if (profile?.user_role === 'agent' || hasCredits || profile?.user_role === undefined) {
+                    } else if (isAgent || hasCredits) {
                         router.push(`/${locale}/dashboard`)
                     } else {
                         router.push(`/${locale}/mypage`)
@@ -110,7 +117,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`,
                 },
             })
             if (error) throw error

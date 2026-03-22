@@ -1,39 +1,39 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { syncAgentProfileFromAuthUser } from '@/lib/auth/syncAgentProfile'
 
+const LOCALES = ['jp', 'en', 'th'] as const
+
+function localeFromPath(pathname: string): string {
+    const seg = pathname.split('/').filter(Boolean)[0]
+    return LOCALES.includes(seg as (typeof LOCALES)[number]) ? seg : 'jp'
+}
+
+function safeNext(nextParam: string | null, locale: string): string {
+    if (!nextParam || !nextParam.startsWith('/') || nextParam.includes('//')) {
+        return `/${locale}/dashboard`
+    }
+    const head = nextParam.split('/').filter(Boolean)[0]
+    if (!LOCALES.includes(head as (typeof LOCALES)[number])) {
+        return `/${locale}/dashboard`
+    }
+    return nextParam
+}
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url)
-    const code = searchParams.get('code')
-    // if "next" is in param, use it as the redirect URL
-    const next = searchParams.get('next') ?? '/dashboard'
+    const url = new URL(request.url)
+    const code = url.searchParams.get('code')
+    const locale = localeFromPath(url.pathname)
+    const next = safeNext(url.searchParams.get('next'), locale)
 
     if (code) {
         const supabase = await createClient()
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error && data.user) {
-            const user = data.user
-            const metadata = user.user_metadata
-
-            // If this was an agent signup, ensure the profile has the agent role
-            if (metadata.user_role === 'agent') {
-                await supabase
-                    .from('profiles')
-                    .update({ 
-                        user_role: 'agent',
-                        full_name: metadata.full_name,
-                        company_name: metadata.company_name,
-                        phone_number: metadata.phone_number,
-                        line_id: metadata.line_id,
-                        target_area: metadata.target_area
-                    })
-                    .eq('id', user.id)
-            }
-
-            return NextResponse.redirect(`${origin}${next}`)
+            await syncAgentProfileFromAuthUser(data.user)
+            return NextResponse.redirect(`${url.origin}${next}`)
         }
     }
 
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    return NextResponse.redirect(`${url.origin}/${locale}/login?error=auth_callback`)
 }

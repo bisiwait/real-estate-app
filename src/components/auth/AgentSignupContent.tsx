@@ -42,23 +42,35 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                 throw new Error(dict.auth.agree_terms_required || "Please agree to the terms of service.")
             }
 
-            const { error } = await supabase.auth.signUp({
+            const { data: signUpResult, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`,
+                    emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/dashboard`)}`,
                     data: {
-                        full_name: agentName,
-                        company_name: companyName,
-                        phone_number: phone,
-                        line_id: lineId,
+                        full_name: agentName.trim(),
+                        company_name: companyName.trim() || null,
+                        phone: phone.trim() || null,
+                        phone_number: phone.trim() || null,
+                        line_id: lineId.trim() || null,
                         target_area: targetArea,
-                        user_role: 'agent' // This will be handled by a trigger or manual update in a real app, but we'll include it in metadata
-                    }
+                        user_role: 'agent',
+                    },
                 },
             })
 
             if (error) throw error
+
+            // メール確認オフの場合は即セッション付与 → 同期してダッシュボードへ
+            if (signUpResult.session?.user) {
+                await fetch('/api/auth/sync-agent-profile', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                }).catch(() => {})
+                router.push(`/${locale}/dashboard`)
+                router.refresh()
+                return
+            }
 
             setMessage({ type: 'success', text: dict.auth.signup_success })
         } catch (error: any) {
@@ -143,7 +155,10 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{dict.auth.phone_number}</label>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                    {dict.auth.phone_number}
+                                    <span className="text-slate-300 font-medium normal-case tracking-normal ml-1">({dict.common.optional || '任意'})</span>
+                                </label>
                                 <div className="relative">
                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                                     <input
@@ -152,12 +167,14 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="080-1234-5678"
                                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-navy-primary/5 focus:border-navy-primary outline-none transition-all font-medium"
-                                        required
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{dict.auth.line_id}</label>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                    {dict.auth.line_id}
+                                    <span className="text-slate-300 font-medium normal-case tracking-normal ml-1">({dict.common.optional || '任意'})</span>
+                                </label>
                                 <div className="relative">
                                     <MessageCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                                     <input
@@ -166,7 +183,6 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                                         onChange={(e) => setLineId(e.target.value)}
                                         placeholder="line_id_123"
                                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-navy-primary/5 focus:border-navy-primary outline-none transition-all font-medium"
-                                        required
                                     />
                                 </div>
                             </div>
