@@ -113,6 +113,7 @@
         "list_property": "物件を掲載する"
     },
     "labels": {
+        "home": "ホーム",
         "auth": "管理画面",
         "login": "ログイン",
         "register": "会員登録",
