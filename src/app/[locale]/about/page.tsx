@@ -98,8 +98,8 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Mission Section */}
-            <section className="py-24 bg-white">
+            {/* Mission Section（ヒーロー「About Chonburi Connect」と同じ bg-slate-50） */}
+            <section className="py-24 bg-slate-50">
                 <div className="container mx-auto px-4 max-w-4xl text-center">
                     <FadeIn>
                         <div className="w-20 h-20 bg-navy-primary/5 rounded-full flex items-center justify-center mx-auto mb-10">
@@ -124,9 +124,14 @@ export default function AboutPage() {
                 <div className="container mx-auto px-4 max-w-5xl">
                     <div className="rounded-[3rem] bg-navy-secondary p-12 md:p-20 text-center relative overflow-hidden group">
                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-navy-primary/20 to-transparent pointer-events-none"></div>
-                        <h3 className="text-3xl md:text-4xl font-bold text-slate-400 mb-8 relative z-10">
+                        {/* globals.css の h3 { color: navy-primary } を打ち消し、フッター「当サイトについて」と同じ slate-400 */}
+                        <p
+                            role="heading"
+                            aria-level={3}
+                            className="relative z-10 mb-8 text-3xl font-bold leading-tight text-slate-400 md:text-4xl"
+                        >
                             理想のタイ暮らしを、ここから見つけよう。
-                        </h3>
+                        </p>
                         <div className="flex flex-col md:flex-row items-center justify-center gap-6 relative z-10">
                             <Link
                                 href="/properties"
