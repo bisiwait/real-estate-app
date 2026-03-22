@@ -154,7 +154,7 @@
     "labels": {
         "auth": "Auth",
         "login": "Login",
-        "register": "Register",
+        "register": "User registration",
         "pricing": "Pricing Plans",
         "dashboard": "Dashboard",
         "edit": "Edit",

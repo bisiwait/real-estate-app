@@ -246,7 +246,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                                 required
                             />
                             <label htmlFor="agreeTerms" className="text-xs font-medium text-slate-500 leading-relaxed">
-                                <Link href={`/${locale}/terms`} className="text-navy-primary hover:underline">{dict.auth.agree_to_terms_link}</Link>
+                                <Link href={`/${locale}/terms`} target="_blank" rel="noopener noreferrer" className="text-navy-primary hover:underline">{dict.auth.agree_to_terms_link}</Link>
                                 {dict.auth.agree_to_terms_suffix}
                             </label>
                         </div>

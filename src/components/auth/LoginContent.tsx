@@ -320,7 +320,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                                                     required
                                                 />
                                                 <label htmlFor="agreeTerms" className="text-xs font-medium text-slate-500 leading-relaxed">
-                                                    <Link href={`/${locale}/terms`} className="text-navy-primary hover:underline">{dict.common.terms_of_service || "利用規約"}</Link>
+                                                    <Link href={`/${locale}/terms`} target="_blank" rel="noopener noreferrer" className="text-navy-primary hover:underline">{dict.common.terms_of_service || "利用規約"}</Link>
                                                     {dict.auth.agree_to_terms || "に同意します。"}
                                                 </label>
                                             </div>
