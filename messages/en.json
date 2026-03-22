@@ -88,6 +88,65 @@
         "cta_properties": "Browse properties",
         "cta_profile": "Set up your profile"
     },
+    "terms_page": {
+        "title": "Terms of Service",
+        "meta_description": "Terms of Service for Chonburi Connect real estate platform (general users and agents).",
+        "updated_label": "Last updated",
+        "updated_date": "March 14, 2026",
+        "back_home": "Back to home",
+        "sections": [
+            {
+                "title": "Article 1 (General)",
+                "paragraphs": [
+                    "These Terms govern use of the real estate information platform provided by Chonburi Connect (\"the Site\"). All registered users (general users and agents) are deemed to have agreed to these Terms."
+                ]
+            },
+            {
+                "title": "Article 2 (User categories and definitions)",
+                "paragraphs": [
+                    "General users: Individuals or entities that browse property information, make inquiries, save favorites, and use similar features through the Site.",
+                    "Agents: Real estate businesses or individual agents who list properties on the Site and respond to inquiries from general users."
+                ]
+            },
+            {
+                "title": "Article 3 (General users)",
+                "paragraphs": [
+                    "General users shall register using accurate information.",
+                    "Review of property details and contract negotiations shall be conducted directly between the user and the agent. The Site assumes no responsibility for the content of any agreement.",
+                    "Features such as favorites (❤️) and My Page may be used freely within personal, non-abusive use."
+                ]
+            },
+            {
+                "title": "Article 4 (Agents)",
+                "subsections": [
+                    {
+                        "heading": "Accuracy of information",
+                        "body": "Agents warrant that listed information (rent, sale price, availability, pet policy, etc.) is up to date and accurate."
+                    },
+                    {
+                        "heading": "Licenses",
+                        "body": "Agents shall comply with applicable legal requirements in Thailand for brokerage (including business licenses where required)."
+                    },
+                    {
+                        "heading": "No bait advertising",
+                        "body": "Listing properties that are already transacted or fictitious is prohibited. The Site may suspend accounts if such conduct is found."
+                    },
+                    {
+                        "heading": "Duty to respond",
+                        "body": "Agents shall respond to inquiries from general users honestly and promptly via LINE, telephone, or other reasonable channels."
+                    }
+                ]
+            },
+            {
+                "title": "Article 5 (Disclaimer)",
+                "paragraphs": [
+                    "The Site strives for accuracy of listings but does not warrant completeness of information.",
+                    "The Site is not liable for disputes between users or for any damages arising from use of the Site.",
+                    "The Site is not responsible for disadvantages arising from changes to Thai law, tax rules, or condominium regulations."
+                ]
+            }
+        ]
+    },
     "header": {
         "search_placeholder": "Search by area or property name...",
         "list_property": "List Your Property"
@@ -102,6 +161,7 @@
         "profile": "Profile",
         "list-property": "List Property",
         "about": "About Us",
+        "terms": "Terms of Service",
         "contact": "Contact",
         "footer_want_to_list": "Want to list your property",
         "post-property": "Listing Guide",
