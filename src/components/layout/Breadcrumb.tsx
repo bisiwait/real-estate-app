@@ -42,7 +42,6 @@ export default function Breadcrumb({ labels = {} }: { labels?: Record<string, st
 
     const dashboardLabel = labels['dashboard'] || 'Dashboard'
     const listPropertyLabel = labels['list-property'] || 'List Property'
-    const homeLabel = labels['home'] || 'Home'
 
     if (isListPropertyPage) {
         const dashboardHref = `/${currentLocale}/dashboard`
@@ -53,10 +52,10 @@ export default function Breadcrumb({ labels = {} }: { labels?: Record<string, st
                         <li>
                             <Link
                                 href={`/${currentLocale}`}
-                                className="hover:text-navy-primary transition-colors flex items-center gap-1"
+                                className="hover:text-navy-primary transition-colors flex items-center"
                             >
-                                <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                                <span>{homeLabel}</span>
+                                <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <span className="sr-only">Home</span>
                             </Link>
                         </li>
                         <li className="flex items-center">

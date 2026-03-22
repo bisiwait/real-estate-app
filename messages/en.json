@@ -87,7 +87,6 @@
         "list_property": "List Your Property"
     },
     "labels": {
-        "home": "Home",
         "auth": "Auth",
         "login": "Login",
         "register": "Register",

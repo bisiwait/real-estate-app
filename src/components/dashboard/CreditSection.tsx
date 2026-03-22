@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { Infinity, Sparkles } from 'lucide-react'
 import { isPremium } from '@/lib/utils/plan'
 
@@ -52,16 +51,10 @@ export default function CreditSection({ profile }: CreditSectionProps) {
                     </p>
                 </div>
             ) : (
-                <div className="relative z-10 space-y-4">
+                <div className="relative z-10">
                     <p className="text-sm font-medium text-white/85 leading-relaxed">
                         このプランで物件の掲載・編集・お問い合わせ管理ができます。上部の「物件を新規掲載する」から登録してください。
                     </p>
-                    <Link
-                        href="/pricing"
-                        className="block w-full bg-white/10 hover:bg-white/20 border border-white/20 text-center py-3 rounded-xl text-sm font-bold transition-all backdrop-blur-sm text-white"
-                    >
-                        上位プランを見る
-                    </Link>
                 </div>
             )}
         </div>
