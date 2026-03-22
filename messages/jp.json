@@ -111,8 +111,6 @@
         "subtitle": "ご登録ありがとうございます。理想の物件探しをお手伝いします。",
         "favorites_card_title": "お気に入り",
         "favorites_card_body": "気になる物件は ❤️ マークを押して保存できます。自分だけのリストを作ってじっくり比較しましょう！",
-        "line_cta": "最新の未公開物件をLINEで受け取る",
-        "line_placeholder_note": "※本番では NEXT_PUBLIC_LINE_ADD_FRIEND_URL に公式LINEの友だち追加URLを設定してください。",
         "cta_properties": "物件を探しに行く",
         "cta_profile": "プロフィール設定"
     },

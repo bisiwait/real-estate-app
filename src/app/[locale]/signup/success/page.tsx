@@ -4,15 +4,13 @@ import { redirect } from 'next/navigation'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { SIGNUP_WELCOME_COOKIE_NAME } from '@/lib/auth/signupWelcomeCookie'
 import Link from 'next/link'
-import { Gift, Sparkles, Heart, ExternalLink } from 'lucide-react'
+import { Gift, Sparkles, Heart } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 /** パタヤ沿岸のイメージ（薄い背景用・Unsplash） */
 const BEACH_BG =
     'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1920&q=75'
-
-const defaultLineUrl = 'https://line.me/R/ti/p/@YOUR_LINE_ID'
 
 export default async function SignupSuccessPage({
     params,
@@ -69,12 +67,8 @@ export default async function SignupSuccessPage({
     const favoritesBody =
         copy.favorites_card_body ||
         '気になる物件は ❤️ マークを押して保存できます。自分だけのリストを作ってじっくり比較しましょう！'
-    const lineCta = copy.line_cta || '最新の未公開物件をLINEで受け取る'
     const ctaProperties = copy.cta_properties || '物件を探しに行く'
     const ctaProfile = copy.cta_profile || 'プロフィール設定'
-
-    const lineUrl = process.env.NEXT_PUBLIC_LINE_ADD_FRIEND_URL || defaultLineUrl
-    const showLinePlaceholderNote = lineUrl.includes('YOUR_LINE_ID')
 
     return (
         <div className="relative min-h-[calc(100vh-80px)] overflow-hidden bg-slate-50">
@@ -119,24 +113,6 @@ export default async function SignupSuccessPage({
                                 </p>
                             </div>
                         </div>
-
-                        {/* LINE 公式（成約率） */}
-                        <a
-                            href={lineUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-center text-base font-black text-white shadow-md transition-all hover:brightness-110 hover:shadow-lg active:scale-[0.99]"
-                            style={{ backgroundColor: '#06C755' }}
-                        >
-                            <span className="leading-tight">{lineCta}</span>
-                            <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                        </a>
-                        {showLinePlaceholderNote && (
-                            <p className="text-center text-[10px] font-medium text-amber-700/80">
-                                {copy.line_placeholder_note ||
-                                    '※本番では NEXT_PUBLIC_LINE_ADD_FRIEND_URL に公式LINEの友だち追加URLを設定してください。'}
-                            </p>
-                        )}
 
                         {/* メインCTA */}
                         <div className="mt-2 flex flex-col gap-3 border-t border-slate-100 pt-6">
