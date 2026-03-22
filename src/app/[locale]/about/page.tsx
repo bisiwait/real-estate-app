@@ -5,28 +5,10 @@ const FadeIn = dynamic(() => import('@/components/animations/FadeIn'), {
     ssr: true // Animations can often run on client only but we can pre-render the structure
 })
 
-import {
-    CheckCircle2,
-    ShieldCheck,
-    Users,
-    ArrowRight,
-    Zap,
-    Bath,
-    MapPin,
-    Clock,
-    CreditCard,
-    Globe
-} from 'lucide-react'
+import { ShieldCheck, ArrowRight, Bath, MapPin, Globe } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AboutPage() {
-    const fadeIn = {
-        initial: { opacity: 0, y: 20 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true },
-        transition: { duration: 0.6 }
-    }
-
     return (
         <div className="bg-white overflow-hidden">
             {/* Hero Section */}
@@ -111,69 +93,6 @@ export default function AboutPage() {
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                        </FadeIn>
-                    </div>
-                </div>
-            </section>
-
-            {/* For Agents Section */}
-            <section className="py-24 bg-navy-secondary text-white relative">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-white/5 skew-x-[-15deg] transform translate-x-1/2 overflow-hidden pointer-events-none"></div>
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                        <FadeIn>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/5">
-                                    <Users className="w-10 h-10 mb-4 text-white" />
-                                    <h5 className="font-black mb-2 text-lg">優良顧客層</h5>
-                                    <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">High intent customers</p>
-                                </div>
-                                <div className="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/5 mt-8">
-                                    <CreditCard className="w-10 h-10 mb-4 text-white" />
-                                    <h5 className="font-black mb-2 text-lg">クレジット制</h5>
-                                    <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">Pay per inquiry</p>
-                                </div>
-                                <div className="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/5 -mt-4">
-                                    <Clock className="w-10 h-10 mb-4 text-white" />
-                                    <h5 className="font-black mb-2 text-lg">24h 管理</h5>
-                                    <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">Self-service dashboard</p>
-                                </div>
-                                <div className="bg-white/10 p-8 rounded-3xl backdrop-blur-md border border-white/5 mt-4">
-                                    <Zap className="w-10 h-10 mb-4 text-white" />
-                                    <h5 className="font-black mb-2 text-lg">即時掲載</h5>
-                                    <p className="text-xs text-slate-400 leading-relaxed uppercase tracking-wider font-bold">Instant listing</p>
-                                </div>
-                            </div>
-                        </FadeIn>
-                        <FadeIn>
-                            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6">For Agents</h2>
-                            <ul className="space-y-4 mb-10">
-                                <li className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                    </div>
-                                    <span className="font-bold">日本人駐在員・長期移住検討者へのダイレクトアプローチ</span>
-                                </li>
-                                <li className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                    </div>
-                                    <span className="font-bold">月額固定費ゼロ。必要な分だけ利用できるクレジット決済</span>
-                                </li>
-                                <li className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                    </div>
-                                    <span className="font-bold">PC・スマホからいつでも物件情報の更新・反響管理が可能</span>
-                                </li>
-                            </ul>
-                            <Link
-                                href="/register"
-                                className="inline-flex items-center space-x-2 bg-white text-navy-primary px-8 py-4 rounded-2xl font-black hover:bg-slate-100 transition-all shadow-xl"
-                            >
-                                <span>掲載主として登録する</span>
-                                <ArrowRight className="w-5 h-5" />
-                            </Link>
                         </FadeIn>
                     </div>
                 </div>
