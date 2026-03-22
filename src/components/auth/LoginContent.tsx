@@ -60,41 +60,26 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                 })
                 if (error) throw error
 
-                // メール確認OFFのときはセッション付与 → そのままログイン扱いで遷移（メッセージは出さない）
+                // メール確認OFFのときはセッション付与 → 一般ユーザーはそのままサンクスページへ（replace で戻れないように）
                 if (signUpResult.session?.user) {
                     const user = signUpResult.session.user
-                    await fetch('/api/auth/sync-agent-profile', {
+                    const signedUpAsAgent = user.user_metadata?.user_role === 'agent'
+
+                    if (signedUpAsAgent) {
+                        await fetch('/api/auth/sync-agent-profile', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                        }).catch(() => {})
+                        router.refresh()
+                        router.replace(`/${locale}/dashboard`)
+                        return
+                    }
+
+                    void fetch('/api/auth/sync-agent-profile', {
                         method: 'POST',
                         credentials: 'same-origin',
                     }).catch(() => {})
-
-                    let { data: profile, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('user_role, is_admin')
-                        .eq('id', user.id)
-                        .single()
-
-                    if (profileError) {
-                        const { data: fallbackProfile } = await supabase
-                            .from('profiles')
-                            .select('is_admin, user_role')
-                            .eq('id', user.id)
-                            .single()
-                        profile = fallbackProfile as any
-                    }
-
-                    router.refresh()
-
-                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
-                    const isAgent = profile?.user_role === 'agent'
-
-                    if (isAdmin) {
-                        router.push(`/${locale}/admin-secret`)
-                    } else if (isAgent) {
-                        router.push(`/${locale}/dashboard`)
-                    } else {
-                        router.push(`/${locale}/signup/success`)
-                    }
+                    router.replace(`/${locale}/signup/success`)
                     return
                 }
 
@@ -152,10 +137,13 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
     const handleSocialLogin = async (provider: 'google') => {
         try {
+            const nextAfterAuth = isSignUp
+                ? `/${locale}/signup/success`
+                : `/${locale}/mypage`
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    redirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`,
+                    redirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(nextAfterAuth)}`,
                 },
             })
             if (error) throw error

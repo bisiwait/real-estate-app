@@ -33,38 +33,12 @@ export default function RegisterPage() {
                 })
                 if (error) throw error
                 if (signUpResult.session) {
-                    await fetch('/api/auth/sync-agent-profile', {
+                    // このフォームは一般向けのため、登録直後は常にサンクスページへ（ロール振り分けはページ側で実施）
+                    void fetch('/api/auth/sync-agent-profile', {
                         method: 'POST',
                         credentials: 'same-origin',
                     }).catch(() => {})
-
-                    let { data: profile, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('user_role, is_admin')
-                        .eq('id', signUpResult.session.user.id)
-                        .single()
-
-                    if (profileError) {
-                        const { data: fallbackProfile } = await supabase
-                            .from('profiles')
-                            .select('is_admin, user_role')
-                            .eq('id', signUpResult.session.user.id)
-                            .single()
-                        profile = fallbackProfile as typeof profile
-                    }
-
-                    router.refresh()
-
-                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
-                    const isAgent = profile?.user_role === 'agent'
-
-                    if (isAdmin) {
-                        router.push(`/${locale}/admin-secret`)
-                    } else if (isAgent) {
-                        router.push(`/${locale}/dashboard`)
-                    } else {
-                        router.push(`/${locale}/signup/success`)
-                    }
+                    router.replace(`/${locale}/signup/success`)
                     return
                 }
                 setIsSignUp(false)
