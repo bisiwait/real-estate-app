@@ -43,6 +43,36 @@ function areaName(p: any, dict: any) {
     return (dict.property?.db_locations as Record<string, string>)?.[raw] || raw || "—";
 }
 
+/** タグからシービュー／シティービューを判定 */
+function getViewLabel(p: any, c: Record<string, string>) {
+    const tags: string[] = Array.isArray(p.tags) ? p.tags.map((t: unknown) => String(t)) : [];
+    let ocean = false;
+    let city = false;
+    for (const t of tags) {
+        const lower = t.toLowerCase();
+        if (
+            t.includes("オーシャン") ||
+            lower.includes("ocean") ||
+            lower.includes("sea view") ||
+            lower.includes("seaview")
+        ) {
+            ocean = true;
+        }
+        if (
+            t.includes("シティー") ||
+            lower.includes("city view") ||
+            lower.includes("cityview") ||
+            (lower.includes("city") && lower.includes("view"))
+        ) {
+            city = true;
+        }
+    }
+    if (ocean && city) return c.view_both;
+    if (ocean) return c.view_ocean;
+    if (city) return c.view_city;
+    return "—";
+}
+
 export default function CompareClient({ locale, dict }: { locale: string; dict: any }) {
     const c = dict.compare;
     const router = useRouter();
@@ -342,6 +372,22 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                                 {!p.is_for_rent && !p.is_for_sale && (
                                                     <span className="text-slate-400">—</span>
                                                 )}
+                                            </td>
+                                        ))}
+                                    </CompareRow>
+                                    <CompareRow label={c.row_sqm}>
+                                        {properties.map((p) => (
+                                            <td key={p.id} className="border-l border-t border-slate-100 p-3 align-top font-bold tabular-nums text-navy-secondary">
+                                                {p.sqm != null && p.sqm !== "" && Number(p.sqm) > 0
+                                                    ? `${Number(p.sqm).toLocaleString()} ㎡`
+                                                    : "—"}
+                                            </td>
+                                        ))}
+                                    </CompareRow>
+                                    <CompareRow label={c.row_view}>
+                                        {properties.map((p) => (
+                                            <td key={p.id} className="border-l border-t border-slate-100 p-3 align-top text-slate-700">
+                                                {getViewLabel(p, c as Record<string, string>)}
                                             </td>
                                         ))}
                                     </CompareRow>
