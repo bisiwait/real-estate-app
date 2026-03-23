@@ -95,7 +95,7 @@ export default function ProfileEditClient({
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
-            <div className="bg-navy-secondary text-white pt-8 pb-16 relative overflow-hidden">
+            <div className="bg-navy-secondary text-white pt-8 pb-12 md:pb-16 relative overflow-hidden z-0">
                 <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_30%_20%,#fff_0%,transparent_45%)]" />
                 <div className="container mx-auto px-4 relative z-10 max-w-2xl">
                     <Link
@@ -110,24 +110,42 @@ export default function ProfileEditClient({
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 -mt-10 max-w-2xl">
+            <div className="container mx-auto px-4 max-w-2xl relative z-10 max-md:mt-4 md:-mt-10">
                 <form
                     onSubmit={handleSubmit}
                     className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-10 space-y-8"
                 >
-                    <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3 text-sm text-slate-600">
+                    <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3.5 text-sm text-slate-600">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
                             {l.email_label}
                         </span>
-                        <span className="font-medium text-navy-secondary">{userEmail}</span>
+                        <span className="font-medium text-navy-secondary break-all">{userEmail}</span>
                         <p className="text-xs text-slate-400 mt-2">{l.profile_edit_email_readonly}</p>
                     </div>
 
-                    {/* LINE ID — 目立つ配置 */}
+                    {/* 1. ニックネーム */}
+                    <div>
+                        <label htmlFor="nickname" className="flex items-center gap-2 text-sm font-bold text-navy-secondary mb-1">
+                            <User className="w-4 h-4 text-slate-400" />
+                            {l.nickname_label}
+                        </label>
+                        <p className="text-xs text-slate-500 mb-2">{l.nickname_help}</p>
+                        <input
+                            id="nickname"
+                            type="text"
+                            autoComplete="nickname"
+                            placeholder={l.nickname_placeholder}
+                            value={nickname}
+                            onChange={(e) => setNickname(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-primary/25 focus:border-navy-primary/40 transition-shadow"
+                        />
+                    </div>
+
+                    {/* 2. LINE ID */}
                     <div className="rounded-2xl border-2 border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white p-5 md:p-6 shadow-sm">
                         <label
                             htmlFor="line_id"
-                            className="flex items-center gap-2 text-sm font-black text-emerald-800 mb-1"
+                            className="flex items-center gap-2 text-sm font-black text-emerald-800 mb-1 flex-wrap"
                         >
                             <MessageCircle className="w-4 h-4 shrink-0" />
                             {l.line_id_label}
@@ -147,23 +165,7 @@ export default function ProfileEditClient({
                         />
                     </div>
 
-                    <div>
-                        <label htmlFor="nickname" className="flex items-center gap-2 text-sm font-bold text-navy-secondary mb-1">
-                            <User className="w-4 h-4 text-slate-400" />
-                            {l.nickname_label}
-                        </label>
-                        <p className="text-xs text-slate-500 mb-2">{l.nickname_help}</p>
-                        <input
-                            id="nickname"
-                            type="text"
-                            autoComplete="nickname"
-                            placeholder={l.nickname_placeholder}
-                            value={nickname}
-                            onChange={(e) => setNickname(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-primary/25 focus:border-navy-primary/40 transition-shadow"
-                        />
-                    </div>
-
+                    {/* 3. 電話番号 */}
                     <div>
                         <label htmlFor="phone" className="flex items-center gap-2 text-sm font-bold text-navy-secondary mb-1">
                             <Phone className="w-4 h-4 text-slate-400" />
@@ -180,6 +182,10 @@ export default function ProfileEditClient({
                             className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-primary/25 focus:border-navy-primary/40 transition-shadow"
                         />
                     </div>
+
+                    <p className="text-xs text-slate-500 leading-relaxed bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                        {l.profile_edit_contact_privacy_note}
+                    </p>
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                         <button
