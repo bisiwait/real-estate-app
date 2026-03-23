@@ -3,7 +3,7 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { Loader2 } from "lucide-react";
 import MyPageClient from "./MyPageClient";
 
-export default async function MyPage({ params }: { params: { locale: string } }) {
+export default async function MyPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const dict = await getDictionary(locale);
 

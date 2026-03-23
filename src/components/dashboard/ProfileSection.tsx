@@ -1,14 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Mail, Phone, MessageSquare, Globe, Building2, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { User, Mail, Phone, MessageSquare, Globe, Pencil } from "lucide-react";
 
 interface ProfileSectionProps {
     user: any;
     profile: any;
+    locale: string;
 }
 
-export default function ProfileSection({ user, profile, dict }: ProfileSectionProps & { dict: any }) {
+export default function ProfileSection({ user, profile, dict, locale }: ProfileSectionProps & { dict: any }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -30,7 +32,7 @@ export default function ProfileSection({ user, profile, dict }: ProfileSectionPr
                     <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-4">
                         {user?.email}
                     </p>
-                    <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                    <div className="flex flex-col sm:flex-row flex-wrap justify-center md:justify-start gap-3">
                         {profile?.line_id && (
                             <span className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-full border border-green-100">
                                 {dict.labels.line_linked}
@@ -39,6 +41,13 @@ export default function ProfileSection({ user, profile, dict }: ProfileSectionPr
                         <span className="px-3 py-1 bg-navy-primary/5 text-navy-primary text-[10px] font-black rounded-full border border-navy-primary/10">
                             {dict.labels.regular_member}
                         </span>
+                        <Link
+                            href={`/${locale}/profile/edit`}
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-black shadow-md shadow-rose-600/20 transition-colors"
+                        >
+                            <Pencil className="w-4 h-4" />
+                            {dict.labels.edit_profile_cta}
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -47,7 +56,6 @@ export default function ProfileSection({ user, profile, dict }: ProfileSectionPr
                 <InfoCard icon={Mail} label={dict.labels.email_label} value={user?.email} />
                 <InfoCard icon={Phone} label={dict.labels.phone_label} value={profile?.phone || dict.labels.not_registered} />
                 <InfoCard icon={MessageSquare} label={dict.labels.line_id_label} value={profile?.line_id || dict.labels.not_registered} />
-                <InfoCard icon={Building2} label={dict.labels.company_name_label} value={profile?.company_name || dict.labels.not_registered} />
             </div>
 
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">

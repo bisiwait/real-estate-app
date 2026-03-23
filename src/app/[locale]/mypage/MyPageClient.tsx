@@ -122,7 +122,9 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
 
                     {/* Main Content Card */}
                     <div className="lg:col-span-12 bg-white rounded-[32px] shadow-2xl shadow-navy-primary/5 border border-slate-100 overflow-hidden min-h-[600px]">
-                        {activeTab === "profile" && <ProfileSection user={user} profile={profile} dict={dict} />}
+                        {activeTab === "profile" && (
+                            <ProfileSection user={user} profile={profile} dict={dict} locale={locale} />
+                        )}
                         {activeTab === "favorites" && <FavoritesSection favorites={favorites} dict={dict} locale={locale} />}
                         {activeTab === "searches" && <SavedSearchesSection searches={searches} dict={dict} locale={locale} />}
                         {activeTab === "settings" && <SettingsSection handleLogout={handleLogout} dict={dict} locale={locale} />}
@@ -145,7 +147,7 @@ function SettingsSection({ handleLogout, dict, locale }: { handleLogout: () => v
             </div>
 
             <div className="space-y-4">
-                <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/dashboard/settings`} />
+                <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/profile/edit`} />
                 <SettingsLink label={dict.labels.change_email_pass} href={`/${locale}/dashboard/settings`} />
                 <SettingsLink label={dict.labels.notification_settings} href="#" />
             </div>
