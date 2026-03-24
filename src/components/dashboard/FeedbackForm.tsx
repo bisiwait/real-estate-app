@@ -75,7 +75,29 @@ export default function FeedbackForm() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                        <div className="px-4 sm:px-6 pt-4">
+                            <div className="rounded-lg bg-blue-50 border border-blue-100/80 p-4 text-sm text-slate-700 leading-relaxed space-y-3 shadow-sm">
+                                <h3 className="font-black text-navy-secondary flex items-start gap-2 text-base leading-snug">
+                                    <span className="text-xl leading-none shrink-0" aria-hidden>
+                                        💡
+                                    </span>
+                                    <span>システム改善へのご協力のお願い</span>
+                                </h3>
+                                <p>
+                                    日頃より当サイトをご利用いただき、誠にありがとうございます。
+                                    私たちは、パタヤ・シラチャで活動するエージェントの皆様にとって「最も使いやすく、成約に近い管理画面」を目指し、日々アップデートを行っております。
+                                </p>
+                                <p>
+                                    「この項目を増やしてほしい」「スマホでの操作を楽にしてほしい」など、現場ならではの気づきやご不満をぜひお聞かせください。
+                                    いただいたご要望は開発チームがすべて目を通し、順次機能改善に役立てさせていただきます。
+                                </p>
+                                <p className="text-xs text-slate-600 border-t border-blue-100/80 pt-3">
+                                    ※すべての要望の採用をお約束するものではありませんが、皆様と共に最高のプラットフォームを創り上げたいと考えております。必ず真摯に検討いたします。
+                                </p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="p-4 sm:p-6 pt-4 space-y-5">
                             <div>
                                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">タイトル</label>
                                 <input
