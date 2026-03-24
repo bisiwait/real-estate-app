@@ -228,53 +228,71 @@ export default function LeadsView({ initialLeads }: LeadsViewProps) {
                     ) : null}
 
                     <dl className="grid gap-2.5 text-sm lg:gap-1.5 lg:text-xs">
-                      <div>
-                        <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:text-[9px] lg:tracking-wide">
-                          問い合わせ日時
+                      <div className="min-w-0">
+                        <dt className="sr-only">
+                          問い合わせ日時・ユーザー名・LINE連絡先
                         </dt>
-                        <dd className="mt-0.5 font-semibold text-navy-secondary lg:mt-0 lg:text-xs lg:leading-tight">
-                          {formatInquiryAt(lead.created_at)}
-                          <span className="ml-2 text-xs font-normal text-slate-400 lg:text-[11px]">
-                            · {getTypeLabel(lead.inquiry_type)}
+                        <dd className="m-0 flex min-w-0 items-center gap-2 overflow-x-auto overscroll-x-contain pb-0.5 [-ms-overflow-style:none] [scrollbar-width:thin] lg:gap-3 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200">
+                          <span className="inline-flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
+                            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 lg:text-[9px]">
+                              日時
+                            </span>
+                            <span className="font-semibold tabular-nums text-navy-secondary lg:text-xs">
+                              {formatInquiryAt(lead.created_at)}
+                              <span className="ml-1 font-normal text-slate-400">
+                                · {getTypeLabel(lead.inquiry_type)}
+                              </span>
+                            </span>
                           </span>
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:text-[9px]">
-                          ユーザー名
-                        </dt>
-                        <dd className="mt-0.5 flex items-center gap-2 font-bold text-navy-secondary lg:mt-0 lg:gap-1.5 lg:text-xs lg:leading-tight">
-                          <User className="h-3.5 w-3.5 shrink-0 text-slate-400 lg:h-3 lg:w-3" aria-hidden />
-                          {userName}
-                        </dd>
-                      </div>
-
-                      <div>
-                        <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:text-[9px]">
-                          LINE連絡先
-                        </dt>
-                        <dd className="mt-0.5 lg:mt-0">
-                          {lineRaw ? (
-                            <div className="flex items-start gap-2 lg:gap-1.5">
-                              <p className="min-w-0 flex-1 break-all font-mono text-xs leading-relaxed text-slate-700 lg:text-[11px] lg:leading-snug">
-                                {lineRaw}
-                              </p>
-                              {canCopyLine ? (
-                                <button
-                                  type="button"
-                                  onClick={() => copyLineContact(lead.profile?.line_id)}
-                                  className="mt-0.5 inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-[#06C755]/40 hover:bg-[#06C755]/5 hover:text-[#025c2c] lg:mt-0 lg:p-1.5"
-                                  title="開く用URL（または入力値）をコピー"
-                                  aria-label="LINE連絡先をコピー"
-                                >
-                                  <Copy className="h-4 w-4 lg:h-3.5 lg:w-3.5" />
-                                </button>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 lg:text-xs">—</span>
-                          )}
+                          <span
+                            className="shrink-0 text-slate-200 select-none"
+                            aria-hidden
+                          >
+                            |
+                          </span>
+                          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+                            <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 lg:text-[9px]">
+                              ユーザー
+                            </span>
+                            <User
+                              className="h-3.5 w-3.5 shrink-0 text-slate-400 lg:h-3 lg:w-3"
+                              aria-hidden
+                            />
+                            <span className="max-w-[10rem] truncate font-bold text-navy-secondary sm:max-w-[14rem] lg:max-w-none lg:text-xs">
+                              {userName}
+                            </span>
+                          </span>
+                          <span
+                            className="shrink-0 text-slate-200 select-none"
+                            aria-hidden
+                          >
+                            |
+                          </span>
+                          <span className="inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap">
+                            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-slate-400 lg:text-[9px]">
+                              LINE
+                            </span>
+                            {lineRaw ? (
+                              <>
+                                <span className="font-mono text-xs text-slate-700 lg:text-[11px]">
+                                  {lineRaw}
+                                </span>
+                                {canCopyLine ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => copyLineContact(lead.profile?.line_id)}
+                                    className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-600 transition hover:border-[#06C755]/40 hover:bg-[#06C755]/5 hover:text-[#025c2c] lg:p-1.5"
+                                    title="開く用URL（または入力値）をコピー"
+                                    aria-label="LINE連絡先をコピー"
+                                  >
+                                    <Copy className="h-4 w-4 lg:h-3.5 lg:w-3.5" />
+                                  </button>
+                                ) : null}
+                              </>
+                            ) : (
+                              <span className="text-slate-400 lg:text-xs">—</span>
+                            )}
+                          </span>
                         </dd>
                       </div>
 
