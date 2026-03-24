@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Search, Users } from 'lucide-react'
 import LeadsView from '@/components/dashboard/LeadsView'
+import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,16 +19,7 @@ export default async function AgentLeadsPage({
         redirect('/login')
     }
 
-    const { data: leads, error } = await supabase
-        .from('inquiry_logs')
-        .select(
-            `*,
-            property:properties(title, id),
-            profile:profiles!inquiry_logs_user_id_fkey(full_name, email, line_id)`
-        )
-        .eq('agent_id', user.id)
-        .order('created_at', { ascending: false })
-
+    const { leads, error } = await fetchAgentInquiryLeads(supabase, user.id)
     if (error) {
         console.error('Error fetching leads:', error)
     }
@@ -63,7 +55,7 @@ export default async function AgentLeadsPage({
                 </div>
             ) : null}
             <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
-                <LeadsView initialLeads={leads || []} locale={locale} />
+                <LeadsView initialLeads={leads} locale={locale} />
             </div>
         </div>
     )

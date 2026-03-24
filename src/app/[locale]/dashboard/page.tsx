@@ -16,6 +16,7 @@ import PremiumPromoCard from '@/components/dashboard/PremiumPromoCard'
 import SubscriptionStatus from '@/components/dashboard/SubscriptionStatus'
 import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
+import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
 
 export default async function DashboardPage({
     searchParams,
@@ -82,17 +83,7 @@ export default async function DashboardPage({
     }
 
 
-    // Fetch Leads（profiles への FK が user_id / agent_id の2つあるため、問い合わせ元ユーザーは FK 名で明示）
-    const { data: leads, error: leadsError } = await supabase
-        .from('inquiry_logs')
-        .select(
-            `*,
-            property:properties(title, id),
-            profile:profiles!inquiry_logs_user_id_fkey(full_name, email, line_id)`
-        )
-        .eq('agent_id', user.id)
-        .order('created_at', { ascending: false })
-
+    const { leads, error: leadsError } = await fetchAgentInquiryLeads(supabase, user.id)
     if (leadsError) {
         console.error('Error fetching inquiry_logs (leads):', leadsError)
     }
@@ -207,8 +198,8 @@ export default async function DashboardPage({
                         profile={profile}
                         initialProperties={properties || []}
                         initialInquiries={inquiries}
-                        leadsCount={leads?.length || 0}
-                        initialLeads={leads || []}
+                        leadsCount={leads.length}
+                        initialLeads={leads}
                         locale={locale}
                     />
                 </div>
