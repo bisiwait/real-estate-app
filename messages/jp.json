@@ -313,6 +313,7 @@
         "sort_oldest": "古い順",
         "sort_price_asc": "価格の安い順",
         "sort_price_desc": "価格の高い順",
+        "sort_price_unavailable_on_all": "価格順は賃貸または売買タブのときだけ選べます（一覧に月額と売買価格が混在すると並べ替えできません）。",
         "apply_filters_footer_hint": "条件を変えたら「この条件で表示」で一覧を更新します。",
         "no_results_title": "条件に一致する物件が見つかりませんでした",
         "no_results_desc": "別の条件を試すか、フィルターをリセットしてください。",

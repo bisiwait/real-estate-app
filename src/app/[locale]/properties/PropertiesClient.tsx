@@ -11,6 +11,7 @@ import SaveSearchButton from '@/components/property/SaveSearchButton'
 import {
     executePropertyListQuery,
     formatPropertyListRows,
+    isPropertyListPriceSortAllowed,
     parsePropertyListFiltersFromURLSearchParams,
     parsePropertyListSort,
     PROPERTY_LIST_PAGE_SIZE,
@@ -175,6 +176,12 @@ export default function PropertiesClient({
     const petsFilter = searchParams.get('pets') === 'true'
     const selectedPropertyType = searchParams.get('property_type') || ''
     const listSort = parsePropertyListSort(searchParams.get('sort'))
+    const priceSortEnabled = isPropertyListPriceSortAllowed(listingType)
+    const effectiveListSort: PropertyListSort = priceSortEnabled
+        ? listSort
+        : listSort === 'price_asc' || listSort === 'price_desc'
+          ? 'newest'
+          : listSort
 
     const draftOceanView = draft.tags.includes(OCEAN_VIEW_TAG)
 
@@ -300,6 +307,19 @@ export default function PropertiesClient({
     }
 
     const tagsRaw = searchParams.get('tags') || ''
+
+    /** 「すべて」表示中に価格ソートが URL に残っていると一覧と UI がずれるため除去 */
+    useEffect(() => {
+        if (priceSortEnabled) return
+        const sp = new URLSearchParams(searchParamsKey)
+        const s = sp.get('sort')
+        if (s !== 'price_asc' && s !== 'price_desc') return
+        sp.delete('sort')
+        const qs = sp.toString()
+        startFilterNavTransition(() => {
+            router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+        })
+    }, [listingType, pathname, priceSortEnabled, router, searchParamsKey, startFilterNavTransition])
 
     useEffect(() => {
         if (skipInitialClientFetchRef.current > 0) {
@@ -600,7 +620,7 @@ export default function PropertiesClient({
                                         <ArrowDownWideNarrow className="h-5 w-5 text-white" />
                                     </span>
                                     <select
-                                        value={listSort}
+                                        value={effectiveListSort}
                                         onChange={(e) => changeListSort(e.target.value as PropertyListSort)}
                                         className={`${selectFieldClass} min-h-[48px] flex-1 sm:flex-1 sm:min-w-[200px] bg-white border-slate-200 shadow-sm`}
                                         aria-label={dict.property.sort_label}
@@ -608,10 +628,19 @@ export default function PropertiesClient({
                                     >
                                         <option value="newest">{dict.property.sort_newest}</option>
                                         <option value="oldest">{dict.property.sort_oldest}</option>
-                                        <option value="price_asc">{dict.property.sort_price_asc}</option>
-                                        <option value="price_desc">{dict.property.sort_price_desc}</option>
+                                        <option value="price_asc" disabled={!priceSortEnabled}>
+                                            {dict.property.sort_price_asc}
+                                        </option>
+                                        <option value="price_desc" disabled={!priceSortEnabled}>
+                                            {dict.property.sort_price_desc}
+                                        </option>
                                     </select>
                                 </div>
+                                {!priceSortEnabled ? (
+                                    <p className="w-full text-[11px] font-bold text-slate-400 leading-snug max-w-md text-right sm:text-left lg:text-right">
+                                        {dict.property.sort_price_unavailable_on_all}
+                                    </p>
+                                ) : null}
                             </div>
                         </div>
                     </div>

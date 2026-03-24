@@ -140,6 +140,11 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
     return query
 }
 
+/** 価格ソート可: 賃貸のみ・売買のみ（「すべて」等で月額と総額が混在すると比較不能のため） */
+export function isPropertyListPriceSortAllowed(listingType: string): boolean {
+    return listingType === 'rent' || listingType === 'sell' || listingType === 'buy'
+}
+
 function applyPropertyListSort<T extends { order: (...args: any[]) => T }>(query: T, filters: PropertyListFilters): T {
     const { sort, listingType } = filters
 
@@ -147,7 +152,12 @@ function applyPropertyListSort<T extends { order: (...args: any[]) => T }>(query
         return query.order('created_at', { ascending: true }).order('id', { ascending: true })
     }
 
-    if (sort === 'price_asc' || sort === 'price_desc') {
+    const wantsPriceSort = sort === 'price_asc' || sort === 'price_desc'
+    if (wantsPriceSort && !isPropertyListPriceSortAllowed(listingType)) {
+        return query.order('created_at', { ascending: false }).order('id', { ascending: false })
+    }
+
+    if (wantsPriceSort) {
         const ascending = sort === 'price_asc'
         const o = { ascending }
         if (listingType === 'rent') {
@@ -156,11 +166,6 @@ function applyPropertyListSort<T extends { order: (...args: any[]) => T }>(query
         if (listingType === 'sell' || listingType === 'buy') {
             return query.order('sale_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
         }
-        if (listingType === 'presale') {
-            return query.order('sale_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
-        }
-        // すべて: 賃貸・売買混在は list_sort_price（生成カラム）で比較
-        return query.order('list_sort_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
     }
 
     return query.order('created_at', { ascending: false }).order('id', { ascending: false })
