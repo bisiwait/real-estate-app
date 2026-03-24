@@ -461,10 +461,6 @@ export default function PropertiesClient({
                 </button>
             ) : null}
 
-            <div>
-                <SaveSearchButton dict={dict} variant="outline" fullWidth />
-            </div>
-
             {(draft.area ||
                 draft.property_type ||
                 draft.price ||
