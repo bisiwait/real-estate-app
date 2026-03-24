@@ -89,10 +89,34 @@ export default function PropertiesClient({
     const selectedPropertyType = searchParams.get('property_type') || ''
 
     const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
+    const searchParamsRef = useRef(searchParams)
+    const pathnameRef = useRef(pathname)
+    const localSearchQueryRef = useRef(localSearchQuery)
+    searchParamsRef.current = searchParams
+    pathnameRef.current = pathname
+    localSearchQueryRef.current = localSearchQuery
 
+    /** ブラウザ戻る・クリア・共有URLなど、URL の q が変わったら入力欄に反映 */
     useEffect(() => {
         setLocalSearchQuery(searchQuery)
     }, [searchQuery])
+
+    /**
+     * キーワードは入力のたびに URL を書き換えない（巻き戻り・過剰フェッチの原因になる）。
+     * ローカル state で即時表示し、少し止めてから URL を replace する。
+     */
+    useEffect(() => {
+        const id = window.setTimeout(() => {
+            const next = localSearchQueryRef.current.trim()
+            const params = new URLSearchParams(searchParamsRef.current.toString())
+            const cur = (params.get('q') || '').trim()
+            if (next === cur) return
+            if (next) params.set('q', next)
+            else params.delete('q')
+            router.replace(`${pathnameRef.current}?${params.toString()}`, { scroll: false })
+        }, 400)
+        return () => window.clearTimeout(id)
+    }, [localSearchQuery, router])
 
     const fetchProperties = async (isLoadMore = false) => {
         if (isLoadMore) {
@@ -207,10 +231,7 @@ export default function PropertiesClient({
                         placeholder={dict.property.keyword_placeholder}
                         className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
                         value={localSearchQuery}
-                        onChange={(e) => {
-                            setLocalSearchQuery(e.target.value)
-                            updateFilters({ q: e.target.value })
-                        }}
+                        onChange={(e) => setLocalSearchQuery(e.target.value)}
                     />
                 </div>
             </div>
@@ -428,8 +449,8 @@ export default function PropertiesClient({
                             <div className="lg:hidden w-full">
                                 <MobileSearchBar
                                     dict={dict}
-                                    searchQuery={searchQuery}
-                                    onSearchChange={(val: string) => updateFilters({ q: val })}
+                                    searchQuery={localSearchQuery}
+                                    onSearchChange={(val: string) => setLocalSearchQuery(val)}
                                     onFilterClick={() => setIsFilterDrawerOpen(true)}
                                     activeFiltersCount={[
                                         selectedArea,
