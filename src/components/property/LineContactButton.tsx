@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import { MessageCircle, X } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 const LINE_ID = '@164exdsf'
 const MD_MIN_PX = 768
@@ -89,40 +88,20 @@ export default function LineContactButton({
 
   const logInquiry = useCallback(async () => {
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      let agentId = property.agentId
-      if (!agentId) {
-        const { data: row, error: fetchErr } = await supabase
-          .from('properties')
-          .select('user_id')
-          .eq('id', property.id)
-          .maybeSingle()
-        if (fetchErr) {
-          console.error('Failed to resolve listing agent for inquiry log', fetchErr)
-          return
-        }
-        agentId = row?.user_id ?? undefined
-      }
-      if (!agentId) {
-        console.error('Cannot log line inquiry: missing agent_id for property', property.id)
-        return
-      }
-
-      const { error } = await supabase.from('inquiry_logs').insert({
-        property_id: property.id,
-        user_id: user?.id || null,
-        agent_id: agentId,
-        inquiry_type: 'line',
+      const res = await fetch('/api/inquiry-logs/line', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ property_id: property.id }),
       })
-      if (error) console.error('inquiry_logs insert failed', error)
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string }
+        console.error('inquiry_logs API failed', res.status, j)
+      }
     } catch (e) {
       console.error('Failed to log line inquiry', e)
     }
-  }, [property.id, property.agentId])
+  }, [property.id])
 
   const handleLineContact = async () => {
     await logInquiry()
