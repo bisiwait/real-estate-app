@@ -40,9 +40,13 @@ export default function PriceRangeSlider({
         }
     }, [initialMin, initialMax, min, max]);
 
-    // Convert to percentage
+    // Convert to percentage（max === min 時は除算を避ける）
     const getPercent = useCallback(
-        (value: number) => Math.round(((value - min) / (max - min)) * 100),
+        (value: number) => {
+            const span = max - min;
+            if (span <= 0) return 0;
+            return Math.round(((value - min) / span) * 100);
+        },
         [min, max]
     );
 

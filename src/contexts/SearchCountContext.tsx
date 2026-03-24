@@ -7,7 +7,14 @@ type SearchCountContextValue = {
   setPropertiesHitCount: (count: number | null) => void;
 };
 
-const SearchCountContext = createContext<SearchCountContextValue | null>(null);
+const noopSetCount = () => {};
+
+const defaultSearchCountValue: SearchCountContextValue = {
+  propertiesHitCount: null,
+  setPropertiesHitCount: noopSetCount,
+};
+
+const SearchCountContext = createContext<SearchCountContextValue>(defaultSearchCountValue);
 
 export function SearchCountProvider({ children }: { children: React.ReactNode }) {
   const [propertiesHitCount, setCount] = useState<number | null>(null);
@@ -24,11 +31,8 @@ export function SearchCountProvider({ children }: { children: React.ReactNode })
   return <SearchCountContext.Provider value={value}>{children}</SearchCountContext.Provider>;
 }
 
+/** Provider 外では no-op（レンダーツリー境界のずれで全体が落ちるのを防ぐ） */
 export function useSearchCount() {
-  const ctx = useContext(SearchCountContext);
-  if (!ctx) {
-    throw new Error("useSearchCount must be used within SearchCountProvider");
-  }
-  return ctx;
+  return useContext(SearchCountContext);
 }
 

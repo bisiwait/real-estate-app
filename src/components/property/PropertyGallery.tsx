@@ -30,6 +30,9 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
     (src): src is string => typeof src === 'string' && src.trim().length > 0
   )
 
+  /** Swiper の loop はスライドが1枚だと内部エラーになりやすい */
+  const enableLoop = safeImages.length > 1
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -77,7 +80,7 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
           navigation
           pagination={{ clickable: true }}
           autoplay={{ delay: 5000, disableOnInteraction: false }}
-          loop={true}
+          loop={enableLoop}
           onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
           className="w-full h-full cursor-zoom-in"
         >
@@ -165,7 +168,7 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
                 spaceBetween={20}
                 slidesPerView={1}
                 initialSlide={initialSlide}
-                loop={true}
+                loop={enableLoop}
                 navigation={{
                   nextEl: '.swiper-fullscreen-next',
                   prevEl: '.swiper-fullscreen-prev',
