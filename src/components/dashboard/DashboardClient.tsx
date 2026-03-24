@@ -329,8 +329,19 @@ function LeadsView({ leads }: { leads: any[] }) {
                             {getStatusBadge(lead.status)}
                         </div>
                         <div className="flex items-center gap-2">
-                            <Home className="w-3 h-3 text-navy-primary" />
-                            <span className="text-xs font-bold text-navy-primary truncate">{lead.property?.title || '—'}</span>
+                            <Home className="w-3 h-3 text-navy-primary shrink-0" />
+                            {lead.inquiry_type === 'line' ? (
+                                <Link
+                                    href={`/properties/${lead.property_id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs font-bold text-navy-primary truncate hover:underline text-left min-w-0"
+                                >
+                                    {lead.property?.title || '—'}
+                                </Link>
+                            ) : (
+                                <span className="text-xs font-bold text-navy-primary truncate">{lead.property?.title || '—'}</span>
+                            )}
                         </div>
                         <div className="flex items-center gap-2">
                             <User className="w-3 h-3 text-slate-400" />
@@ -370,7 +381,13 @@ function LeadsView({ leads }: { leads: any[] }) {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <Link href={`/properties/${lead.property_id}`} className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1">
+                                    <Link
+                                        href={`/properties/${lead.property_id}`}
+                                        className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
+                                        {...(lead.inquiry_type === 'line'
+                                            ? { target: '_blank', rel: 'noopener noreferrer' }
+                                            : {})}
+                                    >
                                         <Home className="w-3 h-3" />{lead.property?.title}
                                     </Link>
                                 </td>

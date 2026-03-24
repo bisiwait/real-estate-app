@@ -127,6 +127,9 @@ export default async function AgentLeadsPage() {
                                             <Link
                                                 href={`/properties/${lead.property_id}`}
                                                 className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
+                                                {...(lead.inquiry_type === 'line'
+                                                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                                                    : {})}
                                             >
                                                 <Home className="w-3 h-3" />
                                                 {lead.property?.title}
