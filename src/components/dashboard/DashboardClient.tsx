@@ -124,7 +124,7 @@ export default function DashboardClient({
                     <LeadsView leads={leads} />
                 ) : tab === 'properties' ? (
                     <>
-                        <div className="p-4 sm:p-8 border-b border-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex flex-col gap-1">
                                 <h3 className="text-lg sm:text-xl font-black text-navy-secondary">登録物件一覧</h3>
                                 <BulkConfirmButton
@@ -150,7 +150,7 @@ export default function DashboardClient({
 
                         {filteredProperties && filteredProperties.length > 0 ? (<>
                             {/* ── MOBILE LIST (< sm) ── */}
-                            <div className="sm:hidden divide-y divide-slate-100">
+                            <div className="sm:hidden divide-y divide-slate-200">
                                 {filteredProperties.map((property) => (
                                     <div key={property.id} className="p-3 active:bg-slate-50 transition-colors">
                                         <div className="flex gap-3">
@@ -213,7 +213,7 @@ export default function DashboardClient({
 
                             {/* ── DESKTOP ROW LIST (sm+) ── */}
                             <div className="hidden sm:block overflow-x-hidden pb-4">
-                                <div className="divide-y divide-slate-50 w-full">
+                                <div className="divide-y divide-slate-200 w-full">
                                     {filteredProperties.map((property) => (
                                         <div key={property.id} className="p-4 lg:p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 lg:gap-6">
                                             <div className="flex items-center space-x-4 lg:space-x-6 min-w-0 flex-1">
