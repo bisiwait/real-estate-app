@@ -419,6 +419,7 @@ export default function AdminProjectManagement() {
                                         <option value="Condo">Condo</option>
                                         <option value="House">House</option>
                                         <option value="Townhouse">Townhouse</option>
+                                        <option value="Commercial">Commercial</option>
                                     </select>
                                 </div>
                                 <div>

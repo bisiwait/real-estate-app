@@ -249,7 +249,8 @@
             "property_type": "Type",
             "q": "Search",
             "bathtub": "Bathtub",
-            "pets": "Pets"
+            "pets": "Pets",
+            "tags": "Features"
         }
     },
     "property": {
@@ -258,6 +259,12 @@
         "found_count": "Showing {count} of {total} listings",
         "keyword_search": "Keyword Search",
         "keyword_placeholder": "Property name, area...",
+        "open_filters_mobile": "Filter by criteria",
+        "preferences_title": "Must-haves",
+        "preferences_hint": "Tap to narrow results—no typing required.",
+        "ocean_view_filter": "Ocean view",
+        "shop": "Shop / commercial",
+        "active_filters_title": "Current filters",
         "city": "City",
         "area": "Area",
         "all_areas": "All Areas",

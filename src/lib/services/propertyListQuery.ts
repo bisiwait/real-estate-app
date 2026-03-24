@@ -8,7 +8,6 @@ export type PropertyListFilters = {
     selectedPropertyType: string
     selectedPrice: string
     selectedTags: string[]
-    searchQuery: string
     listingType: string
     bathtubFilter: boolean
     petsFilter: boolean
@@ -30,7 +29,6 @@ export function parsePropertyListFiltersFromSearchParams(
         selectedPropertyType: firstParam(sp.property_type),
         selectedPrice: firstParam(sp.price),
         selectedTags: tagsRaw ? tagsRaw.split(',').filter(Boolean) : [],
-        searchQuery: firstParam(sp.q),
         listingType: firstParam(sp.type) || 'all',
         bathtubFilter: firstParam(sp.bathtub) === 'true',
         petsFilter: firstParam(sp.pets) === 'true',
@@ -46,7 +44,6 @@ export function parsePropertyListFiltersFromURLSearchParams(searchParams: URLSea
         selectedPropertyType: searchParams.get('property_type') || '',
         selectedPrice: searchParams.get('price') || '',
         selectedTags: tagsRaw ? tagsRaw.split(',').filter(Boolean) : [],
-        searchQuery: searchParams.get('q') || '',
         listingType: searchParams.get('type') || 'all',
         bathtubFilter: searchParams.get('bathtub') === 'true',
         petsFilter: searchParams.get('pets') === 'true',
@@ -63,7 +60,6 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
         selectedPropertyType,
         selectedPrice,
         selectedTags,
-        searchQuery,
         listingType,
         bathtubFilter,
         petsFilter,
@@ -124,10 +120,6 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
 
     if (selectedTags.length > 0) {
         query = query.contains('tags', selectedTags)
-    }
-
-    if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
     }
 
     return query

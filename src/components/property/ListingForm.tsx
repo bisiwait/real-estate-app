@@ -1036,6 +1036,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                             <option value="Condo">コンドミニアム</option>
                                             <option value="House">一軒家・ヴィラ</option>
                                             <option value="Townhouse">タウンハウス</option>
+                                            <option value="Commercial">店舗・商業</option>
                                         </select>
                                     </div>
                                     <div>
@@ -1142,6 +1143,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                         <option value="Condo">コンドミニアム</option>
                                         <option value="House">一軒家・ヴィラ</option>
                                         <option value="Townhouse">タウンハウス</option>
+                                        <option value="Commercial">店舗・商業</option>
                                     </select>
                                 </div>
                                 <div>

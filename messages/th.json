@@ -248,7 +248,8 @@
             "property_type": "ประเภทโครงการ",
             "q": "คำค้นหา",
             "bathtub": "อ่างอาบน้ำ",
-            "pets": "สัตว์เลี้ยง"
+            "pets": "สัตว์เลี้ยง",
+            "tags": "ฟีเจอร์"
         }
     },
     "property": {
@@ -257,6 +258,12 @@
         "found_count": "แสดง {count} จากทั้งหมด {total} รายการ",
         "keyword_search": "ค้นหาด้วยคีย์เวิร์ด",
         "keyword_placeholder": "ชื่อโครงการ, สิ่งอำนวยความสะดวก...",
+        "open_filters_mobile": "กรองตามเงื่อนไข",
+        "preferences_title": "เงื่อนไขพิเศษ",
+        "preferences_hint": "เลือกได้ทันที ไม่ต้องพิมพ์",
+        "ocean_view_filter": "วิวทะเล",
+        "shop": "ร้านค้า / เชิงพาณิชย์",
+        "active_filters_title": "เงื่อนไขปัจจุบัน",
         "city": "เมือง",
         "area": "พื้นที่",
         "all_areas": "พื้นที่ทั้งหมด",

@@ -275,7 +275,8 @@
             "property_type": "物件種別",
             "q": "フリーワード",
             "bathtub": "バスタブ",
-            "pets": "ペット可"
+            "pets": "ペット可",
+            "tags": "こだわり"
         }
     },
     "property": {
@@ -284,6 +285,12 @@
         "found_count": "{total}件中 {count}件を表示",
         "keyword_search": "キーワードで探す",
         "keyword_placeholder": "物件名、エリアなど...",
+        "open_filters_mobile": "条件で絞り込む",
+        "preferences_title": "こだわり条件",
+        "preferences_hint": "よく使う条件をチェックするだけで絞り込めます。",
+        "ocean_view_filter": "オーシャンビュー",
+        "shop": "店舗・商業",
+        "active_filters_title": "現在の条件",
         "city": "都市",
         "area": "エリア",
         "all_areas": "すべてのエリア",

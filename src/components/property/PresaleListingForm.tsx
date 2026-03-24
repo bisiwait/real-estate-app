@@ -766,6 +766,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                 <option value="Condo">コンドミニアム</option>
                                 <option value="House">一軒家・ヴィラ</option>
                                 <option value="Townhouse">タウンハウス</option>
+                                <option value="Commercial">店舗・商業</option>
                             </select>
                         </div>
                         <div>

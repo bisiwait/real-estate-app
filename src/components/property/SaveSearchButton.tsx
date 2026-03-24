@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Bell, Loader2, Search, Info } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, useParams } from "next/navigation";
 import Sheet from "@/components/ui/Sheet";
 import Switch from "@/components/ui/Switch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +27,8 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
 
     const searchParams = useSearchParams();
     const router = useRouter();
+    const params = useParams();
+    const locale = (params?.locale as string) || "jp";
     const supabase = createClient();
     const { user, userData, isLoading } = useAuth();
 
@@ -35,7 +37,7 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
     const currentFilters = useMemo(() => {
         const filters: Record<string, string> = {};
         // Use a stable set of keys for search criteria
-        const essentialKeys = ["region", "area", "price", "type", "property_type", "q"];
+        const essentialKeys = ["region", "area", "price", "type", "property_type", "tags", "bathtub", "pets"];
         essentialKeys.sort().forEach(key => {
             const value = searchParams.get(key);
             if (value && value !== "all") {
@@ -119,7 +121,9 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
         const price = searchParams.get("price");
         const type = searchParams.get("type");
         const propType = searchParams.get("property_type");
-        const q = searchParams.get("q");
+        const tagsParam = searchParams.get("tags");
+        const bathtub = searchParams.get("bathtub");
+        const pets = searchParams.get("pets");
 
         if (region) filters.push({ label: dict.labels.filters.region, value: region });
         if (area) filters.push({ label: dict.labels.filters.area, value: area });
@@ -135,7 +139,8 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
             const propLabels: Record<string, string> = {
                 Condo: dict.property.condo,
                 House: dict.property.house,
-                Townhouse: dict.property.townhouse
+                Townhouse: dict.property.townhouse,
+                Commercial: dict.property.shop,
             };
             filters.push({ label: dict.labels.filters.property_type, value: propLabels[propType] || propType });
         }
@@ -143,7 +148,18 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
             const [min, max] = price.split("-");
             filters.push({ label: dict.labels.filters.price, value: `${Number(min).toLocaleString()}〜${Number(max).toLocaleString()} ฿` });
         }
-        if (q) filters.push({ label: dict.labels.filters.q, value: q });
+        if (bathtub === "true") {
+            filters.push({ label: dict.labels.filters.bathtub, value: dict.property.bathtub });
+        }
+        if (pets === "true") {
+            filters.push({ label: dict.labels.filters.pets, value: dict.property.pets });
+        }
+        if (tagsParam) {
+            tagsParam.split(",").filter(Boolean).forEach((tag) => {
+                const display = dict.property.tags?.[tag] || tag;
+                filters.push({ label: dict.labels.filters.tags, value: display });
+            });
+        }
 
         return filters;
     }, [searchParams, dict]);
@@ -262,7 +278,7 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
                     <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
                             <Search size={14} className="mr-2" />
-                            {dict.labels.filters.q}
+                            {dict.property.active_filters_title}
                         </h4>
                         <div className="flex flex-wrap gap-2">
                             {activeFilters.length > 0 ? activeFilters.map((filter, i) => (

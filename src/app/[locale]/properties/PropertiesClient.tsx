@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
-import MobileSearchBar from '@/components/property/MobileSearchBar'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchCount } from '@/contexts/SearchCountContext'
-import { Search, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog } from 'lucide-react'
+import { Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
 import {
@@ -15,6 +14,9 @@ import {
     parsePropertyListFiltersFromURLSearchParams,
     PROPERTY_LIST_PAGE_SIZE,
 } from '@/lib/services/propertyListQuery'
+
+/** DB の tags 配列と一致（messages の property.tags と同じキー） */
+const OCEAN_VIEW_TAG = 'オーシャンビュー'
 
 type PropertiesClientProps = {
     dict: any
@@ -82,65 +84,12 @@ export default function PropertiesClient({
     const selectedArea = searchParams.get('area') || ''
     const selectedPrice = searchParams.get('price') || ''
     const selectedTags = searchParams.get('tags')?.split(',').filter(Boolean) || []
-    const searchQuery = searchParams.get('q') || ''
     const listingType = searchParams.get('type') || 'all'
     const bathtubFilter = searchParams.get('bathtub') === 'true'
     const petsFilter = searchParams.get('pets') === 'true'
     const selectedPropertyType = searchParams.get('property_type') || ''
 
-    const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery)
-    const searchParamsRef = useRef(searchParams)
-    const pathnameRef = useRef(pathname)
-    const localSearchQueryRef = useRef(localSearchQuery)
-    /** フォーカス中は URL→入力の同期をしない（replace 後の searchQuery で巻き戻るのを防ぐ） */
-    const keywordFieldFocusedRef = useRef(false)
-    const keywordBlurScheduleRef = useRef(0)
-    searchParamsRef.current = searchParams
-    pathnameRef.current = pathname
-    localSearchQueryRef.current = localSearchQuery
-
-    const flushKeywordToUrl = useCallback(() => {
-        const raw = localSearchQueryRef.current
-        const params = new URLSearchParams(searchParamsRef.current.toString())
-        const cur = params.get('q') ?? ''
-        const nextEmpty = raw.trim() === ''
-        const curEmpty = cur.trim() === ''
-        if (nextEmpty && curEmpty) return
-        if (!nextEmpty && raw === cur) return
-        if (nextEmpty) params.delete('q')
-        else params.set('q', raw)
-        router.replace(`${pathnameRef.current}?${params.toString()}`, { scroll: false })
-    }, [router])
-
-    const handleKeywordFocus = () => {
-        window.clearTimeout(keywordBlurScheduleRef.current)
-        keywordFieldFocusedRef.current = true
-    }
-
-    const handleKeywordBlur = () => {
-        keywordBlurScheduleRef.current = window.setTimeout(() => {
-            keywordFieldFocusedRef.current = false
-            flushKeywordToUrl()
-        }, 150)
-    }
-
-    useEffect(() => {
-        return () => window.clearTimeout(keywordBlurScheduleRef.current)
-    }, [])
-
-    /** ブラウザ戻る・フィルタ操作・共有URLなど（入力中以外）で URL の q が変わったら反映 */
-    useEffect(() => {
-        if (keywordFieldFocusedRef.current) return
-        setLocalSearchQuery(searchQuery)
-    }, [searchQuery])
-
-    /** 入力が止まってから URL 反映（PC など）。モバイルは blur / Enter で flush も走る */
-    useEffect(() => {
-        const id = window.setTimeout(() => {
-            flushKeywordToUrl()
-        }, 450)
-        return () => window.clearTimeout(id)
-    }, [localSearchQuery, flushKeywordToUrl])
+    const oceanViewFilter = selectedTags.includes(OCEAN_VIEW_TAG)
 
     const fetchProperties = async (isLoadMore = false) => {
         if (isLoadMore) {
@@ -204,7 +153,7 @@ export default function PropertiesClient({
             return
         }
         fetchProperties()
-    }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, searchQuery, listingType, bathtubFilter, petsFilter])
+    }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, listingType, bathtubFilter, petsFilter])
 
     // Use database properties directly as they are now filtered server-side
     const filteredProperties = dbProperties
@@ -217,6 +166,15 @@ export default function PropertiesClient({
         setPropertiesHitCount(totalCount > 0 ? totalCount : null)
         return () => setPropertiesHitCount(null)
     }, [totalCount, setPropertiesHitCount])
+
+    const activeFilterChipCount = [
+        selectedArea,
+        selectedPropertyType,
+        selectedPrice,
+        bathtubFilter,
+        petsFilter,
+        selectedTags.length > 0,
+    ].filter(Boolean).length
 
     // Sync filters to URL
     const updateFilters = (updates: Record<string, string | string[] | null>) => {
@@ -241,36 +199,28 @@ export default function PropertiesClient({
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
     }
 
+    const toggleOceanViewTag = () => {
+        const next = oceanViewFilter
+            ? selectedTags.filter((t) => t !== OCEAN_VIEW_TAG)
+            : [...selectedTags, OCEAN_VIEW_TAG]
+        updateFilters({ tags: next.length ? next : null })
+    }
+
+    const selectFieldClass =
+        'w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-navy-secondary appearance-none cursor-pointer focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none'
+
     const renderFilterPanel = () => (
         <div className="space-y-8">
-            <div>
-                <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
-                    <Search className="w-3 h-3 mr-2" />
-                    {dict.property.keyword_search}
-                </h3>
-                <div className="relative">
-                    <input
-                        type="text"
-                        suppressHydrationWarning
-                        placeholder={dict.property.keyword_placeholder}
-                        className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
-                        value={localSearchQuery}
-                        onChange={(e) => setLocalSearchQuery(e.target.value)}
-                        onFocus={handleKeywordFocus}
-                        onBlur={handleKeywordBlur}
-                    />
-                </div>
-            </div>
-
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
                     <MapPin className="w-3 h-3 mr-2" />
                     {dict.property.city}
                 </h3>
                 <div className="flex bg-slate-100 p-1 rounded-xl">
-                    {CITIES.map(city => (
+                    {CITIES.map((city) => (
                         <button
                             key={city.value}
+                            type="button"
                             onClick={() => updateFilters({ region: city.value })}
                             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectedCity === city.value ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
                         >
@@ -285,25 +235,20 @@ export default function PropertiesClient({
                     <Filter className="w-3 h-3 mr-2" />
                     {dict.property.area}
                 </h3>
-                <div className="space-y-1">
-                    <button
-                        onClick={() => updateFilters({ area: null })}
-                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${!selectedArea ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        <span>{dict.property.all_areas}</span>
-                        {!selectedArea && <ChevronRight className="w-4 h-4" />}
-                    </button>
-                    {(AREAS_BY_CITY[selectedCity] || []).map(area => (
-                        <button
-                            key={area.value}
-                            onClick={() => updateFilters({ area: area.value })}
-                            className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedArea === area.value ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                        >
-                            <span>{area.label}</span>
-                            {selectedArea === area.value && <ChevronRight className="w-4 h-4" />}
-                        </button>
+                <select
+                    id="filter-area-select"
+                    aria-label={dict.property.area}
+                    className={selectFieldClass}
+                    value={selectedArea}
+                    onChange={(e) => updateFilters({ area: e.target.value || null })}
+                >
+                    <option value="">{dict.property.all_areas}</option>
+                    {(AREAS_BY_CITY[selectedCity] || []).map((area) => (
+                        <option key={area.value} value={area.value}>
+                            {area.label}
+                        </option>
                     ))}
-                </div>
+                </select>
             </div>
 
             <div>
@@ -311,36 +256,19 @@ export default function PropertiesClient({
                     <Filter className="w-3 h-3 mr-2" />
                     {dict.property.property_type}
                 </h3>
-                <div className="space-y-1">
-                    <button
-                        onClick={() => updateFilters({ property_type: null })}
-                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${!selectedPropertyType ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        <span>{dict.property.all_types}</span>
-                        {!selectedPropertyType && <ChevronRight className="w-4 h-4" />}
-                    </button>
-                    <button
-                        onClick={() => updateFilters({ property_type: 'Condo' })}
-                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedPropertyType === 'Condo' ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        <span>{dict.property.condo}</span>
-                        {selectedPropertyType === 'Condo' && <ChevronRight className="w-4 h-4" />}
-                    </button>
-                    <button
-                        onClick={() => updateFilters({ property_type: 'House' })}
-                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedPropertyType === 'House' ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        <span>{dict.property.house}</span>
-                        {selectedPropertyType === 'House' && <ChevronRight className="w-4 h-4" />}
-                    </button>
-                    <button
-                        onClick={() => updateFilters({ property_type: 'Townhouse' })}
-                        className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between ${selectedPropertyType === 'Townhouse' ? 'bg-navy-primary text-white font-bold' : 'text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        <span>{dict.property.townhouse}</span>
-                        {selectedPropertyType === 'Townhouse' && <ChevronRight className="w-4 h-4" />}
-                    </button>
-                </div>
+                <select
+                    id="filter-property-type-select"
+                    aria-label={dict.property.property_type}
+                    className={selectFieldClass}
+                    value={selectedPropertyType}
+                    onChange={(e) => updateFilters({ property_type: e.target.value || null })}
+                >
+                    <option value="">{dict.property.all_types}</option>
+                    <option value="Condo">{dict.property.condo}</option>
+                    <option value="House">{dict.property.house}</option>
+                    <option value="Townhouse">{dict.property.townhouse}</option>
+                    <option value="Commercial">{dict.property.shop}</option>
+                </select>
             </div>
 
             {listingType !== 'all' && (
@@ -371,23 +299,46 @@ export default function PropertiesClient({
                 </div>
             )}
 
-            <div>
-                <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4">{dict.property.japanese_spec}</h3>
-                <div className="grid grid-cols-2 gap-2">
-                    <button
-                        onClick={() => updateFilters({ bathtub: bathtubFilter ? null : 'true' })}
-                        className={`flex items-center justify-center space-x-2 px-3 py-3 rounded-xl text-xs font-bold transition-all border ${bathtubFilter ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-slate-100 text-slate-600 hover:border-navy-primary'}`}
+            <div className="rounded-2xl border-2 border-navy-primary/15 bg-gradient-to-b from-white to-slate-50/90 p-5 shadow-sm">
+                <h3 className="text-sm font-black text-navy-secondary mb-1 tracking-tight">{dict.property.preferences_title}</h3>
+                <p className="text-[11px] font-bold text-slate-400 mb-4">{dict.property.preferences_hint}</p>
+                <div className="space-y-3">
+                    <label
+                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${petsFilter ? 'border-amber-400 bg-amber-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
                     >
-                        <Bath className="w-3.5 h-3.5" />
-                        <span>{dict.property.bathtub}</span>
-                    </button>
-                    <button
-                        onClick={() => updateFilters({ pets: petsFilter ? null : 'true' })}
-                        className={`flex items-center justify-center space-x-2 px-3 py-3 rounded-xl text-xs font-bold transition-all border ${petsFilter ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-white border-slate-100 text-slate-600 hover:border-navy-primary'}`}
+                        <input
+                            type="checkbox"
+                            checked={petsFilter}
+                            onChange={() => updateFilters({ pets: petsFilter ? null : 'true' })}
+                            className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                        />
+                        <Dog className="h-6 w-6 shrink-0 text-amber-600" />
+                        <span className="text-sm font-black text-navy-secondary">{dict.property.pets}</span>
+                    </label>
+                    <label
+                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${bathtubFilter ? 'border-sky-400 bg-sky-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
                     >
-                        <Dog className="w-3.5 h-3.5" />
-                        <span>{dict.property.pets}</span>
-                    </button>
+                        <input
+                            type="checkbox"
+                            checked={bathtubFilter}
+                            onChange={() => updateFilters({ bathtub: bathtubFilter ? null : 'true' })}
+                            className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                        />
+                        <Bath className="h-6 w-6 shrink-0 text-sky-600" />
+                        <span className="text-sm font-black text-navy-secondary">{dict.property.bathtub}</span>
+                    </label>
+                    <label
+                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${oceanViewFilter ? 'border-cyan-500 bg-cyan-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
+                    >
+                        <input
+                            type="checkbox"
+                            checked={oceanViewFilter}
+                            onChange={toggleOceanViewTag}
+                            className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                        />
+                        <Waves className="h-6 w-6 shrink-0 text-cyan-600" />
+                        <span className="text-sm font-black text-navy-secondary">{dict.property.ocean_view_filter}</span>
+                    </label>
                 </div>
             </div>
 
@@ -395,18 +346,30 @@ export default function PropertiesClient({
                 <SaveSearchButton dict={dict} variant="outline" fullWidth />
             </div>
 
-            {
-                (selectedArea || selectedPropertyType || selectedPrice || selectedTags.length > 0 || searchQuery || bathtubFilter || petsFilter) && (
-                    <button
-                        onClick={() => {
-                            updateFilters({ area: null, property_type: null, price: null, tags: null, q: null, bathtub: null, pets: null })
-                        }}
-                        className="w-full py-3 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors border border-dashed border-slate-200 rounded-xl"
-                    >
-                        {dict.property.clear_filters}
-                    </button>
-                )
-            }
+            {(selectedArea ||
+                selectedPropertyType ||
+                selectedPrice ||
+                selectedTags.length > 0 ||
+                bathtubFilter ||
+                petsFilter) && (
+                <button
+                    type="button"
+                    onClick={() => {
+                        updateFilters({
+                            area: null,
+                            property_type: null,
+                            price: null,
+                            tags: null,
+                            q: null,
+                            bathtub: null,
+                            pets: null,
+                        })
+                    }}
+                    className="w-full py-3 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors border border-dashed border-slate-200 rounded-xl"
+                >
+                    {dict.property.clear_filters}
+                </button>
+            )}
         </div>
     )
 
@@ -471,25 +434,20 @@ export default function PropertiesClient({
                                 </button>
                             </div>
 
-                            {/* Mobile search bar (Integrated) */}
                             <div className="lg:hidden w-full">
-                                <MobileSearchBar
-                                    dict={dict}
-                                    searchQuery={localSearchQuery}
-                                    onSearchChange={(val: string) => setLocalSearchQuery(val)}
-                                    onSearchFocus={handleKeywordFocus}
-                                    onSearchBlur={handleKeywordBlur}
-                                    onSearchSubmit={flushKeywordToUrl}
-                                    onFilterClick={() => setIsFilterDrawerOpen(true)}
-                                    activeFiltersCount={[
-                                        selectedArea,
-                                        selectedPropertyType,
-                                        selectedPrice,
-                                        bathtubFilter,
-                                        petsFilter,
-                                        selectedTags.length > 0
-                                    ].filter(Boolean).length}
-                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setIsFilterDrawerOpen(true)}
+                                    className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-navy-primary/15 bg-white px-5 py-4 text-sm font-black text-navy-secondary shadow-md shadow-navy-primary/5 transition-all active:scale-[0.99] hover:border-navy-primary/30"
+                                >
+                                    <SlidersHorizontal className="h-5 w-5 text-navy-primary" />
+                                    <span>{dict.property.open_filters_mobile}</span>
+                                    {activeFilterChipCount > 0 ? (
+                                        <span className="min-w-[1.5rem] rounded-full bg-navy-primary px-2 py-0.5 text-center text-[11px] font-black text-white">
+                                            {activeFilterChipCount}
+                                        </span>
+                                    ) : null}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -556,7 +514,15 @@ export default function PropertiesClient({
                                 <p className="text-slate-500 mb-8">{dict.property.no_results_desc}</p>
                                 <button
                                     type="button"
-                                    onClick={() => updateFilters({ region: null, property_type: null, price: null, tags: null, q: null })}
+                                    onClick={() =>
+                                        updateFilters({
+                                            region: null,
+                                            property_type: null,
+                                            price: null,
+                                            tags: null,
+                                            q: null,
+                                        })
+                                    }
                                     className="bg-navy-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-navy-secondary transition-all"
                                 >
                                     {dict.property.reset_filters_btn}
@@ -572,20 +538,14 @@ export default function PropertiesClient({
                 <div className="fixed inset-0 z-[100] lg:hidden">
                     <div
                         className="absolute inset-0 bg-navy-secondary/60 backdrop-blur-sm"
-                        onClick={() => {
-                            flushKeywordToUrl()
-                            setIsFilterDrawerOpen(false)
-                        }}
+                        onClick={() => setIsFilterDrawerOpen(false)}
                     />
                     <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300 p-8">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-xl font-black text-navy-secondary">{dict.property.search_drawer_title}</h2>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    flushKeywordToUrl()
-                                    setIsFilterDrawerOpen(false)
-                                }}
+                                onClick={() => setIsFilterDrawerOpen(false)}
                                 className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                             >
                                 <X className="w-6 h-6 text-slate-400" />
@@ -597,10 +557,7 @@ export default function PropertiesClient({
                         <div className="mt-12">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    flushKeywordToUrl()
-                                    setIsFilterDrawerOpen(false)
-                                }}
+                                onClick={() => setIsFilterDrawerOpen(false)}
                                 className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold shadow-lg hover:bg-navy-secondary transition-all"
                             >
                                 {dict.property.show_results.replace('{count}', drawerResultsCount.toString())}
