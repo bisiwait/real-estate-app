@@ -8,9 +8,16 @@ import { MessageCircle, X } from 'lucide-react'
 const LINE_ID = '@164exdsf'
 const MD_MIN_PX = 768
 
-function isDesktopViewport(): boolean {
+/**
+ * QR モーダルを出すか。
+ * - md 以上: モーダル（従来どおり）
+ * - 狭い幅でも、マウス主体の PC（coarse なし）はモーダル（DevTools モバイル幅でも line.me 中間ページに飛ばさない）
+ * - スマホ等（pointer: coarse）かつ md 未満: LINE へ直接遷移
+ */
+function shouldShowLineQrModal(): boolean {
   if (typeof window === 'undefined') return false
-  return window.matchMedia(`(min-width: ${MD_MIN_PX}px)`).matches
+  if (window.matchMedia(`(min-width: ${MD_MIN_PX}px)`).matches) return true
+  return !window.matchMedia('(pointer: coarse)').matches
 }
 
 interface PropertyInfo {
@@ -106,7 +113,7 @@ export default function LineContactButton({
   const handleLineContact = async () => {
     await logInquiry()
 
-    if (isDesktopViewport()) {
+    if (shouldShowLineQrModal()) {
       setModalOpen(true)
       return
     }
