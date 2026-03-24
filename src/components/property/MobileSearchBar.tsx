@@ -11,6 +11,8 @@ interface MobileSearchBarProps {
     /** キーワード欄フォーカス中は URL 同期しない（入力が巻き戻るのを防ぐ） */
     onSearchFocus?: () => void
     onSearchBlur?: () => void
+    /** モバイルの「検索」/Enter で即 URL 反映（デバウンス待ちで q が付かない問題の回避） */
+    onSearchSubmit?: () => void
 }
 
 export default function MobileSearchBar({
@@ -21,22 +23,32 @@ export default function MobileSearchBar({
     activeFiltersCount,
     onSearchFocus,
     onSearchBlur,
+    onSearchSubmit,
 }: MobileSearchBarProps) {
     return (
         <div className="flex items-center gap-2 sm:gap-3 w-full animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="relative flex-1 group min-w-0">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-navy-primary transition-colors" />
+            <form
+                className="relative flex-1 min-w-0 group"
+                onSubmit={(e) => {
+                    e.preventDefault()
+                    onSearchSubmit?.()
+                }}
+            >
+                <Search className="pointer-events-none absolute left-4 top-1/2 z-[1] -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-navy-primary transition-colors" />
                 <input
-                    type="text"
+                    type="search"
+                    name="property-keyword"
+                    enterKeyHint="search"
+                    autoComplete="off"
                     suppressHydrationWarning
                     placeholder={dict.property.keyword_placeholder}
-                    className="w-full pl-11 pr-4 py-3 sm:py-4 bg-white border border-slate-100 rounded-xl sm:rounded-2xl shadow-sm focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none text-xs sm:text-sm font-bold text-navy-secondary transition-all"
+                    className="w-full pl-11 pr-10 py-3 sm:py-4 bg-white border border-slate-100 rounded-xl sm:rounded-2xl shadow-sm focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none text-xs sm:text-sm font-bold text-navy-secondary transition-all"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                     onFocus={onSearchFocus}
                     onBlur={onSearchBlur}
                 />
-                {searchQuery && (
+                {searchQuery ? (
                     <button
                         type="button"
                         onClick={() => onSearchChange('')}
@@ -44,8 +56,8 @@ export default function MobileSearchBar({
                     >
                         <X className="w-3 h-3" />
                     </button>
-                )}
-            </div>
+                ) : null}
+            </form>
             <button
                 type="button"
                 onClick={onFilterClick}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import MobileSearchBar from '@/components/property/MobileSearchBar'
@@ -99,6 +99,19 @@ export default function PropertiesClient({
     pathnameRef.current = pathname
     localSearchQueryRef.current = localSearchQuery
 
+    const flushKeywordToUrl = useCallback(() => {
+        const raw = localSearchQueryRef.current
+        const params = new URLSearchParams(searchParamsRef.current.toString())
+        const cur = params.get('q') ?? ''
+        const nextEmpty = raw.trim() === ''
+        const curEmpty = cur.trim() === ''
+        if (nextEmpty && curEmpty) return
+        if (!nextEmpty && raw === cur) return
+        if (nextEmpty) params.delete('q')
+        else params.set('q', raw)
+        router.replace(`${pathnameRef.current}?${params.toString()}`, { scroll: false })
+    }, [router])
+
     const handleKeywordFocus = () => {
         window.clearTimeout(keywordBlurScheduleRef.current)
         keywordFieldFocusedRef.current = true
@@ -107,6 +120,7 @@ export default function PropertiesClient({
     const handleKeywordBlur = () => {
         keywordBlurScheduleRef.current = window.setTimeout(() => {
             keywordFieldFocusedRef.current = false
+            flushKeywordToUrl()
         }, 150)
     }
 
@@ -120,25 +134,13 @@ export default function PropertiesClient({
         setLocalSearchQuery(searchQuery)
     }, [searchQuery])
 
-    /**
-     * キーワードはローカルで即時表示し、入力が止まってから URL を replace。
-     * q は trim せずそのまま保存し、同期 effect との食い違いで文字が消えるのを防ぐ。
-     */
+    /** 入力が止まってから URL 反映（PC など）。モバイルは blur / Enter で flush も走る */
     useEffect(() => {
         const id = window.setTimeout(() => {
-            const raw = localSearchQueryRef.current
-            const params = new URLSearchParams(searchParamsRef.current.toString())
-            const cur = params.get('q') ?? ''
-            const nextEmpty = raw.trim() === ''
-            const curEmpty = cur.trim() === ''
-            if (nextEmpty && curEmpty) return
-            if (!nextEmpty && raw === cur) return
-            if (nextEmpty) params.delete('q')
-            else params.set('q', raw)
-            router.replace(`${pathnameRef.current}?${params.toString()}`, { scroll: false })
+            flushKeywordToUrl()
         }, 450)
         return () => window.clearTimeout(id)
-    }, [localSearchQuery, router])
+    }, [localSearchQuery, flushKeywordToUrl])
 
     const fetchProperties = async (isLoadMore = false) => {
         if (isLoadMore) {
@@ -239,7 +241,7 @@ export default function PropertiesClient({
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
     }
 
-    const filterContentNode = (
+    const renderFilterPanel = () => (
         <div className="space-y-8">
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
@@ -405,7 +407,7 @@ export default function PropertiesClient({
                     </button>
                 )
             }
-        </div >
+        </div>
     )
 
     return (
@@ -477,6 +479,7 @@ export default function PropertiesClient({
                                     onSearchChange={(val: string) => setLocalSearchQuery(val)}
                                     onSearchFocus={handleKeywordFocus}
                                     onSearchBlur={handleKeywordBlur}
+                                    onSearchSubmit={flushKeywordToUrl}
                                     onFilterClick={() => setIsFilterDrawerOpen(true)}
                                     activeFiltersCount={[
                                         selectedArea,
@@ -494,7 +497,7 @@ export default function PropertiesClient({
                     {/* PC Filters Sidebar */}
                     <aside className="hidden lg:block lg:col-span-1">
                         <div className="bg-white rounded-3xl shadow-xl p-8 sticky top-28 border border-white/50 backdrop-blur-sm">
-                            {filterContentNode}
+                            {renderFilterPanel()}
                         </div>
                     </aside>
 
@@ -569,24 +572,35 @@ export default function PropertiesClient({
                 <div className="fixed inset-0 z-[100] lg:hidden">
                     <div
                         className="absolute inset-0 bg-navy-secondary/60 backdrop-blur-sm"
-                        onClick={() => setIsFilterDrawerOpen(false)}
+                        onClick={() => {
+                            flushKeywordToUrl()
+                            setIsFilterDrawerOpen(false)
+                        }}
                     />
                     <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300 p-8">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-xl font-black text-navy-secondary">{dict.property.search_drawer_title}</h2>
                             <button
-                                onClick={() => setIsFilterDrawerOpen(false)}
+                                type="button"
+                                onClick={() => {
+                                    flushKeywordToUrl()
+                                    setIsFilterDrawerOpen(false)
+                                }}
                                 className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                             >
                                 <X className="w-6 h-6 text-slate-400" />
                             </button>
                         </div>
 
-                        {filterContentNode}
+                        {renderFilterPanel()}
 
                         <div className="mt-12">
                             <button
-                                onClick={() => setIsFilterDrawerOpen(false)}
+                                type="button"
+                                onClick={() => {
+                                    flushKeywordToUrl()
+                                    setIsFilterDrawerOpen(false)
+                                }}
                                 className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold shadow-lg hover:bg-navy-secondary transition-all"
                             >
                                 {dict.property.show_results.replace('{count}', drawerResultsCount.toString())}
