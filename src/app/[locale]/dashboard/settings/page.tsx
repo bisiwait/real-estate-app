@@ -53,6 +53,11 @@ export default async function SettingsPage() {
                         </h4>
                         <p className="text-amber-700/80 text-xs font-bold leading-relaxed">
                             ここで登録した情報は、物件詳細ページやお問い合わせ後のエージェント情報として表示されます。
+                            <span className="block mt-2">
+                                エージェントとして登録する<strong className="font-black">電話番号</strong>
+                                は、物件一覧・比較画面など、サイト内の<strong className="font-black">表形式で表示される画面</strong>
+                                にも掲載される場合があります。公開して問題ない番号をご登録ください。
+                            </span>
                             電話番号やLINE IDを正確に入力することで、お客様とのコンタクトがスムーズになります。
                         </p>
                     </div>
