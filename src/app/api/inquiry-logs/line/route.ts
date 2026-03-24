@@ -61,6 +61,7 @@ export async function POST(req: Request) {
       user_id,
       agent_id: prop.user_id,
       inquiry_type: 'line',
+      status: 'pending',
     })
 
     if (insErr) {

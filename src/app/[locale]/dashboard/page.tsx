@@ -85,7 +85,7 @@ export default async function DashboardPage({
     // Fetch Leads
     const { data: leads } = await supabase
         .from('inquiry_logs')
-        .select('*, property:properties(title, id), profile:user_id(full_name, email)')
+        .select('*, property:properties(title, id), profile:user_id(full_name, email, line_id)')
         .eq('agent_id', user.id)
         .order('created_at', { ascending: false })
 

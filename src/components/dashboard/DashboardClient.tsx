@@ -7,13 +7,9 @@ import {
     Users,
     ChevronRight,
     LayoutDashboard,
-    MessageCircle,
-    Phone,
-    FileText,
-    User,
-    Home
 } from 'lucide-react'
 import Link from 'next/link'
+import LeadsView from '@/components/dashboard/LeadsView'
 import BulkConfirmButton from '@/components/dashboard/BulkConfirmButton'
 import StatusFilter from '@/components/dashboard/StatusFilter'
 import AgentStatusToggles from '@/components/dashboard/AgentStatusToggles'
@@ -114,7 +110,7 @@ export default function DashboardClient({
                         }`}
                 >
                     <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <span>LINE ({leadsCount})</span>
+                    <span>リード ({leadsCount})</span>
                 </button>
             </div>
 
@@ -278,145 +274,6 @@ export default function DashboardClient({
                 ) : (
                     <InquiryList initialInquiries={inquiries || []} />
                 )}
-            </div>
-        </div>
-    )
-}
-
-function LeadsView({ leads, locale }: { leads: any[]; locale: string }) {
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'new': return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">新規</span>
-            case 'contacted': return <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold">対応中</span>
-            case 'closed': return <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">成約</span>
-            default: return <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded-full text-[10px] font-bold">{status}</span>
-        }
-    }
-
-    const getTypeIcon = (type: string) => {
-        switch (type) {
-            case 'line': return <MessageCircle className="w-4 h-4 text-[#06C755]" />
-            case 'phone': return <Phone className="w-4 h-4 text-blue-500" />
-            case 'form': return <FileText className="w-4 h-4 text-slate-500" />
-            default: return <MessageCircle className="w-4 h-4 text-slate-400" />
-        }
-    }
-
-    if (!leads || leads.length === 0) {
-        return (
-            <div className="p-20 text-center flex flex-col items-center gap-2 text-slate-400">
-                <Users className="w-12 h-12 opacity-20" />
-                <p className="text-sm font-bold">まだリード情報がありません。</p>
-            </div>
-        )
-    }
-
-    return (
-        <div>
-            <div className="p-4 sm:p-6 border-b border-slate-50">
-                <h3 className="text-lg sm:text-xl font-black text-navy-secondary">リード（見込み客）管理</h3>
-                <p className="text-slate-500 text-xs font-bold mt-1">物件に興味を持ったユーザーのアクション履歴</p>
-            </div>
-            {/* Mobile */}
-            <div className="sm:hidden divide-y divide-slate-100">
-                {leads.map((lead) => (
-                    <div key={lead.id} className="p-4 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                                {getTypeIcon(lead.inquiry_type)}
-                                <span className="text-xs font-bold text-slate-600 capitalize">{lead.inquiry_type}</span>
-                            </div>
-                            {getStatusBadge(lead.status)}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Home className="w-3 h-3 text-navy-primary shrink-0" />
-                            {lead.inquiry_type === 'line' ? (
-                                <Link
-                                    href={`/properties/${lead.property_id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs font-bold text-navy-primary truncate hover:underline text-left min-w-0"
-                                >
-                                    {lead.property?.title || '—'}
-                                </Link>
-                            ) : (
-                                <span className="text-xs font-bold text-navy-primary truncate">{lead.property?.title || '—'}</span>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <User className="w-3 h-3 text-slate-400" />
-                            <div>
-                                <span className="text-xs font-bold text-navy-secondary">{lead.profile?.full_name || 'ゲスト'}</span>
-                                {lead.profile?.email && <span className="text-[10px] text-slate-400 ml-1">({lead.profile.email})</span>}
-                            </div>
-                        </div>
-                        <p className="text-[10px] text-slate-400">
-                            {new Date(lead.created_at).toLocaleString('ja-JP', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                    </div>
-                ))}
-            </div>
-            {/* Desktop */}
-            <div className="hidden sm:block overflow-x-auto">
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="bg-slate-50/50 border-b border-slate-100">
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">日時</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">種別</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">問い合わせ物件</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ユーザー</th>
-                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ステータス</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {leads.map((lead) => (
-                            <tr key={lead.id} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-6 py-4 text-xs font-bold text-navy-secondary whitespace-nowrap">
-                                    {new Date(lead.created_at).toLocaleString('ja-JP', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        {getTypeIcon(lead.inquiry_type)}
-                                        <span className="text-xs font-bold text-slate-600 capitalize">{lead.inquiry_type}</span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    {String(lead.inquiry_type).toLowerCase() === 'line' ? (
-                                        <a
-                                            href={`/${locale}/properties/${lead.property_id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
-                                        >
-                                            <Home className="w-3 h-3" />
-                                            {lead.property?.title}
-                                        </a>
-                                    ) : (
-                                        <Link
-                                            href={`/${locale}/properties/${lead.property_id}`}
-                                            className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
-                                        >
-                                            <Home className="w-3 h-3" />
-                                            {lead.property?.title}
-                                        </Link>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
-                                            <User className="w-3.5 h-3.5 text-slate-400" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-navy-secondary">{lead.profile?.full_name || 'ゲスト（未ログイン）'}</p>
-                                            <p className="text-[10px] text-slate-400">{lead.profile?.email || '—'}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">{getStatusBadge(lead.status)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
             </div>
         </div>
     )
