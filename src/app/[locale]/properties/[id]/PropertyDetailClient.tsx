@@ -242,7 +242,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                     <div className="lg:col-span-4 space-y-6">
                         <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
-                            <LineContactButton property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8) }} variant="full" dict={dict} />
+                            <LineContactButton property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }} variant="full" dict={dict} />
                             
                             <div className="mt-8 pt-8 border-t border-slate-100">
                                 <InquiryForm propertyId={id} propertyName={displayTitle} dict={dict} />

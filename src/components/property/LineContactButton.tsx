@@ -94,15 +94,35 @@ export default function LineContactButton({
         data: { user },
       } = await supabase.auth.getUser()
 
-      await supabase.from('inquiry_logs').insert({
+      let agentId = property.agentId
+      if (!agentId) {
+        const { data: row, error: fetchErr } = await supabase
+          .from('properties')
+          .select('user_id')
+          .eq('id', property.id)
+          .maybeSingle()
+        if (fetchErr) {
+          console.error('Failed to resolve listing agent for inquiry log', fetchErr)
+          return
+        }
+        agentId = row?.user_id ?? undefined
+      }
+      if (!agentId) {
+        console.error('Cannot log line inquiry: missing agent_id for property', property.id)
+        return
+      }
+
+      const { error } = await supabase.from('inquiry_logs').insert({
         property_id: property.id,
         user_id: user?.id || null,
+        agent_id: agentId,
         inquiry_type: 'line',
       })
+      if (error) console.error('inquiry_logs insert failed', error)
     } catch (e) {
       console.error('Failed to log line inquiry', e)
     }
-  }, [property.id])
+  }, [property.id, property.agentId])
 
   const handleLineContact = async () => {
     await logInquiry()
