@@ -37,7 +37,7 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
     const currentFilters = useMemo(() => {
         const filters: Record<string, string> = {};
         // Use a stable set of keys for search criteria
-        const essentialKeys = ["region", "area", "price", "type", "property_type", "tags", "bathtub", "pets"];
+        const essentialKeys = ["region", "area", "price", "type", "property_type", "tags", "bathtub", "pets", "sort"];
         essentialKeys.sort().forEach(key => {
             const value = searchParams.get(key);
             if (value && value !== "all") {

@@ -19,6 +19,7 @@ function filtersToCacheKeyParts(f: PropertyListFilters): string[] {
         f.listingType,
         f.bathtubFilter ? '1' : '0',
         f.petsFilter ? '1' : '0',
+        f.sort,
     ]
 }
 

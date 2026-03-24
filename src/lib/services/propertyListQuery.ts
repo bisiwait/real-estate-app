@@ -2,6 +2,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const PROPERTY_LIST_PAGE_SIZE = 9
 
+/** URL: 省略時は newest */
+export type PropertyListSort = 'newest' | 'oldest' | 'price_asc' | 'price_desc'
+
+export function parsePropertyListSort(raw: string | null | undefined): PropertyListSort {
+    if (raw === 'oldest' || raw === 'price_asc' || raw === 'price_desc') return raw
+    return 'newest'
+}
+
 export type PropertyListFilters = {
     selectedCity: string
     selectedArea: string
@@ -11,6 +19,7 @@ export type PropertyListFilters = {
     listingType: string
     bathtubFilter: boolean
     petsFilter: boolean
+    sort: PropertyListSort
 }
 
 function firstParam(v: string | string[] | undefined): string {
@@ -32,6 +41,7 @@ export function parsePropertyListFiltersFromSearchParams(
         listingType: firstParam(sp.type) || 'all',
         bathtubFilter: firstParam(sp.bathtub) === 'true',
         petsFilter: firstParam(sp.pets) === 'true',
+        sort: parsePropertyListSort(firstParam(sp.sort)),
     }
 }
 
@@ -47,6 +57,7 @@ export function parsePropertyListFiltersFromURLSearchParams(searchParams: URLSea
         listingType: searchParams.get('type') || 'all',
         bathtubFilter: searchParams.get('bathtub') === 'true',
         petsFilter: searchParams.get('pets') === 'true',
+        sort: parsePropertyListSort(searchParams.get('sort')),
     }
 }
 
@@ -129,6 +140,32 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
     return query
 }
 
+function applyPropertyListSort<T extends { order: (...args: any[]) => T }>(query: T, filters: PropertyListFilters): T {
+    const { sort, listingType } = filters
+
+    if (sort === 'oldest') {
+        return query.order('created_at', { ascending: true }).order('id', { ascending: true })
+    }
+
+    if (sort === 'price_asc' || sort === 'price_desc') {
+        const ascending = sort === 'price_asc'
+        const o = { ascending }
+        if (listingType === 'rent') {
+            return query.order('rent_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
+        }
+        if (listingType === 'sell' || listingType === 'buy') {
+            return query.order('sale_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
+        }
+        if (listingType === 'presale') {
+            return query.order('sale_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
+        }
+        // すべて: 賃貸・売買混在は list_sort_price（生成カラム）で比較
+        return query.order('list_sort_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
+    }
+
+    return query.order('created_at', { ascending: false }).order('id', { ascending: false })
+}
+
 export async function executePropertyListQuery(
     supabase: SupabaseClient,
     filters: PropertyListFilters,
@@ -137,10 +174,8 @@ export async function executePropertyListQuery(
     const from = page * PROPERTY_LIST_PAGE_SIZE
     const to = from + PROPERTY_LIST_PAGE_SIZE - 1
 
-    const q = buildFilteredPropertiesQuery(supabase, filters)
-        .order('status', { ascending: true })
-        .order('last_confirmed_at', { ascending: false })
-        .range(from, to)
+    const base = buildFilteredPropertiesQuery(supabase, filters)
+    const q = applyPropertyListSort(base, filters).range(from, to)
 
     return q
 }

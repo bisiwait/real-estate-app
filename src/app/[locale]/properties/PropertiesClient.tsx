@@ -12,7 +12,9 @@ import {
     executePropertyListQuery,
     formatPropertyListRows,
     parsePropertyListFiltersFromURLSearchParams,
+    parsePropertyListSort,
     PROPERTY_LIST_PAGE_SIZE,
+    type PropertyListSort,
 } from '@/lib/services/propertyListQuery'
 
 /** DB の tags 配列と一致（messages の property.tags と同じキー） */
@@ -50,8 +52,8 @@ function serializeDraft(d: FilterDraft): string {
     })
 }
 
-/** クエリはドラフトから組み立て（確定時のみ URL に反映） */
-function buildSearchParamsFromDraft(d: FilterDraft): URLSearchParams {
+/** クエリはドラフトから組み立て（確定時のみ URL に反映）。sort は sortSource から引き継ぐ（null でリセット時は引き継がない） */
+function buildSearchParamsFromDraft(d: FilterDraft, sortSource: URLSearchParams | null): URLSearchParams {
     const p = new URLSearchParams()
     p.set('region', d.region || 'Pattaya')
     if (d.area) p.set('area', d.area)
@@ -61,6 +63,12 @@ function buildSearchParamsFromDraft(d: FilterDraft): URLSearchParams {
     if (d.type && d.type !== 'all') p.set('type', d.type)
     if (d.bathtub) p.set('bathtub', 'true')
     if (d.pets) p.set('pets', 'true')
+    if (sortSource) {
+        const s = sortSource.get('sort')
+        if (s === 'oldest' || s === 'price_asc' || s === 'price_desc') {
+            p.set('sort', s)
+        }
+    }
     return p
 }
 
@@ -166,12 +174,13 @@ export default function PropertiesClient({
     const bathtubFilter = searchParams.get('bathtub') === 'true'
     const petsFilter = searchParams.get('pets') === 'true'
     const selectedPropertyType = searchParams.get('property_type') || ''
+    const listSort = parsePropertyListSort(searchParams.get('sort'))
 
     const draftOceanView = draft.tags.includes(OCEAN_VIEW_TAG)
 
     const pushDraftToUrl = useCallback(
         (d: FilterDraft) => {
-            const next = buildSearchParamsFromDraft(d).toString()
+            const next = buildSearchParamsFromDraft(d, searchParams).toString()
             if (next === searchParams.toString()) return
             startFilterNavTransition(() => {
                 router.replace(`${pathname}?${next}`, { scroll: false })
@@ -182,7 +191,7 @@ export default function PropertiesClient({
 
     const applyFilters = useCallback(
         (opts?: { closeDrawer?: boolean }) => {
-            const next = buildSearchParamsFromDraft(draft).toString()
+            const next = buildSearchParamsFromDraft(draft, searchParams).toString()
             if (next === searchParams.toString()) {
                 if (opts?.closeDrawer) setIsFilterDrawerOpen(false)
                 return
@@ -193,6 +202,23 @@ export default function PropertiesClient({
             if (opts?.closeDrawer) setIsFilterDrawerOpen(false)
         },
         [draft, pathname, router, searchParams, startFilterNavTransition]
+    )
+
+    const changeListSort = useCallback(
+        (value: PropertyListSort) => {
+            const p = new URLSearchParams(searchParams.toString())
+            if (value === 'newest') {
+                p.delete('sort')
+            } else {
+                p.set('sort', value)
+            }
+            const qs = p.toString()
+            const url = qs ? `${pathname}?${qs}` : pathname
+            startFilterNavTransition(() => {
+                router.replace(url, { scroll: false })
+            })
+        },
+        [pathname, router, searchParams, startFilterNavTransition]
     )
 
     const fetchProperties = async (isLoadMore = false) => {
@@ -266,7 +292,7 @@ export default function PropertiesClient({
             return
         }
         fetchProperties()
-    }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, listingType, bathtubFilter, petsFilter])
+    }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, listingType, bathtubFilter, petsFilter, listSort])
 
     const filteredProperties = dbProperties
 
@@ -503,7 +529,7 @@ export default function PropertiesClient({
 
             <div className="container mx-auto px-4 -mt-10 pb-20 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-4 mb-8">
+                    <div className="lg:col-span-4 mb-8 flex flex-col gap-4">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                             <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
                                 <button
@@ -549,6 +575,23 @@ export default function PropertiesClient({
                                     </span>
                                 ) : null}
                             </button>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <span className="text-sm font-black text-navy-secondary shrink-0 pt-1 sm:pt-0">
+                                {dict.property.sort_label}
+                            </span>
+                            <select
+                                value={listSort}
+                                onChange={(e) => changeListSort(e.target.value as PropertyListSort)}
+                                className={`${selectFieldClass} w-full sm:w-auto min-h-[48px] sm:min-w-[min(100%,280px)] max-w-md bg-white border-slate-200 shadow-sm`}
+                                aria-label={dict.property.sort_label}
+                            >
+                                <option value="newest">{dict.property.sort_newest}</option>
+                                <option value="oldest">{dict.property.sort_oldest}</option>
+                                <option value="price_asc">{dict.property.sort_price_asc}</option>
+                                <option value="price_desc">{dict.property.sort_price_desc}</option>
+                            </select>
                         </div>
                     </div>
 
@@ -627,7 +670,12 @@ export default function PropertiesClient({
                                     type="button"
                                     onClick={() => {
                                         setDraft({ ...EMPTY_DRAFT })
-                                        pushDraftToUrl(EMPTY_DRAFT)
+                                        startFilterNavTransition(() => {
+                                            router.replace(
+                                                `${pathname}?${buildSearchParamsFromDraft(EMPTY_DRAFT, null).toString()}`,
+                                                { scroll: false }
+                                            )
+                                        })
                                     }}
                                     className="bg-navy-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-navy-secondary transition-all"
                                 >
