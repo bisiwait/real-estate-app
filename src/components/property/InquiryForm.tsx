@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { clsx } from 'clsx'
+import { normalizeStoredLineContact } from '@/lib/line-contact-url'
 
 export type InquiryContactPrefill = {
   full_name: string | null
@@ -115,9 +116,8 @@ export default function InquiryForm({
       }
 
       const lineTag = p.inquiry_line_contact_message_tag ?? 'LINE'
-      const lineSuffix = formData.lineId.trim()
-        ? `\n\n[${lineTag}: ${formData.lineId.trim()}]`
-        : ''
+      const lineVal = normalizeStoredLineContact(formData.lineId)
+      const lineSuffix = lineVal ? `\n\n[${lineTag}: ${lineVal}]` : ''
       const messageBody = `${formData.message.trim()}${lineSuffix}`
 
       const { error: submitError } = await supabase.from('inquiries').insert([

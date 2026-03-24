@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { ChevronLeft, Loader2, User, MessageCircle, Phone, CircleHelp } from "lucide-react";
+import { normalizeStoredLineContact } from "@/lib/line-contact-url";
 
 type InitialProfile = {
     full_name: string;
@@ -35,14 +36,14 @@ export default function ProfileEditClient({
     const snapshot = useMemo(
         () => ({
             full_name: norm(initial.full_name),
-            line_id: norm(initial.line_id),
+            line_id: normalizeStoredLineContact(initial.line_id ?? ""),
             phone: norm(initial.phone),
         }),
         [initial]
     );
 
     const [nickname, setNickname] = useState(snapshot.full_name);
-    const [lineContact, setLineContact] = useState(snapshot.line_id);
+    const [lineContact, setLineContact] = useState(() => normalizeStoredLineContact(initial.line_id ?? ""));
     const [phone, setPhone] = useState(snapshot.phone);
     const [saving, setSaving] = useState(false);
 
@@ -52,7 +53,7 @@ export default function ProfileEditClient({
 
         const next = {
             full_name: norm(nickname),
-            line_id: norm(lineContact),
+            line_id: normalizeStoredLineContact(lineContact),
             phone: norm(phone),
         };
 
