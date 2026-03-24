@@ -82,12 +82,20 @@ export default async function DashboardPage({
     }
 
 
-    // Fetch Leads
-    const { data: leads } = await supabase
+    // Fetch Leads（profiles への FK が user_id / agent_id の2つあるため、問い合わせ元ユーザーは FK 名で明示）
+    const { data: leads, error: leadsError } = await supabase
         .from('inquiry_logs')
-        .select('*, property:properties(title, id), profile:user_id(full_name, email, line_id)')
+        .select(
+            `*,
+            property:properties(title, id),
+            profile:profiles!inquiry_logs_user_id_fkey(full_name, email, line_id)`
+        )
         .eq('agent_id', user.id)
         .order('created_at', { ascending: false })
+
+    if (leadsError) {
+        console.error('Error fetching inquiry_logs (leads):', leadsError)
+    }
 
     const stats = {
         total: properties?.length || 0,

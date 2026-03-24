@@ -20,11 +20,11 @@ export default async function AgentLeadsPage({
 
     const { data: leads, error } = await supabase
         .from('inquiry_logs')
-        .select(`
-            *,
+        .select(
+            `*,
             property:properties(title, id),
-            profile:user_id(full_name, email, line_id)
-        `)
+            profile:profiles!inquiry_logs_user_id_fkey(full_name, email, line_id)`
+        )
         .eq('agent_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -56,6 +56,12 @@ export default async function AgentLeadsPage({
                 </div>
             </div>
 
+            {error ? (
+                <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-sm font-bold text-red-800">
+                    リード一覧の取得に失敗しました。ダッシュボードのコンソールログを確認するか、Supabase の
+                    inquiry_logs と profiles のリレーション設定を確認してください。
+                </div>
+            ) : null}
             <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
                 <LeadsView initialLeads={leads || []} locale={locale} />
             </div>
