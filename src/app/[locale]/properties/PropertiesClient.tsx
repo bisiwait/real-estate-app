@@ -546,30 +546,19 @@ export default function PropertiesClient({
                                 </button>
                             </div>
 
-                            <div className="flex flex-col gap-2 w-full lg:w-auto lg:min-w-[200px]">
-                                <button
-                                    type="button"
-                                    onClick={() => applyFilters()}
-                                    disabled={!draftDirty}
-                                    className="hidden lg:flex w-full items-center justify-center gap-2 rounded-2xl bg-navy-primary text-white px-6 py-3 text-sm font-black shadow-lg shadow-navy-primary/20 hover:bg-navy-secondary transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.99]"
-                                >
-                                    {dict.property.apply_filters_btn}
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setIsFilterDrawerOpen(true)}
-                                    className="flex lg:hidden w-full items-center justify-center gap-3 rounded-2xl border-2 border-navy-primary/15 bg-white px-5 py-4 text-sm font-black text-navy-secondary shadow-md shadow-navy-primary/5 transition-all active:scale-[0.99] hover:border-navy-primary/30"
-                                >
-                                    <SlidersHorizontal className="h-5 w-5 text-navy-primary" />
-                                    <span>{dict.property.open_filters_mobile}</span>
-                                    {activeFilterChipCount > 0 ? (
-                                        <span className="min-w-[1.5rem] rounded-full bg-navy-primary px-2 py-0.5 text-center text-[11px] font-black text-white">
-                                            {activeFilterChipCount}
-                                        </span>
-                                    ) : null}
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsFilterDrawerOpen(true)}
+                                className="flex lg:hidden w-full items-center justify-center gap-3 rounded-2xl border-2 border-navy-primary/15 bg-white px-5 py-4 text-sm font-black text-navy-secondary shadow-md shadow-navy-primary/5 transition-all active:scale-[0.99] hover:border-navy-primary/30"
+                            >
+                                <SlidersHorizontal className="h-5 w-5 text-navy-primary" />
+                                <span>{dict.property.open_filters_mobile}</span>
+                                {activeFilterChipCount > 0 ? (
+                                    <span className="min-w-[1.5rem] rounded-full bg-navy-primary px-2 py-0.5 text-center text-[11px] font-black text-white">
+                                        {activeFilterChipCount}
+                                    </span>
+                                ) : null}
+                            </button>
                         </div>
                     </div>
 
