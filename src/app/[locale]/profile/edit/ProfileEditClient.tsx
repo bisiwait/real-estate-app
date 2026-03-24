@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -9,7 +9,6 @@ import { ChevronLeft, Loader2, User, MessageCircle, Phone, Link2 } from "lucide-
 type InitialProfile = {
     full_name: string;
     line_id: string;
-    line_friend_url: string;
     phone: string;
 };
 
@@ -30,14 +29,13 @@ export default function ProfileEditClient({
     userEmail: string;
     initial: InitialProfile;
 }) {
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
     const l = dict.labels;
 
     const snapshot = useMemo(
         () => ({
             full_name: norm(initial.full_name),
             line_id: norm(initial.line_id),
-            line_friend_url: norm(initial.line_friend_url),
             phone: norm(initial.phone),
         }),
         [initial]
@@ -45,9 +43,36 @@ export default function ProfileEditClient({
 
     const [nickname, setNickname] = useState(snapshot.full_name);
     const [lineId, setLineId] = useState(snapshot.line_id);
-    const [lineFriendUrl, setLineFriendUrl] = useState(snapshot.line_friend_url);
     const [phone, setPhone] = useState(snapshot.phone);
+    /** DB に line_friend_url カラムがあるときのみ true（マイグレーション未適用でもプロフィール編集は動く） */
+    const [friendUrlColumnReady, setFriendUrlColumnReady] = useState(false);
+    const [lineFriendUrl, setLineFriendUrl] = useState("");
+    const [friendUrlBaseline, setFriendUrlBaseline] = useState("");
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("line_friend_url")
+                .eq("id", userId)
+                .maybeSingle();
+            if (cancelled) return;
+            if (error) {
+                console.warn("[profile/edit] line_friend_url を取得できません（マイグレーション未適用の可能性）:", error.message);
+                setFriendUrlColumnReady(false);
+                return;
+            }
+            setFriendUrlColumnReady(true);
+            const v = typeof data?.line_friend_url === "string" ? data.line_friend_url : "";
+            setLineFriendUrl(v);
+            setFriendUrlBaseline(v);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [userId, supabase]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -56,9 +81,9 @@ export default function ProfileEditClient({
         const next = {
             full_name: norm(nickname),
             line_id: norm(lineId),
-            line_friend_url: norm(lineFriendUrl),
             phone: norm(phone),
         };
+        const nextFriendUrl = norm(lineFriendUrl);
 
         const updates: Record<string, string | null> = {};
         if (next.full_name !== snapshot.full_name) {
@@ -67,11 +92,11 @@ export default function ProfileEditClient({
         if (next.line_id !== snapshot.line_id) {
             updates.line_id = next.line_id || null;
         }
-        if (next.line_friend_url !== snapshot.line_friend_url) {
-            updates.line_friend_url = next.line_friend_url || null;
-        }
         if (next.phone !== snapshot.phone) {
             updates.phone = next.phone || null;
+        }
+        if (friendUrlColumnReady && nextFriendUrl !== norm(friendUrlBaseline)) {
+            updates.line_friend_url = nextFriendUrl || null;
         }
 
         if (Object.keys(updates).length === 0) {
@@ -85,6 +110,21 @@ export default function ProfileEditClient({
 
             if (error) {
                 console.error(error);
+                const msg = String(error.message || "");
+                const missingCol =
+                    /line_friend_url|column|schema/i.test(msg) &&
+                    "line_friend_url" in updates;
+                if (missingCol) {
+                    const { line_friend_url: _drop, ...rest } = updates;
+                    const { error: err2 } = await supabase.from("profiles").update(rest).eq("id", userId);
+                    if (err2) {
+                        toast.error(l.profile_update_error);
+                        return;
+                    }
+                    toast.success(l.profile_updated_toast);
+                    window.location.assign(`/${locale}/mypage?tab=profile`);
+                    return;
+                }
                 toast.error(l.profile_update_error);
                 return;
             }
@@ -171,29 +211,33 @@ export default function ProfileEditClient({
                             className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3.5 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-shadow"
                         />
 
-                        <label
-                            htmlFor="line_friend_url"
-                            className="mt-5 flex items-center gap-2 text-sm font-bold text-emerald-900"
-                        >
-                            <Link2 className="h-4 w-4 shrink-0" />
-                            {l.line_friend_url_label}
-                        </label>
-                        <p className="mt-1 text-xs font-medium leading-relaxed text-emerald-800/90">
-                            {l.line_friend_url_help}
-                        </p>
-                        <p className="mt-2 rounded-lg border border-emerald-100/80 bg-white/80 px-3 py-2.5 text-[11px] leading-relaxed text-slate-600">
-                            {l.line_friend_url_guide}
-                        </p>
-                        <input
-                            id="line_friend_url"
-                            type="url"
-                            inputMode="url"
-                            autoComplete="off"
-                            placeholder={l.line_friend_url_placeholder}
-                            value={lineFriendUrl}
-                            onChange={(e) => setLineFriendUrl(e.target.value)}
-                            className="mt-2 w-full rounded-xl border border-emerald-200 bg-white px-4 py-3.5 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-shadow"
-                        />
+                        {friendUrlColumnReady ? (
+                            <>
+                                <label
+                                    htmlFor="line_friend_url"
+                                    className="mt-5 flex items-center gap-2 text-sm font-bold text-emerald-900"
+                                >
+                                    <Link2 className="h-4 w-4 shrink-0" />
+                                    {l.line_friend_url_label}
+                                </label>
+                                <p className="mt-1 text-xs font-medium leading-relaxed text-emerald-800/90">
+                                    {l.line_friend_url_help}
+                                </p>
+                                <p className="mt-2 rounded-lg border border-emerald-100/80 bg-white/80 px-3 py-2.5 text-[11px] leading-relaxed text-slate-600">
+                                    {l.line_friend_url_guide}
+                                </p>
+                                <input
+                                    id="line_friend_url"
+                                    type="url"
+                                    inputMode="url"
+                                    autoComplete="off"
+                                    placeholder={l.line_friend_url_placeholder}
+                                    value={lineFriendUrl}
+                                    onChange={(e) => setLineFriendUrl(e.target.value)}
+                                    className="mt-2 w-full rounded-xl border border-emerald-200 bg-white px-4 py-3.5 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-shadow"
+                                />
+                            </>
+                        ) : null}
                     </div>
 
                     {/* 3. 電話番号 */}
