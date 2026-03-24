@@ -8,6 +8,9 @@ interface MobileSearchBarProps {
     onSearchChange: (value: string) => void
     onFilterClick: () => void
     activeFiltersCount: number
+    /** キーワード欄フォーカス中は URL 同期しない（入力が巻き戻るのを防ぐ） */
+    onSearchFocus?: () => void
+    onSearchBlur?: () => void
 }
 
 export default function MobileSearchBar({
@@ -15,7 +18,9 @@ export default function MobileSearchBar({
     searchQuery,
     onSearchChange,
     onFilterClick,
-    activeFiltersCount
+    activeFiltersCount,
+    onSearchFocus,
+    onSearchBlur,
 }: MobileSearchBarProps) {
     return (
         <div className="flex items-center gap-2 sm:gap-3 w-full animate-in fade-in slide-in-from-top-4 duration-500">
@@ -28,6 +33,8 @@ export default function MobileSearchBar({
                     className="w-full pl-11 pr-4 py-3 sm:py-4 bg-white border border-slate-100 rounded-xl sm:rounded-2xl shadow-sm focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none text-xs sm:text-sm font-bold text-navy-secondary transition-all"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
+                    onFocus={onSearchFocus}
+                    onBlur={onSearchBlur}
                 />
                 {searchQuery && (
                     <button

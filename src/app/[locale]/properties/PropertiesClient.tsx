@@ -92,29 +92,51 @@ export default function PropertiesClient({
     const searchParamsRef = useRef(searchParams)
     const pathnameRef = useRef(pathname)
     const localSearchQueryRef = useRef(localSearchQuery)
+    /** フォーカス中は URL→入力の同期をしない（replace 後の searchQuery で巻き戻るのを防ぐ） */
+    const keywordFieldFocusedRef = useRef(false)
+    const keywordBlurScheduleRef = useRef(0)
     searchParamsRef.current = searchParams
     pathnameRef.current = pathname
     localSearchQueryRef.current = localSearchQuery
 
-    /** ブラウザ戻る・クリア・共有URLなど、URL の q が変わったら入力欄に反映 */
+    const handleKeywordFocus = () => {
+        window.clearTimeout(keywordBlurScheduleRef.current)
+        keywordFieldFocusedRef.current = true
+    }
+
+    const handleKeywordBlur = () => {
+        keywordBlurScheduleRef.current = window.setTimeout(() => {
+            keywordFieldFocusedRef.current = false
+        }, 150)
+    }
+
     useEffect(() => {
+        return () => window.clearTimeout(keywordBlurScheduleRef.current)
+    }, [])
+
+    /** ブラウザ戻る・フィルタ操作・共有URLなど（入力中以外）で URL の q が変わったら反映 */
+    useEffect(() => {
+        if (keywordFieldFocusedRef.current) return
         setLocalSearchQuery(searchQuery)
     }, [searchQuery])
 
     /**
-     * キーワードは入力のたびに URL を書き換えない（巻き戻り・過剰フェッチの原因になる）。
-     * ローカル state で即時表示し、少し止めてから URL を replace する。
+     * キーワードはローカルで即時表示し、入力が止まってから URL を replace。
+     * q は trim せずそのまま保存し、同期 effect との食い違いで文字が消えるのを防ぐ。
      */
     useEffect(() => {
         const id = window.setTimeout(() => {
-            const next = localSearchQueryRef.current.trim()
+            const raw = localSearchQueryRef.current
             const params = new URLSearchParams(searchParamsRef.current.toString())
-            const cur = (params.get('q') || '').trim()
-            if (next === cur) return
-            if (next) params.set('q', next)
-            else params.delete('q')
+            const cur = params.get('q') ?? ''
+            const nextEmpty = raw.trim() === ''
+            const curEmpty = cur.trim() === ''
+            if (nextEmpty && curEmpty) return
+            if (!nextEmpty && raw === cur) return
+            if (nextEmpty) params.delete('q')
+            else params.set('q', raw)
             router.replace(`${pathnameRef.current}?${params.toString()}`, { scroll: false })
-        }, 400)
+        }, 450)
         return () => window.clearTimeout(id)
     }, [localSearchQuery, router])
 
@@ -232,6 +254,8 @@ export default function PropertiesClient({
                         className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none"
                         value={localSearchQuery}
                         onChange={(e) => setLocalSearchQuery(e.target.value)}
+                        onFocus={handleKeywordFocus}
+                        onBlur={handleKeywordBlur}
                     />
                 </div>
             </div>
@@ -451,6 +475,8 @@ export default function PropertiesClient({
                                     dict={dict}
                                     searchQuery={localSearchQuery}
                                     onSearchChange={(val: string) => setLocalSearchQuery(val)}
+                                    onSearchFocus={handleKeywordFocus}
+                                    onSearchBlur={handleKeywordBlur}
                                     onFilterClick={() => setIsFilterDrawerOpen(true)}
                                     activeFiltersCount={[
                                         selectedArea,
