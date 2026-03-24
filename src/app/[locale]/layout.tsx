@@ -79,7 +79,7 @@ export default async function RootLayout({
               </div>
               <nav className="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-4">
                 <Link href={`/${locale}/about`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.about || 'About'}</Link>
-                <Link href={`/${locale}/terms`} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.terms || (dict.common as any)?.terms_of_service || 'Terms'}</Link>
+                <Link href={`/${locale}/terms`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.terms || (dict.common as any)?.terms_of_service || 'Terms'}</Link>
                 <Link href={`/${locale}/pricing`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">
                   {(dict.labels as any)?.footer_want_to_list || 'Want to list your property'}
                 </Link>
