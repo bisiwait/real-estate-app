@@ -636,11 +636,6 @@ export default function PropertiesClient({
                                         </option>
                                     </select>
                                 </div>
-                                {!priceSortEnabled ? (
-                                    <p className="w-full text-[11px] font-bold text-slate-400 leading-snug max-w-md text-right sm:text-left lg:text-right">
-                                        {dict.property.sort_price_unavailable_on_all}
-                                    </p>
-                                ) : null}
                             </div>
                         </div>
                     </div>

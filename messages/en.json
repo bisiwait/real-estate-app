@@ -287,7 +287,6 @@
         "sort_oldest": "Oldest",
         "sort_price_asc": "Price: Low to High",
         "sort_price_desc": "Price: High to Low",
-        "sort_price_unavailable_on_all": "Price sorting is only available on the Rent or Sale tabs (monthly rent and sale prices can’t be mixed in one ordered list).",
         "apply_filters_footer_hint": "Tap “Show results” to update the list with your filters.",
         "no_results_title": "No properties found",
         "no_results_desc": "Please try different filters or reset them.",
