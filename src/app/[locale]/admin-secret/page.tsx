@@ -2,8 +2,17 @@ import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin'
 import { createClient } from '@/lib/supabase/server'
 import AdminDashboardClient from '@/components/admin/AdminDashboardClient'
+import {
+    fetchAdminMailInquiries,
+    fetchAdminLineLeads,
+} from '@/lib/supabase/fetch-admin-inquiries'
 
-export default async function AdminSecretDashboard() {
+export default async function AdminSecretDashboard({
+    params,
+}: {
+    params: Promise<{ locale: string }>
+}) {
+    const { locale } = await params
     const isUserAdmin = await isAdmin()
 
     if (!isUserAdmin) {
@@ -11,6 +20,11 @@ export default async function AdminSecretDashboard() {
     }
 
     const supabase = await createClient()
+
+    const [mailInquiries, lineLeads] = await Promise.all([
+        fetchAdminMailInquiries(supabase),
+        fetchAdminLineLeads(supabase),
+    ])
 
     const { data: properties } = await supabase.from('properties').select('status, is_approved')
     const { data: contacts } = await supabase.from('inquiries').select('id, created_at')
@@ -31,6 +45,9 @@ export default async function AdminSecretDashboard() {
                     activeCount={activeCount}
                     recentInquiries={recentInquiries}
                     newFeedbackCount={newFeedbackCount}
+                    locale={locale}
+                    mailInquiries={mailInquiries}
+                    lineLeads={lineLeads}
                 />
             </div>
         </div>

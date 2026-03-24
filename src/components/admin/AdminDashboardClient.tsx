@@ -6,6 +6,7 @@ import {
     Home,
     Users,
     MessageSquare,
+    Mail,
     TrendingUp,
     CheckCircle,
     Clock,
@@ -21,8 +22,10 @@ import AdminUserManagement from './UserManagement'
 import AdminProjectManagement from './ProjectManagement'
 import AdminDeveloperManagement from './DeveloperManagement'
 import AdminFeedbackManagement from './FeedbackManagement'
+import AdminInquiriesPanel from './AdminInquiriesPanel'
+import type { AdminMailInquiryRow, AdminLineLeadRow } from '@/lib/supabase/fetch-admin-inquiries'
 
-type TabId = 'overview' | 'projects' | 'developers' | 'properties' | 'users' | 'feedback'
+type TabId = 'overview' | 'projects' | 'developers' | 'properties' | 'users' | 'feedback' | 'inquiries'
 
 interface Props {
     pendingCount: number
@@ -30,6 +33,9 @@ interface Props {
     recentInquiries: number
     newFeedbackCount: number
     initialTab?: TabId
+    locale: string
+    mailInquiries: AdminMailInquiryRow[]
+    lineLeads: AdminLineLeadRow[]
 }
 
 export default function AdminDashboardClient({
@@ -38,14 +44,17 @@ export default function AdminDashboardClient({
     recentInquiries,
     newFeedbackCount,
     initialTab = 'overview',
+    locale,
+    mailInquiries,
+    lineLeads,
 }: Props) {
     const [tab, setTab] = useState<TabId>(initialTab)
 
     const tabClass = (id: TabId) =>
-        `flex items-center justify-center space-x-1.5 py-2.5 sm:py-3.5 rounded-xl font-black transition-all cursor-pointer ${
+        `flex min-h-12 flex-1 basis-[calc(50%-4px)] items-center justify-center space-x-1.5 rounded-xl py-2.5 font-black transition-all cursor-pointer sm:min-h-0 sm:basis-auto sm:flex-none sm:px-3 sm:py-3.5 md:flex-1 ${
             tab === id
                 ? 'bg-navy-primary text-white shadow-lg'
-                : 'text-slate-400 hover:text-navy-secondary hover:bg-slate-50'
+                : 'text-slate-400 hover:bg-slate-50 hover:text-navy-secondary'
         }`
 
     return (
@@ -76,7 +85,7 @@ export default function AdminDashboardClient({
             </div>
 
             {/* Tab Navigation */}
-            <div className="bg-white p-1 rounded-2xl shadow-md border border-slate-100 grid grid-cols-3 sm:flex sm:flex-nowrap gap-1 mb-6 sm:mb-10">
+            <div className="mb-6 flex flex-wrap gap-1 rounded-2xl border border-slate-100 bg-white p-1 shadow-md sm:mb-10">
                 <button onClick={() => setTab('overview')} className={`${tabClass('overview')} sm:flex-1 h-12 sm:h-auto`}>
                     <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">概要</span>
@@ -101,6 +110,10 @@ export default function AdminDashboardClient({
                 <button onClick={() => setTab('users')} className={`${tabClass('users')} sm:flex-1 h-12 sm:h-auto`}>
                     <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">会員</span>
+                </button>
+                <button onClick={() => setTab('inquiries')} className={`${tabClass('inquiries')} sm:flex-1 h-12 sm:h-auto`}>
+                    <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-[9px] sm:text-sm whitespace-nowrap">問い合わせ</span>
                 </button>
                 <button onClick={() => setTab('feedback')} className={`${tabClass('feedback')} sm:flex-1 h-12 sm:h-auto`}>
                     <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -181,6 +194,13 @@ export default function AdminDashboardClient({
                 {tab === 'developers' && <AdminDeveloperManagement />}
                 {tab === 'properties' && <AdminPropertyManagement />}
                 {tab === 'users' && <AdminUserManagement />}
+                {tab === 'inquiries' && (
+                    <AdminInquiriesPanel
+                        locale={locale}
+                        mailInquiries={mailInquiries}
+                        lineLeads={lineLeads}
+                    />
+                )}
                 {tab === 'feedback' && <AdminFeedbackManagement />}
             </div>
         </>
