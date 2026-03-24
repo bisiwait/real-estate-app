@@ -221,6 +221,21 @@ export default function PropertiesClient({
         [pathname, router, searchParams, startFilterNavTransition]
     )
 
+    /** 賃買種別タブは一覧を即反映（現在のドラフトを URL に載せて type / price を更新） */
+    const applyListingTypeTab = useCallback(
+        (type: FilterDraft['type']) => {
+            const next = { ...draft, type, price: '' }
+            setDraft(next)
+            const qs = buildSearchParamsFromDraft(next, searchParams).toString()
+            if (qs !== searchParams.toString()) {
+                startFilterNavTransition(() => {
+                    router.replace(`${pathname}?${qs}`, { scroll: false })
+                })
+            }
+        },
+        [draft, pathname, router, searchParams, startFilterNavTransition]
+    )
+
     const fetchProperties = async (isLoadMore = false) => {
         const myGen = ++fetchGenRef.current
 
@@ -534,28 +549,28 @@ export default function PropertiesClient({
                             <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
                                 <button
                                     type="button"
-                                    onClick={() => setDraft((d) => ({ ...d, type: 'all', price: '' }))}
+                                    onClick={() => applyListingTypeTab('all')}
                                     className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.all}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setDraft((d) => ({ ...d, type: 'rent', price: '' }))}
+                                    onClick={() => applyListingTypeTab('rent')}
                                     className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.rent}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setDraft((d) => ({ ...d, type: 'sell', price: '' }))}
+                                    onClick={() => applyListingTypeTab('sell')}
                                     className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.sell}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setDraft((d) => ({ ...d, type: 'presale', price: '' }))}
+                                    onClick={() => applyListingTypeTab('presale')}
                                     className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'presale' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.presale}
@@ -578,10 +593,12 @@ export default function PropertiesClient({
                                 </button>
 
                                 <div className="flex items-center gap-2.5 w-full sm:w-auto sm:min-w-[min(100%,280px)] lg:min-w-[240px] justify-end sm:justify-start">
-                                    <ArrowDownWideNarrow
-                                        className="h-5 w-5 shrink-0 text-navy-primary"
+                                    <span
+                                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-navy-primary shadow-md shadow-navy-primary/25"
                                         aria-hidden
-                                    />
+                                    >
+                                        <ArrowDownWideNarrow className="h-5 w-5 text-white" />
+                                    </span>
                                     <select
                                         value={listSort}
                                         onChange={(e) => changeListSort(e.target.value as PropertyListSort)}
