@@ -404,7 +404,7 @@
         "quick_contact": "ติดต่อด่วน",
         "line_help_text": "ติดต่อเจ้าหน้าที่โดยตรงผ่าน LINE เพื่อการตอบกลับที่รวดเร็ว",
         "line_modal_title": "เพิ่มเพื่อน LINE อย่างเป็นทางการ",
-        "line_modal_scan_hint": "สแกนด้วยกล้องมือถือเพื่อปรึกษาได้ทันที",
+        "line_modal_scan_hint": "สแกนด้วยกล้องมือถือเพื่อเปิด LINE พร้อมข้อความสอบถามที่กรอกไว้แล้ว",
         "line_modal_id_label": "LINE ID (สำหรับค้นหา)",
         "line_modal_close_aria": "ปิด"
     },

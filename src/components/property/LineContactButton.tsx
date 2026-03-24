@@ -44,8 +44,10 @@ export default function LineContactButton({
   const pr = dict.property ?? {}
   const [modalOpen, setModalOpen] = useState(false)
 
-  const friendUrl = `https://line.me/R/ti/p/${encodeURIComponent(LINE_ID)}`
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=2&data=${encodeURIComponent(friendUrl)}`
+  const rawMsg = pr.inquiry_default_message ?? ''
+  const inquiryMessage = formatMessage(rawMsg, property.title)
+  const lineMessageUrl = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(inquiryMessage)}`
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(lineMessageUrl)}`
 
   useEffect(() => {
     if (!modalOpen) return
@@ -81,17 +83,12 @@ export default function LineContactButton({
   const handleLineContact = async () => {
     await logInquiry()
 
-    const rawMsg = pr.inquiry_default_message ?? ''
-    const message = formatMessage(rawMsg, property.title)
-    const encodedMessage = encodeURIComponent(message)
-    const lineUrl = `https://line.me/R/oaMessage/${LINE_ID}/?${encodedMessage}`
-
     if (isDesktopViewport()) {
       setModalOpen(true)
       return
     }
 
-    window.location.href = lineUrl
+    window.location.href = lineMessageUrl
   }
 
   const baseClasses =

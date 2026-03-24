@@ -431,7 +431,7 @@
         "quick_contact": "クイックコンタクト",
         "line_help_text": "LINE公式アカウントから迅速に対応いたします。",
         "line_modal_title": "公式LINE 友だち追加",
-        "line_modal_scan_hint": "スマホのカメラでスキャンして、すぐにご相談いただけます",
+        "line_modal_scan_hint": "スマホのカメラでスキャンすると、お問い合わせ文が入った状態でLINEのトークが開きます。",
         "line_modal_id_label": "LINE ID（検索用）",
         "line_modal_close_aria": "閉じる"
     },
