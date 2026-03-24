@@ -7,6 +7,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ChevronLeft, Loader2, X } from "lucide-react";
 import LineContactButton from "@/components/property/LineContactButton";
+import ContactAuthRequiredModal from "@/components/property/ContactAuthRequiredModal";
+import { useAuth } from "@/contexts/AuthContext";
 import {
     COMPARE_FACILITY_ROWS,
     facilityMatches,
@@ -79,11 +81,15 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const supabase = createClient();
+    const { user } = useAuth();
 
     const [ids, setIds] = useState<string[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
+    const [contactAuthOpen, setContactAuthOpen] = useState(false);
+
+    const returnPath = `${pathname || `/${locale}/compare`}${searchParams?.toString() ? `?${searchParams}` : ""}`;
 
     const syncStorage = useCallback((next: string[]) => {
         try {
@@ -261,6 +267,13 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
+            <ContactAuthRequiredModal
+                open={contactAuthOpen}
+                onClose={() => setContactAuthOpen(false)}
+                locale={locale}
+                dictProperty={dict.property || {}}
+                returnPath={returnPath}
+            />
             <div className="bg-navy-secondary text-white pt-8 pb-10">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <Link
@@ -512,6 +525,8 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                                             refId: p.reference_id || p.id?.slice(0, 8),
                                                             agentId: p.user_id,
                                                         }}
+                                                        isLoggedIn={!!user}
+                                                        onRequireAuth={() => setContactAuthOpen(true)}
                                                     />
                                                 </td>
                                             );

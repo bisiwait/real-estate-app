@@ -1,5 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
+import { Loader2 } from 'lucide-react'
 import { createStaticClient } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 
@@ -103,5 +105,15 @@ export default async function Page({
         notFound()
     }
 
-    return <PropertyDetailClient initialProperty={property} />
+    return (
+        <Suspense
+            fallback={
+                <div className="flex min-h-[50vh] items-center justify-center bg-slate-50">
+                    <Loader2 className="h-10 w-10 animate-spin text-navy-primary" />
+                </div>
+            }
+        >
+            <PropertyDetailClient initialProperty={property} />
+        </Suspense>
+    )
 }

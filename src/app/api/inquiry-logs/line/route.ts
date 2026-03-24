@@ -30,6 +30,10 @@ export async function POST(req: Request) {
       data: { user },
     } = await supabaseAuth.auth.getUser()
 
+    if (!user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const admin = await createAdminClient()
 
     const { data: prop, error: propErr } = await admin
@@ -46,19 +50,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 })
     }
 
-    let user_id: string | null = null
-    if (user?.id) {
-      const { data: prof } = await admin
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
-      if (prof) user_id = user.id
+    const { data: prof } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (!prof) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
     }
 
     const { error: insErr } = await admin.from('inquiry_logs').insert({
       property_id,
-      user_id,
+      user_id: user.id,
       agent_id: prop.user_id,
       inquiry_type: 'line',
       status: 'pending',

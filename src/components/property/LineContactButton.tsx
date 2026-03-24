@@ -36,6 +36,9 @@ interface LineContactButtonProps {
   }
   className?: string
   variant?: 'full' | 'icon'
+  /** false のとき LINE 遷移せずログイン誘導 */
+  isLoggedIn?: boolean
+  onRequireAuth?: () => void
 }
 
 function formatMessage(template: string, propertyName: string) {
@@ -62,6 +65,8 @@ export default function LineContactButton({
   dict,
   className = '',
   variant = 'full',
+  isLoggedIn = true,
+  onRequireAuth,
 }: LineContactButtonProps) {
   const params = useParams()
   const locale = (params?.locale as string) || 'jp'
@@ -111,6 +116,11 @@ export default function LineContactButton({
   }, [property.id])
 
   const handleLineContact = async () => {
+    if (!isLoggedIn) {
+      onRequireAuth?.()
+      return
+    }
+
     await logInquiry()
 
     if (shouldShowLineQrModal()) {

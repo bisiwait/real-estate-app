@@ -1,7 +1,7 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
-import { useParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useParams, usePathname, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useMemo } from 'react'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { useAuth } from '@/contexts/AuthContext'
 import dynamic from 'next/dynamic'
@@ -16,6 +16,7 @@ import PropertyDescription from '@/components/property/PropertyDescription'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import LineContactButton from '@/components/property/LineContactButton'
+import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -61,9 +62,14 @@ interface PropertyDetailClientProps {
 
 export default function PropertyDetailClient({ initialProperty }: PropertyDetailClientProps) {
     const params = useParams()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
     const id = params?.id as string
     const locale = (params?.locale as string) || 'jp'
     const { user } = useAuth()
+    const [contactAuthOpen, setContactAuthOpen] = useState(false)
+
+    const returnPath = `${pathname || `/${locale}/properties/${id}`}${searchParams?.toString() ? `?${searchParams}` : ''}`
     
     // サーバーから受け取った初期データを使用
     const [property, setProperty] = useState<any>(initialProperty)
@@ -75,6 +81,16 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     const [profile, setProfile] = useState<any>(null)
 
     const isPremium = profile?.plan === 'premium' || profile?.plan_type === 'premium'
+
+    const contactPrefill = useMemo(() => {
+        if (!user) return null
+        return {
+            full_name: profile?.full_name ?? null,
+            email: user.email ?? profile?.email ?? null,
+            phone: profile?.phone ?? null,
+            line_id: profile?.line_id ?? null,
+        }
+    }, [user, profile])
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -90,10 +106,16 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 setAgent(aData)
             }
 
-            // ログインユーザーのプラン確認
+            // ログインユーザーのプラン・問い合わせ用プロフィール
             if (user) {
-                const { data: pData } = await supabase.from('profiles').select('plan, plan_type').eq('id', user.id).single()
+                const { data: pData } = await supabase
+                    .from('profiles')
+                    .select('plan, plan_type, full_name, phone, line_id, email')
+                    .eq('id', user.id)
+                    .single()
                 if (pData) setProfile(pData)
+            } else {
+                setProfile(null)
             }
 
             setLoading(false)
@@ -166,6 +188,13 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20 font-sans tracking-normal">
+            <ContactAuthRequiredModal
+                open={contactAuthOpen}
+                onClose={() => setContactAuthOpen(false)}
+                locale={locale}
+                dictProperty={dict.property || {}}
+                returnPath={returnPath}
+            />
             <BreadcrumbUpdater label={displayTitle} />
             <div className="container mx-auto max-w-7xl px-4 pt-6 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -242,10 +271,23 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                     <div className="lg:col-span-4 space-y-6">
                         <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
-                            <LineContactButton property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }} variant="full" dict={dict} />
-                            
-                            <div className="mt-8 pt-8 border-t border-slate-100">
-                                <InquiryForm propertyId={id} propertyName={displayTitle} dict={dict} />
+                            <LineContactButton
+                                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }}
+                                variant="full"
+                                dict={dict}
+                                isLoggedIn={!!user}
+                                onRequireAuth={() => setContactAuthOpen(true)}
+                            />
+
+                            <div className="mt-8 border-t border-slate-100 pt-8">
+                                <InquiryForm
+                                    propertyId={id}
+                                    propertyName={displayTitle}
+                                    dict={dict}
+                                    isLoggedIn={!!user}
+                                    onRequireAuth={() => setContactAuthOpen(true)}
+                                    contactPrefill={contactPrefill}
+                                />
                             </div>
                         </div>
                     </div>
@@ -256,7 +298,13 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                     <AgentOtherProperties agentId={property.user_id} currentPropertyId={property.id} agentName={agent?.full_name} locale={locale} dict={dict} />
                 </div>
             </div>
-            <StickyContactBar property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }} phoneNumber={agent?.phone} dict={dict} />
+            <StickyContactBar
+                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }}
+                phoneNumber={agent?.phone}
+                dict={dict}
+                isLoggedIn={!!user}
+                onRequireAuth={() => setContactAuthOpen(true)}
+            />
         </div>
     )
 }

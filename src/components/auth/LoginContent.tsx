@@ -7,6 +7,7 @@ import { Mail, Lock, Loader2, ArrowRight, Chrome, ShieldCheck, Heart, Search, Ch
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
+import { safeNextPath } from '@/lib/auth/safe-next-path'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface LoginContentProps {
@@ -126,7 +127,14 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     } else if (isAgent) {
                         router.push(`/${locale}/dashboard`)
                     } else {
-                        router.push(`/${locale}/mypage`)
+                        const returnTo = safeNextPath(
+                            searchParams.get('redirect') || searchParams.get('next')
+                        )
+                        if (returnTo) {
+                            router.push(returnTo)
+                        } else {
+                            router.push(`/${locale}/mypage`)
+                        }
                     }
                 }
             }

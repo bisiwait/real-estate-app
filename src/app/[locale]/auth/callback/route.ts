@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { syncAgentProfileFromAuthUser } from '@/lib/auth/syncAgentProfile'
+import { safeNextPath } from '@/lib/auth/safe-next-path'
 
 const LOCALES = ['jp', 'en', 'th'] as const
 
@@ -10,14 +11,9 @@ function localeFromPath(pathname: string): string {
 }
 
 function safeNext(nextParam: string | null, locale: string): string {
-    if (!nextParam || !nextParam.startsWith('/') || nextParam.includes('//')) {
-        return `/${locale}/dashboard`
-    }
-    const head = nextParam.split('/').filter(Boolean)[0]
-    if (!LOCALES.includes(head as (typeof LOCALES)[number])) {
-        return `/${locale}/dashboard`
-    }
-    return nextParam
+    const p = safeNextPath(nextParam)
+    if (p) return p
+    return `/${locale}/dashboard`
 }
 
 export async function GET(request: Request) {

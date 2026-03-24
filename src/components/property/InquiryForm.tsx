@@ -2,207 +2,309 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { clsx } from 'clsx'
 
-interface InquiryFormProps {
-    propertyId: string
-    propertyName: string
-    dict: any
+export type InquiryContactPrefill = {
+  full_name: string | null
+  email: string | null
+  phone: string | null
+  line_id: string | null
 }
 
-export default function InquiryForm({ propertyId, propertyName, dict }: InquiryFormProps) {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        message: dict.property.inquiry_default_message?.replace('{propertyName}', propertyName) || `Regarding "${propertyName}", please give me more details.`
-    })
-    const [loading, setLoading] = useState(false)
-    const [success, setSuccess] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isOpen, setIsOpen] = useState(false)
-    const [isDesktop, setIsDesktop] = useState(false)
+interface InquiryFormProps {
+  propertyId: string
+  propertyName: string
+  dict: any
+  isLoggedIn: boolean
+  onRequireAuth?: () => void
+  contactPrefill?: InquiryContactPrefill | null
+}
 
-    useEffect(() => {
-        setIsDesktop(window.innerWidth >= 1024)
-        const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
-        window.addEventListener('resize', handleResize)
-        
-        const handleOpenEvent = () => setIsOpen(true)
-        window.addEventListener('open-inquiry-form', handleOpenEvent)
+export default function InquiryForm({
+  propertyId,
+  propertyName,
+  dict,
+  isLoggedIn,
+  onRequireAuth,
+  contactPrefill,
+}: InquiryFormProps) {
+  const defaultMessage =
+    dict.property.inquiry_default_message?.replace('{propertyName}', propertyName) ||
+    `Regarding "${propertyName}", please give me more details.`
 
-        return () => {
-            window.removeEventListener('resize', handleResize)
-            window.removeEventListener('open-inquiry-form', handleOpenEvent)
-        }
-    }, [])
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    lineId: '',
+    message: defaultMessage,
+  })
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
 
-    const supabase = createClient()
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 1024)
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024)
+    window.addEventListener('resize', handleResize)
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleOpenEvent = () => {
+      if (!isLoggedIn) {
+        onRequireAuth?.()
+        return
+      }
+      setIsOpen(true)
+    }
+    window.addEventListener('open-inquiry-form', handleOpenEvent)
 
-        // Simple client-side rate limit check (1 inquiry per 30 seconds)
-        const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
-        if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
-            setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
-            return
-        }
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('open-inquiry-form', handleOpenEvent)
+    }
+  }, [isLoggedIn, onRequireAuth])
 
-        setLoading(true)
-        setError(null)
+  useEffect(() => {
+    if (!isLoggedIn || !contactPrefill) return
+    setFormData((prev) => ({
+      ...prev,
+      name: contactPrefill.full_name ?? prev.name,
+      email: contactPrefill.email ?? prev.email,
+      phone: contactPrefill.phone ?? prev.phone,
+      lineId: contactPrefill.line_id ?? prev.lineId,
+    }))
+  }, [isLoggedIn, contactPrefill])
 
-        try {
-            // Check if propertyId is a valid UUID
-            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyId)
+  const supabase = createClient()
+  const p = dict.property ?? {}
 
-            if (!isUuid) {
-                console.warn('Mock property detected (non-UUID ID). This inquiry will not be saved to the database.')
-                await new Promise(resolve => setTimeout(resolve, 1000))
-                localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
-                setSuccess(true)
-                return
-            }
+  const innerVisible = !isLoggedIn || isOpen || isDesktop
 
-            const { error: submitError } = await supabase
-                .from('inquiries')
-                .insert([
-                    {
-                        property_id: propertyId,
-                        inquirer_name: formData.name,
-                        inquirer_email: formData.email,
-                        inquirer_phone: formData.phone,
-                        message: formData.message
-                    }
-                ])
-
-            if (submitError) throw submitError
-
-            localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
-            setSuccess(true)
-        } catch (err: any) {
-            console.error('Inquiry submission error:', err)
-            setError(getErrorMessage(err))
-        } finally {
-            setLoading(false)
-        }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isLoggedIn) {
+      onRequireAuth?.()
+      return
     }
 
-    if (success) {
-        return (
-            <div className="bg-emerald-50 rounded-3xl p-10 text-center border border-emerald-100 animate-in fade-in zoom-in duration-500">
-                <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                    <CheckCircle className="w-10 h-10 text-emerald-500" />
-                </div>
-                <h3 className="text-lg font-normal text-navy-secondary mb-3">{dict.property.inquiry_success_title}</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                    {dict.property.inquiry_success_desc}
-                </p>
-            </div>
-        )
+    const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
+    if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
+      setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
+      return
     }
 
+    setLoading(true)
+    setError(null)
+
+    try {
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyId)
+
+      if (!isUuid) {
+        console.warn('Mock property detected (non-UUID ID). This inquiry will not be saved to the database.')
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
+        setSuccess(true)
+        return
+      }
+
+      const lineSuffix = formData.lineId.trim()
+        ? `\n\n[LINE ID: ${formData.lineId.trim()}]`
+        : ''
+      const messageBody = `${formData.message.trim()}${lineSuffix}`
+
+      const { error: submitError } = await supabase.from('inquiries').insert([
+        {
+          property_id: propertyId,
+          inquirer_name: formData.name,
+          inquirer_email: formData.email,
+          inquirer_phone: formData.phone || null,
+          message: messageBody,
+        },
+      ])
+
+      if (submitError) throw submitError
+
+      localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
+      setSuccess(true)
+    } catch (err: unknown) {
+      console.error('Inquiry submission error:', err)
+      setError(getErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success) {
     return (
-        <div id="inquiry-form-section" className="relative overflow-visible scroll-mt-24">
+      <div className="animate-in fade-in zoom-in duration-500 rounded-3xl border border-emerald-100 bg-emerald-50 p-10 text-center">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
+          <CheckCircle className="h-10 w-10 text-emerald-500" />
+        </div>
+        <h3 className="mb-3 text-lg font-normal text-navy-secondary">{dict.property.inquiry_success_title}</h3>
+        <p className="text-sm leading-relaxed text-slate-600">{dict.property.inquiry_success_desc}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div id="inquiry-form-section" className="relative overflow-visible scroll-mt-24">
+      <button
+        type="button"
+        onClick={() => {
+          if (!isLoggedIn) {
+            onRequireAuth?.()
+            return
+          }
+          if (!isDesktop) setIsOpen(!isOpen)
+        }}
+        className="flex w-full items-center justify-between lg:cursor-default"
+        disabled={isDesktop}
+      >
+        <h3 className="flex items-center text-base font-normal text-navy-secondary">
+          <Send className="mr-3 h-5 w-5 text-navy-primary" />
+          {dict.property.inquiry_title}
+          {!isLoggedIn ? (
+            <Lock className="ml-2 h-4 w-4 text-amber-600" aria-hidden />
+          ) : null}
+        </h3>
+        <div className="rounded-lg bg-slate-50 p-1 text-navy-primary lg:hidden">
+          {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </div>
+      </button>
+
+      <div
+        className={clsx(
+          'px-0.5 transition-all duration-500 ease-in-out lg:max-h-none lg:opacity-100 lg:overflow-visible',
+          innerVisible
+            ? 'mt-6 max-h-[2400px] overflow-visible opacity-100'
+            : 'max-h-0 overflow-hidden opacity-0 lg:max-h-none lg:overflow-visible lg:opacity-100'
+        )}
+      >
+        {!isLoggedIn ? (
+          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/90 to-white p-6 text-center shadow-sm">
+            <p className="text-sm font-black text-navy-secondary">{p.contact_gate_title}</p>
+            <p className="mt-3 whitespace-pre-line text-left text-xs font-medium leading-relaxed text-slate-600">
+              {p.contact_auth_modal_body}
+            </p>
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between lg:cursor-default"
-                disabled={isDesktop}
+              type="button"
+              onClick={() => onRequireAuth?.()}
+              className="mt-5 w-full min-h-11 rounded-xl bg-navy-primary py-3 text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
             >
-                <h3 className="text-base font-normal text-navy-secondary flex items-center">
-                    <Send className="w-5 h-5 mr-3 text-navy-primary" />
-                    {dict.property.inquiry_title}
-                </h3>
-                <div className="lg:hidden text-navy-primary bg-slate-50 p-1 rounded-lg">
-                    {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </div>
+              {p.contact_gate_cta}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-[10px] font-medium text-slate-500">{p.contact_prefill_note}</p>
+
+            <div>
+              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+                {dict.labels.name_label} ({dict.common.required})
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder={dict.labels.name_placeholder}
+                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                onInvalid={(e) =>
+                  (e.target as HTMLInputElement).setCustomValidity(dict.property.error_name_required)
+                }
+                onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+                {dict.labels.email_label} ({dict.common.required})
+              </label>
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="example@mail.com"
+                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                onInvalid={(e) =>
+                  (e.target as HTMLInputElement).setCustomValidity(dict.property.error_email_invalid)
+                }
+                onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+                {dict.labels.phone_label}
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+66 00 000 0000"
+                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+                {p.inquiry_line_id_label}
+              </label>
+              <input
+                type="text"
+                value={formData.lineId}
+                onChange={(e) => setFormData({ ...formData, lineId: e.target.value })}
+                placeholder="@example"
+                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+              />
+              <p className="mt-1 text-[10px] text-slate-400">{p.inquiry_line_id_hint}</p>
+            </div>
+
+            <div>
+              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+                {dict.labels.inquiry_content_label}
+              </label>
+              <textarea
+                rows={4}
+                required
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="w-full resize-none rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                onInvalid={(e) =>
+                  (e.target as HTMLTextAreaElement).setCustomValidity(dict.property.error_message_required)
+                }
+                onInput={(e) => (e.target as HTMLTextAreaElement).setCustomValidity('')}
+              />
+            </div>
+
+            {error && <div className="px-1 text-xs font-normal text-red-500">{error}</div>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-4 flex w-full items-center justify-center space-x-2 rounded-xl bg-navy-primary py-4 font-normal text-white shadow-lg transition-all hover:bg-navy-secondary hover:shadow-xl"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <span>{dict.property.submit_inquiry_btn}</span>
+                  <Send className="ml-1 h-4 w-4" />
+                </>
+              )}
             </button>
 
-            <div className={clsx(
-                "transition-all duration-500 ease-in-out lg:opacity-100 lg:max-h-none lg:mt-6 px-0.5",
-                isOpen
-                    ? "mt-6 max-h-[2000px] opacity-100 overflow-visible"
-                    : "max-h-0 opacity-0 lg:max-h-none lg:opacity-100 overflow-hidden lg:overflow-visible"
-            )}>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.name_label} ({dict.common.required})</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder={dict.labels.name_placeholder}
-                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity(dict.property.error_name_required)}
-                            onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.email_label} ({dict.common.required})</label>
-                        <input
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="example@mail.com"
-                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                            onInvalid={e => (e.target as HTMLInputElement).setCustomValidity(dict.property.error_email_invalid)}
-                            onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.phone_label}</label>
-                        <input
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            placeholder="+66 00 000 0000"
-                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-[10px] font-normal text-slate-400 uppercase tracking-widest mb-1.5 ml-1">{dict.labels.inquiry_content_label}</label>
-                        <textarea
-                            rows={4}
-                            required
-                            value={formData.message}
-                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none"
-                            onInvalid={e => (e.target as HTMLTextAreaElement).setCustomValidity(dict.property.error_message_required)}
-                            onInput={e => (e.target as HTMLTextAreaElement).setCustomValidity('')}
-                        ></textarea>
-                    </div>
-
-                    {error && (
-                        <div className="text-red-500 text-xs font-normal px-1">{error}</div>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-navy-primary text-white py-4 rounded-xl font-normal flex items-center justify-center space-x-2 hover:bg-navy-secondary transition-all shadow-lg hover:shadow-xl mt-4"
-                    >
-                        {loading ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <>
-                                <span>{dict.property.submit_inquiry_btn}</span>
-                                <Send className="w-4 h-4 ml-1" />
-                            </>
-                        )}
-                    </button>
-
-                    <p className="text-[10px] text-slate-400 text-center mt-4 whitespace-pre-line">
-                        {dict.property.inquiry_footer_note}
-                    </p>
-                </form>
-            </div>
-        </div>
-    )
+            <p className="mt-4 whitespace-pre-line text-center text-[10px] text-slate-400">
+              {dict.property.inquiry_footer_note}
+            </p>
+          </form>
+        )}
+      </div>
+    </div>
+  )
 }

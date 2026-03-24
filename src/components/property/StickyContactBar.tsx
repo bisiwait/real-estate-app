@@ -17,10 +17,22 @@ interface StickyContactBarProps {
     property: PropertyInfo
     phoneNumber?: string
     dict: any
+    isLoggedIn?: boolean
+    onRequireAuth?: () => void
 }
 
-export default function StickyContactBar({ property, phoneNumber, dict }: StickyContactBarProps) {
+export default function StickyContactBar({
+    property,
+    phoneNumber,
+    dict,
+    isLoggedIn = true,
+    onRequireAuth,
+}: StickyContactBarProps) {
     const scrollToInquiry = () => {
+        if (!isLoggedIn) {
+            onRequireAuth?.()
+            return
+        }
         // Dispatch event to open the accordion before calculating dimensions
         window.dispatchEvent(new CustomEvent('open-inquiry-form'))
         
@@ -73,6 +85,8 @@ export default function StickyContactBar({ property, phoneNumber, dict }: Sticky
                         variant="icon"
                         className="flex-1 h-14"
                         dict={dict}
+                        isLoggedIn={isLoggedIn}
+                        onRequireAuth={onRequireAuth}
                     />
                 </div>
 
