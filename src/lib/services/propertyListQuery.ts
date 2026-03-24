@@ -104,16 +104,20 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
     }
 
     if (selectedPrice) {
-        const [min, max] = selectedPrice.split('-').map(Number)
-        const isMaxLimitRent = max >= 80000
-        const isMaxLimitSale = max >= 30000000
+        const parts = selectedPrice.split('-').map(Number)
+        const min = parts[0]
+        const max = parts[1]
+        if (Number.isFinite(min) && Number.isFinite(max)) {
+            const isMaxLimitRent = max >= 80000
+            const isMaxLimitSale = max >= 30000000
 
-        if (listingType !== 'all') {
-            const priceCol = listingType === 'rent' ? 'rent_price' : 'sale_price'
-            query = query.gte(priceCol, min)
-            const isMaxLimit = listingType === 'rent' ? isMaxLimitRent : isMaxLimitSale
-            if (!isMaxLimit) {
-                query = query.lte(priceCol, max)
+            if (listingType !== 'all') {
+                const priceCol = listingType === 'rent' ? 'rent_price' : 'sale_price'
+                query = query.gte(priceCol, min)
+                const isMaxLimit = listingType === 'rent' ? isMaxLimitRent : isMaxLimitSale
+                if (!isMaxLimit) {
+                    query = query.lte(priceCol, max)
+                }
             }
         }
     }

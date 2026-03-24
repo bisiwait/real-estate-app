@@ -8,24 +8,19 @@ import {
     type PropertyListFilters,
 } from '@/lib/services/propertyListQuery'
 
-const fetchFirstPageCached = unstable_cache(
-    async (f: PropertyListFilters) => {
-        const supabase = createStaticClient()
-        const { data, error, count } = await executePropertyListQuery(supabase, f, 0)
-        if (error) {
-            console.error('[getCachedPropertiesListFirstPage]', error)
-            return { formatted: [] as any[], count: 0, pageSize: PROPERTY_LIST_PAGE_SIZE }
-        }
-        const formatted = formatPropertyListRows(data)
-        return {
-            formatted,
-            count: count ?? 0,
-            pageSize: PROPERTY_LIST_PAGE_SIZE,
-        }
-    },
-    ['properties-list-first-page'],
-    { revalidate: 60 }
-)
+/** unstable_cache のキーにフィルターを含める（キー固定だと全 URL が同じキャッシュを共有し空表示になる） */
+function filtersToCacheKeyParts(f: PropertyListFilters): string[] {
+    return [
+        f.selectedCity,
+        f.selectedArea,
+        f.selectedPropertyType,
+        f.selectedPrice,
+        [...f.selectedTags].sort().join('\u001f'),
+        f.listingType,
+        f.bathtubFilter ? '1' : '0',
+        f.petsFilter ? '1' : '0',
+    ]
+}
 
 /**
  * 物件一覧の初回ページを 60 秒 ISR 相当でキャッシュ（フィルタ組み合わせごと）
@@ -34,5 +29,26 @@ export async function getCachedPropertiesListFirstPage(
     searchParams: Record<string, string | string[] | undefined>
 ) {
     const filters = parsePropertyListFiltersFromSearchParams(searchParams)
-    return fetchFirstPageCached(filters)
+    const keyParts = ['properties-list-first-page', ...filtersToCacheKeyParts(filters)]
+
+    const run = unstable_cache(
+        async () => {
+            const supabase = createStaticClient()
+            const { data, error, count } = await executePropertyListQuery(supabase, filters, 0)
+            if (error) {
+                console.error('[getCachedPropertiesListFirstPage]', error)
+                return { formatted: [] as any[], count: 0, pageSize: PROPERTY_LIST_PAGE_SIZE }
+            }
+            const formatted = formatPropertyListRows(data)
+            return {
+                formatted,
+                count: count ?? 0,
+                pageSize: PROPERTY_LIST_PAGE_SIZE,
+            }
+        },
+        keyParts,
+        { revalidate: 60 }
+    )
+
+    return run()
 }

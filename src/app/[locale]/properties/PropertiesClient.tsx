@@ -50,7 +50,13 @@ export default function PropertiesClient({
     const [hasMore, setHasMore] = useState(initialHasMore)
     const [totalCount, setTotalCount] = useState<number>(initialTotalCount)
     const savedScrollYRef = useRef<number | null>(null)
-    const skipDuplicateFetchRef = useRef(skipInitialClientFetch)
+    /**
+     * SSR 済みデータがあるとき初回のクライアント再フェッチを抑止。
+     * React Strict Mode（開発）では effect が 2 回走るため 2 回スキップする。
+     */
+    const skipInitialClientFetchRef = useRef(
+        skipInitialClientFetch ? (process.env.NODE_ENV === 'development' ? 2 : 1) : 0
+    )
     /** 連打時は古いレスポンスを無視（表示のチラつき・食い違い防止） */
     const fetchGenRef = useRef(0)
     const [isFilterNavPending, startFilterNavTransition] = useTransition()
@@ -158,8 +164,8 @@ export default function PropertiesClient({
     const tagsRaw = searchParams.get('tags') || ''
 
     useEffect(() => {
-        if (skipDuplicateFetchRef.current) {
-            skipDuplicateFetchRef.current = false
+        if (skipInitialClientFetchRef.current > 0) {
+            skipInitialClientFetchRef.current -= 1
             return
         }
         fetchProperties()
