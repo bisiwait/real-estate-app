@@ -117,7 +117,7 @@ export default function DashboardClient({
             {/* Content Area */}
             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                 {tab === 'leads' ? (
-                    <LeadsView leads={leads} locale={locale} />
+                    <LeadsView initialLeads={leads} locale={locale} />
                 ) : tab === 'properties' ? (
                     <>
                         <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
