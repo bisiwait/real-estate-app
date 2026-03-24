@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
+import { useParams } from 'next/navigation'
 import { MessageCircle, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -35,17 +36,40 @@ function formatMessage(template: string, propertyName: string) {
   return template.replace(/\{propertyName\}/g, propertyName)
 }
 
+/** 比較ページ等で渡されたURL（相対可）、または現在オリジン＋ロケールの物件詳細パス */
+function buildPropertyDetailUrl(
+  property: PropertyInfo,
+  locale: string
+): string {
+  let raw = property.url?.trim() || ''
+  if (raw.startsWith('/')) {
+    if (typeof window === 'undefined') return ''
+    raw = `${window.location.origin}${raw}`
+  }
+  if (raw) return raw
+  if (typeof window === 'undefined' || !property.id) return ''
+  return `${window.location.origin}/${locale}/properties/${property.id}`
+}
+
 export default function LineContactButton({
   property,
   dict,
   className = '',
   variant = 'full',
 }: LineContactButtonProps) {
+  const params = useParams()
+  const locale = (params?.locale as string) || 'jp'
   const pr = dict.property ?? {}
   const [modalOpen, setModalOpen] = useState(false)
 
   const rawMsg = pr.inquiry_default_message ?? ''
-  const inquiryMessage = formatMessage(rawMsg, property.title)
+  const detailUrl = buildPropertyDetailUrl(property, locale)
+  const inquiryMessage = useMemo(() => {
+    const body = formatMessage(rawMsg, property.title).trimEnd()
+    if (!detailUrl) return body
+    return `${body}\n\n${detailUrl}`
+  }, [rawMsg, property.title, detailUrl])
+
   const lineMessageUrl = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(inquiryMessage)}`
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(lineMessageUrl)}`
 
