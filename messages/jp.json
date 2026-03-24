@@ -308,7 +308,6 @@
         "loading_more": "さらに読み込み中...",
         "refreshing_results": "結果を更新中…",
         "apply_filters_btn": "この条件で表示",
-        "filter_draft_hint": "まだ一覧に反映されていません。確定ボタンを押すと検索します。",
         "apply_filters_footer_hint": "条件を変えたら「この条件で表示」で一覧を更新します。",
         "no_results_title": "条件に一致する物件が見つかりませんでした",
         "no_results_desc": "別の条件を試すか、フィルターをリセットしてください。",
