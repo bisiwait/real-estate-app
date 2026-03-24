@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState, useEffect, useRef, useTransition, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { createClient } from '@/lib/supabase/client'
@@ -18,13 +18,69 @@ import {
 /** DB の tags 配列と一致（messages の property.tags と同じキー） */
 const OCEAN_VIEW_TAG = 'オーシャンビュー'
 
+type FilterDraft = {
+    region: string
+    area: string
+    property_type: string
+    price: string
+    tags: string[]
+    type: string
+    bathtub: boolean
+    pets: boolean
+}
+
+function draftFromSearchParams(sp: URLSearchParams): FilterDraft {
+    const tags = sp.get('tags')?.split(',').filter(Boolean) || []
+    return {
+        region: sp.get('region') || 'Pattaya',
+        area: sp.get('area') || '',
+        property_type: sp.get('property_type') || '',
+        price: sp.get('price') || '',
+        tags,
+        type: sp.get('type') || 'all',
+        bathtub: sp.get('bathtub') === 'true',
+        pets: sp.get('pets') === 'true',
+    }
+}
+
+function serializeDraft(d: FilterDraft): string {
+    return JSON.stringify({
+        ...d,
+        tags: [...d.tags].sort(),
+    })
+}
+
+/** クエリはドラフトから組み立て（確定時のみ URL に反映） */
+function buildSearchParamsFromDraft(d: FilterDraft): URLSearchParams {
+    const p = new URLSearchParams()
+    p.set('region', d.region || 'Pattaya')
+    if (d.area) p.set('area', d.area)
+    if (d.property_type) p.set('property_type', d.property_type)
+    if (d.price) p.set('price', d.price)
+    if (d.tags.length > 0) p.set('tags', d.tags.join(','))
+    if (d.type && d.type !== 'all') p.set('type', d.type)
+    if (d.bathtub) p.set('bathtub', 'true')
+    if (d.pets) p.set('pets', 'true')
+    return p
+}
+
+const EMPTY_DRAFT: FilterDraft = {
+    region: 'Pattaya',
+    area: '',
+    property_type: '',
+    price: '',
+    tags: [],
+    type: 'all',
+    bathtub: false,
+    pets: false,
+}
+
 type PropertiesClientProps = {
     dict: any
     locale: string
     initialProperties?: any[]
     initialTotalCount?: number
     initialHasMore?: boolean
-    /** サーバーでキャッシュ済みの初回データがあるとき、マウント直後の重複フェッチを避ける */
     skipInitialClientFetch?: boolean
 }
 
@@ -42,6 +98,10 @@ export default function PropertiesClient({
     const supabase = createClient()
     const { setPropertiesHitCount } = useSearchCount()
 
+    const [draft, setDraft] = useState<FilterDraft>(() =>
+        draftFromSearchParams(new URLSearchParams(searchParams.toString()))
+    )
+
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
     const [dbProperties, setDbProperties] = useState<any[]>(initialProperties)
     const [loading, setLoading] = useState(!skipInitialClientFetch)
@@ -50,45 +110,54 @@ export default function PropertiesClient({
     const [hasMore, setHasMore] = useState(initialHasMore)
     const [totalCount, setTotalCount] = useState<number>(initialTotalCount)
     const savedScrollYRef = useRef<number | null>(null)
-    /**
-     * SSR 済みデータがあるとき初回のクライアント再フェッチを抑止。
-     * React Strict Mode（開発）では effect が 2 回走るため 2 回スキップする。
-     */
     const skipInitialClientFetchRef = useRef(
         skipInitialClientFetch ? (process.env.NODE_ENV === 'development' ? 2 : 1) : 0
     )
-    /** 連打時は古いレスポンスを無視（表示のチラつき・食い違い防止） */
     const fetchGenRef = useRef(0)
     const [isFilterNavPending, startFilterNavTransition] = useTransition()
 
-    // Local constants derived from dict
+    const searchParamsKey = searchParams.toString()
+
+    // ブラウザ戻る・共有 URL などでクエリが変わったらドラフトを同期
+    useEffect(() => {
+        setDraft(draftFromSearchParams(new URLSearchParams(searchParamsKey)))
+    }, [searchParamsKey])
+
+    const committedDraft = useMemo(
+        () => draftFromSearchParams(new URLSearchParams(searchParamsKey)),
+        [searchParamsKey]
+    )
+    const draftDirty = useMemo(
+        () => serializeDraft(draft) !== serializeDraft(committedDraft),
+        [draft, committedDraft]
+    )
+
     const CITIES = [
         { label: dict.property.cities.pattaya, value: 'Pattaya' },
-        { label: dict.property.cities.sriracha, value: 'Sriracha' }
+        { label: dict.property.cities.sriracha, value: 'Sriracha' },
     ]
 
-    const AREAS_BY_CITY: Record<string, { label: string, value: string }[]> = {
+    const AREAS_BY_CITY: Record<string, { label: string; value: string }[]> = {
         Pattaya: [
             { label: dict.property.areas.pattaya_north, value: 'North Pattaya / Wongamat' },
             { label: dict.property.areas.pattaya_central, value: 'Central Pattaya' },
             { label: dict.property.areas.pattaya_south, value: 'South Pattaya' },
             { label: dict.property.areas.pattaya_pratumnak, value: 'Pratumnak' },
             { label: dict.property.areas.pattaya_jomtien, value: 'Jomtien' },
-            { label: dict.property.areas.pattaya_east, value: 'East Pattaya' }
+            { label: dict.property.areas.pattaya_east, value: 'East Pattaya' },
         ],
         Sriracha: [
-            { label: dict.property.areas.sriracha_robinson, value: 'ロビンソン周辺' }, // Value should match DB
+            { label: dict.property.areas.sriracha_robinson, value: 'ロビンソン周辺' },
             { label: dict.property.areas.sriracha_park, value: 'スカパープ公園周辺' },
             { label: dict.property.areas.sriracha_assumption, value: 'アサンプション周辺' },
             { label: dict.property.areas.sriracha_jpark, value: 'J-Park周辺' },
-            { label: dict.property.areas.sriracha_mt, value: 'スラサック・山側' }
-        ]
+            { label: dict.property.areas.sriracha_mt, value: 'スラサック・山側' },
+        ],
     }
 
     const PRICE_RANGES = { min: 0, max: 80000, step: 5000 }
     const SALE_PRICE_RANGES = { min: 0, max: 30000000, step: 1000000 }
 
-    // Local state derived from URL
     const selectedCity = searchParams.get('region') || 'Pattaya'
     const selectedArea = searchParams.get('area') || ''
     const selectedPrice = searchParams.get('price') || ''
@@ -98,7 +167,33 @@ export default function PropertiesClient({
     const petsFilter = searchParams.get('pets') === 'true'
     const selectedPropertyType = searchParams.get('property_type') || ''
 
-    const oceanViewFilter = selectedTags.includes(OCEAN_VIEW_TAG)
+    const draftOceanView = draft.tags.includes(OCEAN_VIEW_TAG)
+
+    const pushDraftToUrl = useCallback(
+        (d: FilterDraft) => {
+            const next = buildSearchParamsFromDraft(d).toString()
+            if (next === searchParams.toString()) return
+            startFilterNavTransition(() => {
+                router.replace(`${pathname}?${next}`, { scroll: false })
+            })
+        },
+        [pathname, router, searchParams, startFilterNavTransition]
+    )
+
+    const applyFilters = useCallback(
+        (opts?: { closeDrawer?: boolean }) => {
+            const next = buildSearchParamsFromDraft(draft).toString()
+            if (next === searchParams.toString()) {
+                if (opts?.closeDrawer) setIsFilterDrawerOpen(false)
+                return
+            }
+            startFilterNavTransition(() => {
+                router.replace(`${pathname}?${next}`, { scroll: false })
+            })
+            if (opts?.closeDrawer) setIsFilterDrawerOpen(false)
+        },
+        [draft, pathname, router, searchParams, startFilterNavTransition]
+    )
 
     const fetchProperties = async (isLoadMore = false) => {
         const myGen = ++fetchGenRef.current
@@ -134,7 +229,7 @@ export default function PropertiesClient({
                 const formatted = formatPropertyListRows(data)
 
                 if (isLoadMore) {
-                    setDbProperties(prev => [...prev, ...formatted])
+                    setDbProperties((prev) => [...prev, ...formatted])
                     setPage(currentPage)
 
                     setTimeout(() => {
@@ -147,7 +242,9 @@ export default function PropertiesClient({
                     setDbProperties(formatted)
                 }
 
-                const hasMoreData = count ? (from + formatted.length) < count : formatted.length === PROPERTY_LIST_PAGE_SIZE
+                const hasMoreData = count
+                    ? from + formatted.length < count
+                    : formatted.length === PROPERTY_LIST_PAGE_SIZE
                 setHasMore(hasMoreData)
             }
         } catch (err: any) {
@@ -171,64 +268,48 @@ export default function PropertiesClient({
         fetchProperties()
     }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, listingType, bathtubFilter, petsFilter])
 
-    // Use database properties directly as they are now filtered server-side
     const filteredProperties = dbProperties
 
-    // Mobile drawer should show total results (not just the first page size)
     const drawerResultsCount = totalCount > 0 ? totalCount : filteredProperties.length
 
-    // Share hit count to header (only meaningful on properties page)
     useEffect(() => {
         setPropertiesHitCount(totalCount > 0 ? totalCount : null)
         return () => setPropertiesHitCount(null)
     }, [totalCount, setPropertiesHitCount])
 
     const activeFilterChipCount = [
-        selectedArea,
-        selectedPropertyType,
-        selectedPrice,
-        bathtubFilter,
-        petsFilter,
-        selectedTags.length > 0,
+        draft.area,
+        draft.property_type,
+        draft.price,
+        draft.bathtub,
+        draft.pets,
+        draft.tags.length > 0,
     ].filter(Boolean).length
 
-    // Sync filters to URL
-    const updateFilters = (updates: Record<string, string | string[] | null>) => {
-        const params = new URLSearchParams(searchParams.toString())
-
-        Object.entries(updates).forEach(([key, value]) => {
-            if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
-                params.delete(key)
-            } else if (Array.isArray(value)) {
-                params.set(key, value.join(','))
-            } else {
-                params.set(key, value)
-            }
-        })
-
-        // If city changes, clear area and tags
-        if (updates.region !== undefined) {
-            params.delete('area')
-            params.delete('tags')
-        }
-
-        startFilterNavTransition(() => {
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-        })
+    const handleClearDraftFilters = () => {
+        setDraft({ ...EMPTY_DRAFT })
+        pushDraftToUrl(EMPTY_DRAFT)
     }
 
-    const toggleOceanViewTag = () => {
-        const next = oceanViewFilter
-            ? selectedTags.filter((t) => t !== OCEAN_VIEW_TAG)
-            : [...selectedTags, OCEAN_VIEW_TAG]
-        updateFilters({ tags: next.length ? next : null })
+    const toggleDraftOceanTag = () => {
+        setDraft((prev) => {
+            const has = prev.tags.includes(OCEAN_VIEW_TAG)
+            const tags = has ? prev.tags.filter((t) => t !== OCEAN_VIEW_TAG) : [...prev.tags, OCEAN_VIEW_TAG]
+            return { ...prev, tags }
+        })
     }
 
     const selectFieldClass =
         'w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-navy-secondary appearance-none cursor-pointer focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none'
 
-    const renderFilterPanel = () => (
+    const renderFilterPanel = (opts?: { showApplyButton?: boolean }) => (
         <div className="space-y-8">
+            {draftDirty ? (
+                <p className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                    {dict.property.filter_draft_hint}
+                </p>
+            ) : null}
+
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
                     <MapPin className="w-3 h-3 mr-2" />
@@ -239,8 +320,15 @@ export default function PropertiesClient({
                         <button
                             key={city.value}
                             type="button"
-                            onClick={() => updateFilters({ region: city.value })}
-                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectedCity === city.value ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                            onClick={() =>
+                                setDraft((d) => ({
+                                    ...d,
+                                    region: city.value,
+                                    area: '',
+                                    tags: [],
+                                }))
+                            }
+                            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${draft.region === city.value ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
                         >
                             {city.label}
                         </button>
@@ -257,11 +345,11 @@ export default function PropertiesClient({
                     id="filter-area-select"
                     aria-label={dict.property.area}
                     className={selectFieldClass}
-                    value={selectedArea}
-                    onChange={(e) => updateFilters({ area: e.target.value || null })}
+                    value={draft.area}
+                    onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value }))}
                 >
                     <option value="">{dict.property.all_areas}</option>
-                    {(AREAS_BY_CITY[selectedCity] || []).map((area) => (
+                    {(AREAS_BY_CITY[draft.region] || []).map((area) => (
                         <option key={area.value} value={area.value}>
                             {area.label}
                         </option>
@@ -278,8 +366,8 @@ export default function PropertiesClient({
                     id="filter-property-type-select"
                     aria-label={dict.property.property_type}
                     className={selectFieldClass}
-                    value={selectedPropertyType}
-                    onChange={(e) => updateFilters({ property_type: e.target.value || null })}
+                    value={draft.property_type}
+                    onChange={(e) => setDraft((d) => ({ ...d, property_type: e.target.value }))}
                 >
                     <option value="">{dict.property.all_types}</option>
                     <option value="Condo">{dict.property.condo}</option>
@@ -289,29 +377,31 @@ export default function PropertiesClient({
                 </select>
             </div>
 
-            {listingType !== 'all' && (
+            {draft.type !== 'all' && (
                 <div>
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest leading-none">{dict.property.budget}</h3>
+                        <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest leading-none">
+                            {dict.property.budget}
+                        </h3>
                     </div>
                     <div className="px-2">
                         <PriceRangeSlider
-                            key={listingType}
-                            min={listingType === 'rent' ? PRICE_RANGES.min : SALE_PRICE_RANGES.min}
-                            max={listingType === 'rent' ? PRICE_RANGES.max : SALE_PRICE_RANGES.max}
-                            step={listingType === 'rent' ? PRICE_RANGES.step : SALE_PRICE_RANGES.step}
+                            key={draft.type}
+                            min={draft.type === 'rent' ? PRICE_RANGES.min : SALE_PRICE_RANGES.min}
+                            max={draft.type === 'rent' ? PRICE_RANGES.max : SALE_PRICE_RANGES.max}
+                            step={draft.type === 'rent' ? PRICE_RANGES.step : SALE_PRICE_RANGES.step}
                             debounceMs={180}
-                            initialMin={selectedPrice ? Number(selectedPrice.split('-')[0]) : undefined}
-                            initialMax={selectedPrice ? Number(selectedPrice.split('-')[1]) : undefined}
+                            initialMin={draft.price ? Number(draft.price.split('-')[0]) : undefined}
+                            initialMax={draft.price ? Number(draft.price.split('-')[1]) : undefined}
                             onChange={(min, max) => {
-                                updateFilters({ price: `${min}-${max}` })
+                                setDraft((d) => ({ ...d, price: `${min}-${max}` }))
                             }}
                             formatValue={(val) => {
-                                if (val === 0) return '0 ฿';
+                                if (val === 0) return '0 ฿'
                                 if (val >= 1000000) {
-                                    return locale === 'jp' ? `${val / 10000}万 ฿` : `${val / 1000000}M ฿`;
+                                    return locale === 'jp' ? `${val / 10000}万 ฿` : `${val / 1000000}M ฿`
                                 }
-                                return `${val.toLocaleString()} ฿`;
+                                return `${val.toLocaleString()} ฿`
                             }}
                         />
                     </div>
@@ -323,36 +413,36 @@ export default function PropertiesClient({
                 <p className="text-[11px] font-bold text-slate-400 mb-4">{dict.property.preferences_hint}</p>
                 <div className="space-y-3">
                     <label
-                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${petsFilter ? 'border-amber-400 bg-amber-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
+                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${draft.pets ? 'border-amber-400 bg-amber-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
                     >
                         <input
                             type="checkbox"
-                            checked={petsFilter}
-                            onChange={() => updateFilters({ pets: petsFilter ? null : 'true' })}
+                            checked={draft.pets}
+                            onChange={() => setDraft((d) => ({ ...d, pets: !d.pets }))}
                             className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
                         />
                         <Dog className="h-6 w-6 shrink-0 text-amber-600" />
                         <span className="text-sm font-black text-navy-secondary">{dict.property.pets}</span>
                     </label>
                     <label
-                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${bathtubFilter ? 'border-sky-400 bg-sky-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
+                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${draft.bathtub ? 'border-sky-400 bg-sky-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
                     >
                         <input
                             type="checkbox"
-                            checked={bathtubFilter}
-                            onChange={() => updateFilters({ bathtub: bathtubFilter ? null : 'true' })}
+                            checked={draft.bathtub}
+                            onChange={() => setDraft((d) => ({ ...d, bathtub: !d.bathtub }))}
                             className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
                         />
                         <Bath className="h-6 w-6 shrink-0 text-sky-600" />
                         <span className="text-sm font-black text-navy-secondary">{dict.property.bathtub}</span>
                     </label>
                     <label
-                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${oceanViewFilter ? 'border-cyan-500 bg-cyan-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
+                        className={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border-2 px-4 py-4 transition-all ${draftOceanView ? 'border-cyan-500 bg-cyan-50/80 shadow-inner' : 'border-slate-200 bg-white hover:border-navy-primary/25'}`}
                     >
                         <input
                             type="checkbox"
-                            checked={oceanViewFilter}
-                            onChange={toggleOceanViewTag}
+                            checked={draftOceanView}
+                            onChange={toggleDraftOceanTag}
                             className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
                         />
                         <Waves className="h-6 w-6 shrink-0 text-cyan-600" />
@@ -361,29 +451,29 @@ export default function PropertiesClient({
                 </div>
             </div>
 
+            {opts?.showApplyButton ? (
+                <button
+                    type="button"
+                    onClick={() => applyFilters()}
+                    className="w-full py-4 rounded-2xl bg-navy-primary text-white text-sm font-black shadow-lg shadow-navy-primary/20 hover:bg-navy-secondary transition-all active:scale-[0.99]"
+                >
+                    {dict.property.apply_filters_btn}
+                </button>
+            ) : null}
+
             <div>
                 <SaveSearchButton dict={dict} variant="outline" fullWidth />
             </div>
 
-            {(selectedArea ||
-                selectedPropertyType ||
-                selectedPrice ||
-                selectedTags.length > 0 ||
-                bathtubFilter ||
-                petsFilter) && (
+            {(draft.area ||
+                draft.property_type ||
+                draft.price ||
+                draft.tags.length > 0 ||
+                draft.bathtub ||
+                draft.pets) && (
                 <button
                     type="button"
-                    onClick={() => {
-                        updateFilters({
-                            area: null,
-                            property_type: null,
-                            price: null,
-                            tags: null,
-                            q: null,
-                            bathtub: null,
-                            pets: null,
-                        })
-                    }}
+                    onClick={handleClearDraftFilters}
                     className="w-full py-3 text-xs font-bold text-slate-400 hover:text-red-500 transition-colors border border-dashed border-slate-200 rounded-xl"
                 >
                     {dict.property.clear_filters}
@@ -394,11 +484,12 @@ export default function PropertiesClient({
 
     return (
         <div className="bg-slate-50 min-h-screen">
-            {/* Page Header */}
             <div className="bg-navy-secondary text-white pt-12 pb-24 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10">
                     <div className="grid grid-cols-6 h-full w-full">
-                        {[...Array(24)].map((_, i) => <div key={i} className="border border-white/20" />)}
+                        {[...Array(24)].map((_, i) => (
+                            <div key={i} className="border border-white/20" />
+                        ))}
                     </div>
                 </div>
                 <div className="container mx-auto px-4 relative z-10">
@@ -411,53 +502,64 @@ export default function PropertiesClient({
                             <SaveSearchButton dict={dict} />
                             <div className="text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center shrink-0">
                                 {(loading || isFilterNavPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                {dict.property.found_count.replace('{total}', totalCount.toString()).replace('{count}', filteredProperties.length.toString())}
+                                {dict.property.found_count
+                                    .replace('{total}', totalCount.toString())
+                                    .replace('{count}', filteredProperties.length.toString())}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="container mx-auto px-4 -mt-10 pb-20 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-                    {/* Sidebar / Top area for Mobile */}
                     <div className="lg:col-span-4 mb-8">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                            {/* Tabs */}
                             <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
                                 <button
-                                    onClick={() => updateFilters({ type: 'all', price: null })}
-                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
+                                    type="button"
+                                    onClick={() => setDraft((d) => ({ ...d, type: 'all', price: '' }))}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'all' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.all}
                                 </button>
                                 <button
-                                    onClick={() => updateFilters({ type: 'rent', price: null })}
-                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
+                                    type="button"
+                                    onClick={() => setDraft((d) => ({ ...d, type: 'rent', price: '' }))}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'rent' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.rent}
                                 </button>
                                 <button
-                                    onClick={() => updateFilters({ type: 'sell', price: null })}
-                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
+                                    type="button"
+                                    onClick={() => setDraft((d) => ({ ...d, type: 'sell', price: '' }))}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'sell' ? 'bg-navy-primary text-white shadow-lg' : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.sell}
                                 </button>
                                 <button
-                                    onClick={() => updateFilters({ type: 'presale', price: null })}
-                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${listingType === 'presale' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-50'}`}
+                                    type="button"
+                                    onClick={() => setDraft((d) => ({ ...d, type: 'presale', price: '' }))}
+                                    className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all ${draft.type === 'presale' ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-50'}`}
                                 >
                                     {dict.labels.presale}
                                 </button>
                             </div>
 
-                            <div className="lg:hidden w-full">
+                            <div className="flex flex-col gap-2 w-full lg:w-auto lg:min-w-[200px]">
+                                <button
+                                    type="button"
+                                    onClick={() => applyFilters()}
+                                    disabled={!draftDirty}
+                                    className="hidden lg:flex w-full items-center justify-center gap-2 rounded-2xl bg-navy-primary text-white px-6 py-3 text-sm font-black shadow-lg shadow-navy-primary/20 hover:bg-navy-secondary transition-all disabled:opacity-40 disabled:pointer-events-none active:scale-[0.99]"
+                                >
+                                    {dict.property.apply_filters_btn}
+                                </button>
+
                                 <button
                                     type="button"
                                     onClick={() => setIsFilterDrawerOpen(true)}
-                                    className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-navy-primary/15 bg-white px-5 py-4 text-sm font-black text-navy-secondary shadow-md shadow-navy-primary/5 transition-all active:scale-[0.99] hover:border-navy-primary/30"
+                                    className="flex lg:hidden w-full items-center justify-center gap-3 rounded-2xl border-2 border-navy-primary/15 bg-white px-5 py-4 text-sm font-black text-navy-secondary shadow-md shadow-navy-primary/5 transition-all active:scale-[0.99] hover:border-navy-primary/30"
                                 >
                                     <SlidersHorizontal className="h-5 w-5 text-navy-primary" />
                                     <span>{dict.property.open_filters_mobile}</span>
@@ -471,14 +573,12 @@ export default function PropertiesClient({
                         </div>
                     </div>
 
-                    {/* PC Filters Sidebar */}
                     <aside className="hidden lg:block lg:col-span-1">
                         <div className="bg-white rounded-3xl shadow-xl p-8 sticky top-28 border border-white/50 backdrop-blur-sm">
-                            {renderFilterPanel()}
+                            {renderFilterPanel({ showApplyButton: true })}
                         </div>
                     </aside>
 
-                    {/* Results Grid */}
                     <div className="lg:col-span-3">
                         {loading && dbProperties.length === 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
@@ -517,9 +617,9 @@ export default function PropertiesClient({
                                         <button
                                             type="button"
                                             onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                fetchProperties(true);
+                                                e.preventDefault()
+                                                e.stopPropagation()
+                                                fetchProperties(true)
                                             }}
                                             disabled={loadingMore}
                                             className="group flex flex-col items-center space-y-4"
@@ -546,15 +646,10 @@ export default function PropertiesClient({
                                 <p className="text-slate-500 mb-8">{dict.property.no_results_desc}</p>
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        updateFilters({
-                                            region: null,
-                                            property_type: null,
-                                            price: null,
-                                            tags: null,
-                                            q: null,
-                                        })
-                                    }
+                                    onClick={() => {
+                                        setDraft({ ...EMPTY_DRAFT })
+                                        pushDraftToUrl(EMPTY_DRAFT)
+                                    }}
                                     className="bg-navy-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-navy-secondary transition-all"
                                 >
                                     {dict.property.reset_filters_btn}
@@ -565,15 +660,11 @@ export default function PropertiesClient({
                 </div>
             </div>
 
-            {/* Mobile Filter Drawer (Overlay) */}
             {isFilterDrawerOpen && (
                 <div className="fixed inset-0 z-[100] lg:hidden">
-                    <div
-                        className="absolute inset-0 bg-navy-secondary/60 backdrop-blur-sm"
-                        onClick={() => setIsFilterDrawerOpen(false)}
-                    />
-                    <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300 p-8">
-                        <div className="flex items-center justify-between mb-8">
+                    <div className="absolute inset-0 bg-navy-secondary/60 backdrop-blur-sm" onClick={() => setIsFilterDrawerOpen(false)} />
+                    <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300 p-8 flex flex-col">
+                        <div className="flex items-center justify-between mb-8 shrink-0">
                             <h2 className="text-xl font-black text-navy-secondary">{dict.property.search_drawer_title}</h2>
                             <button
                                 type="button"
@@ -584,16 +675,20 @@ export default function PropertiesClient({
                             </button>
                         </div>
 
-                        {renderFilterPanel()}
+                        <div className="flex-1 overflow-y-auto min-h-0">{renderFilterPanel()}</div>
 
-                        <div className="mt-12">
+                        <div className="mt-6 pt-4 border-t border-slate-100 shrink-0 space-y-3">
                             <button
                                 type="button"
-                                onClick={() => setIsFilterDrawerOpen(false)}
-                                className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold shadow-lg hover:bg-navy-secondary transition-all"
+                                onClick={() => applyFilters({ closeDrawer: true })}
+                                disabled={!draftDirty}
+                                className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold shadow-lg hover:bg-navy-secondary transition-all disabled:opacity-40 disabled:pointer-events-none"
                             >
-                                {dict.property.show_results.replace('{count}', drawerResultsCount.toString())}
+                                {dict.property.apply_filters_btn}
                             </button>
+                            <p className="text-center text-[10px] font-bold text-slate-400 leading-relaxed px-1">
+                                {dict.property.apply_filters_footer_hint}
+                            </p>
                         </div>
                     </div>
                 </div>
