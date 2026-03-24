@@ -280,6 +280,7 @@
         "clear_filters": "Clear All Filters",
         "load_more_listings": "Load More Listings",
         "loading_more": "Loading more...",
+        "refreshing_results": "Updating results…",
         "no_results_title": "No properties found",
         "no_results_desc": "Please try different filters or reset them.",
         "reset_filters_btn": "Reset Filters",

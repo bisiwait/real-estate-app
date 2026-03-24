@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { createClient } from '@/lib/supabase/client'
@@ -51,6 +51,9 @@ export default function PropertiesClient({
     const [totalCount, setTotalCount] = useState<number>(initialTotalCount)
     const savedScrollYRef = useRef<number | null>(null)
     const skipDuplicateFetchRef = useRef(skipInitialClientFetch)
+    /** 連打時は古いレスポンスを無視（表示のチラつき・食い違い防止） */
+    const fetchGenRef = useRef(0)
+    const [isFilterNavPending, startFilterNavTransition] = useTransition()
 
     // Local constants derived from dict
     const CITIES = [
@@ -92,12 +95,14 @@ export default function PropertiesClient({
     const oceanViewFilter = selectedTags.includes(OCEAN_VIEW_TAG)
 
     const fetchProperties = async (isLoadMore = false) => {
+        const myGen = ++fetchGenRef.current
+
         if (isLoadMore) {
             savedScrollYRef.current = window.scrollY
             setLoadingMore(true)
-        }
-        else {
+        } else {
             setLoading(true)
+            setLoadingMore(false)
             setPage(0)
         }
 
@@ -111,6 +116,8 @@ export default function PropertiesClient({
 
             const { data, error, count } = await executePropertyListQuery(supabase, filters, currentPage)
 
+            if (myGen !== fetchGenRef.current) return
+
             if (error) {
                 console.error('Supabase Error Details:', error)
             }
@@ -123,7 +130,7 @@ export default function PropertiesClient({
                 if (isLoadMore) {
                     setDbProperties(prev => [...prev, ...formatted])
                     setPage(currentPage)
-                    
+
                     setTimeout(() => {
                         if (savedScrollYRef.current !== null) {
                             window.scrollTo({ top: savedScrollYRef.current, behavior: 'instant' })
@@ -138,10 +145,13 @@ export default function PropertiesClient({
                 setHasMore(hasMoreData)
             }
         } catch (err: any) {
+            if (myGen !== fetchGenRef.current) return
             console.error('Fetch Runtime Error:', err)
         } finally {
-            setLoading(false)
-            setLoadingMore(false)
+            if (myGen === fetchGenRef.current) {
+                setLoading(false)
+                setLoadingMore(false)
+            }
         }
     }
 
@@ -196,7 +206,9 @@ export default function PropertiesClient({
             params.delete('tags')
         }
 
-        router.push(`${pathname}?${params.toString()}`, { scroll: false })
+        startFilterNavTransition(() => {
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+        })
     }
 
     const toggleOceanViewTag = () => {
@@ -282,6 +294,7 @@ export default function PropertiesClient({
                             min={listingType === 'rent' ? PRICE_RANGES.min : SALE_PRICE_RANGES.min}
                             max={listingType === 'rent' ? PRICE_RANGES.max : SALE_PRICE_RANGES.max}
                             step={listingType === 'rent' ? PRICE_RANGES.step : SALE_PRICE_RANGES.step}
+                            debounceMs={180}
                             initialMin={selectedPrice ? Number(selectedPrice.split('-')[0]) : undefined}
                             initialMax={selectedPrice ? Number(selectedPrice.split('-')[1]) : undefined}
                             onChange={(min, max) => {
@@ -391,7 +404,7 @@ export default function PropertiesClient({
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                             <SaveSearchButton dict={dict} />
                             <div className="text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center shrink-0">
-                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                {(loading || isFilterNavPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                 {dict.property.found_count.replace('{total}', totalCount.toString()).replace('{count}', filteredProperties.length.toString())}
                             </div>
                         </div>
@@ -468,7 +481,20 @@ export default function PropertiesClient({
                                 ))}
                             </div>
                         ) : filteredProperties.length > 0 ? (
-                            <div className="space-y-12 min-h-[800px] ![overflow-anchor:none]" style={{ overflowAnchor: 'none' }}>
+                            <div
+                                className={`relative space-y-12 min-h-[800px] ![overflow-anchor:none] transition-opacity duration-150 ${loading && !loadingMore ? 'opacity-60' : 'opacity-100'}`}
+                                style={{ overflowAnchor: 'none' }}
+                                aria-busy={loading && !loadingMore}
+                            >
+                                {loading && !loadingMore ? (
+                                    <div
+                                        className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 rounded-full bg-white/95 px-4 py-2 shadow-lg border border-slate-100 flex items-center gap-2"
+                                        aria-hidden
+                                    >
+                                        <Loader2 className="h-4 w-4 animate-spin text-navy-primary" />
+                                        <span className="text-xs font-black text-navy-secondary">{dict.property.refreshing_results}</span>
+                                    </div>
+                                ) : null}
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {filteredProperties.map((property, idx) => (
                                         <PropertyCard

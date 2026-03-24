@@ -306,6 +306,7 @@
         "clear_filters": "条件をすべてクリア",
         "load_more_listings": "物件をもっと見る",
         "loading_more": "さらに読み込み中...",
+        "refreshing_results": "結果を更新中…",
         "no_results_title": "条件に一致する物件が見つかりませんでした",
         "no_results_desc": "別の条件を試すか、フィルターをリセットしてください。",
         "reset_filters_btn": "フィルターをリセット",

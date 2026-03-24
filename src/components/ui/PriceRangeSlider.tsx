@@ -10,6 +10,8 @@ interface PriceRangeSliderProps {
     initialMax?: number;
     onChange: (minPrice: number, maxPrice: number) => void;
     formatValue?: (value: number) => string;
+    /** URL 同期までの待ち（ms）。小さいほど反応が速い */
+    debounceMs?: number;
 }
 
 export default function PriceRangeSlider({
@@ -19,7 +21,8 @@ export default function PriceRangeSlider({
     initialMin,
     initialMax,
     onChange,
-    formatValue = (v) => v.toString()
+    formatValue = (v) => v.toString(),
+    debounceMs = 200,
 }: PriceRangeSliderProps) {
     const [minValue, setMinValue] = useState(initialMin ?? min);
     const [maxValue, setMaxValue] = useState(initialMax ?? max);
@@ -80,10 +83,10 @@ export default function PriceRangeSlider({
 
         const timer = setTimeout(() => {
             onChange(minValue, maxValue);
-        }, 500); // 500ms delay to prevent too many re-renders/searches
+        }, debounceMs);
 
         return () => clearTimeout(timer);
-    }, [minValue, maxValue, onChange]);
+    }, [minValue, maxValue, onChange, debounceMs]);
 
     // React to prop changes (e.g. switching between rent and sell tabs)
     useEffect(() => {
