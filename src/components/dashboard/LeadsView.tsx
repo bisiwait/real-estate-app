@@ -3,17 +3,13 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import {
   MessageCircle,
-  Phone,
   FileText,
   User,
-  Home,
   Users,
   ExternalLink,
-  Pencil,
   Loader2,
   ChevronDown,
-  Sparkles,
-  Mail,
+  Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { buildLeadLineReplyUrls } from '@/lib/line-contact-url'
@@ -62,19 +58,6 @@ function normalizeStatus(raw: string | undefined | null): LeadStatusValue {
   return 'pending'
 }
 
-function getTypeIcon(type: string) {
-  switch (String(type).toLowerCase()) {
-    case 'line':
-      return <MessageCircle className="h-4 w-4 text-[#06C755]" />
-    case 'phone':
-      return <Phone className="h-4 w-4 text-blue-500" />
-    case 'form':
-      return <FileText className="h-4 w-4 text-slate-500" />
-    default:
-      return <MessageCircle className="h-4 w-4 text-slate-400" />
-  }
-}
-
 function getTypeLabel(type: string) {
   switch (String(type).toLowerCase()) {
     case 'line':
@@ -88,7 +71,6 @@ function getTypeLabel(type: string) {
   }
 }
 
-/** スマホでは LINE アプリ起動用スキームを優先し、未起動時は HTTPS を別タブで開くフォールバック */
 function openLineReplyPreferApp(
   e: React.MouseEvent<HTMLAnchorElement>,
   httpsUrl: string,
@@ -101,6 +83,26 @@ function openLineReplyPreferApp(
   window.setTimeout(() => {
     window.open(httpsUrl, '_blank', 'noopener,noreferrer')
   }, 700)
+}
+
+function lineCopyPayload(lineId: string | null | undefined): string {
+  const urls = buildLeadLineReplyUrls(lineId)
+  if (urls?.httpsUrl) return urls.httpsUrl
+  return (lineId ?? '').trim()
+}
+
+async function copyLineContact(lineId: string | null | undefined) {
+  const text = lineCopyPayload(lineId)
+  if (!text) {
+    toast.message('コピーする内容がありません')
+    return
+  }
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.success('コピーしました')
+  } catch {
+    toast.error('コピーに失敗しました')
+  }
 }
 
 interface LeadsViewProps {
@@ -117,13 +119,18 @@ function useMobileUa() {
   return mobile
 }
 
-function telHref(phone: string | null | undefined): string | null {
-  const d = phone?.replace(/[^\d+]/g, '').trim()
-  if (!d) return null
-  return `tel:${d}`
+function formatInquiryAt(iso: string) {
+  return new Date(iso).toLocaleString('ja-JP', {
+    timeZone: 'Asia/Bangkok',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
-export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
+export default function LeadsView({ initialLeads }: LeadsViewProps) {
   const [leads, setLeads] = useState<LeadRow[]>(initialLeads || [])
   const [savingId, setSavingId] = useState<string | null>(null)
   const isMobileUa = useMobileUa()
@@ -158,249 +165,157 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
 
   if (!leads || leads.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 p-20 text-center text-slate-400">
-        <Users className="h-12 w-12 opacity-20" />
+      <div className="flex flex-col items-center gap-2 px-4 py-16 text-center text-slate-400">
+        <Users className="h-10 w-10 opacity-20" />
         <p className="text-sm font-bold">まだリード情報がありません。</p>
       </div>
     )
   }
 
-  const publicPropertyUrl = (propertyId: string) =>
-    `/${locale}/properties/${propertyId}`
-  const editPropertyUrl = (propertyId: string) =>
-    `/${locale}/dashboard/edit/${propertyId}`
-
-  const hasLineReplyable = leads.some(
-    (l) =>
-      String(l.inquiry_type).toLowerCase() === 'line' &&
-      !!buildLeadLineReplyUrls(l.profile?.line_id)
-  )
-
   return (
-    <div className="divide-y divide-slate-100">
-      {hasLineReplyable ? (
-        <div className="border-b border-[#06C755]/25 bg-gradient-to-br from-[#06C755]/18 via-white to-emerald-50/90 px-4 py-4 sm:px-6 sm:py-5">
-          <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#06C755] text-white shadow-lg shadow-[#06C755]/30">
-                <MessageCircle className="h-7 w-7" strokeWidth={2.25} />
-              </div>
-              <div className="min-w-0 pt-0.5">
-                <p className="flex flex-wrap items-center gap-2 text-base font-black leading-tight text-[#025c2c] sm:text-lg">
-                  <Sparkles className="h-5 w-5 shrink-0 text-[#06C755]" />
-                  次のアクション：LINEで返信する
-                </p>
-                <p className="mt-1.5 text-xs font-bold leading-relaxed text-slate-600 sm:text-sm">
-                  LINE連絡先（ID または URL）が登録されているリードは緑のボタンから開けます。メール・電話ボタンで別ルートからも連絡できます。対応後はステータスを更新しましょう。
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="border-b border-slate-100 px-4 py-5 sm:px-6">
-        <h3 className="text-lg font-black text-navy-secondary sm:text-xl">
-          リード（問い合わせ）詳細
-        </h3>
-        <p className="mt-1 text-xs font-bold text-slate-500">
-          次のアクションから対応を進め、ステータスで進捗を管理できます。
-        </p>
+    <div className="divide-y divide-slate-200/80">
+      <div className="px-3 py-3 sm:px-4">
+        <h3 className="text-base font-black text-navy-secondary">リード（問い合わせ）詳細</h3>
+        <p className="mt-0.5 text-[11px] text-slate-500">LINE で返信し、ステータスを更新してください。</p>
       </div>
 
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-slate-200/80">
         {leads.map((lead) => {
           const isLine = String(lead.inquiry_type).toLowerCase() === 'line'
           const lineUrls = buildLeadLineReplyUrls(lead.profile?.line_id)
-          const mailto = lead.profile?.email?.trim()
-            ? `mailto:${lead.profile.email.trim()}`
-            : null
-          const tel = telHref(lead.profile?.phone)
           const showLineAction = isLine && !!lineUrls
           const statusVal = normalizeStatus(lead.status)
-          const actionHighlight = isLine && (showLineAction || mailto || tel)
+          const lineRaw = lead.profile?.line_id?.trim() || ''
+          const canCopyLine = Boolean(lineCopyPayload(lead.profile?.line_id))
+          const userName = lead.profile?.full_name || 'ゲスト（未ログイン）'
+          const propertyTitle = lead.property?.title || '（タイトルなし）'
+          const messageBody = (lead.notes ?? '').trim()
 
           return (
-            <li key={lead.id} className="px-4 py-6 sm:px-6">
-              <div className="mx-auto flex max-w-3xl flex-col gap-5">
-                {/* アクション優先 */}
-                <div
-                  className={`rounded-2xl border p-4 sm:p-5 ${
-                    actionHighlight
-                      ? 'border-[#06C755]/40 bg-gradient-to-br from-[#06C755]/12 via-white to-slate-50/80'
-                      : 'border-slate-200 bg-slate-50/80'
-                  }`}
-                >
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
-                    次に取るアクション
+            <li key={lead.id} className="px-3 py-4 sm:px-4">
+              <div className="mx-auto max-w-3xl space-y-3">
+                {showLineAction ? (
+                  <a
+                    href={lineUrls!.httpsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) =>
+                      openLineReplyPreferApp(
+                        e,
+                        lineUrls!.httpsUrl,
+                        lineUrls!.appUrl,
+                        isMobileUa
+                      )
+                    }
+                    className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-[#06C755] px-4 py-3.5 text-base font-black text-white shadow-[0_8px_24px_-6px_rgba(6,199,85,0.45)] transition hover:bg-[#05b34c] active:scale-[0.99] sm:min-h-[48px] sm:text-[15px]"
+                  >
+                    <MessageCircle className="h-6 w-6 shrink-0" strokeWidth={2.25} aria-hidden />
+                    LINEで返信する
+                    <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                  </a>
+                ) : isLine ? (
+                  <p className="rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs font-bold text-amber-900">
+                    LINE連絡先が未登録のため、返信用リンクを表示できません。
                   </p>
-                  {isLine ? (
-                    <div className="mt-3 flex flex-col gap-3">
-                      <p className="text-sm font-bold text-slate-700">
-                        {showLineAction
-                          ? '登録された LINE連絡先（ID または URL）から会話を開始できます'
-                          : 'LINE リンクが使えない場合はメール・電話でご連絡ください'}
-                      </p>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch">
-                        {showLineAction ? (
-                          <a
-                            href={lineUrls!.httpsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) =>
-                              openLineReplyPreferApp(
-                                e,
-                                lineUrls!.httpsUrl,
-                                lineUrls!.appUrl,
-                                isMobileUa
-                              )
-                            }
-                            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#06C755]/25 transition hover:bg-[#05b34c] active:scale-[0.99] sm:min-w-[200px]"
-                          >
-                            <MessageCircle className="h-5 w-5 shrink-0" />
-                            LINEで返信する
-                            <ExternalLink className="h-4 w-4 shrink-0 opacity-80" />
-                          </a>
-                        ) : null}
-                        {mailto ? (
-                          <a
-                            href={mailto}
-                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-navy-secondary shadow-sm transition hover:bg-slate-50 sm:min-w-[140px]"
-                          >
-                            <Mail className="h-4 w-4 shrink-0 text-navy-primary" />
-                            メール
-                          </a>
-                        ) : null}
-                        {tel ? (
-                          <a
-                            href={tel}
-                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-navy-secondary shadow-sm transition hover:bg-slate-50 sm:min-w-[140px]"
-                          >
-                            <Phone className="h-4 w-4 shrink-0 text-navy-primary" />
-                            電話
-                          </a>
-                        ) : null}
-                      </div>
-                      {!showLineAction && isLine ? (
-                        <p className="text-xs leading-relaxed text-slate-600">
-                          LINE連絡先が未登録、またはリンクが無効な場合があります。登録済みのメール・電話からご連絡ください。
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-sm text-slate-600">
-                      物件ページの確認や、登録済みの連絡先からフォローしてください。
-                    </p>
-                  )}
-                </div>
+                ) : null}
 
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 flex-1 space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {getTypeIcon(lead.inquiry_type)}
-                      <span className="text-xs font-bold capitalize text-slate-600">
-                        {getTypeLabel(lead.inquiry_type)}
+                <dl className="grid gap-2.5 text-sm">
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      問い合わせ日時
+                    </dt>
+                    <dd className="mt-0.5 font-semibold text-navy-secondary">
+                      {formatInquiryAt(lead.created_at)}
+                      <span className="ml-2 text-xs font-normal text-slate-400">
+                        · {getTypeLabel(lead.inquiry_type)}
                       </span>
-                      <span className="text-[10px] text-slate-400">·</span>
-                      <time className="text-xs font-medium text-slate-500">
-                        {new Date(lead.created_at).toLocaleString('ja-JP', {
-                          timeZone: 'Asia/Bangkok',
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </time>
-                    </div>
-
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        問い合わせ物件
-                      </p>
-                      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                        <a
-                          href={publicPropertyUrl(lead.property_id)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group inline-flex min-h-11 max-w-full items-center gap-1.5 text-base font-black text-navy-secondary underline decoration-navy-primary/25 decoration-2 underline-offset-4 transition hover:text-navy-primary hover:decoration-navy-primary sm:min-h-0"
-                        >
-                          <Home className="h-4 w-4 shrink-0 text-navy-primary/70 group-hover:text-navy-primary" />
-                          <span className="break-words text-left">
-                            {lead.property?.title || '（タイトルなし）'}
-                          </span>
-                          <ExternalLink className="h-4 w-4 shrink-0 opacity-50 group-hover:opacity-80" />
-                          <span className="sr-only">（公開ページを別タブで開く）</span>
-                        </a>
-                        <a
-                          href={editPropertyUrl(lead.property_id)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-black text-navy-primary underline underline-offset-4 transition hover:text-navy-secondary sm:min-h-0"
-                        >
-                          <Pencil className="h-4 w-4 shrink-0" />
-                          編集画面を別タブで開く
-                          <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                        </a>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-                        <User className="h-4 w-4 text-slate-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          ユーザー
-                        </p>
-                        <p className="text-sm font-bold text-navy-secondary">
-                          {lead.profile?.full_name || 'ゲスト（未ログイン）'}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {lead.profile?.email || '—'}
-                        </p>
-                        {lead.profile?.phone ? (
-                          <p className="mt-1 text-xs text-slate-500">
-                            電話: {lead.profile.phone}
-                          </p>
-                        ) : null}
-                        {lead.profile?.line_id ? (
-                          <p className="mt-1 break-all font-mono text-[11px] text-slate-600">
-                            LINE: {lead.profile.line_id}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
+                    </dd>
                   </div>
 
-                  <div className="w-full shrink-0 sm:w-52">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      対応ステータス
-                    </label>
-                    <div className="relative mt-1.5">
-                      <select
-                        value={statusVal}
-                        disabled={savingId === lead.id}
-                        onChange={(e) =>
-                          updateStatus(lead.id, e.target.value as LeadStatusValue)
-                        }
-                        className="min-h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-3 pr-9 text-sm font-bold text-navy-secondary shadow-sm outline-none focus:border-navy-primary focus:ring-2 focus:ring-navy-primary/15 disabled:opacity-60 sm:min-h-0 sm:py-2.5"
-                      >
-                        {STATUS_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                      {savingId === lead.id ? (
-                        <Loader2 className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-navy-primary" />
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      ユーザー名
+                    </dt>
+                    <dd className="mt-0.5 flex items-center gap-2 font-bold text-navy-secondary">
+                      <User className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+                      {userName}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      LINE連絡先
+                    </dt>
+                    <dd className="mt-0.5">
+                      {lineRaw ? (
+                        <div className="flex items-start gap-2">
+                          <p className="min-w-0 flex-1 break-all font-mono text-xs leading-relaxed text-slate-700">
+                            {lineRaw}
+                          </p>
+                          {canCopyLine ? (
+                            <button
+                              type="button"
+                              onClick={() => copyLineContact(lead.profile?.line_id)}
+                              className="mt-0.5 inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:border-[#06C755]/40 hover:bg-[#06C755]/5 hover:text-[#025c2c]"
+                              title="開く用URL（または入力値）をコピー"
+                              aria-label="LINE連絡先をコピー"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                          ) : null}
+                        </div>
                       ) : (
-                        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <span className="text-slate-400">—</span>
                       )}
-                    </div>
-                    <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
-                      Supabase の inquiry_logs に保存されます
-                    </p>
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      対象物件
+                    </dt>
+                    <dd className="mt-0.5 font-semibold text-navy-secondary">{propertyTitle}</dd>
+                  </div>
+
+                  <div>
+                    <dt className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <FileText className="h-3 w-3" aria-hidden />
+                      メッセージ内容
+                    </dt>
+                    <dd className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700">
+                      {messageBody || '（記載なし）'}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="border-t border-slate-100 pt-3">
+                  <label
+                    htmlFor={`lead-status-${lead.id}`}
+                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400"
+                  >
+                    対応ステータス
+                  </label>
+                  <div className="relative mt-1.5">
+                    <select
+                      id={`lead-status-${lead.id}`}
+                      value={statusVal}
+                      disabled={savingId === lead.id}
+                      onChange={(e) =>
+                        updateStatus(lead.id, e.target.value as LeadStatusValue)
+                      }
+                      className="min-h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-3 pr-10 text-sm font-bold text-navy-secondary outline-none focus:border-navy-primary focus:ring-2 focus:ring-navy-primary/15 disabled:opacity-60"
+                    >
+                      {STATUS_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                    {savingId === lead.id ? (
+                      <Loader2 className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-navy-primary" />
+                    ) : (
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    )}
                   </div>
                 </div>
               </div>
