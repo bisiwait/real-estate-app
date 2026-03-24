@@ -121,7 +121,7 @@ export default function DashboardClient({
             {/* Content Area */}
             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                 {tab === 'leads' ? (
-                    <LeadsView leads={leads} />
+                    <LeadsView leads={leads} locale={locale} />
                 ) : tab === 'properties' ? (
                     <>
                         <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -283,7 +283,7 @@ export default function DashboardClient({
     )
 }
 
-function LeadsView({ leads }: { leads: any[] }) {
+function LeadsView({ leads, locale }: { leads: any[]; locale: string }) {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'new': return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">新規</span>
@@ -381,15 +381,25 @@ function LeadsView({ leads }: { leads: any[] }) {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <Link
-                                        href={`/properties/${lead.property_id}`}
-                                        className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
-                                        {...(lead.inquiry_type === 'line'
-                                            ? { target: '_blank', rel: 'noopener noreferrer' }
-                                            : {})}
-                                    >
-                                        <Home className="w-3 h-3" />{lead.property?.title}
-                                    </Link>
+                                    {String(lead.inquiry_type).toLowerCase() === 'line' ? (
+                                        <a
+                                            href={`/${locale}/properties/${lead.property_id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
+                                        >
+                                            <Home className="w-3 h-3" />
+                                            {lead.property?.title}
+                                        </a>
+                                    ) : (
+                                        <Link
+                                            href={`/${locale}/properties/${lead.property_id}`}
+                                            className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
+                                        >
+                                            <Home className="w-3 h-3" />
+                                            {lead.property?.title}
+                                        </Link>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">

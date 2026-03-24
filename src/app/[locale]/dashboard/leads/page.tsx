@@ -15,7 +15,12 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-export default async function AgentLeadsPage() {
+export default async function AgentLeadsPage({
+    params,
+}: {
+    params: Promise<{ locale: string }>
+}) {
+    const { locale } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -124,16 +129,25 @@ export default async function AgentLeadsPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Link
-                                                href={`/properties/${lead.property_id}`}
-                                                className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
-                                                {...(lead.inquiry_type === 'line'
-                                                    ? { target: '_blank', rel: 'noopener noreferrer' }
-                                                    : {})}
-                                            >
-                                                <Home className="w-3 h-3" />
-                                                {lead.property?.title}
-                                            </Link>
+                                            {String(lead.inquiry_type).toLowerCase() === 'line' ? (
+                                                <a
+                                                    href={`/${locale}/properties/${lead.property_id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
+                                                >
+                                                    <Home className="w-3 h-3" />
+                                                    {lead.property?.title}
+                                                </a>
+                                            ) : (
+                                                <Link
+                                                    href={`/${locale}/properties/${lead.property_id}`}
+                                                    className="text-xs font-bold text-navy-primary hover:underline flex items-center gap-1"
+                                                >
+                                                    <Home className="w-3 h-3" />
+                                                    {lead.property?.title}
+                                                </Link>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">

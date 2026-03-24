@@ -19,9 +19,12 @@ import DashboardClient from '@/components/dashboard/DashboardClient'
 
 export default async function DashboardPage({
     searchParams,
+    params,
 }: {
     searchParams: { tab?: string; profile_updated?: string; filter?: string; status?: string }
+    params: Promise<{ locale: string }>
 }) {
+    const { locale } = await params
     const { tab = 'properties', profile_updated, filter = 'all', status = 'all' } = await searchParams
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -198,7 +201,7 @@ export default async function DashboardPage({
                         initialInquiries={inquiries}
                         leadsCount={leads?.length || 0}
                         initialLeads={leads || []}
-                        locale={tab} // This will be updated by the client component
+                        locale={locale}
                     />
                 </div>
             </div>
