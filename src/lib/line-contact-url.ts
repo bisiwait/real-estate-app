@@ -46,46 +46,30 @@ function lineAppUrlFromHttps(httpsUrl: string): string | null {
   }
 }
 
-/** LINE ID を line.me/R/ti/p 用のパスセグメントに（@ はそのまま、それ以外は先頭に ~） */
-function lineIdToRTiPSegment(raw: string): string {
-  const s = raw.trim()
-  if (s.startsWith('@')) {
-    const inner = s.slice(1).replace(/^@+/g, '')
-    return `@${encodeURIComponent(inner)}`
-  }
-  const withTilde = s.startsWith('~') ? s : `~${s}`
-  return encodeURIComponent(withTilde)
-}
-
 /**
- * リード詳細の「LINEで返信」用。
- * 友だち追加 URL を最優先。なければ LINE ID で https://line.me/R/ti/p/~… 形式。
+ * リード詳細の「LINEで返信」用。プロフィールの `line_id` に ID または友だち追加 URL を保存する想定。
+ * - http(s) で始まる → そのまま href
+ * - line.me のパス形式（スキームなし）→ https を付与
+ * - それ以外 → @ を除去し、`https://line.me/R/ti/p/~` 形式（パスは encode）
  */
 export function buildLeadLineReplyUrls(
-  friendUrl: string | null | undefined,
-  lineId: string | null | undefined
+  lineContact: string | null | undefined
 ): { httpsUrl: string; appUrl: string | null } | null {
-  const f = friendUrl?.trim()
-  if (f) {
-    if (/^https?:\/\//i.test(f)) {
-      return { httpsUrl: f, appUrl: lineAppUrlFromHttps(f) }
-    }
-    if (/^line\.me\//i.test(f) || /^www\.line\.me\//i.test(f)) {
-      const httpsUrl = `https://${f.replace(/^https?:\/\//i, '')}`
-      return { httpsUrl, appUrl: lineAppUrlFromHttps(httpsUrl) }
-    }
+  const raw = lineContact?.trim()
+  if (!raw) return null
+
+  if (/^https?:\/\//i.test(raw)) {
+    return { httpsUrl: raw, appUrl: lineAppUrlFromHttps(raw) }
+  }
+  if (/^line\.me\//i.test(raw) || /^www\.line\.me\//i.test(raw)) {
+    const httpsUrl = `https://${raw.replace(/^https?:\/\//i, '')}`
+    return { httpsUrl, appUrl: lineAppUrlFromHttps(httpsUrl) }
   }
 
-  const id = lineId?.trim()
-  if (!id) return null
-  if (/^https?:\/\//i.test(id)) {
-    return { httpsUrl: id, appUrl: lineAppUrlFromHttps(id) }
-  }
-
-  const segment = lineIdToRTiPSegment(id)
+  const idClean = raw.replace(/@/g, '').trim()
+  if (!idClean) return null
+  const pathCore = idClean.startsWith('~') ? idClean : `~${idClean}`
+  const segment = encodeURIComponent(pathCore)
   const httpsUrl = `https://line.me/R/ti/p/${segment}`
-  return {
-    httpsUrl,
-    appUrl: lineAppUrlFromHttps(httpsUrl),
-  }
+  return { httpsUrl, appUrl: lineAppUrlFromHttps(httpsUrl) }
 }

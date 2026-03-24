@@ -34,7 +34,6 @@ export interface LeadRow {
     email: string | null
     phone: string | null
     line_id: string | null
-    line_friend_url: string | null
   } | null
 }
 
@@ -174,7 +173,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
   const hasLineReplyable = leads.some(
     (l) =>
       String(l.inquiry_type).toLowerCase() === 'line' &&
-      !!buildLeadLineReplyUrls(l.profile?.line_friend_url, l.profile?.line_id)
+      !!buildLeadLineReplyUrls(l.profile?.line_id)
   )
 
   return (
@@ -192,7 +191,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                   次のアクション：LINEで返信する
                 </p>
                 <p className="mt-1.5 text-xs font-bold leading-relaxed text-slate-600 sm:text-sm">
-                  友だち追加 URL または LINE ID があるリードは緑のボタンから開けます。メール・電話ボタンで別ルートからも連絡できます。対応後はステータスを更新しましょう。
+                  LINE連絡先（ID または URL）が登録されているリードは緑のボタンから開けます。メール・電話ボタンで別ルートからも連絡できます。対応後はステータスを更新しましょう。
                 </p>
               </div>
             </div>
@@ -212,10 +211,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
       <ul className="divide-y divide-slate-100">
         {leads.map((lead) => {
           const isLine = String(lead.inquiry_type).toLowerCase() === 'line'
-          const lineUrls = buildLeadLineReplyUrls(
-            lead.profile?.line_friend_url,
-            lead.profile?.line_id
-          )
+          const lineUrls = buildLeadLineReplyUrls(lead.profile?.line_id)
           const mailto = lead.profile?.email?.trim()
             ? `mailto:${lead.profile.email.trim()}`
             : null
@@ -242,7 +238,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                     <div className="mt-3 flex flex-col gap-3">
                       <p className="text-sm font-bold text-slate-700">
                         {showLineAction
-                          ? '友だち追加 URL または LINE ID から会話を開始できます'
+                          ? '登録された LINE連絡先（ID または URL）から会話を開始できます'
                           : 'LINE リンクが使えない場合はメール・電話でご連絡ください'}
                       </p>
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch">
@@ -287,7 +283,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                       </div>
                       {!showLineAction && isLine ? (
                         <p className="text-xs leading-relaxed text-slate-600">
-                          友だち追加 URL・LINE ID が未登録、または ID 検索でヒットしない場合があります。登録済みのメール・電話からご連絡ください。
+                          LINE連絡先が未登録、またはリンクが無効な場合があります。登録済みのメール・電話からご連絡ください。
                         </p>
                       ) : null}
                     </div>
@@ -369,13 +365,8 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                           </p>
                         ) : null}
                         {lead.profile?.line_id ? (
-                          <p className="mt-1 font-mono text-[11px] text-slate-600">
-                            LINE ID: {lead.profile.line_id}
-                          </p>
-                        ) : null}
-                        {lead.profile?.line_friend_url ? (
-                          <p className="mt-1 text-[11px] text-emerald-700">
-                            友だち追加 URL 登録済み
+                          <p className="mt-1 break-all font-mono text-[11px] text-slate-600">
+                            LINE: {lead.profile.line_id}
                           </p>
                         ) : null}
                       </div>

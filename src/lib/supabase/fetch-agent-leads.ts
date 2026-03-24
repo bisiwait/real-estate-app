@@ -16,7 +16,6 @@ export type AgentInquiryLead = {
     email: string | null
     phone: string | null
     line_id: string | null
-    line_friend_url: string | null
   } | null
 }
 
@@ -59,7 +58,7 @@ export async function fetchAgentInquiryLeads(
     userIds.length > 0
       ? await supabase
           .from('profiles')
-          .select('id, full_name, email, phone, line_id, line_friend_url')
+          .select('id, full_name, email, phone, line_id')
           .in('id', userIds)
       : { data: [], error: null }
 
@@ -89,10 +88,6 @@ export async function fetchAgentInquiryLeads(
             email: prof.email,
             phone: prof.phone as string | null,
             line_id: prof.line_id,
-            line_friend_url:
-              'line_friend_url' in prof && prof.line_friend_url != null
-                ? String(prof.line_friend_url)
-                : null,
           }
         : null,
     }

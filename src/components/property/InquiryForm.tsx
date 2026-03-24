@@ -114,8 +114,9 @@ export default function InquiryForm({
         return
       }
 
+      const lineTag = p.inquiry_line_contact_message_tag ?? 'LINE'
       const lineSuffix = formData.lineId.trim()
-        ? `\n\n[LINE ID: ${formData.lineId.trim()}]`
+        ? `\n\n[${lineTag}: ${formData.lineId.trim()}]`
         : ''
       const messageBody = `${formData.message.trim()}${lineSuffix}`
 
@@ -273,16 +274,18 @@ export default function InquiryForm({
 
             <div>
               <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
-                {p.inquiry_line_id_label}
+                {p.inquiry_line_contact_label ?? p.inquiry_line_id_label}
               </label>
               <input
                 type="text"
                 value={formData.lineId}
                 onChange={(e) => setFormData({ ...formData, lineId: e.target.value })}
-                placeholder="@example"
+                placeholder={p.inquiry_line_contact_placeholder ?? '@example'}
                 className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
               />
-              <p className="mt-1 text-[10px] text-slate-400">{p.inquiry_line_id_hint}</p>
+              <p className="mt-1 text-[10px] text-slate-400">
+                {p.inquiry_line_contact_hint ?? p.inquiry_line_id_hint}
+              </p>
             </div>
 
             <div>

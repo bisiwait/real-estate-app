@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { ChevronLeft, Loader2, User, MessageCircle, Phone, Link2 } from "lucide-react";
+import { ChevronLeft, Loader2, User, MessageCircle, Phone, CircleHelp } from "lucide-react";
 
 type InitialProfile = {
     full_name: string;
@@ -42,37 +42,9 @@ export default function ProfileEditClient({
     );
 
     const [nickname, setNickname] = useState(snapshot.full_name);
-    const [lineId, setLineId] = useState(snapshot.line_id);
+    const [lineContact, setLineContact] = useState(snapshot.line_id);
     const [phone, setPhone] = useState(snapshot.phone);
-    /** DB に line_friend_url カラムがあるときのみ true（マイグレーション未適用でもプロフィール編集は動く） */
-    const [friendUrlColumnReady, setFriendUrlColumnReady] = useState(false);
-    const [lineFriendUrl, setLineFriendUrl] = useState("");
-    const [friendUrlBaseline, setFriendUrlBaseline] = useState("");
     const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            const { data, error } = await supabase
-                .from("profiles")
-                .select("line_friend_url")
-                .eq("id", userId)
-                .maybeSingle();
-            if (cancelled) return;
-            if (error) {
-                console.warn("[profile/edit] line_friend_url を取得できません（マイグレーション未適用の可能性）:", error.message);
-                setFriendUrlColumnReady(false);
-                return;
-            }
-            setFriendUrlColumnReady(true);
-            const v = typeof data?.line_friend_url === "string" ? data.line_friend_url : "";
-            setLineFriendUrl(v);
-            setFriendUrlBaseline(v);
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [userId, supabase]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,10 +52,9 @@ export default function ProfileEditClient({
 
         const next = {
             full_name: norm(nickname),
-            line_id: norm(lineId),
+            line_id: norm(lineContact),
             phone: norm(phone),
         };
-        const nextFriendUrl = norm(lineFriendUrl);
 
         const updates: Record<string, string | null> = {};
         if (next.full_name !== snapshot.full_name) {
@@ -94,9 +65,6 @@ export default function ProfileEditClient({
         }
         if (next.phone !== snapshot.phone) {
             updates.phone = next.phone || null;
-        }
-        if (friendUrlColumnReady && nextFriendUrl !== norm(friendUrlBaseline)) {
-            updates.line_friend_url = nextFriendUrl || null;
         }
 
         if (Object.keys(updates).length === 0) {
@@ -110,27 +78,11 @@ export default function ProfileEditClient({
 
             if (error) {
                 console.error(error);
-                const msg = String(error.message || "");
-                const missingCol =
-                    /line_friend_url|column|schema/i.test(msg) &&
-                    "line_friend_url" in updates;
-                if (missingCol) {
-                    const { line_friend_url: _drop, ...rest } = updates;
-                    const { error: err2 } = await supabase.from("profiles").update(rest).eq("id", userId);
-                    if (err2) {
-                        toast.error(l.profile_update_error);
-                        return;
-                    }
-                    toast.success(l.profile_updated_toast);
-                    window.location.assign(`/${locale}/mypage?tab=profile`);
-                    return;
-                }
                 toast.error(l.profile_update_error);
                 return;
             }
 
             toast.success(l.profile_updated_toast);
-            // マイページのクライアント取得を確実にやり直すためフル遷移
             window.location.assign(`/${locale}/mypage?tab=profile`);
         } catch (err) {
             console.error(err);
@@ -139,6 +91,11 @@ export default function ProfileEditClient({
             setSaving(false);
         }
     };
+
+    const lineContactLabel = l.line_contact_label ?? l.line_id_label;
+    const lineContactHelp = l.line_contact_help ?? l.line_id_highlight_hint;
+    const lineContactHint = l.line_contact_url_hint ?? l.line_friend_url_guide;
+    const lineContactPlaceholder = l.line_contact_placeholder ?? l.line_id_placeholder;
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
@@ -170,7 +127,6 @@ export default function ProfileEditClient({
                         <p className="text-xs text-slate-400 mt-2">{l.profile_edit_email_readonly}</p>
                     </div>
 
-                    {/* 1. ニックネーム */}
                     <div>
                         <label htmlFor="nickname" className="flex items-center gap-2 text-sm font-bold text-navy-secondary mb-1">
                             <User className="w-4 h-4 text-slate-400" />
@@ -188,59 +144,39 @@ export default function ProfileEditClient({
                         />
                     </div>
 
-                    {/* 2. LINE ID */}
                     <div className="rounded-2xl border-2 border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white p-5 md:p-6 shadow-sm">
                         <label
-                            htmlFor="line_id"
-                            className="flex items-center gap-2 text-sm font-black text-emerald-800 mb-1 flex-wrap"
+                            htmlFor="line_contact"
+                            className="flex flex-wrap items-center gap-2 text-sm font-black text-emerald-800 mb-1"
                         >
                             <MessageCircle className="w-4 h-4 shrink-0" />
-                            {l.line_id_label}
+                            {lineContactLabel}
                             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100/80 px-2 py-0.5 rounded-full">
                                 {l.line_id_recommended_badge}
                             </span>
+                            <span
+                                className="inline-flex items-center gap-1 text-emerald-700/90"
+                                title={lineContactHint}
+                            >
+                                <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />
+                                <span className="sr-only">{lineContactHint}</span>
+                            </span>
                         </label>
-                        <p className="text-xs text-emerald-700/80 mb-3 font-medium">{l.line_id_highlight_hint}</p>
+                        <p className="text-xs text-emerald-800/90 mb-2 font-medium leading-relaxed">{lineContactHelp}</p>
+                        <p className="mb-3 rounded-lg border border-emerald-100/80 bg-white/80 px-3 py-2.5 text-[11px] leading-relaxed text-slate-600">
+                            {lineContactHint}
+                        </p>
                         <input
-                            id="line_id"
+                            id="line_contact"
                             type="text"
                             autoComplete="off"
-                            placeholder={l.line_id_placeholder}
-                            value={lineId}
-                            onChange={(e) => setLineId(e.target.value)}
+                            placeholder={lineContactPlaceholder}
+                            value={lineContact}
+                            onChange={(e) => setLineContact(e.target.value)}
                             className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3.5 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-shadow"
                         />
-
-                        {friendUrlColumnReady ? (
-                            <>
-                                <label
-                                    htmlFor="line_friend_url"
-                                    className="mt-5 flex items-center gap-2 text-sm font-bold text-emerald-900"
-                                >
-                                    <Link2 className="h-4 w-4 shrink-0" />
-                                    {l.line_friend_url_label}
-                                </label>
-                                <p className="mt-1 text-xs font-medium leading-relaxed text-emerald-800/90">
-                                    {l.line_friend_url_help}
-                                </p>
-                                <p className="mt-2 rounded-lg border border-emerald-100/80 bg-white/80 px-3 py-2.5 text-[11px] leading-relaxed text-slate-600">
-                                    {l.line_friend_url_guide}
-                                </p>
-                                <input
-                                    id="line_friend_url"
-                                    type="url"
-                                    inputMode="url"
-                                    autoComplete="off"
-                                    placeholder={l.line_friend_url_placeholder}
-                                    value={lineFriendUrl}
-                                    onChange={(e) => setLineFriendUrl(e.target.value)}
-                                    className="mt-2 w-full rounded-xl border border-emerald-200 bg-white px-4 py-3.5 text-navy-secondary placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 transition-shadow"
-                                />
-                            </>
-                        ) : null}
                     </div>
 
-                    {/* 3. 電話番号 */}
                     <div>
                         <label htmlFor="phone" className="flex items-center gap-2 text-sm font-bold text-navy-secondary mb-1">
                             <Phone className="w-4 h-4 text-slate-400" />

@@ -16,7 +16,6 @@ export default async function ProfileEditPage({ params }: { params: Promise<{ lo
         redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/profile/edit`)}`);
     }
 
-    // line_friend_url はマイグレーション未適用の DB だと select 自体が失敗するため含めない（クライアントでオプション取得）
     const { data: profile, error } = await supabase
         .from("profiles")
         .select("full_name, line_id, phone, user_role, is_admin")

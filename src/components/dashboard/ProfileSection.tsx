@@ -55,7 +55,7 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-slate-50">
                 <InfoCard icon={Mail} label={dict.labels.email_label} value={user?.email} />
                 <InfoCard icon={Phone} label={dict.labels.phone_label} value={profile?.phone || dict.labels.not_registered} />
-                <InfoCard icon={MessageSquare} label={dict.labels.line_id_label} value={profile?.line_id || dict.labels.not_registered} />
+                <InfoCard icon={MessageSquare} label={dict.labels.line_contact_label ?? dict.labels.line_id_label} value={profile?.line_id || dict.labels.not_registered} />
             </div>
 
             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
