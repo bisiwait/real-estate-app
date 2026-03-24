@@ -5,7 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchCount } from '@/contexts/SearchCountContext'
-import { Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves } from 'lucide-react'
+import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
 import {
@@ -529,8 +529,8 @@ export default function PropertiesClient({
 
             <div className="container mx-auto px-4 -mt-10 pb-20 relative z-20">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    <div className="lg:col-span-4 mb-8 flex flex-col gap-4">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="lg:col-span-4 mb-8">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
                             <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
                                 <button
                                     type="button"
@@ -562,36 +562,40 @@ export default function PropertiesClient({
                                 </button>
                             </div>
 
-                            <button
-                                type="button"
-                                onClick={() => setIsFilterDrawerOpen(true)}
-                                className="flex lg:hidden w-full items-center justify-center gap-3 rounded-2xl border-2 border-navy-primary/15 bg-white px-5 py-4 text-sm font-black text-navy-secondary shadow-md shadow-navy-primary/5 transition-all active:scale-[0.99] hover:border-navy-primary/30"
-                            >
-                                <SlidersHorizontal className="h-5 w-5 text-navy-primary" />
-                                <span>{dict.property.open_filters_mobile}</span>
-                                {activeFilterChipCount > 0 ? (
-                                    <span className="min-w-[1.5rem] rounded-full bg-navy-primary px-2 py-0.5 text-center text-[11px] font-black text-white">
-                                        {activeFilterChipCount}
-                                    </span>
-                                ) : null}
-                            </button>
-                        </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 w-full lg:w-auto lg:shrink-0 lg:ml-auto">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsFilterDrawerOpen(true)}
+                                    className="flex lg:hidden w-full sm:w-auto sm:min-w-0 items-center justify-center gap-3 rounded-2xl border-2 border-navy-primary/15 bg-white px-5 py-4 min-h-[48px] text-sm font-black text-navy-secondary shadow-md shadow-navy-primary/5 transition-all active:scale-[0.99] hover:border-navy-primary/30"
+                                >
+                                    <SlidersHorizontal className="h-5 w-5 text-navy-primary shrink-0" />
+                                    <span>{dict.property.open_filters_mobile}</span>
+                                    {activeFilterChipCount > 0 ? (
+                                        <span className="min-w-[1.5rem] rounded-full bg-navy-primary px-2 py-0.5 text-center text-[11px] font-black text-white">
+                                            {activeFilterChipCount}
+                                        </span>
+                                    ) : null}
+                                </button>
 
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                            <span className="text-sm font-black text-navy-secondary shrink-0 pt-1 sm:pt-0">
-                                {dict.property.sort_label}
-                            </span>
-                            <select
-                                value={listSort}
-                                onChange={(e) => changeListSort(e.target.value as PropertyListSort)}
-                                className={`${selectFieldClass} w-full sm:w-auto min-h-[48px] sm:min-w-[min(100%,280px)] max-w-md bg-white border-slate-200 shadow-sm`}
-                                aria-label={dict.property.sort_label}
-                            >
-                                <option value="newest">{dict.property.sort_newest}</option>
-                                <option value="oldest">{dict.property.sort_oldest}</option>
-                                <option value="price_asc">{dict.property.sort_price_asc}</option>
-                                <option value="price_desc">{dict.property.sort_price_desc}</option>
-                            </select>
+                                <div className="flex items-center gap-2.5 w-full sm:w-auto sm:min-w-[min(100%,280px)] lg:min-w-[240px] justify-end sm:justify-start">
+                                    <ArrowDownWideNarrow
+                                        className="h-5 w-5 shrink-0 text-navy-primary"
+                                        aria-hidden
+                                    />
+                                    <select
+                                        value={listSort}
+                                        onChange={(e) => changeListSort(e.target.value as PropertyListSort)}
+                                        className={`${selectFieldClass} min-h-[48px] flex-1 sm:flex-1 sm:min-w-[200px] bg-white border-slate-200 shadow-sm`}
+                                        aria-label={dict.property.sort_label}
+                                        title={dict.property.sort_label}
+                                    >
+                                        <option value="newest">{dict.property.sort_newest}</option>
+                                        <option value="oldest">{dict.property.sort_oldest}</option>
+                                        <option value="price_asc">{dict.property.sort_price_asc}</option>
+                                        <option value="price_desc">{dict.property.sort_price_desc}</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
