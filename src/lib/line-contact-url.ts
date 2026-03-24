@@ -34,3 +34,58 @@ export function buildLineAgentReplyUrls(
     appUrl: `line://ti/p/${seg}`,
   }
 }
+
+function lineAppUrlFromHttps(httpsUrl: string): string | null {
+  try {
+    const u = new URL(httpsUrl)
+    if (u.hostname !== 'line.me' && !u.hostname.endsWith('.line.me')) return null
+    const path = `${u.pathname.replace(/^\//, '')}${u.search}${u.hash}`
+    return path ? `line://${path}` : null
+  } catch {
+    return null
+  }
+}
+
+/** LINE ID を line.me/R/ti/p 用のパスセグメントに（@ はそのまま、それ以外は先頭に ~） */
+function lineIdToRTiPSegment(raw: string): string {
+  const s = raw.trim()
+  if (s.startsWith('@')) {
+    const inner = s.slice(1).replace(/^@+/g, '')
+    return `@${encodeURIComponent(inner)}`
+  }
+  const withTilde = s.startsWith('~') ? s : `~${s}`
+  return encodeURIComponent(withTilde)
+}
+
+/**
+ * リード詳細の「LINEで返信」用。
+ * 友だち追加 URL を最優先。なければ LINE ID で https://line.me/R/ti/p/~… 形式。
+ */
+export function buildLeadLineReplyUrls(
+  friendUrl: string | null | undefined,
+  lineId: string | null | undefined
+): { httpsUrl: string; appUrl: string | null } | null {
+  const f = friendUrl?.trim()
+  if (f) {
+    if (/^https?:\/\//i.test(f)) {
+      return { httpsUrl: f, appUrl: lineAppUrlFromHttps(f) }
+    }
+    if (/^line\.me\//i.test(f) || /^www\.line\.me\//i.test(f)) {
+      const httpsUrl = `https://${f.replace(/^https?:\/\//i, '')}`
+      return { httpsUrl, appUrl: lineAppUrlFromHttps(httpsUrl) }
+    }
+  }
+
+  const id = lineId?.trim()
+  if (!id) return null
+  if (/^https?:\/\//i.test(id)) {
+    return { httpsUrl: id, appUrl: lineAppUrlFromHttps(id) }
+  }
+
+  const segment = lineIdToRTiPSegment(id)
+  const httpsUrl = `https://line.me/R/ti/p/${segment}`
+  return {
+    httpsUrl,
+    appUrl: lineAppUrlFromHttps(httpsUrl),
+  }
+}

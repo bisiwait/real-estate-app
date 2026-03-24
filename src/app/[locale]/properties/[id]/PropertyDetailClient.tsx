@@ -17,6 +17,7 @@ import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import LineContactButton from '@/components/property/LineContactButton'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
+import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -287,6 +288,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                                     isLoggedIn={!!user}
                                     onRequireAuth={() => setContactAuthOpen(true)}
                                     contactPrefill={contactPrefill}
+                                    officialLineAddFriendUrl={getOfficialLineAddFriendUrl()}
                                 />
                             </div>
                         </div>

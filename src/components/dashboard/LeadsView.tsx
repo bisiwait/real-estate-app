@@ -13,9 +13,10 @@ import {
   Loader2,
   ChevronDown,
   Sparkles,
+  Mail,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { buildLineAgentReplyUrls } from '@/lib/line-contact-url'
+import { buildLeadLineReplyUrls } from '@/lib/line-contact-url'
 
 export type LeadStatusValue = 'pending' | 'replied' | 'viewing' | 'won' | 'lost'
 
@@ -31,7 +32,9 @@ export interface LeadRow {
   profile?: {
     full_name: string | null
     email: string | null
+    phone: string | null
     line_id: string | null
+    line_friend_url: string | null
   } | null
 }
 
@@ -115,6 +118,12 @@ function useMobileUa() {
   return mobile
 }
 
+function telHref(phone: string | null | undefined): string | null {
+  const d = phone?.replace(/[^\d+]/g, '').trim()
+  if (!d) return null
+  return `tel:${d}`
+}
+
 export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
   const [leads, setLeads] = useState<LeadRow[]>(initialLeads || [])
   const [savingId, setSavingId] = useState<string | null>(null)
@@ -165,7 +174,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
   const hasLineReplyable = leads.some(
     (l) =>
       String(l.inquiry_type).toLowerCase() === 'line' &&
-      !!buildLineAgentReplyUrls(l.profile?.line_id)
+      !!buildLeadLineReplyUrls(l.profile?.line_friend_url, l.profile?.line_id)
   )
 
   return (
@@ -183,7 +192,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                   次のアクション：LINEで返信する
                 </p>
                 <p className="mt-1.5 text-xs font-bold leading-relaxed text-slate-600 sm:text-sm">
-                  お客様の LINE ID が分かるリードでは、一覧内の緑のボタンから LINE アプリで会話を開始できます。対応後はステータスを更新しましょう。
+                  友だち追加 URL または LINE ID があるリードは緑のボタンから開けます。メール・電話ボタンで別ルートからも連絡できます。対応後はステータスを更新しましょう。
                 </p>
               </div>
             </div>
@@ -203,9 +212,17 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
       <ul className="divide-y divide-slate-100">
         {leads.map((lead) => {
           const isLine = String(lead.inquiry_type).toLowerCase() === 'line'
-          const lineUrls = buildLineAgentReplyUrls(lead.profile?.line_id)
+          const lineUrls = buildLeadLineReplyUrls(
+            lead.profile?.line_friend_url,
+            lead.profile?.line_id
+          )
+          const mailto = lead.profile?.email?.trim()
+            ? `mailto:${lead.profile.email.trim()}`
+            : null
+          const tel = telHref(lead.profile?.phone)
           const showLineAction = isLine && !!lineUrls
           const statusVal = normalizeStatus(lead.status)
+          const actionHighlight = isLine && (showLineAction || mailto || tel)
 
           return (
             <li key={lead.id} className="px-4 py-6 sm:px-6">
@@ -213,7 +230,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                 {/* アクション優先 */}
                 <div
                   className={`rounded-2xl border p-4 sm:p-5 ${
-                    showLineAction
+                    actionHighlight
                       ? 'border-[#06C755]/40 bg-gradient-to-br from-[#06C755]/12 via-white to-slate-50/80'
                       : 'border-slate-200 bg-slate-50/80'
                   }`}
@@ -221,34 +238,59 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
                     次に取るアクション
                   </p>
-                  {showLineAction ? (
-                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  {isLine ? (
+                    <div className="mt-3 flex flex-col gap-3">
                       <p className="text-sm font-bold text-slate-700">
-                        お客様の LINE にすぐ返信できます
+                        {showLineAction
+                          ? '友だち追加 URL または LINE ID から会話を開始できます'
+                          : 'LINE リンクが使えない場合はメール・電話でご連絡ください'}
                       </p>
-                      <a
-                        href={lineUrls!.httpsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) =>
-                          openLineReplyPreferApp(
-                            e,
-                            lineUrls!.httpsUrl,
-                            lineUrls!.appUrl,
-                            isMobileUa
-                          )
-                        }
-                        className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-6 py-3 text-sm font-black text-white shadow-lg shadow-[#06C755]/25 transition hover:bg-[#05b34c] active:scale-[0.99] sm:w-auto sm:min-w-[200px]"
-                      >
-                        <MessageCircle className="h-5 w-5 shrink-0" />
-                        LINEで返信する
-                        <ExternalLink className="h-4 w-4 shrink-0 opacity-80" />
-                      </a>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch">
+                        {showLineAction ? (
+                          <a
+                            href={lineUrls!.httpsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) =>
+                              openLineReplyPreferApp(
+                                e,
+                                lineUrls!.httpsUrl,
+                                lineUrls!.appUrl,
+                                isMobileUa
+                              )
+                            }
+                            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#06C755]/25 transition hover:bg-[#05b34c] active:scale-[0.99] sm:min-w-[200px]"
+                          >
+                            <MessageCircle className="h-5 w-5 shrink-0" />
+                            LINEで返信する
+                            <ExternalLink className="h-4 w-4 shrink-0 opacity-80" />
+                          </a>
+                        ) : null}
+                        {mailto ? (
+                          <a
+                            href={mailto}
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-navy-secondary shadow-sm transition hover:bg-slate-50 sm:min-w-[140px]"
+                          >
+                            <Mail className="h-4 w-4 shrink-0 text-navy-primary" />
+                            メール
+                          </a>
+                        ) : null}
+                        {tel ? (
+                          <a
+                            href={tel}
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-navy-secondary shadow-sm transition hover:bg-slate-50 sm:min-w-[140px]"
+                          >
+                            <Phone className="h-4 w-4 shrink-0 text-navy-primary" />
+                            電話
+                          </a>
+                        ) : null}
+                      </div>
+                      {!showLineAction && isLine ? (
+                        <p className="text-xs leading-relaxed text-slate-600">
+                          友だち追加 URL・LINE ID が未登録、または ID 検索でヒットしない場合があります。登録済みのメール・電話からご連絡ください。
+                        </p>
+                      ) : null}
                     </div>
-                  ) : isLine ? (
-                    <p className="mt-2 text-sm text-slate-600">
-                      お客様（問い合わせユーザー）の LINE ID が登録されていないため、ここから LINE を開けません。メールなど別の方法でご連絡ください。
-                    </p>
                   ) : (
                     <p className="mt-2 text-sm text-slate-600">
                       物件ページの確認や、登録済みの連絡先からフォローしてください。
@@ -321,9 +363,19 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                         <p className="text-xs text-slate-500">
                           {lead.profile?.email || '—'}
                         </p>
+                        {lead.profile?.phone ? (
+                          <p className="mt-1 text-xs text-slate-500">
+                            電話: {lead.profile.phone}
+                          </p>
+                        ) : null}
                         {lead.profile?.line_id ? (
                           <p className="mt-1 font-mono text-[11px] text-slate-600">
                             LINE ID: {lead.profile.line_id}
+                          </p>
+                        ) : null}
+                        {lead.profile?.line_friend_url ? (
+                          <p className="mt-1 text-[11px] text-emerald-700">
+                            友だち追加 URL 登録済み
                           </p>
                         ) : null}
                       </div>
