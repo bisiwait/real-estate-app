@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import stripe from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
+import { resolveSubscriptionPriceId, type SubscriptionBillingInterval } from '@/lib/stripe-subscription-prices'
 
 // NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_SITE_URL → localhost の優先順でフォールバック
 const BASE_URL =
@@ -9,17 +10,28 @@ const BASE_URL =
     'http://localhost:3000'
 
 interface CheckoutRequestBody {
-    priceId: string
+    priceId?: string
+    /** 未指定時はサーバー環境変数から Price ID を解決 */
+    billingInterval?: SubscriptionBillingInterval
 }
 
 export async function POST(req: Request) {
     try {
         const body = (await req.json()) as Partial<CheckoutRequestBody>
-        const { priceId } = body
+        const billingInterval: SubscriptionBillingInterval =
+            body.billingInterval === 'year' ? 'year' : 'month'
 
-        if (!priceId || typeof priceId !== 'string' || priceId.trim() === '') {
+        const priceId = resolveSubscriptionPriceId({
+            billingInterval,
+            explicitPriceId: body.priceId,
+        })
+
+        if (!priceId) {
             return NextResponse.json(
-                { error: 'priceId は必須です（Stripe の Price ID を指定してください）。' },
+                {
+                    error:
+                        'Stripe の Price ID が未設定です。STRIPE_PRICE_ID_MONTHLY / STRIPE_PRICE_ID_YEARLY（または NEXT_PUBLIC 相当）を環境変数に設定してください。',
+                },
                 { status: 400 }
             )
         }

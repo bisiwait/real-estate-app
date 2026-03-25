@@ -616,7 +616,7 @@
         "checkout_guest_hint": "To start your free trial, please complete free agent registration and sign in first.",
         "checkout_go_register": "Register as an agent (free)",
         "checkout_go_login": "Already registered? Log in",
-        "signup_after_pricing_hint": "After you finish signing up, return to the pricing page and tap “Start 1-month free trial”.",
+        "signup_after_pricing_hint": "After signup you’ll go to the dashboard. To upgrade to Pro, use “Start 1-month free trial” from the dashboard or the pricing page.",
         "stripe_not_configured_notice": "Online signup (free trial) is not available yet. For Pro, please contact us and we’ll help you get started.",
         "trial_disabled_stripe": "Signup coming soon",
         "trial_disabled_premium": "You’re already on Pro",

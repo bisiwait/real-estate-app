@@ -45,7 +45,16 @@ function localeToDateLocale(locale: string) {
     return "en-US";
 }
 
-export default function AgentListingPricingClient({ dict, locale }: { dict: Dict; locale: string }) {
+export default function AgentListingPricingClient({
+    dict,
+    locale,
+    stripeCheckoutReady: stripeFromServer,
+}: {
+    dict: Dict;
+    locale: string;
+    /** サーバーで STRIPE_PRICE_ID_* を読んだ結果（Vercel 本番向け） */
+    stripeCheckoutReady?: boolean;
+}) {
     const p = dict.agent_plan;
     const router = useRouter();
     const supabase = createClient();
@@ -59,7 +68,7 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
     const [authResolved, setAuthResolved] = useState(false);
     const [isPremium, setIsPremium] = useState(false);
 
-    const stripeCheckoutReady = stripePriceIdsReady();
+    const stripeCheckoutReady = Boolean(stripeFromServer) || stripePriceIdsReady();
     const trialDisabledForUser = authResolved && !!user && (!stripeCheckoutReady || isPremium);
 
     const pricingPath = `/${locale}/pricing`;
@@ -122,14 +131,10 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
         setIsConfirmOpen(false);
     };
 
-    const handleCheckout = async (priceId: string) => {
+    const handleCheckout = async () => {
         if (!user) {
             closeConfirm();
             router.push(signupWithReturn);
-            return;
-        }
-        if (!priceId?.trim()) {
-            setConfirmError(p.stripe_not_configured_notice);
             return;
         }
 
@@ -139,7 +144,9 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
             const res = await fetch("/api/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ priceId }),
+                body: JSON.stringify({
+                    billingInterval: isAnnual ? "year" : "month",
+                }),
             });
 
             const data = (await res.json()) as { url?: string; error?: string };
@@ -162,8 +169,7 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
 
     const handleConfirmCheckout = () => {
         if (trialDisabledForUser) return;
-        const priceId = isAnnual ? STRIPE_PRICE_ID_YEARLY : STRIPE_PRICE_ID_MONTHLY;
-        handleCheckout(priceId);
+        handleCheckout();
     };
 
     const reasons = [

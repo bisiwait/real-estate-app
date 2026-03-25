@@ -47,7 +47,8 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
         () => safeInternalPath(locale, searchParams.get('redirect')),
         [locale, searchParams]
     )
-    const nextAfterAuth = redirectAfter ?? `/${locale}/dashboard`
+    /** 新規登録完了後は常にダッシュボードへ（有料プランはそこから /pricing へ） */
+    const dashboardPath = `/${locale}/dashboard`
     const showPricingReturnHint = Boolean(redirectAfter?.includes('/pricing'))
 
     const handleSignup = async (e: React.FormEvent) => {
@@ -67,7 +68,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(nextAfterAuth)}`,
+                    emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(dashboardPath)}`,
                     data: {
                         full_name: agentName.trim(),
                         company_name: companyName.trim() || null,
@@ -88,12 +89,12 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                     method: 'POST',
                     credentials: 'same-origin',
                 }).catch(() => {})
-                router.push(nextAfterAuth)
+                router.push(dashboardPath)
                 router.refresh()
                 return
             }
 
-            router.push(`/${locale}/login?redirect=${encodeURIComponent(nextAfterAuth)}`)
+            router.push(`/${locale}/login?redirect=${encodeURIComponent(dashboardPath)}`)
         } catch (error: any) {
             setMessage({ type: 'error', text: getErrorMessage(error) })
         } finally {
@@ -298,7 +299,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
 
                     <div className="mt-12 text-center">
                         <Link
-                            href={`/${locale}/login?redirect=${encodeURIComponent(nextAfterAuth)}`}
+                            href={`/${locale}/login?redirect=${encodeURIComponent(redirectAfter ?? dashboardPath)}`}
                             className="text-sm font-black text-navy-primary hover:text-navy-secondary transition-colors underline underline-offset-8 decoration-navy-primary/20"
                         >
                             {dict.auth.already_have_account}
