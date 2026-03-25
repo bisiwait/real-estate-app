@@ -189,7 +189,12 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                                         {cmp.compare_toggle}
                                     </span>
                                 </label>
-                                <PropertyCard property={property} dict={dict} />
+                                <PropertyCard
+                                    property={property}
+                                    dict={dict}
+                                    hideFavoriteButton
+                                    imageOpensInNewTab
+                                />
                                 <button
                                     type="button"
                                     onClick={(e) => {

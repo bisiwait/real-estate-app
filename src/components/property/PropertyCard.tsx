@@ -37,62 +37,70 @@ export default function PropertyCard({
     property,
     dict,
     imagePriority = false,
+    hideFavoriteButton = false,
+    imageOpensInNewTab = false,
 }: {
     property: any
     dict: any
     imagePriority?: boolean
+    hideFavoriteButton?: boolean
+    imageOpensInNewTab?: boolean
 }) {
     const params = useParams()
     const locale = params?.locale as string || 'jp'
-    
+    const detailHref = `/${locale}/properties/${property.id}`
+    const badgeRightClass = hideFavoriteButton ? 'right-4' : 'right-14'
+
     const getDisplayTitle = () => {
         if (locale === 'en' && property.title_en) return property.title_en;
         if (locale === 'th' && property.title_th) return property.title_th;
         return property.title;
     };
 
-    return (
-        <div className="relative group h-full">
-            {/* Favorite Button - Absolute positioned outside the Link to ensure it handles its own clicks */}
-            <div className="absolute top-4 right-4 z-20">
-                <FavoriteButton propertyId={property.id} />
+    const imageSection = (
+        <>
+            <Image
+                src={property.images?.[0] || '/images/placeholder-property.jpg'}
+                alt={property.title}
+                fill
+                sizes={CARD_IMAGE_SIZES}
+                priority={imagePriority}
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+            />
+            <div
+                className={`pointer-events-none absolute top-4 left-4 ${badgeRightClass} flex flex-wrap gap-2 overflow-hidden max-h-[60px]`}
+            >
+                {property.status === 'contracted' && (
+                    <span className="bg-purple-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
+                        {dict.property.contracted}
+                    </span>
+                )}
+                {property.status === 'under_negotiation' && (
+                    <span className="bg-blue-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
+                        {dict.property.under_negotiation}
+                    </span>
+                )}
+                {property.is_presale && (
+                    <span className="bg-amber-500 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-sm tracking-wider shrink-0">
+                        {dict.property.presale}
+                    </span>
+                )}
+                {property.tags &&
+                    Array.isArray(property.tags) &&
+                    property.tags.slice(0, property.is_presale ? 1 : 2).map((tag: string) => (
+                        <span
+                            key={tag}
+                            className="bg-white/90 backdrop-blur-sm text-navy-primary text-[10px] font-normal px-2 py-1 rounded-md shadow-sm truncate max-w-[100px] shrink-0"
+                        >
+                            {dict.property.tags?.[tag] || tag}
+                        </span>
+                    ))}
             </div>
+        </>
+    )
 
-            <Link href={`/${locale}/properties/${property.id}`} prefetch={false} className="block h-full transition-transform active:scale-[0.98] duration-200">
-                <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg border border-slate-100 h-full flex flex-col">
-                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-100">
-                        <Image
-                            src={property.images?.[0] || '/images/placeholder-property.jpg'}
-                            alt={property.title}
-                            fill
-                            sizes={CARD_IMAGE_SIZES}
-                            priority={imagePriority}
-                            className="object-cover transition-transform duration-500"
-                        />
-                        <div className="absolute top-4 left-4 right-14 flex flex-wrap gap-2 overflow-hidden max-h-[60px]">
-                            {property.status === 'contracted' && (
-                                <span className="bg-purple-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
-                                    {dict.property.contracted}
-                                </span>
-                            )}
-                            {property.status === 'under_negotiation' && (
-                                <span className="bg-blue-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
-                                    {dict.property.under_negotiation}
-                                </span>
-                            )}
-                            {property.is_presale && (
-                                <span className="bg-amber-500 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-sm tracking-wider shrink-0">
-                                    {dict.property.presale}
-                                </span>
-                            )}
-                            {property.tags && Array.isArray(property.tags) && property.tags.slice(0, property.is_presale ? 1 : 2).map((tag: string) => (
-                                <span key={tag} className="bg-white/90 backdrop-blur-sm text-navy-primary text-[10px] font-normal px-2 py-1 rounded-md shadow-sm truncate max-w-[100px] shrink-0">
-                                    {dict.property.tags?.[tag] || tag}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="p-5 flex-1 flex flex-col justify-between">
+    const bodySection = (
+        <div className="p-5 flex-1 flex flex-col justify-between">
                         <div>
                             <div className="flex items-center text-slate-500 text-xs mb-2">
                                 <MapPin className="w-3 h-3 mr-1" />
@@ -151,8 +159,48 @@ export default function PropertyCard({
                         </div>
 
                     </div>
+    )
+
+    return (
+        <div className="relative group h-full">
+            {!hideFavoriteButton ? (
+                <div className="absolute top-4 right-4 z-20">
+                    <FavoriteButton propertyId={property.id} />
                 </div>
-            </Link>
+            ) : null}
+
+            {imageOpensInNewTab ? (
+                <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-lg">
+                    <a
+                        href={detailHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative block w-full shrink-0 aspect-[4/3] overflow-hidden bg-slate-100 outline-none ring-inset focus-visible:ring-2 focus-visible:ring-navy-primary"
+                    >
+                        {imageSection}
+                    </a>
+                    <Link
+                        href={detailHref}
+                        prefetch={false}
+                        className="block min-h-0 flex-1 transition-transform active:scale-[0.99] duration-200"
+                    >
+                        {bodySection}
+                    </Link>
+                </div>
+            ) : (
+                <Link
+                    href={detailHref}
+                    prefetch={false}
+                    className="block h-full transition-transform active:scale-[0.98] duration-200"
+                >
+                    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-lg">
+                        <div className="relative w-full shrink-0 aspect-[4/3] overflow-hidden bg-slate-100">
+                            {imageSection}
+                        </div>
+                        {bodySection}
+                    </div>
+                </Link>
+            )}
         </div>
     )
 }

@@ -93,7 +93,13 @@ export default async function FavoritesPage({ params }: { params: { locale: stri
                 {favoriteProperties.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {favoriteProperties.map((property: any) => (
-                            <PropertyCard key={property.id} property={property} dict={dict} />
+                            <PropertyCard
+                                key={property.id}
+                                property={property}
+                                dict={dict}
+                                hideFavoriteButton
+                                imageOpensInNewTab
+                            />
                         ))}
                     </div>
                 ) : (
