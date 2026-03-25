@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
-import { buildAuthCallbackRedirectUrl } from '@/lib/auth/auth-callback-url'
+import { buildOAuthSignInRedirectUrl } from '@/lib/auth/auth-callback-url'
+import { setAuthReturnToCookie } from '@/lib/auth/auth-return-cookie'
 import { useState } from 'react'
 import type { Provider } from '@supabase/supabase-js'
 
@@ -20,7 +21,8 @@ export function SocialLoginButtons({ locale = 'jp' }: { locale?: string }) {
             setLoading(null)
             return
         }
-        const redirectTo = buildAuthCallbackRedirectUrl(origin, locale, `/${locale}/mypage`)
+        setAuthReturnToCookie(`/${locale}/mypage`)
+        const redirectTo = buildOAuthSignInRedirectUrl(origin, locale)
 
         const { error } = await supabase.auth.signInWithOAuth({
             provider: provider as Provider,

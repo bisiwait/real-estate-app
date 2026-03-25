@@ -9,7 +9,8 @@ import { getErrorMessage } from '@/lib/utils/errors'
 import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
 import { safeNextPath } from '@/lib/auth/safe-next-path'
 import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
-import { buildAuthCallbackRedirectUrl } from '@/lib/auth/auth-callback-url'
+import { buildAuthCallbackRedirectUrl, buildOAuthSignInRedirectUrl } from '@/lib/auth/auth-callback-url'
+import { setAuthReturnToCookie } from '@/lib/auth/auth-return-cookie'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface LoginContentProps {
@@ -160,10 +161,11 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
             if (!origin) {
                 throw new Error('サイトURLが設定されていません（NEXT_PUBLIC_SITE_URL）。')
             }
+            setAuthReturnToCookie(nextAfterAuth)
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    redirectTo: buildAuthCallbackRedirectUrl(origin, locale, nextAfterAuth),
+                    redirectTo: buildOAuthSignInRedirectUrl(origin, locale),
                 },
             })
             if (error) throw error

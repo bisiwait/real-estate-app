@@ -32,3 +32,13 @@ export function buildAuthCallbackRedirectUrl(origin: string, locale: string, nex
     const path = authCallbackPathForOrigin(origin, locale)
     return `${origin}${path}?next=${encodeURIComponent(nextPath)}`
 }
+
+/**
+ * signInWithOAuth 専用。クエリ文字列なし。
+ * Supabase の許可 URL は多くの場合「?next= 無し」の1行だけ登録しており、付けると不一致で Site URL（localhost）に落ちる。
+ * ログイン後の行き先は auth_return_to Cookie で渡す。
+ */
+export function buildOAuthSignInRedirectUrl(origin: string, locale: string): string {
+    const path = authCallbackPathForOrigin(origin, locale)
+    return `${origin}${path}`
+}
