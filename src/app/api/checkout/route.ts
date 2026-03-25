@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import stripe from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 import { resolveSubscriptionPriceId, type SubscriptionBillingInterval } from '@/lib/stripe-subscription-prices'
+import { getPublicSiteUrl } from '@/lib/site-url'
 
-// NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_SITE_URL → localhost の優先順でフォールバック
+// NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_SITE_URL → getPublicSiteUrl()（本番は chonburihome.com 等）
 const BASE_URL =
     process.env.NEXT_PUBLIC_BASE_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    'http://localhost:3000'
+    getPublicSiteUrl()
 
 interface CheckoutRequestBody {
     priceId?: string

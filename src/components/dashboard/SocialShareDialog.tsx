@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import * as htmlToImage from 'html-to-image'
+import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -215,10 +216,13 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     const shortText = aiText.substring(0, 300)
     const hasMore = aiText.length > 300
     
-    // プレビュー用のURL（キャッシュ回避パラメータ付き）
-    const BASE_URL = 'https://real-estate-app-sigma-brown.vercel.app'
+    const origin = getAuthSiteOrigin()
+    if (!origin) {
+      toast.error('共有用のサイトURLを取得できません。')
+      return
+    }
     const shareLocale = activeLang === 'ja' ? 'jp' : activeLang
-    const shareUrl = `${BASE_URL}/${shareLocale}/properties/${propertyContext.id}?v=FORCE_RELOAD_FINAL_01`
+    const shareUrl = `${origin}/${shareLocale}/properties/${propertyContext.id}`
     
     // 物件名、AI紹介文、URLをすべて1つのテキストにまとめ、URLを最後に配置
     // これにより、LINEは「1つのメッセージ」としてプレビュー付きで送信します

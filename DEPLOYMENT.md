@@ -22,7 +22,22 @@
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase の Anon Key
    - その他、`.env.local` にある必要な変数。
 
-## 3. 本番環境の最適化
+## 3. 本番ドメイン（chonburihome.com）
+
+Vercel（またはホスティング先）の **Environment Variables** で次を必ず設定してください。
+
+| 変数 | 例 |
+|------|-----|
+| `NEXT_PUBLIC_SITE_URL` | `https://chonburihome.com` |
+| `NEXT_PUBLIC_BASE_URL` | （未使用なら省略可。使用する場合は `https://chonburihome.com` と揃える） |
+
+ローカルの `.env.local` では `http://localhost:3000` のままで問題ありません。
+
+**Supabase（Authentication → URL Configuration）** でも Site URL・Redirect URLs を `https://chonburihome.com/...` に更新してください。
+
+旧ホスト（`real-estate-app-sigma-brown.vercel.app` / `real-estate-app-8oj.pages.dev`）からは `next.config.ts` の `redirects` で `https://chonburihome.com` へ 308 リダイレクトします。
+
+## 4. 本番環境の最適化
 
 - `next.config.ts` で `images.remotePatterns` に Supabase のホスト名が正しく設定されていることを確認してください。
 - 認証リダイレクト URL が本番環境のドメインになっているか確認してください。

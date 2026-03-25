@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
+import { getPublicSiteUrl } from '@/lib/site-url'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
   apiVersion: '2026-01-28.clover',
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || getPublicSiteUrl()
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

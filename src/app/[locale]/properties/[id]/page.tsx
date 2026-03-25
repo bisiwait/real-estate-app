@@ -4,10 +4,9 @@ import { Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
 import { createStaticClient } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
+import { getPublicSiteUrl } from '@/lib/site-url'
 
 export const revalidate = 60
-
-const BASE_URL = 'https://real-estate-app-sigma-brown.vercel.app'
 
 async function fetchProperty(id: string) {
     const supabase = createStaticClient()
@@ -39,7 +38,8 @@ export async function generateMetadata(
             ? property.description.replace(/<[^>]+>/g, '').substring(0, 160)
             : 'Pattaya & Sriracha real estate listing on Chonburi Connect.'
 
-        let imageUrl = `${BASE_URL}/og-default.png`
+        const baseUrl = getPublicSiteUrl()
+        let imageUrl = `${baseUrl}/og-default.png`
         if (property.images?.[0]) {
             const firstImage = property.images[0]
             let baseImageUrl = ''
@@ -47,14 +47,14 @@ export async function generateMetadata(
                 baseImageUrl = firstImage
             } else {
                 const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`
-                baseImageUrl = `${BASE_URL}${path}`
+                baseImageUrl = `${baseUrl}${path}`
             }
             
             // 1. Next.js の自動エスケープ (& -> &amp;) を避けるため、パラメータを1つ (?format=jpg) に絞る
             imageUrl = `${baseImageUrl}?format=jpg`
         }
 
-        const pageUrl = `${BASE_URL}/${locale}/properties/${id}?v=FORCE_RELOAD_FINAL_01`
+        const pageUrl = `${baseUrl}/${locale}/properties/${id}`
 
         return {
             title: `${title} | Chonburi Connect`,

@@ -9,6 +9,7 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SearchCountProvider } from "@/contexts/SearchCountContext";
 import { Toaster } from 'sonner';
+import { getPublicSiteUrl } from '@/lib/site-url';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,9 +29,10 @@ const outfit = Outfit({
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const dict = await getDictionary(locale);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const baseUrl = getPublicSiteUrl();
 
   return {
+    metadataBase: new URL(baseUrl),
     title: dict.metadata.title,
     description: dict.metadata.description,
     alternates: {

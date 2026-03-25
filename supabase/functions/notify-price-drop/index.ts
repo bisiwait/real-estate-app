@@ -16,7 +16,7 @@ serve(async (req) => {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         const lineAccessToken = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN')!
-        const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://real-estate-app-8oj.pages.dev'
+        const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://chonburihome.com'
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -59,7 +59,7 @@ serve(async (req) => {
             oldPrice: old_price,
             newPrice: new_price,
             imageUrl: new_record.images?.[0] || 'https://via.placeholder.com/800x530?text=No+Image',
-            propertyUrl: `${siteUrl}/properties/${property_id}`,
+            propertyUrl: `${siteUrl}/jp/properties/${property_id}`,
             area: new_record.area_name || 'パタヤ'
         })
 

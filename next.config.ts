@@ -1,6 +1,28 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "real-estate-app-sigma-brown.vercel.app" }],
+        destination: "https://chonburihome.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "real-estate-app-8oj.pages.dev" }],
+        destination: "https://chonburihome.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.chonburihome.com" }],
+        destination: "https://chonburihome.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
