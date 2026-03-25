@@ -41,6 +41,9 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
     let targetLocale: string | null = null
     if (pathname === '/') {
         targetLocale = getLocale(request)
+    } else if (pathname === '/auth/callback' || pathname === '/auth/callback/') {
+        // Supabase に登録しやすいロケールなし URL から、[locale]/auth/callback へ寄せる
+        targetLocale = getLocale(request)
     } else {
         const root = locales.find((locale) => pathname === `/${locale}` || pathname === `/${locale}/`)
         if (root) targetLocale = root
@@ -164,6 +167,8 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
+        // 単独の「/」は次のパターンにマッチしない環境があるため明示する（/?code= の OAuth 戻り用）
+        '/',
         '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$).*)',
     ],
 }

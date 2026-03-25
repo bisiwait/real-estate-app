@@ -7,6 +7,7 @@ import { Mail, Lock, Loader2, ArrowRight, Building2, User, Phone, MessageCircle,
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
+import { buildAuthCallbackRedirectUrl } from '@/lib/auth/auth-callback-url'
 import { motion } from 'framer-motion'
 
 interface AgentSignupContentProps {
@@ -69,7 +70,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${getAuthSiteOrigin()}/${locale}/auth/callback?next=${encodeURIComponent(dashboardPath)}`,
+                    emailRedirectTo: buildAuthCallbackRedirectUrl(getAuthSiteOrigin(), locale, dashboardPath),
                     data: {
                         full_name: agentName.trim(),
                         company_name: companyName.trim() || null,

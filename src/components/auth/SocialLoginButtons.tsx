@@ -3,10 +3,11 @@
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
+import { buildAuthCallbackRedirectUrl } from '@/lib/auth/auth-callback-url'
 import { useState } from 'react'
 import type { Provider } from '@supabase/supabase-js'
 
-/** @param locale jp | en | th — コールバックは /{locale}/auth/callback */
+/** @param locale jp | en | th — localhost では /auth/callback、本番では /{locale}/auth/callback */
 export function SocialLoginButtons({ locale = 'jp' }: { locale?: string }) {
     const [loading, setLoading] = useState<string | null>(null)
     const supabase = createClient()
@@ -19,7 +20,7 @@ export function SocialLoginButtons({ locale = 'jp' }: { locale?: string }) {
             setLoading(null)
             return
         }
-        const redirectTo = `${origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`
+        const redirectTo = buildAuthCallbackRedirectUrl(origin, locale, `/${locale}/mypage`)
 
         const { error } = await supabase.auth.signInWithOAuth({
             provider: provider as Provider,

@@ -9,6 +9,7 @@ import { getErrorMessage } from '@/lib/utils/errors'
 import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
 import { safeNextPath } from '@/lib/auth/safe-next-path'
 import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
+import { buildAuthCallbackRedirectUrl } from '@/lib/auth/auth-callback-url'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface LoginContentProps {
@@ -58,7 +59,11 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${getAuthSiteOrigin()}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
+                        emailRedirectTo: buildAuthCallbackRedirectUrl(
+                            getAuthSiteOrigin(),
+                            locale,
+                            `/${locale}/signup/success?new=1`
+                        ),
                     },
                 })
                 if (error) throw error
@@ -158,7 +163,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    redirectTo: `${origin}/${locale}/auth/callback?next=${encodeURIComponent(nextAfterAuth)}`,
+                    redirectTo: buildAuthCallbackRedirectUrl(origin, locale, nextAfterAuth),
                 },
             })
             if (error) throw error

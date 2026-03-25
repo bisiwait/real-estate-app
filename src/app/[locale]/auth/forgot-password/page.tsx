@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
+import { buildAuthCallbackRedirectUrl } from '@/lib/auth/auth-callback-url'
 import { motion } from 'framer-motion'
 
 export default function ForgotPasswordPage() {
@@ -29,7 +30,7 @@ export default function ForgotPasswordPage() {
             }
             const nextPath = `/${locale}/auth/reset-password`
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${origin}/${locale}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+                redirectTo: buildAuthCallbackRedirectUrl(origin, locale, nextPath),
             })
             if (error) throw error
             setMessage({ type: 'success', text: 'パスワード再設定用のメールを送信しました。' })

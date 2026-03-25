@@ -8,6 +8,7 @@ import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
 import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
+import { buildAuthCallbackRedirectUrl } from '@/lib/auth/auth-callback-url'
 
 export default function RegisterPageClient() {
     const params = useParams()
@@ -33,7 +34,11 @@ export default function RegisterPageClient() {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${getAuthSiteOrigin()}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
+                        emailRedirectTo: buildAuthCallbackRedirectUrl(
+                            getAuthSiteOrigin(),
+                            locale,
+                            `/${locale}/signup/success?new=1`
+                        ),
                     },
                 })
                 if (error) throw error
