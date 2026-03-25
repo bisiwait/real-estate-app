@@ -21,6 +21,38 @@ function getLocale(request: NextRequest): string {
     return defaultLocale
 }
 
+/**
+ * Supabase の Site URL がオリジンだけ（例: http://localhost:3000）のとき、
+ * OAuth 後に `/?code=...` や `/jp/?code=...` に戻ることがある。
+ * そのままでは /[locale]/auth/callback の exchangeCodeForSession に届かないため、ここで寄せる。
+ */
+function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse | null {
+    const code = request.nextUrl.searchParams.get('code')
+    if (!code) return null
+
+    const pathname = request.nextUrl.pathname
+
+    const alreadyOnCallback = locales.some((locale) => {
+        const base = `/${locale}/auth/callback`
+        return pathname === base || pathname.startsWith(`${base}/`)
+    })
+    if (alreadyOnCallback) return null
+
+    let targetLocale: string | null = null
+    if (pathname === '/') {
+        targetLocale = getLocale(request)
+    } else {
+        const root = locales.find((locale) => pathname === `/${locale}` || pathname === `/${locale}/`)
+        if (root) targetLocale = root
+    }
+
+    if (!targetLocale) return null
+
+    const url = request.nextUrl.clone()
+    url.pathname = `/${targetLocale}/auth/callback`
+    return NextResponse.redirect(url)
+}
+
 export default async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname
 
@@ -33,6 +65,9 @@ export default async function middleware(request: NextRequest) {
     ) {
         return (await updateSession(request)).response
     }
+
+    const oauthRedirect = redirectOAuthPkceCodeToAuthCallback(request)
+    if (oauthRedirect) return oauthRedirect
 
     // Check if there is any supported locale in the pathname
     const pathnameHasLocale = locales.some(
