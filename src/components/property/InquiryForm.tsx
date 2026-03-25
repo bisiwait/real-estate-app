@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -50,6 +50,34 @@ export default function InquiryForm({
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+  const [contactSendConsent, setContactSendConsent] = useState(false)
+  const [submitPhase, setSubmitPhase] = useState<'idle' | 'armed'>('idle')
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearConfirmTimer = useCallback(() => {
+    if (confirmTimerRef.current) {
+      clearTimeout(confirmTimerRef.current)
+      confirmTimerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => () => clearConfirmTimer(), [clearConfirmTimer])
+
+  useEffect(() => {
+    if (!contactSendConsent) {
+      setSubmitPhase('idle')
+      clearConfirmTimer()
+    }
+  }, [contactSendConsent, clearConfirmTimer])
+
+  const armSubmitConfirm = useCallback(() => {
+    clearConfirmTimer()
+    setSubmitPhase('armed')
+    confirmTimerRef.current = setTimeout(() => {
+      setSubmitPhase('idle')
+      confirmTimerRef.current = null
+    }, 3000)
+  }, [clearConfirmTimer])
 
   useEffect(() => {
     setIsDesktop(window.innerWidth >= 1024)
@@ -87,16 +115,29 @@ export default function InquiryForm({
 
   const innerVisible = !isLoggedIn || isOpen || isDesktop
 
+  const labelEmphasis = isLoggedIn
+    ? 'mb-2 ml-1 block text-xs font-black uppercase tracking-wide text-navy-primary'
+    : 'mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400'
+  const labelDefault = 'mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isLoggedIn) {
       onRequireAuth?.()
       return
     }
+    if (!contactSendConsent) {
+      return
+    }
+    if (submitPhase !== 'armed') {
+      return
+    }
 
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
       setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
+      setSubmitPhase('idle')
+      clearConfirmTimer()
       return
     }
 
@@ -137,6 +178,8 @@ export default function InquiryForm({
     } catch (err: unknown) {
       console.error('Inquiry submission error:', err)
       setError(getErrorMessage(err))
+      setSubmitPhase('idle')
+      clearConfirmTimer()
     } finally {
       setLoading(false)
     }
@@ -260,20 +303,23 @@ export default function InquiryForm({
             </div>
 
             <div>
-              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
-                {dict.labels.phone_label}
-              </label>
+              <label className={isLoggedIn ? labelEmphasis : labelDefault}>{dict.labels.phone_label}</label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+66 00 000 0000"
-                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                className={clsx(
+                  'w-full rounded-xl border bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary',
+                  isLoggedIn
+                    ? 'border border-slate-100 border-l-4 border-l-navy-primary shadow-sm'
+                    : 'border border-slate-100'
+                )}
               />
             </div>
 
             <div>
-              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+              <label className={isLoggedIn ? labelEmphasis : labelDefault}>
                 {p.inquiry_line_contact_label ?? p.inquiry_line_id_label}
               </label>
               <input
@@ -281,7 +327,12 @@ export default function InquiryForm({
                 value={formData.lineId}
                 onChange={(e) => setFormData({ ...formData, lineId: e.target.value })}
                 placeholder={p.inquiry_line_contact_placeholder ?? '@example'}
-                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                className={clsx(
+                  'w-full rounded-xl border bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary',
+                  isLoggedIn
+                    ? 'border border-slate-100 border-l-4 border-l-navy-primary shadow-sm'
+                    : 'border border-slate-100'
+                )}
               />
               <p className="mt-1 text-[10px] text-slate-400">
                 {p.inquiry_line_contact_hint ?? p.inquiry_line_id_hint}
@@ -307,20 +358,65 @@ export default function InquiryForm({
 
             {error && <div className="px-1 text-xs font-normal text-red-500">{error}</div>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-4 flex w-full items-center justify-center space-x-2 rounded-xl bg-navy-primary py-4 font-normal text-white shadow-lg transition-all hover:bg-navy-secondary hover:shadow-xl"
-            >
-              {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <>
-                  <span>{dict.property.submit_inquiry_btn}</span>
-                  <Send className="ml-1 h-4 w-4" />
-                </>
-              )}
-            </button>
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-4">
+              <label htmlFor="inquiry-contact-consent" className="flex cursor-pointer items-start gap-3">
+                <input
+                  id="inquiry-contact-consent"
+                  type="checkbox"
+                  checked={contactSendConsent}
+                  onChange={(e) => setContactSendConsent(e.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-2 focus:ring-navy-primary"
+                />
+                <span className="text-sm font-bold leading-snug text-navy-secondary">
+                  {p.inquiry_contact_send_consent}
+                </span>
+              </label>
+            </div>
+
+            {submitPhase === 'idle' ? (
+              <button
+                type="button"
+                disabled={loading || !contactSendConsent}
+                onClick={() => {
+                  if (contactSendConsent) armSubmitConfirm()
+                }}
+                className={clsx(
+                  'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
+                  contactSendConsent && !loading
+                    ? 'bg-navy-primary text-white hover:bg-navy-secondary hover:shadow-xl'
+                    : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55 shadow-none'
+                )}
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <span>{p.inquiry_send_btn_primary ?? dict.property.submit_inquiry_btn}</span>
+                    <Send className="h-4 w-4 shrink-0" />
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading || !contactSendConsent}
+                className={clsx(
+                  'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
+                  !loading && contactSendConsent
+                    ? 'bg-orange-600 text-white shadow-orange-600/30 hover:bg-orange-700 hover:shadow-xl'
+                    : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55'
+                )}
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-center leading-tight">{p.inquiry_send_btn_confirm}</span>
+                    <Send className="h-4 w-4 shrink-0" />
+                  </>
+                )}
+              </button>
+            )}
 
             <p className="mt-4 whitespace-pre-line text-center text-[10px] text-slate-400">
               {dict.property.inquiry_footer_note}
