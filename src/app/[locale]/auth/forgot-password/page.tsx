@@ -3,7 +3,9 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Mail, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
 import { motion } from 'framer-motion'
 
 export default function ForgotPasswordPage() {
@@ -11,6 +13,8 @@ export default function ForgotPasswordPage() {
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
+    const params = useParams()
+    const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
     const supabase = createClient()
 
     const handleResetRequest = async (e: React.FormEvent) => {
@@ -19,8 +23,13 @@ export default function ForgotPasswordPage() {
         setMessage(null)
 
         try {
+            const origin = getAuthSiteOrigin()
+            if (!origin) {
+                throw new Error('サイトURLが設定されていません（NEXT_PUBLIC_SITE_URL）。')
+            }
+            const nextPath = `/${locale}/auth/reset-password`
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+                redirectTo: `${origin}/${locale}/auth/callback?next=${encodeURIComponent(nextPath)}`,
             })
             if (error) throw error
             setMessage({ type: 'success', text: 'パスワード再設定用のメールを送信しました。' })
@@ -87,7 +96,7 @@ export default function ForgotPasswordPage() {
                     <div className="text-center">
                         <p className="text-slate-500 mb-8 font-medium">メールが届かない場合は、迷惑メールフォルダを確認するか、時間をおいて再度お試しください。</p>
                         <Link
-                            href="/login"
+                            href={`/${locale}/login`}
                             className="inline-flex items-center space-x-2 text-navy-primary font-black hover:text-navy-secondary transition-colors"
                         >
                             <ArrowLeft className="w-4 h-4" />
@@ -98,7 +107,7 @@ export default function ForgotPasswordPage() {
 
                 <div className="mt-10 pt-8 border-t border-slate-50 text-center font-bold">
                     <Link
-                        href="/login"
+                        href={`/${locale}/login`}
                         className="text-sm text-slate-400 hover:text-navy-primary transition-colors flex items-center justify-center space-x-2"
                     >
                         <ArrowLeft className="w-4 h-4" />

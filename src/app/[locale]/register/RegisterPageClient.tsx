@@ -7,6 +7,7 @@ import { safeNextPath } from '@/lib/auth/safe-next-path'
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
+import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
 
 export default function RegisterPageClient() {
     const params = useParams()
@@ -32,7 +33,7 @@ export default function RegisterPageClient() {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
+                        emailRedirectTo: `${getAuthSiteOrigin()}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
                     },
                 })
                 if (error) throw error

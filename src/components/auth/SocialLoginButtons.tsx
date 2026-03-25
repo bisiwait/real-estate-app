@@ -2,21 +2,28 @@
 
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
+import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
 import { useState } from 'react'
 import type { Provider } from '@supabase/supabase-js'
 
-export function SocialLoginButtons() {
+/** @param locale jp | en | th — コールバックは /{locale}/auth/callback */
+export function SocialLoginButtons({ locale = 'jp' }: { locale?: string }) {
     const [loading, setLoading] = useState<string | null>(null)
     const supabase = createClient()
 
     const handleLogin = async (provider: 'google') => {
         setLoading(provider)
+        const origin = getAuthSiteOrigin()
+        if (!origin) {
+            console.error('OAuth redirect: set NEXT_PUBLIC_SITE_URL to your public site URL.')
+            setLoading(null)
+            return
+        }
+        const redirectTo = `${origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/mypage`)}`
 
         const { error } = await supabase.auth.signInWithOAuth({
             provider: provider as Provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-            },
+            options: { redirectTo },
         })
 
         if (error) {

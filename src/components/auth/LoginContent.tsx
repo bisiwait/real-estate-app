@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { setSignupWelcomeCookie } from '@/lib/auth/signupWelcomeCookie'
 import { safeNextPath } from '@/lib/auth/safe-next-path'
+import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface LoginContentProps {
@@ -57,7 +58,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
+                        emailRedirectTo: `${getAuthSiteOrigin()}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/signup/success?new=1`)}`,
                     },
                 })
                 if (error) throw error
@@ -149,11 +150,15 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
         try {
             const nextAfterAuth = isSignUp
                 ? `/${locale}/signup/success?new=1`
-                : `/${locale}/mypage`
+                : safeNextPath(searchParams.get('redirect') || searchParams.get('next')) || `/${locale}/mypage`
+            const origin = getAuthSiteOrigin()
+            if (!origin) {
+                throw new Error('サイトURLが設定されていません（NEXT_PUBLIC_SITE_URL）。')
+            }
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    redirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(nextAfterAuth)}`,
+                    redirectTo: `${origin}/${locale}/auth/callback?next=${encodeURIComponent(nextAfterAuth)}`,
                 },
             })
             if (error) throw error

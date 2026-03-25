@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Loader2, ArrowRight, Building2, User, Phone, MessageCircle, MapPin, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { getAuthSiteOrigin } from '@/lib/auth/site-origin'
 import { motion } from 'framer-motion'
 
 interface AgentSignupContentProps {
@@ -68,7 +69,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(dashboardPath)}`,
+                    emailRedirectTo: `${getAuthSiteOrigin()}/${locale}/auth/callback?next=${encodeURIComponent(dashboardPath)}`,
                     data: {
                         full_name: agentName.trim(),
                         company_name: companyName.trim() || null,
