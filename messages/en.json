@@ -163,6 +163,7 @@
         "about": "About Us",
         "terms": "Terms of Service",
         "contact": "Contact",
+        "faq": "FAQ",
         "footer_want_to_list": "Want to list your property",
         "post-property": "Listing Guide",
         "admin": "Admin",
@@ -628,6 +629,81 @@
         "pro_benefit_pdf_desc": "One-click flyers with your contact and QR—great for viewings and handoffs.",
         "pro_benefit_search_title": "Higher placement in search",
         "pro_benefit_search_desc": "Listings rank higher in results, lifting views and inquiries vs Free."
+    },
+    "faq_page": {
+        "meta_title": "FAQ | Chonburi Connect",
+        "meta_description": "Answers about searching and inquiries, living in Pattaya & Sriracha, and using the site.",
+        "title": "Frequently asked questions",
+        "subtitle": "Choose a category and tap a question to read the answer.",
+        "cat_property_title": "Property search",
+        "cat_life_title": "Daily life",
+        "cat_system_title": "System",
+        "items_property": [
+            {
+                "q": "Does it cost anything to use the site?",
+                "a": "No. Property seekers can use all features for free."
+            },
+            {
+                "q": "Will the platform team contact me after I inquire?",
+                "a": "No. We are a marketplace: your message goes straight to the listing agent. Please wait for them to reply."
+            },
+            {
+                "q": "Why use LINE to inquire?",
+                "a": "LINE is the fastest, most reliable channel for Thai real estate. Availability and viewing slots are easy to arrange in chat."
+            },
+            {
+                "q": "Can I ask about several listings in one message?",
+                "a": "Different properties may have different agents. Please use the inquiry button on each listing page."
+            },
+            {
+                "q": "Do I need to log in to inquire?",
+                "a": "Yes. We require sign-in for reliable follow-up and to reduce spam. After the first time, your details are easier to reuse."
+            }
+        ],
+        "items_life": [
+            {
+                "q": "Can I book a viewing from Japan?",
+                "a": "Yes. You can also discuss a video viewing with the agent over LINE."
+            },
+            {
+                "q": "If a listing says “pet friendly”, can I definitely bring my pet?",
+                "a": "“Pet friendly” means it may be possible, but breed/size rules vary. Always confirm details with the agent first."
+            },
+            {
+                "q": "How common are bathtubs?",
+                "a": "Relatively limited in Pattaya & Sriracha. Use the “bathtub” filter when you search."
+            },
+            {
+                "q": "What documents do I need to sign a lease?",
+                "a": "A passport copy is usually required. Your agent will guide you through the rest."
+            }
+        ],
+        "items_system": [
+            {
+                "q": "A favorite listing disappeared.",
+                "a": "It may have been rented/sold and removed from the site."
+            },
+            {
+                "q": "My LINE ID can’t be found.",
+                "a": "In LINE, turn on “Allow others to add me by ID”, or copy your add-friend URL from your profile and register that instead."
+            },
+            {
+                "q": "Are listing details guaranteed accurate?",
+                "a": "Agents update their own listings; Thailand’s market moves quickly. Always confirm the latest availability on LINE or by phone."
+            },
+            {
+                "q": "Is my personal data protected?",
+                "a": "Yes. Your inquiry details are not shown to anyone except the agent you contacted."
+            },
+            {
+                "q": "How do I delete my account?",
+                "a": "From My Page → Settings you can leave the service and request data removal."
+            },
+            {
+                "q": "I found a bug on the site.",
+                "a": "Please report it via “Bug report (LINE)” in the footer. We may not reply individually, but we use reports to improve the site."
+            }
+        ]
     },
     "presale": {
         "japanese_support": "Japanese Support Available",

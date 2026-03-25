@@ -83,7 +83,7 @@ export default async function RootLayout({
                 <Link href={`/${locale}/pricing`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">
                   {(dict.labels as any)?.footer_want_to_list || 'Want to list your property'}
                 </Link>
-                <Link href={`/${locale}/contact`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.contact || 'Contact'}</Link>
+                <Link href={`/${locale}/faq`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.faq || 'FAQ'}</Link>
               </nav>
             </div>
             <div className="text-center text-xs text-slate-500 font-medium">
