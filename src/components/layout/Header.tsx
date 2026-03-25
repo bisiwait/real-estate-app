@@ -27,7 +27,11 @@ export default function Header({ dict }: { dict: any }) {
 
     const navLinks = [
         { href: `/${currentLocale}/properties`, label: dict.common.properties, icon: Search },
-        { href: `/${currentLocale}/agent/welcome`, label: "物件を掲載したい方", icon: Building2 },
+        {
+            href: `/${currentLocale}/pricing`,
+            label: dict.agent_plan?.nav_for_agents ?? dict.labels?.footer_want_to_list ?? "List properties",
+            icon: Building2,
+        },
     ]
 
     return (
