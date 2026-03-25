@@ -10,7 +10,6 @@ import ProfileSection from "@/components/dashboard/ProfileSection";
 import FavoritesSection from "@/components/dashboard/FavoritesSection";
 import SavedSearchesSection from "@/components/dashboard/SavedSearchesSection";
 import UserPasswordChangeForm from "@/components/dashboard/UserPasswordChangeForm";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function MyPageClient({ dict, locale }: { dict: any, locale: string }) {
     const [activeTab, setActiveTab] = useState("profile");
@@ -137,6 +136,8 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
 }
 
 function SettingsSection({ handleLogout, dict, locale }: { handleLogout: () => void, dict: any, locale: string }) {
+    const [passwordOpen, setPasswordOpen] = useState(false);
+
     return (
         <div className="p-12 max-w-2xl mx-auto space-y-10">
             <div className="text-center mb-12">
@@ -149,7 +150,26 @@ function SettingsSection({ handleLogout, dict, locale }: { handleLogout: () => v
 
             <div className="space-y-4">
                 <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/profile/edit`} />
-                <UserPasswordChangeForm dict={dict} locale={locale} />
+                <div className="overflow-hidden rounded-2xl border border-transparent bg-slate-50 transition-all hover:border-navy-primary/20">
+                    <button
+                        type="button"
+                        onClick={() => setPasswordOpen((o) => !o)}
+                        aria-expanded={passwordOpen}
+                        className="group flex w-full items-center justify-between p-6 text-left transition-all hover:bg-navy-primary/5"
+                    >
+                        <span className="font-bold text-navy-secondary">{dict.labels.settings_password_section_title}</span>
+                        <ChevronRight
+                            size={18}
+                            className={`shrink-0 text-slate-300 transition-transform group-hover:text-navy-primary ${passwordOpen ? "rotate-90" : "group-hover:translate-x-1"}`}
+                            aria-hidden
+                        />
+                    </button>
+                    {passwordOpen ? (
+                        <div className="border-t border-slate-200/80 px-4 pb-5 pt-1 sm:px-6">
+                            <UserPasswordChangeForm dict={dict} locale={locale} embedded />
+                        </div>
+                    ) : null}
+                </div>
                 <SettingsLink label={dict.labels.notification_settings} href="#" />
             </div>
 

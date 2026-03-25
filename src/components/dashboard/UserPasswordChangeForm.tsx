@@ -11,9 +11,11 @@ const MIN_PASSWORD_LEN = 8;
 type Props = {
     dict: { labels: Record<string, string>; auth: { forgot_password: string } };
     locale: string;
+    /** 設定メニュー内など、見出し行の下に置くときは true */
+    embedded?: boolean;
 };
 
-export default function UserPasswordChangeForm({ dict, locale }: Props) {
+export default function UserPasswordChangeForm({ dict, locale, embedded = false }: Props) {
     const supabase = useMemo(() => createClient(), []);
     const l = dict.labels;
 
@@ -82,7 +84,13 @@ export default function UserPasswordChangeForm({ dict, locale }: Props) {
 
     if (!ready) {
         return (
-            <div className="flex items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 py-12">
+            <div
+                className={
+                    embedded
+                        ? "flex items-center justify-center py-10"
+                        : "flex items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 py-12"
+                }
+            >
                 <Loader2 className="h-8 w-8 animate-spin text-navy-primary" />
             </div>
         );
@@ -90,20 +98,32 @@ export default function UserPasswordChangeForm({ dict, locale }: Props) {
 
     if (oauthOnly) {
         return (
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-sm leading-relaxed text-slate-600">
+            <div
+                className={
+                    embedded
+                        ? "rounded-xl bg-slate-100/80 p-4 text-sm leading-relaxed text-slate-600"
+                        : "rounded-2xl border border-slate-100 bg-slate-50 p-6 text-sm leading-relaxed text-slate-600"
+                }
+            >
                 {l.settings_password_oauth_only}
             </div>
         );
     }
 
+    const shell = embedded
+        ? "space-y-4 pt-1"
+        : "rounded-2xl border border-slate-100 bg-white p-6 shadow-sm";
+
     return (
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-primary/10 text-navy-primary">
-                    <Lock className="h-5 w-5" />
+        <div className={shell}>
+            {!embedded && (
+                <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-primary/10 text-navy-primary">
+                        <Lock className="h-5 w-5" />
+                    </div>
+                    <h4 className="text-lg font-black text-navy-secondary">{l.settings_password_section_title}</h4>
                 </div>
-                <h4 className="text-lg font-black text-navy-secondary">{l.settings_password_section_title}</h4>
-            </div>
+            )}
 
             <form onSubmit={onSubmit} className="space-y-4">
                 <div>
