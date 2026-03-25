@@ -47,27 +47,41 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
     const [isAnnual, setIsAnnual] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmError, setConfirmError] = useState<string | null>(null);
+    const [authResolved, setAuthResolved] = useState(false);
+
+    const pricingPath = `/${locale}/pricing`;
+    const signupWithReturn = `/${locale}/agent/signup?redirect=${encodeURIComponent(pricingPath)}`;
+    const loginWithReturn = `/${locale}/login?redirect=${encodeURIComponent(pricingPath)}`;
 
     useEffect(() => {
+        let cancelled = false;
         (async () => {
-            const { data: { user: u } } = await supabase.auth.getUser();
-            if (!u) {
-                setUser(null);
-                setIsAgent(false);
-                return;
+            try {
+                const { data: { user: u } } = await supabase.auth.getUser();
+                if (cancelled) return;
+                if (!u) {
+                    setUser(null);
+                    setIsAgent(false);
+                    return;
+                }
+                setUser({ id: u.id });
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("user_role, is_admin")
+                    .eq("id", u.id)
+                    .maybeSingle();
+                const agent =
+                    profile?.user_role === "agent" ||
+                    profile?.user_role === "admin" ||
+                    profile?.is_admin === true;
+                setIsAgent(!!agent);
+            } finally {
+                if (!cancelled) setAuthResolved(true);
             }
-            setUser({ id: u.id });
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("user_role, is_admin")
-                .eq("id", u.id)
-                .maybeSingle();
-            const agent =
-                profile?.user_role === "agent" ||
-                profile?.user_role === "admin" ||
-                profile?.is_admin === true;
-            setIsAgent(!!agent);
         })();
+        return () => {
+            cancelled = true;
+        };
     }, [supabase]);
 
     const billingStartDate = addDays(new Date(), 30);
@@ -95,7 +109,8 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
 
     const handleCheckout = async (priceId: string) => {
         if (!user) {
-            router.push(`/${locale}/login?redirect=${encodeURIComponent(`/${locale}/pricing`)}`);
+            closeConfirm();
+            router.push(signupWithReturn);
             return;
         }
         if (!priceId) {
@@ -213,7 +228,7 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                             ) : (
                                 <>
                                     <Link
-                                        href={`/${locale}/agent/signup`}
+                                        href={signupWithReturn}
                                         className="agent-plan-shimmer inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-navy-primary px-8 py-4 text-lg font-black text-white shadow-lg shadow-navy-primary/20 transition-all hover:bg-navy-secondary sm:w-auto"
                                     >
                                         {p.cta_register_free}
@@ -307,7 +322,7 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                                 <FeatureRow label={p.feat_pdf} value={p.feat_not_included} muted />
                             </div>
                             <Link
-                                href={isAgent ? `/${locale}/dashboard` : `/${locale}/agent/signup`}
+                                href={isAgent ? `/${locale}/dashboard` : signupWithReturn}
                                 className="w-full rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-black text-navy-secondary shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98]"
                             >
                                 {isAgent ? p.plan_cta_current : p.plan_cta_start_free}
@@ -444,7 +459,7 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                         </Link>
                     ) : (
                         <Link
-                            href={`/${locale}/agent/signup`}
+                            href={signupWithReturn}
                             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-navy-primary px-10 py-4 text-lg font-black text-white shadow-lg shadow-navy-primary/25 transition-all hover:bg-navy-secondary"
                         >
                             {p.cta_register_free}
@@ -516,35 +531,74 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                                 <p className="mt-2 text-sm font-medium text-slate-600">{trialBillingNote}</p>
                             </div>
 
+                            {authResolved && !user ? (
+                                <div className="rounded-2xl border border-amber-100 bg-amber-50/90 p-4 text-sm font-medium leading-relaxed text-amber-950">
+                                    {p.checkout_guest_hint}
+                                </div>
+                            ) : null}
+
                             {confirmError && (
                                 <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{confirmError}</div>
                             )}
                         </div>
 
-                        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                            <button
-                                type="button"
-                                onClick={closeConfirm}
-                                className="flex-1 rounded-2xl border border-slate-200 bg-white py-3.5 font-black text-navy-secondary transition-colors hover:bg-slate-50 disabled:opacity-60"
-                                disabled={loading}
-                            >
-                                {p.modal_back}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleConfirmCheckout}
-                                className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-navy-primary py-3.5 font-black text-white shadow-md transition-colors hover:bg-navy-secondary disabled:opacity-70"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="h-5 w-5 animate-spin" />
-                                        {p.modal_processing}
-                                    </>
-                                ) : (
-                                    p.modal_agree
-                                )}
-                            </button>
+                        <div className="mt-6 flex flex-col gap-3">
+                            {!authResolved ? (
+                                <div className="flex justify-center py-6">
+                                    <Loader2 className="h-8 w-8 animate-spin text-navy-primary" />
+                                </div>
+                            ) : !user ? (
+                                <>
+                                    <Link
+                                        href={signupWithReturn}
+                                        onClick={closeConfirm}
+                                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-navy-primary py-3.5 font-black text-white shadow-md transition-colors hover:bg-navy-secondary"
+                                    >
+                                        {p.checkout_go_register}
+                                        <ArrowRight className="h-5 w-5" />
+                                    </Link>
+                                    <Link
+                                        href={loginWithReturn}
+                                        onClick={closeConfirm}
+                                        className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white py-3.5 font-black text-navy-secondary transition-colors hover:bg-slate-50"
+                                    >
+                                        {p.checkout_go_login}
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={closeConfirm}
+                                        className="py-2 text-center text-sm font-bold text-slate-500 transition-colors hover:text-navy-secondary"
+                                    >
+                                        {p.modal_back}
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <button
+                                        type="button"
+                                        onClick={closeConfirm}
+                                        className="flex-1 rounded-2xl border border-slate-200 bg-white py-3.5 font-black text-navy-secondary transition-colors hover:bg-slate-50 disabled:opacity-60"
+                                        disabled={loading}
+                                    >
+                                        {p.modal_back}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleConfirmCheckout}
+                                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-navy-primary py-3.5 font-black text-white shadow-md transition-colors hover:bg-navy-secondary disabled:opacity-70"
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                {p.modal_processing}
+                                            </>
+                                        ) : (
+                                            p.modal_agree
+                                        )}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

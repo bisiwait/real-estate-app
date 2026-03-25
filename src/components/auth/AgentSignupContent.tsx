@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Loader2, ArrowRight, Building2, User, Phone, MessageCircle, MapPin, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -11,6 +11,19 @@ import { motion } from 'framer-motion'
 interface AgentSignupContentProps {
     dict: any
     locale: string
+}
+
+/** オープンリダイレクト防止: 同一ロケールのパスのみ許可 */
+function safeInternalPath(locale: string, raw: string | null): string | null {
+    if (!raw || typeof raw !== 'string') return null
+    let s = raw
+    try {
+        s = decodeURIComponent(raw)
+    } catch {
+        return null
+    }
+    if (!s.startsWith(`/${locale}/`) || s.includes('//') || s.includes('://')) return null
+    return s
 }
 
 export default function AgentSignupContent({ dict, locale }: AgentSignupContentProps) {
@@ -27,7 +40,15 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
     const router = useRouter()
+    const searchParams = useSearchParams()
     const supabase = createClient()
+
+    const redirectAfter = useMemo(
+        () => safeInternalPath(locale, searchParams.get('redirect')),
+        [locale, searchParams]
+    )
+    const nextAfterAuth = redirectAfter ?? `/${locale}/dashboard`
+    const showPricingReturnHint = Boolean(redirectAfter?.includes('/pricing'))
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -46,7 +67,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(`/${locale}/dashboard`)}`,
+                    emailRedirectTo: `${window.location.origin}/${locale}/auth/callback?next=${encodeURIComponent(nextAfterAuth)}`,
                     data: {
                         full_name: agentName.trim(),
                         company_name: companyName.trim() || null,
@@ -67,12 +88,12 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                     method: 'POST',
                     credentials: 'same-origin',
                 }).catch(() => {})
-                router.push(`/${locale}/dashboard`)
+                router.push(nextAfterAuth)
                 router.refresh()
                 return
             }
 
-            router.push(`/${locale}/login`)
+            router.push(`/${locale}/login?redirect=${encodeURIComponent(nextAfterAuth)}`)
         } catch (error: any) {
             setMessage({ type: 'error', text: getErrorMessage(error) })
         } finally {
@@ -85,7 +106,10 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
             <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden border border-slate-100 p-8 md:p-16">
                 <div className="max-w-md mx-auto w-full">
                     <div className="mb-12 text-center">
-                        <Link href={`/${locale}/agent/welcome`} className="inline-flex items-center space-x-2 text-navy-primary font-black mb-6 hover:opacity-70 transition-opacity">
+                        <Link
+                            href={redirectAfter ?? `/${locale}/pricing`}
+                            className="inline-flex items-center space-x-2 text-navy-primary font-black mb-6 hover:opacity-70 transition-opacity"
+                        >
                             <Building2 className="w-5 h-5" />
                             <span>For Agents</span>
                         </Link>
@@ -93,6 +117,11 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                             {dict.auth.agent_signup_title}
                         </h1>
                         <p className="text-slate-400 font-medium">必要事項を入力してエージェント登録を開始してください</p>
+                        {showPricingReturnHint && dict.agent_plan?.signup_after_pricing_hint ? (
+                            <p className="mt-4 rounded-2xl border border-navy-primary/15 bg-navy-primary/5 px-4 py-3 text-left text-sm font-bold leading-relaxed text-navy-secondary">
+                                {dict.agent_plan.signup_after_pricing_hint}
+                            </p>
+                        ) : null}
                     </div>
 
                     {message && (
@@ -269,7 +298,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
 
                     <div className="mt-12 text-center">
                         <Link
-                            href={`/${locale}/login`}
+                            href={`/${locale}/login?redirect=${encodeURIComponent(nextAfterAuth)}`}
                             className="text-sm font-black text-navy-primary hover:text-navy-secondary transition-colors underline underline-offset-8 decoration-navy-primary/20"
                         >
                             {dict.auth.already_have_account}
