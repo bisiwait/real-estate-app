@@ -115,10 +115,10 @@ export default function InquiryForm({
 
   const innerVisible = !isLoggedIn || isOpen || isDesktop
 
-  const labelEmphasis = isLoggedIn
-    ? 'mb-2 ml-1 block text-xs font-black uppercase tracking-wide text-navy-primary'
-    : 'mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400'
-  const labelDefault = 'mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400'
+  const fieldLabelClass =
+    'mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400'
+  const fieldInputClass =
+    'w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -267,7 +267,7 @@ export default function InquiryForm({
             <p className="text-[10px] font-medium text-slate-500">{p.contact_prefill_note}</p>
 
             <div>
-              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+              <label className={fieldLabelClass}>
                 {dict.labels.name_label} ({dict.common.required})
               </label>
               <input
@@ -276,7 +276,7 @@ export default function InquiryForm({
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder={dict.labels.name_placeholder}
-                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                className={fieldInputClass}
                 onInvalid={(e) =>
                   (e.target as HTMLInputElement).setCustomValidity(dict.property.error_name_required)
                 }
@@ -285,7 +285,7 @@ export default function InquiryForm({
             </div>
 
             <div>
-              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
+              <label className={fieldLabelClass}>
                 {dict.labels.email_label} ({dict.common.required})
               </label>
               <input
@@ -294,7 +294,7 @@ export default function InquiryForm({
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="example@mail.com"
-                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                className={fieldInputClass}
                 onInvalid={(e) =>
                   (e.target as HTMLInputElement).setCustomValidity(dict.property.error_email_invalid)
                 }
@@ -303,23 +303,18 @@ export default function InquiryForm({
             </div>
 
             <div>
-              <label className={isLoggedIn ? labelEmphasis : labelDefault}>{dict.labels.phone_label}</label>
+              <label className={fieldLabelClass}>{dict.labels.phone_label}</label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+66 00 000 0000"
-                className={clsx(
-                  'w-full rounded-xl border bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary',
-                  isLoggedIn
-                    ? 'border border-slate-100 border-l-4 border-l-navy-primary shadow-sm'
-                    : 'border border-slate-100'
-                )}
+                className={fieldInputClass}
               />
             </div>
 
             <div>
-              <label className={isLoggedIn ? labelEmphasis : labelDefault}>
+              <label className={fieldLabelClass}>
                 {p.inquiry_line_contact_label ?? p.inquiry_line_id_label}
               </label>
               <input
@@ -327,12 +322,7 @@ export default function InquiryForm({
                 value={formData.lineId}
                 onChange={(e) => setFormData({ ...formData, lineId: e.target.value })}
                 placeholder={p.inquiry_line_contact_placeholder ?? '@example'}
-                className={clsx(
-                  'w-full rounded-xl border bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary',
-                  isLoggedIn
-                    ? 'border border-slate-100 border-l-4 border-l-navy-primary shadow-sm'
-                    : 'border border-slate-100'
-                )}
+                className={fieldInputClass}
               />
               <p className="mt-1 text-[10px] text-slate-400">
                 {p.inquiry_line_contact_hint ?? p.inquiry_line_id_hint}
@@ -340,15 +330,13 @@ export default function InquiryForm({
             </div>
 
             <div>
-              <label className="mb-1.5 ml-1 block text-[10px] font-normal uppercase tracking-widest text-slate-400">
-                {dict.labels.inquiry_content_label}
-              </label>
+              <label className={fieldLabelClass}>{dict.labels.inquiry_content_label}</label>
               <textarea
                 rows={4}
                 required
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full resize-none rounded-xl border border-slate-100 bg-slate-50 px-4 py-3.5 text-sm outline-none transition-all focus:ring-2 focus:ring-navy-primary"
+                className={clsx(fieldInputClass, 'resize-none')}
                 onInvalid={(e) =>
                   (e.target as HTMLTextAreaElement).setCustomValidity(dict.property.error_message_required)
                 }
