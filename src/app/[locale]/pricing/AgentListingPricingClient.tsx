@@ -28,6 +28,15 @@ import Switch from "@/components/ui/Switch";
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY ?? "";
 const STRIPE_PRICE_ID_YEARLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY ?? "";
 
+function stripePriceIdsReady() {
+    return (
+        typeof STRIPE_PRICE_ID_MONTHLY === "string" &&
+        STRIPE_PRICE_ID_MONTHLY.trim().length > 0 &&
+        typeof STRIPE_PRICE_ID_YEARLY === "string" &&
+        STRIPE_PRICE_ID_YEARLY.trim().length > 0
+    );
+}
+
 type Dict = { agent_plan: Record<string, string> };
 
 function localeToDateLocale(locale: string) {
@@ -48,6 +57,10 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmError, setConfirmError] = useState<string | null>(null);
     const [authResolved, setAuthResolved] = useState(false);
+    const [isPremium, setIsPremium] = useState(false);
+
+    const stripeCheckoutReady = stripePriceIdsReady();
+    const trialDisabledForUser = authResolved && !!user && (!stripeCheckoutReady || isPremium);
 
     const pricingPath = `/${locale}/pricing`;
     const signupWithReturn = `/${locale}/agent/signup?redirect=${encodeURIComponent(pricingPath)}`;
@@ -62,12 +75,13 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                 if (!u) {
                     setUser(null);
                     setIsAgent(false);
+                    setIsPremium(false);
                     return;
                 }
                 setUser({ id: u.id });
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("user_role, is_admin")
+                    .select("user_role, is_admin, plan_type, plan")
                     .eq("id", u.id)
                     .maybeSingle();
                 const agent =
@@ -75,6 +89,7 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                     profile?.user_role === "admin" ||
                     profile?.is_admin === true;
                 setIsAgent(!!agent);
+                setIsPremium(profile?.plan_type === "premium" || profile?.plan === "premium");
             } finally {
                 if (!cancelled) setAuthResolved(true);
             }
@@ -113,8 +128,8 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
             router.push(signupWithReturn);
             return;
         }
-        if (!priceId) {
-            setConfirmError(p.error_price_id);
+        if (!priceId?.trim()) {
+            setConfirmError(p.stripe_not_configured_notice);
             return;
         }
 
@@ -146,6 +161,7 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
     };
 
     const handleConfirmCheckout = () => {
+        if (trialDisabledForUser) return;
         const priceId = isAnnual ? STRIPE_PRICE_ID_YEARLY : STRIPE_PRICE_ID_MONTHLY;
         handleCheckout(priceId);
     };
@@ -321,12 +337,22 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                                 <FeatureRow label={p.feat_presale} value={p.feat_not_included} muted />
                                 <FeatureRow label={p.feat_pdf} value={p.feat_not_included} muted />
                             </div>
-                            <Link
-                                href={isAgent ? `/${locale}/dashboard` : signupWithReturn}
-                                className="w-full rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-black text-navy-secondary shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98]"
-                            >
-                                {isAgent ? p.plan_cta_current : p.plan_cta_start_free}
-                            </Link>
+                            {isAgent ? (
+                                <div
+                                    className="w-full cursor-default select-none rounded-2xl border border-slate-200 bg-slate-100 py-4 text-center text-sm font-black text-slate-500"
+                                    role="status"
+                                    aria-label={p.plan_cta_current}
+                                >
+                                    {p.plan_cta_current}
+                                </div>
+                            ) : (
+                                <Link
+                                    href={signupWithReturn}
+                                    className="block w-full rounded-2xl border border-slate-200 bg-white py-4 text-center text-sm font-black text-navy-secondary shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98]"
+                                >
+                                    {p.plan_cta_start_free}
+                                </Link>
+                            )}
                         </div>
 
                         {/* Pro */}
@@ -374,14 +400,27 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                             <button
                                 type="button"
                                 onClick={openConfirm}
-                                disabled={loading}
-                                className="agent-plan-shimmer flex w-full items-center justify-center gap-2 rounded-2xl bg-navy-primary py-4 text-lg font-black text-white shadow-md transition-all hover:bg-navy-secondary disabled:opacity-70"
+                                disabled={loading || trialDisabledForUser}
+                                title={
+                                    trialDisabledForUser
+                                        ? isPremium
+                                            ? p.trial_disabled_premium
+                                            : p.trial_disabled_stripe
+                                        : undefined
+                                }
+                                className="agent-plan-shimmer flex w-full items-center justify-center gap-2 rounded-2xl bg-navy-primary py-4 text-lg font-black text-white shadow-md transition-all hover:bg-navy-secondary disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : null}
-                                {p.trial_btn}
-                                <ArrowRight className="h-6 w-6" />
+                                {trialDisabledForUser
+                                    ? isPremium
+                                        ? p.trial_disabled_premium
+                                        : p.trial_disabled_stripe
+                                    : p.trial_btn}
+                                {!trialDisabledForUser ? <ArrowRight className="h-6 w-6" /> : null}
                             </button>
-                            <p className="mt-4 text-center text-[10px] font-bold text-slate-500">{p.trial_note}</p>
+                            <p className="mt-4 text-center text-[10px] font-bold text-slate-500">
+                                {trialDisabledForUser && !isPremium ? p.stripe_not_configured_notice : p.trial_note}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -469,11 +508,22 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                     <button
                         type="button"
                         onClick={openConfirm}
-                        disabled={loading}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-navy-primary/30 bg-navy-primary/5 px-10 py-4 text-lg font-black text-navy-primary transition-all hover:bg-navy-primary/10 disabled:opacity-70"
+                        disabled={loading || trialDisabledForUser}
+                        title={
+                            trialDisabledForUser
+                                ? isPremium
+                                    ? p.trial_disabled_premium
+                                    : p.trial_disabled_stripe
+                                : undefined
+                        }
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-navy-primary/30 bg-navy-primary/5 px-10 py-4 text-lg font-black text-navy-primary transition-all hover:bg-navy-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                        {p.trial_btn}
+                        {trialDisabledForUser
+                            ? isPremium
+                                ? p.trial_disabled_premium
+                                : p.trial_disabled_stripe
+                            : p.trial_btn}
                     </button>
                 </div>
             </section>
@@ -526,14 +576,22 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                                 )}
                             </div>
 
-                            <div className="rounded-2xl border border-navy-primary/25 bg-navy-primary/5 p-4">
-                                <div className="text-xl font-black text-navy-primary">{p.modal_today_title}</div>
-                                <p className="mt-2 text-sm font-medium text-slate-600">{trialBillingNote}</p>
-                            </div>
+                            {!(authResolved && user && trialDisabledForUser) ? (
+                                <div className="rounded-2xl border border-navy-primary/25 bg-navy-primary/5 p-4">
+                                    <div className="text-xl font-black text-navy-primary">{p.modal_today_title}</div>
+                                    <p className="mt-2 text-sm font-medium text-slate-600">{trialBillingNote}</p>
+                                </div>
+                            ) : null}
 
                             {authResolved && !user ? (
                                 <div className="rounded-2xl border border-amber-100 bg-amber-50/90 p-4 text-sm font-medium leading-relaxed text-amber-950">
                                     {p.checkout_guest_hint}
+                                </div>
+                            ) : null}
+
+                            {authResolved && user && trialDisabledForUser ? (
+                                <div className="rounded-2xl border border-amber-100 bg-amber-50/90 p-4 text-sm font-medium leading-relaxed text-amber-950">
+                                    {isPremium ? p.trial_disabled_premium : p.stripe_not_configured_notice}
                                 </div>
                             ) : null}
 
@@ -572,6 +630,14 @@ export default function AgentListingPricingClient({ dict, locale }: { dict: Dict
                                         {p.modal_back}
                                     </button>
                                 </>
+                            ) : trialDisabledForUser ? (
+                                <button
+                                    type="button"
+                                    onClick={closeConfirm}
+                                    className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 font-black text-navy-secondary transition-colors hover:bg-slate-50"
+                                >
+                                    {p.modal_back}
+                                </button>
                             ) : (
                                 <div className="flex flex-col gap-3 sm:flex-row">
                                     <button
