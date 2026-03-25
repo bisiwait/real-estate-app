@@ -98,7 +98,7 @@ export default async function FavoritesPage({ params }: { params: { locale: stri
                                 property={property}
                                 dict={dict}
                                 hideFavoriteButton
-                                imageOpensInNewTab
+                                openDetailInNewTab
                             />
                         ))}
                     </div>

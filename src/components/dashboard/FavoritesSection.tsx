@@ -193,7 +193,7 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                                     property={property}
                                     dict={dict}
                                     hideFavoriteButton
-                                    imageOpensInNewTab
+                                    openDetailInNewTab
                                 />
                                 <button
                                     type="button"
@@ -201,7 +201,7 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                                         e.preventDefault();
                                         handleRemove(property.id);
                                     }}
-                                    className="absolute top-4 right-14 z-30 p-2 bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 rounded-full shadow-lg transition-all"
+                                    className="absolute top-4 right-4 z-30 p-2 bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 rounded-full shadow-lg transition-all"
                                 >
                                     <Trash2 size={16} />
                                 </button>

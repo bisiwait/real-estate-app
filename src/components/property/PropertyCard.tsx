@@ -38,13 +38,14 @@ export default function PropertyCard({
     dict,
     imagePriority = false,
     hideFavoriteButton = false,
-    imageOpensInNewTab = false,
+    openDetailInNewTab = false,
 }: {
     property: any
     dict: any
     imagePriority?: boolean
     hideFavoriteButton?: boolean
-    imageOpensInNewTab?: boolean
+    /** 画像・本文とも物件詳細を別タブで開く */
+    openDetailInNewTab?: boolean
 }) {
     const params = useParams()
     const locale = params?.locale as string || 'jp'
@@ -169,24 +170,20 @@ export default function PropertyCard({
                 </div>
             ) : null}
 
-            {imageOpensInNewTab ? (
-                <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-lg">
-                    <a
-                        href={detailHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative block w-full shrink-0 aspect-[4/3] overflow-hidden bg-slate-100 outline-none ring-inset focus-visible:ring-2 focus-visible:ring-navy-primary"
-                    >
-                        {imageSection}
-                    </a>
-                    <Link
-                        href={detailHref}
-                        prefetch={false}
-                        className="block min-h-0 flex-1 transition-transform active:scale-[0.99] duration-200"
-                    >
+            {openDetailInNewTab ? (
+                <a
+                    href={detailHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block h-full outline-none transition-transform duration-200 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-navy-primary focus-visible:ring-offset-2 rounded-2xl"
+                >
+                    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-lg">
+                        <div className="relative w-full shrink-0 aspect-[4/3] overflow-hidden bg-slate-100">
+                            {imageSection}
+                        </div>
                         {bodySection}
-                    </Link>
-                </div>
+                    </div>
+                </a>
             ) : (
                 <Link
                     href={detailHref}
