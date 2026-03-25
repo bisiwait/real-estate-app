@@ -185,7 +185,12 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
         }
         return name || nameJp || '-';
     };
-    const projectDisplayName = getProjectDisplayName(property.project);
+    const projectDisplayName = getProjectDisplayName(property.project)
+
+    const amenityTags = (property.tags || []).filter((t: string) => typeof t === 'string' && t.trim().length > 0)
+    const sharedFacilitiesList = (property.project?.facilities || property.project_facilities || []).filter(
+        (f: string) => typeof f === 'string' && f.trim().length > 0
+    )
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20 font-sans tracking-normal">
@@ -239,11 +244,15 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
  
                         <PropertyDescription description={property.description} descriptionEn={property.description_en} descriptionTh={property.description_th} dict={dict} activeLang={activeLang} setActiveLang={setActiveLang} isPremium={isPremium} />
 
-                        <SectionBox title={translateTag("こだわり設備")} icon={Gem}>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {property.tags?.map((t: string, i: number) => <TagItem key={i} tag={t} icon={getFeatureIcon(t)} translate={translateTag} />)}
-                            </div>
-                        </SectionBox>
+                        {amenityTags.length > 0 ? (
+                            <SectionBox title={translateTag("こだわり設備")} icon={Gem}>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    {amenityTags.map((t: string, i: number) => (
+                                        <TagItem key={i} tag={t} icon={getFeatureIcon(t)} translate={translateTag} />
+                                    ))}
+                                </div>
+                            </SectionBox>
+                        ) : null}
 
                         <SectionBox title={dict.property.building_info_label} icon={Building}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
@@ -256,11 +265,15 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                             </div>
                         </SectionBox>
 
-                        <SectionBox title={dict.property.shared_facilities_label} icon={Sparkles}>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {(property.project?.facilities || property.project_facilities || []).map((f: string, i: number) => <TagItem key={i} tag={f} icon={getFeatureIcon(f)} translate={translateTag} />)}
-                            </div>
-                        </SectionBox>
+                        {sharedFacilitiesList.length > 0 ? (
+                            <SectionBox title={dict.property.shared_facilities_label} icon={Sparkles}>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    {sharedFacilitiesList.map((f: string, i: number) => (
+                                        <TagItem key={i} tag={f} icon={getFeatureIcon(f)} translate={translateTag} />
+                                    ))}
+                                </div>
+                            </SectionBox>
+                        ) : null}
 
                         <div className="pt-4">
                             <a href={`https://www.google.com/maps/search/?api=1&query=${property.project?.latitude || 12.9236},${property.project?.longitude || 100.8824}`} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2A4076] hover:bg-[#1A2B56] text-white py-4 rounded-2xl font-bold flex justify-center gap-2 shadow-lg">
