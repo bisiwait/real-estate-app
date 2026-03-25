@@ -9,6 +9,7 @@ import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import ProfileSection from "@/components/dashboard/ProfileSection";
 import FavoritesSection from "@/components/dashboard/FavoritesSection";
 import SavedSearchesSection from "@/components/dashboard/SavedSearchesSection";
+import UserPasswordChangeForm from "@/components/dashboard/UserPasswordChangeForm";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function MyPageClient({ dict, locale }: { dict: any, locale: string }) {
@@ -143,12 +144,12 @@ function SettingsSection({ handleLogout, dict, locale }: { handleLogout: () => v
                     <SettingsIcon size={32} />
                 </div>
                 <h3 className="text-2xl font-black text-navy-secondary">{dict.labels.settings}</h3>
-                <p className="text-slate-400 font-bold mt-2">{dict.labels.notification_settings}</p>
+                <p className="text-slate-400 font-bold mt-2">{dict.labels.account_and_lang}</p>
             </div>
 
             <div className="space-y-4">
                 <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/profile/edit`} />
-                <SettingsLink label={dict.labels.change_email_pass} href={`/${locale}/dashboard/settings`} />
+                <UserPasswordChangeForm dict={dict} locale={locale} />
                 <SettingsLink label={dict.labels.notification_settings} href="#" />
             </div>
 
