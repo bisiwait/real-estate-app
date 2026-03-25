@@ -13,7 +13,12 @@ export function authCallbackPathForOrigin(origin: string, locale: string): strin
     const loc = LOCALES.includes(locale as (typeof LOCALES)[number]) ? locale : 'jp'
     try {
         const hostname = new URL(origin).hostname.toLowerCase()
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.pages.dev')) {
+        if (
+            hostname === 'localhost' ||
+            hostname === '127.0.0.1' ||
+            hostname === '[::1]' ||
+            hostname.endsWith('.pages.dev')
+        ) {
             return '/auth/callback'
         }
     } catch {
