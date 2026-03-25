@@ -1,26 +1,19 @@
 /**
  * メール確認・OAuth の redirectTo に使うサイトのオリジン（スキーム + ホスト、パスなし）。
  *
- * ローカル開発では、NEXT_PUBLIC_SITE_URL が本番のままだと OAuth の戻り先が本番になり PKCE が壊れる。
- * またポートが 3000 以外のとき env と実際のタブがずれる。ブラウザで localhost 系のときは常に window の origin を使う。
+ * この関数は主に Client Component のクリック／送信から呼ばれる。
+ * その場合は **常に window.location.origin を優先**する。
  *
- * Vercel 本番では NEXT_PUBLIC_SITE_URL にデプロイ URL を設定してください。
+ * Vercel の環境変数に NEXT_PUBLIC_SITE_URL=http://localhost:3000 のまま入っていると、
+ * 本番（例: real-estate-app-sigma-brown.vercel.app）で Google ログインしても redirectTo が localhost になり失敗する。
+ * 実際にユーザーが開いているタブの origin が OAuth の戻り先と一致している必要がある。
+ *
+ * window が無いときだけ NEXT_PUBLIC_SITE_URL / NEXT_PUBLIC_BASE_URL にフォールバックする。
  */
-function isLocalDevHostname(hostname: string): boolean {
-    const h = hostname.toLowerCase();
-    return h === "localhost" || h === "127.0.0.1" || h === "[::1]";
-}
-
 export function getAuthSiteOrigin(): string {
     const trim = (s: string) => s.trim().replace(/\/$/, "");
     if (typeof window !== "undefined" && window.location?.origin) {
-        try {
-            if (isLocalDevHostname(new URL(window.location.origin).hostname)) {
-                return window.location.origin;
-            }
-        } catch {
-            /* 無視 */
-        }
+        return window.location.origin;
     }
     const fromEnv =
         (typeof process !== "undefined" && process.env.NEXT_PUBLIC_SITE_URL && trim(process.env.NEXT_PUBLIC_SITE_URL)) ||
@@ -28,9 +21,6 @@ export function getAuthSiteOrigin(): string {
         "";
     if (fromEnv && /^https?:\/\//i.test(fromEnv)) {
         return fromEnv;
-    }
-    if (typeof window !== "undefined" && window.location?.origin) {
-        return window.location.origin;
     }
     return "";
 }
