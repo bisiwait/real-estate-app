@@ -176,6 +176,7 @@
         "no_results_desc": "Please try different filters or reset them.",
         "reset_filters": "Reset Filters",
         "no_favorites": "No favorites yet",
+        "favorites_tab_empty": "No favorites in this category. Try another tab or add listings from search.",
         "no_favorites_desc": "Click the heart icon on properties to save them here.",
         "go_find_properties": "Go find properties",
         "back_to_top": "Back to Top",

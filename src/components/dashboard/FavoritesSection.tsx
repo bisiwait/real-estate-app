@@ -4,10 +4,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import PropertyCard from "@/components/property/PropertyCard";
 import { Heart, Search, Trash2, GitCompareArrows } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { clsx } from "clsx";
+
+type FavoriteTab = "rent" | "sell" | "presale";
+
+function favoriteListingCategory(p: any): FavoriteTab {
+    if (p?.is_presale) return "presale";
+    if (p?.is_for_rent && !p?.is_for_sale) return "rent";
+    if (p?.is_for_sale && !p?.is_for_rent) return "sell";
+    if (p?.is_for_rent) return "rent";
+    if (p?.is_for_sale) return "sell";
+    return "rent";
+}
 
 interface FavoritesSectionProps {
     favorites: any[];
@@ -16,9 +28,42 @@ interface FavoritesSectionProps {
 export default function FavoritesSection({ favorites: initialFavorites, dict, locale }: FavoritesSectionProps & { dict: any, locale: string }) {
     const [favorites, setFavorites] = useState(initialFavorites);
     const [compareIds, setCompareIds] = useState<string[]>([]);
+    const [activeTab, setActiveTab] = useState<FavoriteTab>("rent");
     const supabase = createClient();
     const router = useRouter();
     const cmp = dict.compare;
+
+    const favoritesByTab = useMemo(() => {
+        const rent: any[] = [];
+        const sell: any[] = [];
+        const presale: any[] = [];
+        for (const p of favorites) {
+            const c = favoriteListingCategory(p);
+            if (c === "presale") presale.push(p);
+            else if (c === "rent") rent.push(p);
+            else sell.push(p);
+        }
+        return { rent, sell, presale };
+    }, [favorites]);
+
+    const tabList = favoritesByTab[activeTab];
+
+    const favSig = useMemo(() => favorites.map((f: any) => f.id).sort().join("|"), [favorites]);
+
+    useEffect(() => {
+        if (favorites.length === 0) return;
+        setActiveTab((current) => {
+            const rent = favorites.filter((p) => favoriteListingCategory(p) === "rent");
+            const sell = favorites.filter((p) => favoriteListingCategory(p) === "sell");
+            const presale = favorites.filter((p) => favoriteListingCategory(p) === "presale");
+            const by = { rent, sell, presale };
+            if (by[current].length > 0) return current;
+            if (rent.length) return "rent";
+            if (sell.length) return "sell";
+            if (presale.length) return "presale";
+            return current;
+        });
+    }, [favSig, favorites]);
 
     const handleRemove = async (propertyId: string) => {
         if (!confirm(dict.labels.remove_confirm)) return;
@@ -67,9 +112,15 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
         return <EmptyState dict={dict} locale={locale} />;
     }
 
+    const tabButtons: { id: FavoriteTab; label: string }[] = [
+        { id: "rent", label: dict.labels.rent },
+        { id: "sell", label: dict.labels.sell },
+        { id: "presale", label: dict.labels.presale },
+    ];
+
     return (
         <div className="p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 p-4 md:p-5 rounded-2xl bg-slate-50 border border-slate-100">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 p-4 md:p-5 rounded-2xl bg-slate-50 border border-slate-100">
                 <p className="text-sm font-bold text-navy-secondary">{cmp.select_hint}</p>
                 <button
                     type="button"
@@ -85,43 +136,75 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                <AnimatePresence>
-                    {favorites.map((property) => (
-                        <motion.div
-                            key={property.id}
-                            layout
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="relative"
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 bg-white/90 p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm mb-8">
+                {tabButtons.map(({ id, label }) => {
+                    const count = favoritesByTab[id].length;
+                    const active = activeTab === id;
+                    return (
+                        <button
+                            key={id}
+                            type="button"
+                            onClick={() => setActiveTab(id)}
+                            className={clsx(
+                                "flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all",
+                                active && id === "presale" && "bg-amber-500 text-white shadow-lg",
+                                active && id !== "presale" && "bg-navy-primary text-white shadow-lg",
+                                !active && id === "presale" && "text-slate-400 hover:text-amber-500 hover:bg-amber-50",
+                                !active && id !== "presale" && "text-slate-400 hover:text-navy-primary hover:bg-slate-50"
+                            )}
                         >
-                            <label className="absolute bottom-16 left-4 z-30 flex cursor-pointer items-center gap-2 rounded-lg bg-white/95 px-3 py-2 shadow-md border border-slate-100 backdrop-blur-sm md:bottom-[4.5rem]">
-                                <input
-                                    type="checkbox"
-                                    checked={compareIds.includes(property.id)}
-                                    onChange={() => toggleCompare(property.id)}
-                                    className="h-4 w-4 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
-                                />
-                                <span className="text-[10px] font-black uppercase tracking-wide text-navy-secondary">
-                                    {cmp.compare_toggle}
-                                </span>
-                            </label>
-                            <PropertyCard property={property} dict={dict} />
-                            {/* Overlaid remove button for Dashboard view specifically */}
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleRemove(property.id);
-                                }}
-                                className="absolute top-4 right-14 z-30 p-2 bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 rounded-full shadow-lg transition-all"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
+                            {label}
+                            <span className={clsx("ml-1.5 tabular-nums opacity-80", active ? "text-white/90" : "")}>
+                                ({count})
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
+
+            {tabList.length === 0 ? (
+                <p className="text-center text-sm font-bold text-slate-500 py-16 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+                    {dict.labels.favorites_tab_empty}
+                </p>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                    <AnimatePresence mode="popLayout">
+                        {tabList.map((property) => (
+                            <motion.div
+                                key={property.id}
+                                layout
+                                initial={{ opacity: 0, scale: 0.96 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.96 }}
+                                className="relative"
+                            >
+                                <label className="absolute top-4 left-4 z-30 flex cursor-pointer items-center gap-2 rounded-lg bg-white/95 px-3 py-2 shadow-md border border-slate-100 backdrop-blur-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={compareIds.includes(property.id)}
+                                        onChange={() => toggleCompare(property.id)}
+                                        className="h-4 w-4 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                                    />
+                                    <span className="text-[10px] font-black uppercase tracking-wide text-navy-secondary">
+                                        {cmp.compare_toggle}
+                                    </span>
+                                </label>
+                                <PropertyCard property={property} dict={dict} />
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleRemove(property.id);
+                                    }}
+                                    className="absolute top-4 right-14 z-30 p-2 bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 rounded-full shadow-lg transition-all"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            )}
         </div>
     );
 }

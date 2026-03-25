@@ -202,6 +202,7 @@
         "no_results_desc": "別の条件を試すか、フィルターをリセットしてください。",
         "reset_filters": "検索条件をクリア",
         "no_favorites": "お気に入りはまだありません",
+        "favorites_tab_empty": "このカテゴリのお気に入りはありません。別のタブを選ぶか、物件一覧から追加してください。",
         "no_favorites_desc": "物件のハートアイコンをクリックして保存しましょう。",
         "go_find_properties": "物件を探しに行く",
         "back_to_top": "トップに戻る",
