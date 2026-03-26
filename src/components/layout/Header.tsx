@@ -38,13 +38,13 @@ export default function Header({ dict }: { dict: any }) {
         <header className="border-b border-slate-100 sticky top-0 z-[100] bg-white">
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
                 {/* Logo */}
-                <Link href={`/${currentLocale}`} className="flex items-center relative z-[110] active:scale-95 transition-transform duration-200 shrink-0 min-w-0 py-1">
+                <Link href={`/${currentLocale}`} className="flex items-center relative z-[110] active:scale-95 transition-transform duration-200 shrink-0 min-w-0 py-0.5">
                     <img
                         src="/logo_row_1000.svg"
                         alt="Chonburi Home"
                         width={1000}
                         height={303}
-                        className="h-12 w-auto max-w-[min(420px,90vw)] sm:h-14 md:h-[3.75rem] lg:h-16 object-contain object-left"
+                        className="h-14 w-auto max-w-[min(480px,92vw)] sm:h-16 md:h-[4.25rem] lg:h-[4.5rem] object-contain object-left"
                     />
                 </Link>
 
