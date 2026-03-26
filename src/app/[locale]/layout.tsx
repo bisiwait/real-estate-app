@@ -82,11 +82,11 @@ export default async function RootLayout({
               <div>
                 <Link href={`/${locale}`} className="inline-block mb-2">
                   <img
-                    src="/images/logo-home.svg"
+                    src="/logo_1000.svg"
                     alt="Chonburi Home"
-                    width={200}
-                    height={34}
-                    className="h-8 w-auto max-w-[220px]"
+                    width={1000}
+                    height={545}
+                    className="h-[30px] w-auto max-w-[200px] object-contain object-left"
                   />
                 </Link>
                 <p className="text-xs text-slate-400 font-bold tracking-widest uppercase">Pattaya & Sriracha Real Estate</p>

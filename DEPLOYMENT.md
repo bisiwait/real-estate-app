@@ -35,7 +35,7 @@ Vercel（またはホスティング先）の **Environment Variables** で次�
 
 **Supabase（Authentication → URL Configuration）** でも Site URL・Redirect URLs を `https://chonburihome.com/...` に更新してください。
 
-旧ホスト（`real-estate-app-sigma-brown.vercel.app` / `real-estate-app-8oj.pages.dev`）からは `next.config.ts` の `redirects` で `https://chonburihome.com` へ 308 リダイレクトします。
+旧ホストから `https://chonburihome.com` へ 308 リダイレクトが必要な場合は、ホスティング先の **Environment Variables** に `LEGACY_REDIRECT_HOSTS` を設定します（カンマ区切りのホスト名。例: `old-project.example.com,preview.example.dev`）。リダイレクト先は常に `https://chonburihome.com` です。
 
 ## 4. 本番環境の最適化
 
