@@ -44,7 +44,7 @@ export default function Header({ dict }: { dict: any }) {
                         alt="Chonburi Home"
                         width={1000}
                         height={223}
-                        className="h-[3.75rem] w-auto max-w-[min(520px,94vw)] sm:h-[4.5rem] md:h-[4.625rem] lg:h-[4.75rem] object-contain object-left"
+                        className="h-14 w-auto max-w-[min(460px,90vw)] sm:h-16 md:h-[4.125rem] lg:h-[4.25rem] object-contain object-left"
                     />
                 </Link>
 
