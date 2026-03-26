@@ -115,7 +115,7 @@ export default function RegisterPageClient() {
                     <h1 className="mb-2 text-2xl font-black text-white">
                         {isSignUp ? 'アカウント作成' : 'ログイン'}
                     </h1>
-                    <p className="text-sm font-medium text-navy-secondary">Chonburi Connect</p>
+                    <p className="text-sm font-medium text-white/80">Chonburi Home</p>
                 </div>
 
                 <div className="p-8">

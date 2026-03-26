@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
+      // ブラウザのデフォルト取得先。SVG ファビコンと同一アセットを返す。
+      { source: "/favicon.ico", destination: "/favicon.svg", permanent: false },
       {
         source: "/:path*",
         has: [{ type: "host", value: "real-estate-app-sigma-brown.vercel.app" }],

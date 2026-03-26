@@ -190,7 +190,7 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
       // 4. ダウンロード実行
       const link = document.createElement('a')
       link.href = dataUrl
-      link.download = `ChonburiConnect_${editedProperty.title.replace(/\s+/g, '_')}_SNS.png`
+      link.download = `ChonburiHome_${editedProperty.title.replace(/\s+/g, '_')}_SNS.png`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -298,10 +298,10 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
              </p>
              <div className="pt-2 flex items-center space-x-3 opacity-95 w-full">
                 <div className="w-10 h-10 bg-[#f59e0b] rounded-full flex items-center justify-center shadow-lg">
-                   <span className="text-[#2A4076] font-black text-xl">C</span>
+                   <span className="text-[#2A4076] font-black text-xl">H</span>
                 </div>
                 <span className="text-2xl font-black tracking-widest text-[#FFFFFFE6] uppercase shadow-sm">
-                  Chonburi Connect
+                  Chonburi Home
                 </span>
              </div>
           </div>

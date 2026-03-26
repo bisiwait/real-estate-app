@@ -17,7 +17,7 @@ export default function AboutPage() {
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <FadeIn>
                         <span className="inline-block px-4 py-1.5 bg-navy-primary/10 text-navy-primary text-xs font-black uppercase tracking-[0.2em] rounded-full mb-6">
-                            About Chonburi Connect
+                            About Chonburi Home
                         </span>
                         <h1 className="text-4xl md:text-6xl font-black text-navy-secondary mb-8 leading-[1.1]">
                             タイでの暮らしを、<br />
@@ -25,7 +25,7 @@ export default function AboutPage() {
                         </h1>
                         <p className="max-w-3xl mx-auto text-lg md:text-xl text-slate-500 font-medium leading-relaxed mb-10">
                             パタヤの開放感と、シラチャの利便性。チョンブリ県に特化した、<br className="hidden md:block" />
-                            日本人のための不動産プラットフォーム『Chonburi Connect』
+                            日本人のための不動産プラットフォーム『Chonburi Home』
                         </p>
                         <div className="flex flex-col md:flex-row items-center justify-center gap-4">
                             <Link
@@ -98,7 +98,7 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Mission Section（ヒーロー「About Chonburi Connect」と同じ bg-slate-50） */}
+            {/* Mission Section（ヒーロー「About Chonburi Home」と同じ bg-slate-50） */}
             <section className="py-24 bg-slate-50">
                 <div className="container mx-auto px-4 max-w-4xl text-center">
                     <FadeIn>
@@ -113,7 +113,7 @@ export default function AboutPage() {
                         <p className="text-slate-500 text-lg font-medium leading-relaxed italic">
                             私たちは、「情報の非対称性」が激しいタイの不動産市場において、<br className="hidden md:block" />
                             借りる人・買う人・貸す人の三者が、互いに信頼し合える環境を創出します。<br className="hidden md:block" />
-                            Chonburi Connect は、チョンブリ県から、新しい不動産のスタンダードを作ります。
+                            Chonburi Home は、チョンブリ県から、新しい不動産のスタンダードを作ります。
                         </p>
                     </FadeIn>
                 </div>

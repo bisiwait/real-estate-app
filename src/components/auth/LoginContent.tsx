@@ -186,7 +186,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
                     <div className="relative z-10">
                         <Link href={`/${locale}`} className="inline-block text-white/60 hover:text-white mb-12 font-black tracking-tighter text-xl">
-                            Chonburi<span className="text-white">Connect</span>
+                            Chonburi <span className="text-white">Home</span>
                         </Link>
 
                         <h2 className="text-4xl font-black !text-white leading-tight mb-8 whitespace-pre-line">

@@ -28,7 +28,7 @@ export async function generateMetadata(
 
         if (!property) {
             return {
-                title: 'Property | Chonburi Connect',
+                title: 'Property | Chonburi Home',
                 description: 'Real estate listings in Pattaya & Sriracha.',
             }
         }
@@ -36,7 +36,7 @@ export async function generateMetadata(
         const title = property.title_ja || property.title_en || property.title || 'Property'
         const description = property.description
             ? property.description.replace(/<[^>]+>/g, '').substring(0, 160)
-            : 'Pattaya & Sriracha real estate listing on Chonburi Connect.'
+            : 'Pattaya & Sriracha real estate listing on Chonburi Home.'
 
         const baseUrl = getPublicSiteUrl()
         let imageUrl = `${baseUrl}/og-default.png`
@@ -57,13 +57,13 @@ export async function generateMetadata(
         const pageUrl = `${baseUrl}/${locale}/properties/${id}`
 
         return {
-            title: `${title} | Chonburi Connect`,
+            title: `${title} | Chonburi Home`,
             description,
             openGraph: {
-                title: `${title} | Chonburi Connect`,
+                title: `${title} | Chonburi Home`,
                 description,
                 url: pageUrl,
-                siteName: 'Chonburi Connect',
+                siteName: 'Chonburi Home',
                 images: [
                     {
                         url: imageUrl,
@@ -79,7 +79,7 @@ export async function generateMetadata(
             },
             twitter: {
                 card: 'summary_large_image',
-                title: `${title} | Chonburi Connect`,
+                title: `${title} | Chonburi Home`,
                 description,
                 images: [imageUrl],
             },
@@ -87,7 +87,7 @@ export async function generateMetadata(
     } catch (error) {
         console.error('[generateMetadata] error:', error)
         return {
-            title: 'Property | Chonburi Connect',
+            title: 'Property | Chonburi Home',
             description: 'Real estate listings in Pattaya & Sriracha.',
         }
     }

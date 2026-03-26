@@ -35,6 +35,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     metadataBase: new URL(baseUrl),
     title: dict.metadata.title,
     description: dict.metadata.description,
+    icons: {
+      icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+      apple: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    },
     alternates: {
       languages: {
         'ja': `${baseUrl}/jp`,
@@ -76,7 +80,15 @@ export default async function RootLayout({
             <div className="container mx-auto px-3 sm:px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-12 border-b border-white/10 pb-12 text-center md:text-left">
               <div>
-                <h2 className="text-xl font-black italic tracking-tighter mb-2">Chonburi Connect</h2>
+                <Link href={`/${locale}`} className="inline-block mb-2">
+                  <img
+                    src="/images/logo-home.svg"
+                    alt="Chonburi Home"
+                    width={200}
+                    height={34}
+                    className="h-8 w-auto max-w-[220px]"
+                  />
+                </Link>
                 <p className="text-xs text-slate-400 font-bold tracking-widest uppercase">Pattaya & Sriracha Real Estate</p>
               </div>
               <nav className="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-4">
@@ -89,7 +101,7 @@ export default async function RootLayout({
               </nav>
             </div>
             <div className="text-center text-xs text-slate-500 font-medium">
-              &copy; {new Date().getFullYear()} Chonburi Connect. All rights reserved.
+              &copy; {new Date().getFullYear()} Chonburi Home. All rights reserved.
             </div>
           </div>
         </footer>

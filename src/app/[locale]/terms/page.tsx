@@ -28,7 +28,7 @@ export async function generateMetadata({
     const dict = await getDictionary(locale)
     const tp = (dict as { terms_page?: TermsPageDict }).terms_page
     return {
-        title: tp?.title ? `${tp.title} | Chonburi Connect` : 'Terms of Service',
+        title: tp?.title ? `${tp.title} | Chonburi Home` : 'Terms of Service',
         description: tp?.meta_description,
     }
 }

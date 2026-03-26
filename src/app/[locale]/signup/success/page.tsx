@@ -60,7 +60,7 @@ export default async function SignupSuccessPage({
         (dict as { signup_success_page?: Record<string, string> }).signup_success_page || {}
 
     const mainHeadline =
-        copy.main_headline || '登録が完了しました！ Welcome to Chonburi Connect!'
+        copy.main_headline || '登録が完了しました！ Welcome to Chonburi Home!'
     const subtitle =
         copy.subtitle || 'ご登録ありがとうございます。理想の物件探しをお手伝いします。'
     const favoritesTitle = copy.favorites_card_title || 'お気に入り機能'

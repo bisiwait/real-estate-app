@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
         // 2. Send email via Resend
         const { data, error } = await resend.emails.send({
-            from: 'Chonburi Connect <onboarding@resend.dev>',
+            from: 'Chonburi Home <onboarding@resend.dev>',
             to: [agentEmail],
             subject: `【新着】物件「${property.title}」にお問い合わせがありました`,
             html: `
@@ -90,6 +90,9 @@ export async function POST(req: NextRequest) {
           
           <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; text-align: center;">
             ※このメールはシステムによる自動送信です。心当たりのない場合は破棄してください。
+          </p>
+          <p style="font-size: 11px; color: #cbd5e1; margin-top: 16px; text-align: center; font-weight: 600;">
+            Chonburi Home
           </p>
         </div>
       `,

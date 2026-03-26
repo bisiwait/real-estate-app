@@ -77,11 +77,11 @@
         "signup_success": "Agent registration completed. Sign in to use your dashboard."
     },
     "metadata": {
-        "title": "Chonburi Connect | Real Estate Platform for Japanese in Chonburi",
+        "title": "Chonburi Home | Real Estate Platform for Japanese in Chonburi",
         "description": "Real estate marketplace specialized in Chonburi province (Pattaya, Sriracha) for Japanese. Supporting your Thai life with accurate location data and Japanese standards."
     },
     "signup_success_page": {
-        "main_headline": "Registration complete! Welcome to Chonburi Connect!",
+        "main_headline": "Registration complete! Welcome to Chonburi Home!",
         "subtitle": "Thank you for signing up. We're here to help you find your ideal property.",
         "favorites_card_title": "Favorites",
         "favorites_card_body": "Tap the ❤️ on any listing to save it. Build your own shortlist and compare at your own pace!",
@@ -90,7 +90,7 @@
     },
     "terms_page": {
         "title": "Terms of Service",
-        "meta_description": "Terms of Service for Chonburi Connect real estate platform (general users and agents).",
+        "meta_description": "Terms of Service for Chonburi Home real estate platform (general users and agents).",
         "updated_label": "Last updated",
         "updated_date": "March 14, 2026",
         "back_home": "Back to home",
@@ -98,7 +98,7 @@
             {
                 "title": "Article 1 (General)",
                 "paragraphs": [
-                    "These Terms govern use of the real estate information platform provided by Chonburi Connect (\"the Site\"). All registered users (general users and agents) are deemed to have agreed to these Terms."
+                    "These Terms govern use of the real estate information platform provided by Chonburi Home (\"the Site\"). All registered users (general users and agents) are deemed to have agreed to these Terms."
                 ]
             },
             {
@@ -524,7 +524,7 @@
         "hero_badge": "For real estate agents",
         "hero_title": "Maximize Pattaya & Sriracha leads. An agent platform built for closings.",
         "hero_subtitle": "Skip messy email threads—connect with clients directly on LINE. We grow with you as a true partner.",
-        "partner_intro": "Chonburi Connect stands beside you in the field, putting your listings in front of the right buyers and tenants—with less operational drag so you can focus on deals.",
+        "partner_intro": "Chonburi Home stands beside you in the field, putting your listings in front of the right buyers and tenants—with less operational drag so you can focus on deals.",
         "reasons_title": "Why agents choose us",
         "reason_1_title": "Lightning-fast response with LINE",
         "reason_1_desc": "Shorten the gap from inquiry to reply. Reach clients instantly and never miss the moment to talk business.",
@@ -631,7 +631,7 @@
         "pro_benefit_search_desc": "Listings rank higher in results, lifting views and inquiries vs Free."
     },
     "faq_page": {
-        "meta_title": "FAQ | Chonburi Connect",
+        "meta_title": "FAQ | Chonburi Home",
         "meta_description": "Answers about searching and inquiries, living in Pattaya & Sriracha, and using the site.",
         "title": "Frequently asked questions",
         "subtitle": "Choose a category and tap a question to read the answer.",

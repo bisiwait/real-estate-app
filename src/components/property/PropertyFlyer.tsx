@@ -91,7 +91,7 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: '8px', height: '28px', backgroundColor: '#f59e0b', borderRadius: '2px' }} />
                     <span style={{ fontSize: '20px', fontWeight: '900', color: '#2A4076', letterSpacing: '0.05em' }}>
-                        Chonburi Connect
+                        Chonburi Home
                     </span>
                 </div>
                 <span style={{ fontSize: '10px', color: '#94a3b8', backgroundColor: '#f8fafc', padding: '2px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>

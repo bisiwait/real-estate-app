@@ -32,7 +32,7 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'thb',
             product_data: {
-              name: `Chonburi Connect: PREMIUM (${period.toUpperCase()})`,
+              name: `Chonburi Home: PREMIUM (${period.toUpperCase()})`,
               description: period === 'yearly' ? '年払い（20% OFF）' : '月払い',
             },
             unit_amount: amountTHB * 100,

@@ -39,8 +39,14 @@ export default function Header({ dict }: { dict: any }) {
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
                 {/* Logo */}
                 <Link href={`/${currentLocale}`} className="flex flex-col relative z-[110] active:scale-95 transition-transform duration-200">
-                    <span className="text-2xl font-black text-navy-primary tracking-tighter italic whitespace-nowrap">Chonburi Connect</span>
-                    <span className="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase -mt-1 ml-0.5">Pattaya & Sriracha Real Estate</span>
+                    <img
+                        src="/images/logo-home.svg"
+                        alt="Chonburi Home"
+                        width={220}
+                        height={38}
+                        className="h-9 w-auto max-w-[min(220px,55vw)]"
+                    />
+                    <span className="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase -mt-0.5 ml-0.5">Pattaya & Sriracha Real Estate</span>
                 </Link>
 
                 {/* Desktop Navigation */}
@@ -141,7 +147,7 @@ export default function Header({ dict }: { dict: any }) {
                     {/* Footer Credit */}
                     <div className="pt-4 pb-2 text-center">
                         <p className="text-[10px] text-slate-300 font-bold tracking-widest italic">
-                            Chonburi Connect © 2026
+                            Chonburi Home © {new Date().getFullYear()}
                         </p>
                     </div>
                 </div>
