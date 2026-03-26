@@ -189,6 +189,7 @@ export default function PropertiesClient({
         (d: FilterDraft) => {
             const next = buildSearchParamsFromDraft(d, searchParams).toString()
             if (next === searchParams.toString()) return
+            setLoading(true)
             startFilterNavTransition(() => {
                 router.replace(`${pathname}?${next}`, { scroll: false })
             })
@@ -203,6 +204,7 @@ export default function PropertiesClient({
                 if (opts?.closeDrawer) setIsFilterDrawerOpen(false)
                 return
             }
+            setLoading(true)
             startFilterNavTransition(() => {
                 router.replace(`${pathname}?${next}`, { scroll: false })
             })
@@ -220,7 +222,9 @@ export default function PropertiesClient({
                 p.set('sort', value)
             }
             const qs = p.toString()
+            if (qs === searchParams.toString()) return
             const url = qs ? `${pathname}?${qs}` : pathname
+            setLoading(true)
             startFilterNavTransition(() => {
                 router.replace(url, { scroll: false })
             })
@@ -235,6 +239,7 @@ export default function PropertiesClient({
             setDraft(next)
             const qs = buildSearchParamsFromDraft(next, searchParams).toString()
             if (qs !== searchParams.toString()) {
+                setLoading(true)
                 startFilterNavTransition(() => {
                     router.replace(`${pathname}?${qs}`, { scroll: false })
                 })
@@ -316,6 +321,7 @@ export default function PropertiesClient({
         if (s !== 'price_asc' && s !== 'price_desc') return
         sp.delete('sort')
         const qs = sp.toString()
+        setLoading(true)
         startFilterNavTransition(() => {
             router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
         })
@@ -362,6 +368,8 @@ export default function PropertiesClient({
 
     const selectFieldClass =
         'w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-navy-secondary appearance-none cursor-pointer focus:ring-2 focus:ring-navy-primary focus:border-transparent outline-none'
+
+    const resultsBusy = loading || isFilterNavPending
 
     const renderFilterPanel = (opts?: { showApplyButton?: boolean }) => (
         <div className="space-y-8">
@@ -509,10 +517,12 @@ export default function PropertiesClient({
             {opts?.showApplyButton ? (
                 <button
                     type="button"
+                    disabled={resultsBusy}
                     onClick={() => applyFilters()}
-                    className="w-full py-4 rounded-2xl bg-navy-primary text-white text-sm font-black shadow-lg shadow-navy-primary/20 hover:bg-navy-secondary transition-all active:scale-[0.99]"
+                    className="w-full py-4 rounded-2xl bg-navy-primary text-white text-sm font-black shadow-lg shadow-navy-primary/20 hover:bg-navy-secondary transition-all active:scale-[0.99] disabled:opacity-80 disabled:pointer-events-none flex items-center justify-center gap-2 min-h-[52px]"
                 >
-                    {dict.property.apply_filters_btn}
+                    {resultsBusy ? <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden /> : null}
+                    <span>{dict.property.apply_filters_btn}</span>
                 </button>
             ) : null}
 
@@ -552,7 +562,7 @@ export default function PropertiesClient({
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                             <SaveSearchButton dict={dict} />
                             <div className="text-sm font-bold bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center shrink-0">
-                                {(loading || isFilterNavPending) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                {resultsBusy ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                 {dict.property.found_count
                                     .replace('{total}', totalCount.toString())
                                     .replace('{count}', filteredProperties.length.toString())}
@@ -715,6 +725,7 @@ export default function PropertiesClient({
                                     type="button"
                                     onClick={() => {
                                         setDraft({ ...EMPTY_DRAFT })
+                                        setLoading(true)
                                         startFilterNavTransition(() => {
                                             router.replace(
                                                 `${pathname}?${buildSearchParamsFromDraft(EMPTY_DRAFT, null).toString()}`,
@@ -753,10 +764,11 @@ export default function PropertiesClient({
                             <button
                                 type="button"
                                 onClick={() => applyFilters({ closeDrawer: true })}
-                                disabled={!draftDirty}
-                                className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold shadow-lg hover:bg-navy-secondary transition-all disabled:opacity-40 disabled:pointer-events-none"
+                                disabled={!draftDirty || resultsBusy}
+                                className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold shadow-lg hover:bg-navy-secondary transition-all disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-2 min-h-[52px]"
                             >
-                                {dict.property.apply_filters_btn}
+                                {resultsBusy ? <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden /> : null}
+                                <span>{dict.property.apply_filters_btn}</span>
                             </button>
                             <p className="text-center text-[10px] font-bold text-slate-400 leading-relaxed px-1">
                                 {dict.property.apply_filters_footer_hint}
