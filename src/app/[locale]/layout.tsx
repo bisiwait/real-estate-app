@@ -80,16 +80,15 @@ export default async function RootLayout({
             <div className="container mx-auto px-3 sm:px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-12 border-b border-white/10 pb-12 text-center md:text-left">
               <div>
-                <Link href={`/${locale}`} className="inline-block mb-2">
+                <Link href={`/${locale}`} className="inline-block">
                   <img
                     src="/logo_800.svg"
                     alt="Chonburi Home"
                     width={800}
                     height={345}
-                    className="h-[30px] w-auto max-w-[200px] object-contain object-left"
+                    className="h-10 w-auto max-w-[min(320px,85vw)] sm:h-11 md:h-12 object-contain object-left"
                   />
                 </Link>
-                <p className="text-xs text-slate-400 font-bold tracking-widest uppercase">Pattaya & Sriracha Real Estate</p>
               </div>
               <nav className="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-4">
                 <Link href={`/${locale}/about`} className="text-sm font-bold text-slate-400 hover:text-white transition-colors">{(dict.labels as any)?.about || 'About'}</Link>

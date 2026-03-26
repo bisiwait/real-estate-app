@@ -38,15 +38,14 @@ export default function Header({ dict }: { dict: any }) {
         <header className="border-b border-slate-100 sticky top-0 z-[100] bg-white">
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
                 {/* Logo */}
-                <Link href={`/${currentLocale}`} className="flex flex-col justify-center gap-1 relative z-[110] active:scale-95 transition-transform duration-200 shrink-0 min-w-0">
+                <Link href={`/${currentLocale}`} className="flex items-center relative z-[110] active:scale-95 transition-transform duration-200 shrink-0 min-w-0 py-1">
                     <img
                         src="/logo_800.svg"
                         alt="Chonburi Home"
                         width={800}
                         height={345}
-                        className="h-9 w-auto max-w-[min(280px,72vw)] md:h-12 object-contain object-left"
+                        className="h-12 w-auto max-w-[min(420px,90vw)] sm:h-14 md:h-[3.75rem] lg:h-16 object-contain object-left"
                     />
-                    <span className="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase ml-0.5 leading-none">Pattaya & Sriracha Real Estate</span>
                 </Link>
 
                 {/* Desktop Navigation */}
