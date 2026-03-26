@@ -27,8 +27,11 @@ export function normalizeLatLngForThailand(lat: number, lng: number): { lat: num
 }
 
 /**
- * 指定座標を画面中央にピン留め表示する Google マップ URL。
- * `/search/?query=lat,lng` は検索扱いになり別候補へ飛ぶことがあるため使わない。
+ * 指定座標にピンを立てて開く Google マップ URL。
+ *
+ * - `maps?q=緯度,経度` … 座標マーカー（赤ピン）が付きやすい。`z` でズーム。
+ * - `maps/@緯度,経度,zoomz` … 中心移動のみでピンが出ないことがあるため使わない。
+ * - `maps/search/?api=1&query=` … テキスト検索扱いになり別場所へ飛ぶことがあったため使わない。
  */
 export function googleMapsUrlFromLatLng(
   lat: number,
@@ -38,5 +41,8 @@ export function googleMapsUrlFromLatLng(
   const la = finiteCoord(lat, DEFAULT_MAP_LAT)
   const ln = finiteCoord(lng, DEFAULT_MAP_LNG)
   const { lat: nLat, lng: nLng } = normalizeLatLngForThailand(la, ln)
-  return `https://www.google.com/maps/@${nLat},${nLng},${zoom}z`
+  const url = new URL('https://www.google.com/maps')
+  url.searchParams.set('q', `${nLat},${nLng}`)
+  url.searchParams.set('z', String(zoom))
+  return url.toString()
 }
