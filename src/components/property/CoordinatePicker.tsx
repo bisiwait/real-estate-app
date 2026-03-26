@@ -1,33 +1,29 @@
 'use client'
 
-import { useState } from 'react'
-import { MapPin, Info } from 'lucide-react'
+import { MapPin } from 'lucide-react'
+import {
+    DEFAULT_MAP_LAT,
+    DEFAULT_MAP_LNG,
+    finiteCoord,
+    googleMapsUrlFromLatLng,
+} from '@/lib/google-maps-url'
 
 interface CoordinatePickerProps {
-    lat: number
-    lng: number
+    lat: number | null | undefined
+    lng: number | null | undefined
     onChange: (lat: number, lng: number) => void
 }
 
 export default function CoordinatePicker({ lat, lng, onChange }: CoordinatePickerProps) {
-    const [searchQuery, setSearchQuery] = useState('')
-
-    // Pattaya default center if coordinates are zero
-    const displayLat = lat || 12.9236
-    const displayLng = lng || 100.8824
-
-    const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        // Since we can't easily get coordinates from a standard iframe, 
-        // we provide instructions and manual inputs.
-        // For a more advanced version, we would use a proper Map library like Leaflet or Google Maps JS SDK.
-        // For now, we'll keep it simple as requested.
-    }
+    const displayLat = finiteCoord(lat, DEFAULT_MAP_LAT)
+    const displayLng = finiteCoord(lng, DEFAULT_MAP_LNG)
+    const mapsHref = googleMapsUrlFromLatLng(displayLat, displayLng)
 
     return (
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-shrink-0">
                 <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${displayLat},${displayLng}`}
+                    href={mapsHref}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white border-2 border-slate-100 hover:border-navy-primary px-3 py-2.5 rounded-lg text-[11px] font-black text-navy-secondary transition-all flex items-center justify-center shadow-sm h-[42px]"
@@ -43,8 +39,14 @@ export default function CoordinatePicker({ lat, lng, onChange }: CoordinatePicke
                     <input
                         type="number"
                         step="0.0000001"
-                        value={lat || ''}
-                        onChange={e => onChange(parseFloat(e.target.value), lng)}
+                        value={Number.isFinite(lat as number) ? lat : ''}
+                        onChange={e => {
+                            const v = e.target.value.trim()
+                            if (v === '') return
+                            const n = Number(v)
+                            if (!Number.isFinite(n)) return
+                            onChange(n, finiteCoord(lng, DEFAULT_MAP_LNG))
+                        }}
                         placeholder="例: 12.9236"
                         className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs focus:ring-2 focus:ring-navy-primary outline-none font-bold text-navy-secondary h-[42px]"
                     />
@@ -54,8 +56,14 @@ export default function CoordinatePicker({ lat, lng, onChange }: CoordinatePicke
                     <input
                         type="number"
                         step="0.0000001"
-                        value={lng || ''}
-                        onChange={e => onChange(lat, parseFloat(e.target.value))}
+                        value={Number.isFinite(lng as number) ? lng : ''}
+                        onChange={e => {
+                            const v = e.target.value.trim()
+                            if (v === '') return
+                            const n = Number(v)
+                            if (!Number.isFinite(n)) return
+                            onChange(finiteCoord(lat, DEFAULT_MAP_LAT), n)
+                        }}
                         placeholder="例: 100.8824"
                         className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs focus:ring-2 focus:ring-navy-primary outline-none font-bold text-navy-secondary h-[42px]"
                     />

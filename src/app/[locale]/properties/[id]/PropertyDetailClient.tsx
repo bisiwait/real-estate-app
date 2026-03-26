@@ -18,6 +18,7 @@ import StickyContactBar from '@/components/property/StickyContactBar'
 import LineContactButton from '@/components/property/LineContactButton'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
+import { googleMapsUrlFromLatLng } from '@/lib/google-maps-url'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -276,7 +277,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                         ) : null}
 
                         <div className="pt-4">
-                            <a href={`https://www.google.com/maps/search/?api=1&query=${property.project?.latitude || 12.9236},${property.project?.longitude || 100.8824}`} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2A4076] hover:bg-[#1A2B56] text-white py-4 rounded-2xl font-bold flex justify-center gap-2 shadow-lg">
+                            <a href={googleMapsUrlFromLatLng(Number(property.project?.latitude), Number(property.project?.longitude))} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2A4076] hover:bg-[#1A2B56] text-white py-4 rounded-2xl font-bold flex justify-center gap-2 shadow-lg">
                                 <MapPin className="w-4 h-4" /> {dict.property.view_on_google_maps}
                             </a>
                         </div>
