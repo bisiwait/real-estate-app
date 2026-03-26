@@ -9,8 +9,8 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
     const [activeTab, setActiveTab] = useState<'rent' | 'buy' | 'presale'>('rent');
     const [activeArea, setActiveArea] = useState<'pattaya' | 'sriracha'>('pattaya');
     const [activePropertyType, setActivePropertyType] = useState('');
-    /** 英語 UI では主ラベルが既に RENT/BUY なので括弧内の重複表記を出さない */
-    const showTabSubLabel = locale !== 'en';
+    /** 英語では括弧行を見せないが、レイアウト幅・高さは維持するため invisible で占位 */
+    const tabSubLabelHidden = locale === 'en';
 
     return (
         <div className="relative isolate pt-14">
@@ -50,9 +50,12 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                                     }`}
                             >
                                 <span>{dict.home.hero_rent}</span>
-                                {showTabSubLabel && (
-                                    <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（RENT）</span>
-                                )}
+                                <span
+                                    className={`text-[10px] sm:text-lg font-normal sm:font-bold ${tabSubLabelHidden ? 'invisible' : ''}`}
+                                    aria-hidden={tabSubLabelHidden}
+                                >
+                                    （RENT）
+                                </span>
                                 {activeTab === 'rent' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-navy-primary pointer-events-none z-30" />
                                 )}
@@ -65,9 +68,12 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                                     }`}
                             >
                                 <span>{dict.home.hero_buy}</span>
-                                {showTabSubLabel && (
-                                    <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（BUY）</span>
-                                )}
+                                <span
+                                    className={`text-[10px] sm:text-lg font-normal sm:font-bold ${tabSubLabelHidden ? 'invisible' : ''}`}
+                                    aria-hidden={tabSubLabelHidden}
+                                >
+                                    （BUY）
+                                </span>
                                 {activeTab === 'buy' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-navy-primary pointer-events-none z-30" />
                                 )}
@@ -80,9 +86,12 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                                     }`}
                             >
                                 <span className="pt-1 sm:pt-0">{dict.home.hero_presale}</span>
-                                {showTabSubLabel && (
-                                    <span className="text-[10px] sm:text-lg font-normal sm:font-bold">（PRESALE）</span>
-                                )}
+                                <span
+                                    className={`text-[10px] sm:text-lg font-normal sm:font-bold ${tabSubLabelHidden ? 'invisible' : ''}`}
+                                    aria-hidden={tabSubLabelHidden}
+                                >
+                                    （PRESALE）
+                                </span>
                                 {activeTab === 'presale' && (
                                     <div className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-t-amber-500 pointer-events-none z-30" />
                                 )}
