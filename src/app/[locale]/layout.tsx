@@ -80,14 +80,14 @@ export default async function RootLayout({
             <div className="container mx-auto px-3 sm:px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-12 border-b border-white/10 pb-12 text-center md:text-left">
               <div>
-                <Link href={`/${locale}`} className="inline-block">
-                  <img
-                    src="/logo_row_1000.svg"
-                    alt="Chonburi Home"
-                    width={1000}
-                    height={303}
-                    className="h-10 w-auto max-w-[min(320px,85vw)] sm:h-11 md:h-12 object-contain object-left"
-                  />
+                <Link
+                  href={`/${locale}`}
+                  className="inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 rounded-sm"
+                >
+                  <span className="block text-xl sm:text-2xl font-black italic tracking-tighter text-white antialiased">
+                    Chonburi{' '}
+                    <span className="text-amber-400 not-italic">Home</span>
+                  </span>
                 </Link>
               </div>
               <nav className="flex flex-wrap justify-center md:justify-end gap-x-8 gap-y-4">
