@@ -40,10 +40,10 @@ export default function Header({ dict }: { dict: any }) {
                 {/* Logo */}
                 <Link href={`/${currentLocale}`} className="flex items-center relative z-[110] active:scale-95 transition-transform duration-200 shrink-0 min-w-0 py-0">
                     <img
-                        src="/logo_row_1000.svg"
+                        src="/logo_row_1000_2.svg"
                         alt="Chonburi Home"
                         width={1000}
-                        height={303}
+                        height={223}
                         className="h-[3.75rem] w-auto max-w-[min(520px,94vw)] sm:h-[4.5rem] md:h-[4.625rem] lg:h-[4.75rem] object-contain object-left"
                     />
                 </Link>
