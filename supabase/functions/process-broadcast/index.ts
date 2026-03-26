@@ -9,6 +9,11 @@ const corsHeaders = {
     'Access-Control-Max-Age': '86400',
 }
 
+function getSiteOrigin(): string {
+    const raw = Deno.env.get('NEXT_PUBLIC_SITE_URL') || Deno.env.get('SITE_URL') || 'https://chonburihome.com'
+    return raw.replace(/\/$/, '')
+}
+
 serve(async (req) => {
     console.log(`[process-broadcast] Method: ${req.method} | URL: ${req.url}`)
 
@@ -146,7 +151,7 @@ serve(async (req) => {
                                 'Authorization': `Bearer ${resendApiKey}`,
                             },
                             body: JSON.stringify({
-                                from: 'Property Alert <notifications@resend.dev>',
+                                from: 'Chonburi Home <notifications@resend.dev>',
                                 to: user.email,
                                 subject: log.title,
                                 html: generateEmailHtml(user, log, properties),
@@ -176,7 +181,7 @@ serve(async (req) => {
                             },
                             body: JSON.stringify({
                                 to: user.line_id,
-                                messages: [generateLineFlexMessage(log, properties)]
+                                messages: [generateLineFlexMessage(log, properties, getSiteOrigin())]
                             }),
                         })
                         if (lineRes.ok) {
@@ -241,6 +246,7 @@ serve(async (req) => {
 })
 
 function generateEmailHtml(user: any, log: any, properties: any[]) {
+    const origin = getSiteOrigin()
     const propertyHtml = properties.map(p => `
         <div style="margin-bottom: 30px; border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: white;">
             <img src="${p.images?.[0]}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
@@ -248,7 +254,7 @@ function generateEmailHtml(user: any, log: any, properties: any[]) {
                 <h3 style="margin: 0 0 10px 0; color: #1a1e2e;">${p.title}</h3>
                 <p style="font-size: 18px; font-weight: bold; color: #0066ff; margin: 0 0 10px 0;">${p.price?.toLocaleString()} THB</p>
                 <p style="font-size: 14px; color: #666; margin-bottom: 20px;">${p.area?.name}</p>
-                <a href="http://pattaya-realestate.com/properties/${p.id}" style="display: inline-block; padding: 10px 20px; background: #1a1e2e; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">詳細を見る</a>
+                <a href="${origin}/jp/properties/${p.id}" style="display: inline-block; padding: 10px 20px; background: #1a1e2e; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">詳細を見る</a>
             </div>
         </div>
     `).join('')
@@ -261,15 +267,15 @@ function generateEmailHtml(user: any, log: any, properties: any[]) {
                 ${propertyHtml}
                 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 40px 0;">
                 <p style="font-size: 11px; color: #94a3b8; text-align: center;">
-                    このメールは新着物件通知設定をされている方に送信されています。<br>
-                    配信停止は<a href="http://pattaya-realestate.com/mypage" style="color: #0066ff;">マイページ</a>から行えます。
+                    このメールは Chonburi Home の新着物件通知設定をされている方に送信されています。<br>
+                    配信停止は<a href="${origin}/jp/mypage" style="color: #0066ff;">マイページ</a>から行えます。
                 </p>
             </div>
         </div>
     `
 }
 
-function generateLineFlexMessage(log: any, properties: any[]) {
+function generateLineFlexMessage(log: any, properties: any[], siteOrigin: string) {
     const bubbles = properties.slice(0, 10).map(p => ({
         type: "bubble",
         hero: {
@@ -326,7 +332,7 @@ function generateLineFlexMessage(log: any, properties: any[]) {
                     action: {
                         type: "uri",
                         label: "詳細を見る",
-                        uri: `http://pattaya-realestate.com/properties/${p.id}`
+                        uri: `${siteOrigin}/jp/properties/${p.id}`
                     }
                 }
             ]
@@ -335,7 +341,7 @@ function generateLineFlexMessage(log: any, properties: any[]) {
 
     return {
         type: "flex",
-        altText: log.title,
+        altText: `${log.title} | Chonburi Home`,
         contents: {
             type: "carousel",
             contents: bubbles

@@ -51,7 +51,7 @@ serve(async (req) => {
                 'Authorization': `Bearer ${resendApiKey}`,
             },
             body: JSON.stringify({
-                from: 'Pattaya Real Estate <notifications@resend.dev>', // Update with verified domain
+                from: 'Chonburi Home <notifications@resend.dev>', // Update with verified domain
                 to: inquiry.inquirer_email,
                 subject: `【返信】「${inquiry.property.title}」についてのお問い合わせ`,
                 html: `
@@ -66,7 +66,7 @@ serve(async (req) => {
                         
                         <p>※本メールはシステムによる自動送信です。返信される場合は、直接担当者の連絡先、またはサイトのお問い合わせフォームをご利用ください。</p>
                         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-                        <p style="font-size: 12px; color: #999;">Pattaya Real Estate System</p>
+                        <p style="font-size: 12px; color: #999;">Chonburi Home</p>
                     </div>
                 `,
             }),
