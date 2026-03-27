@@ -204,103 +204,118 @@ export default function PriceRangeSlider({
             <div className="mb-8 w-full min-w-0">
                 <div className="mx-auto w-[82%] min-w-0 max-w-full lg:w-full">
                     <div
-                        className="relative h-1.5 w-full min-w-0 rounded-full bg-slate-100 px-4"
+                        className="flex flex-col gap-2 px-8 lg:px-4"
                         onMouseLeave={(e) => {
                             if (e.buttons === 0) setActiveThumb(null);
                         }}
                     >
-                        {/* Active Range Line */}
-                        <div
-                            ref={rangeRef}
-                            className="absolute h-1.5 bg-navy-primary rounded-full z-10"
-                        ></div>
+                        {/* 縦方向の余白で大きなつまみがはみ出してもタッチしやすい */}
+                        <div className="flex min-h-[64px] w-full min-w-0 items-center">
+                            <div className="relative h-1.5 w-full min-w-0 overflow-visible rounded-full bg-slate-100">
+                                {/* Active Range Line */}
+                                <div
+                                    ref={rangeRef}
+                                    className="absolute top-0 h-1.5 bg-navy-primary rounded-full z-10"
+                                ></div>
 
-                        {/* Min/Max Thumb Inputs overlays */}
-                        <style dangerouslySetInnerHTML={{
-                            __html: `
+                                {/* Min/Max Thumb Inputs（thumb 56px = 十分なターゲットサイズ） */}
+                                <style dangerouslySetInnerHTML={{
+                                    __html: `
                   .dual-slider-input {
                     -webkit-appearance: none;
                     appearance: none;
                     pointer-events: none;
                     position: absolute;
+                    left: 0;
+                    right: 0;
                     width: 100%;
-                    top: -10px;
-                    height: 20px;
+                    top: 50%;
+                    height: 64px;
+                    transform: translateY(-50%);
                     opacity: 0;
                     margin: 0;
                     touch-action: none;
+                    box-sizing: border-box;
                   }
                   .dual-slider-input::-webkit-slider-runnable-track {
                     pointer-events: none;
+                    height: 6px;
+                    border-radius: 9999px;
                   }
                   .dual-slider-input::-webkit-slider-thumb {
                     -webkit-appearance: none;
                     appearance: none;
                     pointer-events: auto;
-                    width: 32px;
-                    height: 32px;
+                    width: 56px;
+                    height: 56px;
                     border-radius: 50%;
                     cursor: pointer;
+                    margin-top: -25px;
+                    border: none;
+                    background: transparent;
+                    box-shadow: none;
                   }
                   .dual-slider-input::-moz-range-track {
                     pointer-events: none;
+                    height: 6px;
+                    border-radius: 9999px;
                   }
                   .dual-slider-input::-moz-range-thumb {
                     pointer-events: auto;
-                    width: 32px;
-                    height: 32px;
+                    width: 56px;
+                    height: 56px;
                     border-radius: 50%;
                     cursor: pointer;
                     border: none;
+                    background: transparent;
                   }
                 `}} />
 
-                        {/* Max を先に描画し、Min を上に重ねる（後勝ちスタック） */}
-                        <input
-                            type="range"
-                            min={min}
-                            max={max}
-                            step={step}
-                            value={maxValue}
-                            onChange={handleMaxChange}
-                            onPointerDown={() => setActiveThumb('max')}
-                            className="dual-slider-input"
-                            style={{ zIndex: maxInputZ }}
-                        />
+                                <input
+                                    type="range"
+                                    min={min}
+                                    max={max}
+                                    step={step}
+                                    value={maxValue}
+                                    onChange={handleMaxChange}
+                                    onPointerDown={() => setActiveThumb('max')}
+                                    className="dual-slider-input"
+                                    style={{ zIndex: maxInputZ }}
+                                />
 
-                        <input
-                            type="range"
-                            min={min}
-                            max={max}
-                            step={step}
-                            value={minValue}
-                            onChange={handleMinChange}
-                            onPointerDown={() => setActiveThumb('min')}
-                            className="dual-slider-input"
-                            style={{ zIndex: minInputZ }}
-                        />
+                                <input
+                                    type="range"
+                                    min={min}
+                                    max={max}
+                                    step={step}
+                                    value={minValue}
+                                    onChange={handleMinChange}
+                                    onPointerDown={() => setActiveThumb('min')}
+                                    className="dual-slider-input"
+                                    style={{ zIndex: minInputZ }}
+                                />
 
-                        {/* Tick marks */}
-                        <div className="absolute top-5 inset-x-0 flex justify-between px-0 text-[9px] text-slate-300 font-black pointer-events-none uppercase tracking-tighter">
+                                {/* Custom Min Thumb Visual（見た目も操作域に合わせて拡大） */}
+                                <div
+                                    className={`pointer-events-none absolute top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-navy-primary bg-white shadow-lg transition-transform ${activeThumb === 'min' ? 'scale-110 ring-4 ring-navy-primary/10' : ''}`}
+                                    style={{ left: `${getPercent(minValue)}%`, zIndex: minInputZ + 5 }}
+                                >
+                                    <div className="h-2 w-2 rounded-full bg-navy-primary" />
+                                </div>
+
+                                <div
+                                    className={`pointer-events-none absolute top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-navy-primary bg-white shadow-lg transition-transform ${activeThumb === 'max' ? 'scale-110 ring-4 ring-navy-primary/10' : ''}`}
+                                    style={{ left: `${getPercent(maxValue)}%`, zIndex: maxInputZ + 5 }}
+                                >
+                                    <div className="h-2 w-2 rounded-full bg-navy-primary" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between px-0 text-[9px] font-black uppercase tracking-tighter text-slate-300">
                             <span>{formatValue(min)}</span>
                             <span className="opacity-0 sm:opacity-100">{formatValue(min + (max - min) / 2)}</span>
                             <span>{formatValue(max)}+</span>
-                        </div>
-
-                        {/* Custom Min Thumb Visual */}
-                        <div
-                            className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'min' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
-                            style={{ left: `${getPercent(minValue)}%`, zIndex: minInputZ + 5 }}
-                        >
-                            <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
-                        </div>
-
-                        {/* Custom Max Thumb Visual */}
-                        <div
-                            className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'max' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
-                            style={{ left: `${getPercent(maxValue)}%`, zIndex: maxInputZ + 5 }}
-                        >
-                            <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
                         </div>
                     </div>
                 </div>
