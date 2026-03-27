@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
     Users,
@@ -43,7 +44,13 @@ interface AgentPerformance {
     last_activity: string
 }
 
-export default function AgentPerformanceTable({ onSelectAgent }: { onSelectAgent: (id: string) => void }) {
+export default function AgentPerformanceTable({
+    onSelectAgent,
+    locale,
+}: {
+    onSelectAgent: (id: string) => void
+    locale: string
+}) {
     const [agents, setAgents] = useState<AgentPerformance[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
@@ -181,7 +188,7 @@ export default function AgentPerformanceTable({ onSelectAgent }: { onSelectAgent
                                 </button>
                             </th>
                             <th className="px-4 py-5 text-right">最終アクティビティ</th>
-                            <th className="px-8 py-5"></th>
+                            <th className="px-8 py-5 text-right">詳細</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
@@ -262,10 +269,27 @@ export default function AgentPerformanceTable({ onSelectAgent }: { onSelectAgent
                                         <p className="text-[11px] font-bold text-navy-secondary">{new Date(agent.last_activity).toLocaleDateString('ja-JP')}</p>
                                         <p className="text-[10px] text-slate-400 mt-0.5">{new Date(agent.last_activity).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</p>
                                     </td>
-                                    <td className="px-8 py-6 text-right">
-                                        <button className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-navy-primary hover:text-white transition-all shadow-sm border border-transparent">
-                                            <ChevronRight size={18} />
-                                        </button>
+                                    <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex flex-wrap items-center justify-end gap-2">
+                                            <Link
+                                                href={`/${locale}/admin-secret/agents?agent=${encodeURIComponent(agent.id)}`}
+                                                className="inline-flex items-center rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                詳細を見る
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-navy-primary hover:text-white transition-all shadow-sm border border-transparent"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onSelectAgent(agent.id)
+                                                }}
+                                                aria-label="詳細を開く"
+                                            >
+                                                <ChevronRight size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))

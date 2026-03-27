@@ -193,7 +193,7 @@ export default function AdminDashboardClient({
                 {tab === 'projects' && <AdminProjectManagement />}
                 {tab === 'developers' && <AdminDeveloperManagement />}
                 {tab === 'properties' && <AdminPropertyManagement />}
-                {tab === 'users' && <AdminUserManagement />}
+                {tab === 'users' && <AdminUserManagement locale={locale} />}
                 {tab === 'inquiries' && (
                     <AdminInquiriesPanel
                         locale={locale}

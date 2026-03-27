@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
     Users,
@@ -14,14 +15,15 @@ import {
     KeyRound,
     Eye,
     EyeOff,
-    X
+    X,
+    ExternalLink
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { adminResetPassword } from '@/app/actions/adminAuth'
 
 type UserRoleFilter = 'agent' | 'general';
 
-export default function AdminUserManagement() {
+export default function AdminUserManagement({ locale }: { locale: string }) {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -287,7 +289,34 @@ export default function AdminUserManagement() {
                                             <button onClick={() => { setResettingPassword(null); setNewPassword('') }} className="text-[10px] font-black text-slate-400">✕</button>
                                         </div>
                                     ) : (
-                                        <div className="flex items-center gap-1.5">
+                                        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+                                            {roleFilter === 'agent' ? (
+                                                <>
+                                                    <Link
+                                                        href={`/${locale}/admin-secret/agents?agent=${user.id}`}
+                                                        className="inline-flex items-center gap-1 rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
+                                                    >
+                                                        詳細（分析）
+                                                        <ExternalLink className="h-3 w-3 opacity-70" />
+                                                    </Link>
+                                                    <Link
+                                                        href={`/${locale}/agents/${user.id}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 underline-offset-2 hover:text-navy-primary hover:underline"
+                                                    >
+                                                        公開ページ
+                                                    </Link>
+                                                </>
+                                            ) : (
+                                                <Link
+                                                    href={`/${locale}/admin-secret/users/${user.id}`}
+                                                    className="inline-flex items-center gap-1 rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
+                                                >
+                                                    詳細
+                                                    <ExternalLink className="h-3 w-3 opacity-70" />
+                                                </Link>
+                                            )}
                                             <button
                                                 onClick={() => { setResettingPassword(user.id); setNewPassword('') }}
                                                 className="p-2 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-100 transition-all"
