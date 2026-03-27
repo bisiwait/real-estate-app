@@ -491,16 +491,16 @@ export default function AgentListingPricingClient({
 
                 <div className="w-full max-w-5xl">
                     <div className="overflow-x-auto overscroll-x-contain rounded-3xl border border-slate-200 bg-white text-center shadow-md touch-pan-x [-webkit-overflow-scrolling:touch]">
-                        <table className="inline-table w-full min-w-[480px] table-fixed border-collapse text-left align-top md:table md:w-full md:min-w-[640px] md:table-auto">
+                        <table className="inline-table w-full min-w-[480px] table-fixed border-collapse text-left align-top md:table md:w-full md:min-w-[640px] md:table-fixed">
                             <thead>
                                 <tr className="bg-slate-50">
-                                    <th className="w-[22%] min-w-0 max-w-[5.5rem] p-2 text-[9px] font-bold uppercase leading-tight tracking-tight text-slate-500 md:w-auto md:max-w-none md:whitespace-nowrap md:p-6 md:text-xs md:tracking-widest">
+                                    <th className="w-[46%] min-w-0 p-2 text-[9px] font-bold uppercase leading-tight tracking-tight text-slate-500 md:whitespace-nowrap md:p-6 md:text-xs md:tracking-widest">
                                         {p.table_feature}
                                     </th>
-                                    <th className="w-[39%] border-l border-slate-200 p-2 text-center text-[11px] font-black leading-tight text-navy-secondary md:w-auto md:whitespace-nowrap md:p-6 md:text-sm">
+                                    <th className="w-[27%] border-l border-slate-200 p-2 text-center text-[11px] font-black leading-tight text-navy-secondary md:whitespace-nowrap md:p-6 md:text-sm">
                                         {p.table_free}
                                     </th>
-                                    <th className="w-[39%] border-l border-slate-200 bg-navy-primary/5 p-2 text-center text-[11px] font-black leading-tight text-navy-primary md:w-auto md:whitespace-nowrap md:p-6 md:text-sm">
+                                    <th className="w-[27%] border-l border-slate-200 bg-navy-primary/5 p-2 text-center text-[11px] font-black leading-tight text-navy-primary md:whitespace-nowrap md:p-6 md:text-sm">
                                         {p.table_pro}
                                     </th>
                                 </tr>
@@ -758,7 +758,7 @@ function CmpRow({
         if (typeof val === "string") {
             return (
                 <td className={base}>
-                    <span className="inline-block max-w-[200px] text-[10px] font-bold leading-snug text-navy-secondary md:max-w-[220px] md:text-sm lg:max-w-none">
+                    <span className="inline-block max-w-full text-[10px] font-bold leading-snug text-navy-secondary md:text-sm">
                         {val}
                     </span>
                 </td>
@@ -785,7 +785,7 @@ function CmpRow({
     return (
         <tr className="transition-colors hover:bg-slate-50/80">
             <td
-                className={`min-w-0 max-w-[5.5rem] p-2 text-[10px] font-bold leading-snug text-navy-secondary md:max-w-none md:p-5 md:text-sm md:leading-normal ${labelIsMultiline ? "" : "whitespace-normal md:whitespace-nowrap"}`}
+                className={`min-w-0 p-2 text-[10px] font-bold leading-snug text-navy-secondary md:p-5 md:text-sm md:leading-normal ${labelIsMultiline ? "" : "whitespace-normal md:whitespace-nowrap"}`}
             >
                 {labelIsMultiline ? (
                     <>
