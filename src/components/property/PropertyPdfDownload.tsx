@@ -257,13 +257,11 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
                 try {
                     console.log(`html2canvas attempt ${attempt + 1}/${MAX_RETRIES}...`);
                     canvas = await html2canvas(flyerRef.current, {
-                        scale: 2, // 2x scale to maintain high resolution
+                        scale: 2,
                         useCORS: true,
-                        allowTaint: false, // Essential to prevent security errors causing rendering stops
-                        logging: true, // Output debug logs from html2canvas
+                        allowTaint: false,
+                        logging: false,
                         backgroundColor: '#ffffff',
-                        width: 793.7, // 210mm in pixels at 96dpi
-                        height: 1122.5 // 297mm in pixels at 96dpi
                     });
                     
                     if (canvas) {
@@ -296,13 +294,30 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
                 orientation: 'p',
                 unit: 'mm',
                 format: 'a4',
-                compress: true // Enable internal PDF compression
+                compress: true,
             });
-            
+
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            
-            pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+
+            const imgWidthMm = pageWidth;
+            const imgHeightMm = (canvas.height * imgWidthMm) / canvas.width;
+
+            if (imgHeightMm <= pageHeight + 0.5) {
+                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidthMm, imgHeightMm, undefined, 'FAST');
+            } else {
+                let heightLeft = imgHeightMm;
+                let y = 0;
+                while (heightLeft > 0) {
+                    pdf.addImage(imgData, 'JPEG', 0, y, imgWidthMm, imgHeightMm, undefined, 'FAST');
+                    heightLeft -= pageHeight;
+                    if (heightLeft > 0) {
+                        pdf.addPage();
+                        y -= pageHeight;
+                    }
+                }
+            }
+
             pdf.save(`Property_${property.reference_id || property.id.slice(0, 8)}.pdf`);
             
             toast.success("PDFのダウンロードを開始しました。");
@@ -324,7 +339,7 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
                 pointerEvents: 'none'
             }}
         >
-            <div ref={flyerRef} style={{ width: '210mm', height: '297mm', backgroundColor: 'white' }}>
+            <div ref={flyerRef} style={{ width: '210mm', minHeight: '297mm', height: 'auto', backgroundColor: 'white' }}>
                 <PropertyFlyer {...flyerData} />
             </div>
         </div>

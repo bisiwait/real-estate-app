@@ -29,6 +29,18 @@ interface PropertyFlyerProps {
     qrCodeUrl: string;
 }
 
+/** PDF用: HTMLを除き、改行を残してプレーンテキスト化 */
+function htmlToPlainText(html: string, maxLen: number): string {
+    const withBreaks = html
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<[^>]+>/g, '');
+    const collapsed = withBreaks.replace(/\n{3,}/g, '\n\n').trim();
+    if (collapsed.length <= maxLen) return collapsed;
+    return `${collapsed.slice(0, maxLen)}…`;
+}
+
 function generateHighlights(property: PropertyFlyerProps['property']): string[] {
     const result: string[] = [];
     const tags = property.tags || [];
@@ -65,10 +77,18 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
     const allHighlights = Array.from(new Set([...autoHighlights, ...tagHighlights])).slice(0, 6);
     const mainFacilities = (property.shared_facilities || []).slice(0, 6);
 
+    const descJa = property.description
+        ? htmlToPlainText(property.description, 900)
+        : '';
+    const descEn = property.description_en
+        ? htmlToPlainText(property.description_en, 700)
+        : '';
+
     return (
         <div style={{
             width: '210mm',
-            height: '297mm',
+            minHeight: '297mm',
+            height: 'auto',
             backgroundColor: '#ffffff',
             padding: '14mm 16mm',
             display: 'flex',
@@ -77,6 +97,7 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
             color: '#1e293b',
             boxSizing: 'border-box',
             position: 'relative',
+            overflow: 'visible',
         }}>
 
             {/* ── Header ── */}
@@ -87,6 +108,7 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                 marginBottom: '5mm',
                 borderBottom: '2px solid #2A4076',
                 paddingBottom: '3mm',
+                flexShrink: 0,
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <div style={{ width: '8px', height: '28px', backgroundColor: '#f59e0b', borderRadius: '2px' }} />
@@ -100,13 +122,12 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
             </div>
 
             {/* ── Main Image ── */}
-            <div style={{ width: '100%', height: '86mm', marginBottom: '5mm', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ width: '100%', height: '86mm', marginBottom: '5mm', borderRadius: '6px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
                 {property.images && property.images.length > 0 ? (
                     <img src={property.images[0]} alt="Property" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                     <div style={{ width: '100%', height: '100%', backgroundColor: '#e2e8f0' }} />
                 )}
-                {/* 種別バッジ: flex で文字を縦横中央 */}
                 <div style={{
                     position: 'absolute', top: '8px', left: '8px',
                     backgroundColor: property.is_for_rent ? '#2563eb' : '#dc2626',
@@ -114,20 +135,16 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                     fontSize: '11px',
                     fontWeight: '900',
                     letterSpacing: '0.1em',
-                    padding: '5px 12px',
+                    padding: '4px 12px',
                     borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    lineHeight: 1,
-                    boxSizing: 'border-box',
+                    display: 'inline-block',
                 }}>
                     {property.is_for_rent ? 'FOR RENT' : 'FOR SALE'}
                 </div>
             </div>
 
             {/* ── Title ── */}
-            <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e293b', marginBottom: '4mm', lineHeight: '1.3' }}>
+            <div style={{ fontSize: '18px', fontWeight: '900', color: '#1e293b', marginBottom: '4mm', lineHeight: '1.3', flexShrink: 0 }}>
                 {property.title}
             </div>
 
@@ -140,8 +157,8 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                 padding: '6mm 0',
                 textAlign: 'center',
                 boxSizing: 'border-box',
+                flexShrink: 0,
             }}>
-                {/* ラベル行 */}
                 <div style={{
                     fontSize: '11px',
                     fontWeight: '700',
@@ -149,25 +166,15 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                     textTransform: 'uppercase',
                     letterSpacing: '0.12em',
                     marginBottom: '3mm',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    lineHeight: 1.2,
-                    minHeight: '14px',
                 }}>
                     {property.is_for_rent ? 'MONTHLY RENT — 賃料/月' : 'SALE PRICE — 販売価格'}
                 </div>
-                {/* 金額行 */}
                 <div style={{
                     fontSize: '46px',
                     fontWeight: '900',
                     color: '#fbbf24',
                     letterSpacing: '-0.02em',
-                    lineHeight: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexWrap: 'wrap',
+                    lineHeight: '1',
                 }}>
                     {property.price?.toLocaleString()}
                     <span style={{ fontSize: '18px', fontWeight: '700', color: '#e2e8f0', marginLeft: '8px' }}>
@@ -182,6 +189,7 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                 gridTemplateColumns: 'repeat(4, 1fr)',
                 gap: '4mm',
                 marginBottom: '6mm',
+                flexShrink: 0,
             }}>
                 <InfoItem label="TYPE" value={property.property_type || '—'} />
                 <InfoItem label="SIZE" value={`${property.sqm || '—'} m²`} />
@@ -190,35 +198,30 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
             </div>
 
             {/* ── Highlights & Facilities ── */}
-            <div style={{ display: 'flex', gap: '5mm', marginBottom: '5mm' }}>
+            <div style={{ display: 'flex', gap: '5mm', marginBottom: '5mm', flexShrink: 0 }}>
                 {allHighlights.length > 0 && (
                     <div style={{ flex: 1 }}>
                         <div style={{
                             fontSize: '10px', fontWeight: '900', color: '#2563eb',
                             textTransform: 'uppercase', letterSpacing: '0.08em',
-                            borderBottom: '2px solid #2563eb', paddingBottom: '3px',
-                            marginBottom: '3mm', display: 'inline-flex', alignItems: 'center',
-                            lineHeight: 1.25, minHeight: '14px', boxSizing: 'border-box',
+                            borderBottom: '2px solid #2563eb', paddingBottom: '2px',
+                            marginBottom: '3mm', display: 'inline-block',
                         }}>
                             HIGHLIGHTS / おすすめポイント
                         </div>
                         <div>
                             {allHighlights.map((item, idx) => (
                                 <span key={idx} style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
+                                    display: 'inline-block',
                                     fontSize: '10px',
                                     fontWeight: '700',
                                     color: '#1e40af',
                                     backgroundColor: '#eff6ff',
                                     border: '1px solid #bfdbfe',
                                     borderRadius: '12px',
-                                    padding: '4px 10px',
+                                    padding: '3px 9px',
                                     marginRight: '3mm',
                                     marginBottom: '2mm',
-                                    lineHeight: 1.25,
-                                    boxSizing: 'border-box',
                                 }}>
                                     ✦ {item}
                                 </span>
@@ -231,29 +234,24 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                         <div style={{
                             fontSize: '10px', fontWeight: '900', color: '#64748b',
                             textTransform: 'uppercase', letterSpacing: '0.08em',
-                            borderBottom: '2px solid #64748b', paddingBottom: '3px',
-                            marginBottom: '3mm', display: 'inline-flex', alignItems: 'center',
-                            lineHeight: 1.25, minHeight: '14px', boxSizing: 'border-box',
+                            borderBottom: '2px solid #64748b', paddingBottom: '2px',
+                            marginBottom: '3mm', display: 'inline-block',
                         }}>
                             FACILITIES / 共有施設
                         </div>
                         <div>
                             {mainFacilities.map((facility, idx) => (
                                 <span key={idx} style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
+                                    display: 'inline-block',
                                     fontSize: '10px',
                                     fontWeight: '700',
                                     color: '#475569',
                                     backgroundColor: '#f1f5f9',
                                     border: '1px solid #e2e8f0',
                                     borderRadius: '12px',
-                                    padding: '4px 10px',
+                                    padding: '3px 9px',
                                     marginRight: '3mm',
                                     marginBottom: '2mm',
-                                    lineHeight: 1.25,
-                                    boxSizing: 'border-box',
                                 }}>
                                     ★ {facility}
                                 </span>
@@ -263,34 +261,48 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                 )}
             </div>
 
-            {/* ── Descriptions ── */}
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-                {property.description && (
+            {/* ── Descriptions（overflow で切らない。flex 縮小で1行化しないよう flexShrink:0） ── */}
+            <div style={{ flexShrink: 0, overflow: 'visible', width: '100%' }}>
+                {descJa ? (
                     <div style={{ marginBottom: '4mm' }}>
                         <div style={{
                             fontSize: '11px', fontWeight: '900', color: '#2A4076',
-                            borderBottom: '2px solid #2A4076', paddingBottom: '3px',
-                            marginBottom: '2mm', display: 'inline-flex', alignItems: 'center',
-                            lineHeight: 1.25, minHeight: '15px', boxSizing: 'border-box',
+                            borderBottom: '2px solid #2A4076', paddingBottom: '2px',
+                            marginBottom: '2mm', display: 'inline-block',
                         }}>物件紹介</div>
-                        <p style={{ fontSize: '11px', lineHeight: '1.65', color: '#475569', margin: '0' }}>
-                            {property.description.replace(/<[^>]+>/g, '').slice(0, 280)}{property.description.length > 280 ? '…' : ''}
+                        <p style={{
+                            fontSize: '11px',
+                            lineHeight: 1.65,
+                            color: '#475569',
+                            margin: 0,
+                            whiteSpace: 'pre-line',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                        }}>
+                            {descJa}
                         </p>
                     </div>
-                )}
-                {property.description_en && (
+                ) : null}
+                {descEn ? (
                     <div style={{ marginBottom: '4mm' }}>
                         <div style={{
                             fontSize: '11px', fontWeight: '900', color: '#2A4076',
-                            borderBottom: '2px solid #2A4076', paddingBottom: '3px',
-                            marginBottom: '2mm', display: 'inline-flex', alignItems: 'center',
-                            lineHeight: 1.25, minHeight: '15px', boxSizing: 'border-box',
+                            borderBottom: '2px solid #2A4076', paddingBottom: '2px',
+                            marginBottom: '2mm', display: 'inline-block',
                         }}>English Description</div>
-                        <p style={{ fontSize: '11px', lineHeight: '1.65', color: '#475569', margin: '0' }}>
-                            {property.description_en.slice(0, 220)}{property.description_en.length > 220 ? '…' : ''}
+                        <p style={{
+                            fontSize: '11px',
+                            lineHeight: 1.65,
+                            color: '#475569',
+                            margin: 0,
+                            whiteSpace: 'pre-line',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                        }}>
+                            {descEn}
                         </p>
                     </div>
-                )}
+                ) : null}
             </div>
 
             {/* ── Footer ── */}
@@ -301,6 +313,7 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
                 alignItems: 'flex-end',
                 borderTop: '2px solid #e2e8f0',
                 paddingTop: '4mm',
+                flexShrink: 0,
             }}>
                 <div>
                     <div style={{ fontSize: '15px', fontWeight: '900', color: '#2A4076', marginBottom: '2mm' }}>{agent.full_name}</div>
@@ -316,7 +329,7 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
     );
 };
 
-/* ── InfoItem ── ラベル・値をそれぞれ flex で縦中央寄せ */
+/* ── InfoItem ── html2canvas 向けにシンプルなブロックレイアウト */
 const InfoItem = ({ label, value }: { label: string; value: string }) => (
     <div style={{
         backgroundColor: '#F8FAFF',
@@ -325,11 +338,6 @@ const InfoItem = ({ label, value }: { label: string; value: string }) => (
         padding: '4mm 3mm',
         textAlign: 'center',
         boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '2mm',
     }}>
         <div style={{
             fontSize: '8px',
@@ -337,11 +345,7 @@ const InfoItem = ({ label, value }: { label: string; value: string }) => (
             textTransform: 'uppercase',
             fontWeight: '800',
             letterSpacing: '0.06em',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            lineHeight: 1.2,
-            minHeight: '10px',
+            marginBottom: '2mm',
         }}>
             {label}
         </div>
@@ -349,10 +353,6 @@ const InfoItem = ({ label, value }: { label: string; value: string }) => (
             fontSize: '14px',
             color: '#2A4076',
             fontWeight: '900',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            lineHeight: 1.15,
         }}>
             {value}
         </div>
