@@ -1,7 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Heart, Search, Settings } from "lucide-react";
+import { User, Heart, Search, Settings, type LucideIcon } from "lucide-react";
+
+interface TabDef {
+    id: string;
+    label: string;
+    labelMobile?: string;
+    icon: LucideIcon;
+}
 
 interface DashboardTabsProps {
     activeTab: string;
@@ -9,10 +16,11 @@ interface DashboardTabsProps {
 }
 
 export default function DashboardTabs({ activeTab, onTabChange, dict }: DashboardTabsProps & { dict: any }) {
-    const tabs = [
+    const savedShort = dict.labels.saved_searches_tab_short ?? dict.labels.saved_searches;
+    const tabs: TabDef[] = [
         { id: "profile", label: dict.labels.profile, icon: User },
         { id: "favorites", label: dict.labels.favorites, icon: Heart },
-        { id: "searches", label: dict.labels.saved_searches, icon: Search },
+        { id: "searches", label: dict.labels.saved_searches, labelMobile: savedShort, icon: Search },
         { id: "settings", label: dict.common.settings, icon: Settings },
     ];
 
@@ -36,7 +44,16 @@ export default function DashboardTabs({ activeTab, onTabChange, dict }: Dashboar
                         />
                     )}
                     <tab.icon className="relative z-10 h-3.5 w-3.5 shrink-0 sm:h-3.5 sm:w-3.5" strokeWidth={2.25} aria-hidden />
-                    <span className="relative z-10 line-clamp-2 w-full break-words [overflow-wrap:anywhere] sm:line-clamp-none">{tab.label}</span>
+                    <span className="relative z-10 w-full break-words [overflow-wrap:anywhere] sm:line-clamp-none">
+                        {tab.labelMobile ? (
+                            <>
+                                <span className="line-clamp-2 sm:hidden">{tab.labelMobile}</span>
+                                <span className="hidden sm:inline">{tab.label}</span>
+                            </>
+                        ) : (
+                            <span className="line-clamp-2 sm:line-clamp-none">{tab.label}</span>
+                        )}
+                    </span>
                 </button>
             ))}
         </div>

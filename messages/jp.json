@@ -226,6 +226,7 @@
         "settings_password_hint": "メールアドレスの確認やニックネーム・連絡先の編集は「プロフィール編集」から行えます。",
         "notification_settings": "通知設定",
         "saved_searches": "保存した検索条件",
+        "saved_searches_tab_short": "検索条件",
         "saved_date": "保存日",
         "notifications_on": "通知オン",
         "go_find": "探しに行く",

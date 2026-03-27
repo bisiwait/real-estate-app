@@ -199,6 +199,7 @@
         "settings_password_hint": "ตรวจสอบอีเมลหรือแก้ไขชื่อที่แสดงและข้อมูลติดต่อได้ที่ «แก้ไขโปรไฟล์»",
         "notification_settings": "ตั้งค่าการแจ้งเตือน",
         "saved_searches": "การค้นหาที่บันทึกไว้",
+        "saved_searches_tab_short": "เงื่อนไข",
         "saved_date": "วันที่บันทึก",
         "notifications_on": "การแจ้งเตือนเปิดอยู่",
         "go_find": "ไปค้นหากันเลย",

@@ -106,7 +106,7 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
                             <LayoutDashboard className="h-5 w-5 text-white md:h-6 md:w-6" />
                         </div>
                         <div className="min-w-0 pt-0.5">
-                            <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">{dict.labels.mypage}</h1>
+                            <h1 className="text-2xl !font-black tracking-tight !text-white md:text-3xl">{dict.labels.mypage}</h1>
                             <p className="mt-1 hidden text-[10px] font-black uppercase tracking-[0.2em] text-white/70 md:block">{dict.common.dashboard}</p>
                         </div>
                     </div>
