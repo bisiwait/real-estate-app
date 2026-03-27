@@ -35,16 +35,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     metadataBase: new URL(baseUrl),
     title: dict.metadata.title,
     description: dict.metadata.description,
-    icons: {
-      icon: [
-        {
-          url: '/favicon.ico?v=2',
-          type: 'image/x-icon',
-          sizes: 'any',
-        },
-      ],
-      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
-    },
     manifest: '/site.webmanifest',
     openGraph: {
       type: 'website',

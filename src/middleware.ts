@@ -64,7 +64,7 @@ export default async function middleware(request: NextRequest) {
         pathname.startsWith('/api') ||
         pathname.startsWith('/_next') ||
         pathname.includes('favicon.ico') ||
-        pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$/)
+        pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2|webmanifest|ico)$/)
     ) {
         return (await updateSession(request)).response
     }
@@ -169,6 +169,6 @@ export const config = {
     matcher: [
         // 単独の「/」は次のパターンにマッチしない環境があるため明示する（/?code= の OAuth 戻り用）
         '/',
-        '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2)$).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|site.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ttf|woff|woff2|webmanifest|ico)$).*)',
     ],
 }
