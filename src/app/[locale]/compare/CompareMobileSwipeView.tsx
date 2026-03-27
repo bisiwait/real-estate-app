@@ -172,12 +172,13 @@ export default function CompareMobileSwipeView({
                     "sticky left-0 z-30 shrink-0 self-start border-r border-navy-primary/20 bg-gradient-to-b from-slate-50 via-white to-slate-50/90 shadow-[6px_0_20px_-10px_rgba(30,58,138,0.25)]"
                 )}
             >
-                <div
-                    className="flex flex-col gap-2 border-b border-cyan-500/25 bg-gradient-to-br from-navy-primary/[0.06] to-cyan-500/[0.06] px-2.5 pb-3 pt-2"
-                    aria-hidden
-                >
+                <div className="flex flex-col gap-2 border-b border-cyan-500/25 bg-gradient-to-br from-navy-primary/[0.06] to-cyan-500/[0.06] px-2.5 pb-3 pt-2">
                     <div className="min-h-[2.5rem] shrink-0" />
-                    <div className="h-32 shrink-0 rounded-xl bg-white/50 ring-1 ring-navy-primary/10" />
+                    <div className="flex h-32 shrink-0 items-center justify-center rounded-xl border border-navy-primary/15 bg-white/60 px-1 ring-1 ring-navy-primary/10">
+                        <span className="text-center text-[10px] font-black leading-tight text-navy-secondary">
+                            {c.row_image}
+                        </span>
+                    </div>
                     <div className="flex min-h-[2.25rem] shrink-0 items-end">
                         <span className="text-[9px] font-black uppercase tracking-widest text-navy-primary/70">
                             {c.row_item}
