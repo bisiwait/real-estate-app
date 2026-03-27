@@ -14,6 +14,7 @@ import {
     facilityMatches,
     getMergedFacilities,
 } from "@/lib/compare/facilityMatch";
+import CompareMobileSwipeView from "./CompareMobileSwipeView";
 
 const STORAGE_KEY = "cc_compare_property_ids";
 
@@ -296,7 +297,21 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                 ) : properties.length === 0 ? (
                     <p className="text-center text-slate-500 py-16">{c.not_found}</p>
                 ) : (
-                    <div className="rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+                    <>
+                        <div className="md:hidden rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+                            <CompareMobileSwipeView
+                                properties={properties}
+                                locale={locale}
+                                dict={dict}
+                                c={c}
+                                facilityRows={rows}
+                                origin={origin}
+                                user={user}
+                                removeId={removeId}
+                                onRequireAuth={() => setContactAuthOpen(true)}
+                            />
+                        </div>
+                        <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
                         <div className="overflow-x-auto overscroll-x-contain">
                             <table className="w-full min-w-[640px] border-collapse text-sm">
                                 <thead>
@@ -535,7 +550,8 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
