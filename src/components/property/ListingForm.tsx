@@ -46,6 +46,7 @@ const CoordinatePicker = dynamic(() => import('./CoordinatePicker'), {
 })
 
 import { getErrorMessage } from '@/lib/utils/errors'
+import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 
 interface Area {
     id: string
@@ -69,6 +70,7 @@ interface Project {
     developer_id?: string
     latitude?: number
     longitude?: number
+    google_place_id?: string | null
 }
 
 interface ListingFormProps {
@@ -95,7 +97,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         developer: '',
         developer_id: '',
         latitude: 12.9236,
-        longitude: 100.8824
+        longitude: 100.8824,
+        google_place_id: ''
     })
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
@@ -566,6 +569,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         developer_id: projectForm.developer_id || null,
                         latitude: projectForm.latitude,
                         longitude: projectForm.longitude,
+                        google_place_id: projectForm.google_place_id?.trim() || null,
                         facilities: formData.project_facilities
                     })
                     .select()
@@ -1058,8 +1062,23 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                 </div>
                                 <div>
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
-                                    <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50">
-                                        <CoordinatePicker lat={projectForm.latitude} lng={projectForm.longitude} onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })} />
+                                    <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
+                                        <GoogleMapsShareLinkField
+                                            onResolved={(data) =>
+                                                setProjectForm((prev) => ({
+                                                    ...prev,
+                                                    google_place_id: data.google_place_id ?? '',
+                                                    latitude: data.latitude ?? prev.latitude,
+                                                    longitude: data.longitude ?? prev.longitude,
+                                                }))
+                                            }
+                                        />
+                                        <CoordinatePicker
+                                            lat={projectForm.latitude}
+                                            lng={projectForm.longitude}
+                                            googlePlaceId={projectForm.google_place_id}
+                                            onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })}
+                                        />
                                     </div>
                                 </div>
                                 <div className="pt-4 border-t border-slate-200">

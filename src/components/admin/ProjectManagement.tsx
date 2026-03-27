@@ -21,6 +21,7 @@ import {
     Shield
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
+import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import dynamic from 'next/dynamic'
 
 const CoordinatePicker = dynamic(() => import('../property/CoordinatePicker'), {
@@ -46,6 +47,7 @@ interface Project {
     image_url: string
     latitude: number | null
     longitude: number | null
+    google_place_id?: string | null
     developer_id?: string | null
     average_price_sqm?: number | null
     total_units?: number | null
@@ -79,6 +81,7 @@ export default function AdminProjectManagement() {
         image_url: '',
         latitude: 12.9236,
         longitude: 100.8824,
+        google_place_id: '',
         developer_id: '',
         total_units: null,
         facilities: []
@@ -213,6 +216,7 @@ export default function AdminProjectManagement() {
             image_url: '',
             latitude: 12.9236,
             longitude: 100.8824,
+            google_place_id: '',
             developer_id: '',
             total_units: null,
             facilities: []
@@ -236,6 +240,7 @@ export default function AdminProjectManagement() {
                 image_url: formData.image_url,
                 latitude: formData.latitude,
                 longitude: formData.longitude,
+                google_place_id: formData.google_place_id?.trim() || null,
                 developer_id: formData.developer_id || null,
                 total_units: formData.total_units,
                 facilities: formData.facilities || []
@@ -474,8 +479,23 @@ export default function AdminProjectManagement() {
 
                             <div className="mt-6">
                                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
-                                <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50">
-                                    <CoordinatePicker lat={formData.latitude || 12.9236} lng={formData.longitude || 100.8824} onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })} />
+                                <div className="h-auto space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                                    <GoogleMapsShareLinkField
+                                        onResolved={(data) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                google_place_id: data.google_place_id ?? '',
+                                                latitude: data.latitude ?? prev.latitude ?? 12.9236,
+                                                longitude: data.longitude ?? prev.longitude ?? 100.8824,
+                                            }))
+                                        }
+                                    />
+                                    <CoordinatePicker
+                                        lat={formData.latitude || 12.9236}
+                                        lng={formData.longitude || 100.8824}
+                                        googlePlaceId={formData.google_place_id}
+                                        onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
+                                    />
                                 </div>
                             </div>
 

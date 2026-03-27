@@ -1,3 +1,5 @@
+import { normalizeStoredGooglePlaceId } from '@/lib/google-maps-parse'
+
 /** パタヤ周辺のデフォルト（座標未設定時） */
 export const DEFAULT_MAP_LAT = 12.9236
 export const DEFAULT_MAP_LNG = 100.8824
@@ -45,4 +47,34 @@ export function googleMapsUrlFromLatLng(
   url.searchParams.set('q', `${nLat},${nLng}`)
   url.searchParams.set('z', String(zoom))
   return url.toString()
+}
+
+/**
+ * Place ID で Google マップの該当施設ページを開く（公式の検索 URL）。
+ */
+export function googleMapsUrlFromPlaceId(placeId: string): string {
+  const id = normalizeStoredGooglePlaceId(placeId)
+  if (!id) return googleMapsUrlFromLatLng(DEFAULT_MAP_LAT, DEFAULT_MAP_LNG)
+  const url = new URL('https://www.google.com/maps/search/')
+  url.searchParams.set('api', '1')
+  url.searchParams.set('query_place_id', id)
+  url.searchParams.set('query', '\u00a0')
+  return url.toString()
+}
+
+export type ProjectMapFields = {
+  google_place_id?: string | null
+  latitude?: unknown
+  longitude?: unknown
+} | null
+  | undefined
+
+/**
+ * 物件に紐づくプロジェクトについて、マップで開く URL（Place ID 優先、無効時は座標）。
+ */
+export function propertyProjectOpenMapsUrl(project: ProjectMapFields): string {
+  if (!project) return googleMapsUrlFromLatLng(DEFAULT_MAP_LAT, DEFAULT_MAP_LNG)
+  const pid = normalizeStoredGooglePlaceId(project.google_place_id ?? null)
+  if (pid) return googleMapsUrlFromPlaceId(pid)
+  return googleMapsUrlFromLatLng(Number(project.latitude), Number(project.longitude))
 }

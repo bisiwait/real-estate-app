@@ -2,15 +2,16 @@
 import { createClient } from '@/lib/supabase/client'
 import { useParams, usePathname, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { useAuth } from '@/contexts/AuthContext'
-import dynamic from 'next/dynamic'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
 const PropertyGallery = dynamic(() => import('@/components/property/PropertyGallery'), { ssr: false })
 const RelatedProperties = dynamic(() => import('@/components/property/RelatedProperties'), { ssr: false })
 const AgentOtherProperties = dynamic(() => import('@/components/agent/AgentOtherProperties'), { ssr: false })
 const InquiryForm = dynamic(() => import('@/components/property/InquiryForm'), { ssr: false })
+const PropertyLocationMap = dynamic(() => import('@/components/property/PropertyLocationMap'), { ssr: false })
 
 import PropertyDescription from '@/components/property/PropertyDescription'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
@@ -18,7 +19,7 @@ import StickyContactBar from '@/components/property/StickyContactBar'
 import LineContactButton from '@/components/property/LineContactButton'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
-import { googleMapsUrlFromLatLng } from '@/lib/google-maps-url'
+import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -177,6 +178,11 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     };
     const displayTitle = getDisplayTitle();
 
+    const openMapsHref = useMemo(
+        () => propertyProjectOpenMapsUrl(property.project),
+        [property.project?.google_place_id, property.project?.latitude, property.project?.longitude]
+    )
+
     const getProjectDisplayName = (proj: any) => {
         if (!proj) return '-';
         const name = proj.name || '';
@@ -276,9 +282,16 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                             </SectionBox>
                         ) : null}
 
-                        <div className="pt-4">
-                            <a href={googleMapsUrlFromLatLng(Number(property.project?.latitude), Number(property.project?.longitude))} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2A4076] hover:bg-[#1A2B56] text-white py-4 rounded-2xl font-bold flex justify-center gap-2 shadow-lg">
-                                <MapPin className="w-4 h-4" /> {dict.property.view_on_google_maps}
+                        <div className="space-y-4 pt-4">
+                            <PropertyLocationMap
+                                googlePlaceId={property.project?.google_place_id}
+                                latitude={property.project?.latitude}
+                                longitude={property.project?.longitude}
+                                propertyTitle={displayTitle}
+                                openInMapsUrl={openMapsHref}
+                            />
+                            <a href={openMapsHref} target="_blank" rel="noopener noreferrer" className="flex w-full justify-center gap-2 rounded-2xl bg-[#2A4076] py-4 font-bold text-white shadow-lg hover:bg-[#1A2B56]">
+                                <MapPin className="h-4 w-4" /> {dict.property.view_on_google_maps}
                             </a>
                         </div>
                     </div>

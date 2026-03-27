@@ -1,23 +1,28 @@
 'use client'
 
 import { MapPin } from 'lucide-react'
+import { normalizeStoredGooglePlaceId } from '@/lib/google-maps-parse'
 import {
     DEFAULT_MAP_LAT,
     DEFAULT_MAP_LNG,
     finiteCoord,
     googleMapsUrlFromLatLng,
+    googleMapsUrlFromPlaceId,
 } from '@/lib/google-maps-url'
 
 interface CoordinatePickerProps {
     lat: number | null | undefined
     lng: number | null | undefined
+    /** 有効なときは「Googleマップで開く」が Place の公式ページへ遷移 */
+    googlePlaceId?: string | null
     onChange: (lat: number, lng: number) => void
 }
 
-export default function CoordinatePicker({ lat, lng, onChange }: CoordinatePickerProps) {
+export default function CoordinatePicker({ lat, lng, googlePlaceId, onChange }: CoordinatePickerProps) {
     const displayLat = finiteCoord(lat, DEFAULT_MAP_LAT)
     const displayLng = finiteCoord(lng, DEFAULT_MAP_LNG)
-    const mapsHref = googleMapsUrlFromLatLng(displayLat, displayLng)
+    const pid = normalizeStoredGooglePlaceId(googlePlaceId ?? null)
+    const mapsHref = pid ? googleMapsUrlFromPlaceId(pid) : googleMapsUrlFromLatLng(displayLat, displayLng)
 
     return (
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">

@@ -27,6 +27,7 @@ import Select from 'react-select'
 import imageCompression from 'browser-image-compression'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Globe } from 'lucide-react'
+import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -58,6 +59,7 @@ interface Project {
     facilities?: string[]
     latitude?: number
     longitude?: number
+    google_place_id?: string | null
 }
 
 interface PresaleListingFormProps {
@@ -92,7 +94,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         developer: '',
         developer_id: '',
         latitude: 12.9236,
-        longitude: 100.8824
+        longitude: 100.8824,
+        google_place_id: ''
     })
 
     const [error, setError] = useState<string | null>(null)
@@ -303,6 +306,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         developer: projectForm.developer,
                         latitude: projectForm.latitude,
                         longitude: projectForm.longitude,
+                        google_place_id: projectForm.google_place_id?.trim() || null,
                         facilities: formData.project_facilities
                     })
                     .select()
@@ -693,8 +697,23 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                 </div>
                                 <div className="col-span-1 md:col-span-2">
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
-                                    <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50">
-                                        <CoordinatePicker lat={projectForm.latitude} lng={projectForm.longitude} onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })} />
+                                    <div className="h-auto space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                                        <GoogleMapsShareLinkField
+                                            onResolved={(data) =>
+                                                setProjectForm((prev) => ({
+                                                    ...prev,
+                                                    google_place_id: data.google_place_id ?? '',
+                                                    latitude: data.latitude ?? prev.latitude,
+                                                    longitude: data.longitude ?? prev.longitude,
+                                                }))
+                                            }
+                                        />
+                                        <CoordinatePicker
+                                            lat={projectForm.latitude}
+                                            lng={projectForm.longitude}
+                                            googlePlaceId={projectForm.google_place_id}
+                                            onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })}
+                                        />
                                     </div>
                                 </div>
                             </div>
