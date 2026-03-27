@@ -185,17 +185,19 @@ export default function PriceRangeSlider({
                 </div>
             </div>
 
-            {/* Visual Slider（つまみが -ml-3 で中心合わせのため、左右に余白を確保。lg 未満はバーを少し短く） */}
-            <div className="relative w-full min-w-0 h-1.5 bg-slate-100 rounded-full mb-8 px-6 lg:px-4">
-                {/* Active Range Line */}
-                <div
-                    ref={rangeRef}
-                    className="absolute h-1.5 bg-navy-primary rounded-full z-10"
-                ></div>
+            {/* Visual Slider: padding では bg が全幅に見えるため、lg 未満は幅を絞った子でトラックを短く表示 */}
+            <div className="mb-8 w-full min-w-0">
+                <div className="mx-auto w-[82%] min-w-0 max-w-full lg:w-full">
+                    <div className="relative h-1.5 w-full min-w-0 rounded-full bg-slate-100 px-4">
+                        {/* Active Range Line */}
+                        <div
+                            ref={rangeRef}
+                            className="absolute h-1.5 bg-navy-primary rounded-full z-10"
+                        ></div>
 
-                {/* Min/Max Thumb Inputs overlays */}
-                <style dangerouslySetInnerHTML={{
-                    __html: `
+                        {/* Min/Max Thumb Inputs overlays */}
+                        <style dangerouslySetInnerHTML={{
+                            __html: `
                   .dual-slider-input {
                     -webkit-appearance: none;
                     appearance: none;
@@ -227,59 +229,61 @@ export default function PriceRangeSlider({
                   }
                 `}} />
 
-                {/* Min Thumb Input */}
-                <input
-                    type="range"
-                    min={min}
-                    max={max}
-                    step={step}
-                    value={minValue}
-                    onChange={handleMinChange}
-                    onMouseOver={() => setActiveThumb('min')}
-                    onMouseLeave={() => setActiveThumb(null)}
-                    onTouchStart={() => setActiveThumb('min')}
-                    onTouchEnd={() => setActiveThumb(null)}
-                    className="dual-slider-input"
-                    style={{ zIndex: activeThumb === 'min' || minValue > max - step * 2 ? 40 : 30 }}
-                />
+                        {/* Min Thumb Input */}
+                        <input
+                            type="range"
+                            min={min}
+                            max={max}
+                            step={step}
+                            value={minValue}
+                            onChange={handleMinChange}
+                            onMouseOver={() => setActiveThumb('min')}
+                            onMouseLeave={() => setActiveThumb(null)}
+                            onTouchStart={() => setActiveThumb('min')}
+                            onTouchEnd={() => setActiveThumb(null)}
+                            className="dual-slider-input"
+                            style={{ zIndex: activeThumb === 'min' || minValue > max - step * 2 ? 40 : 30 }}
+                        />
 
-                {/* Max Thumb Input */}
-                <input
-                    type="range"
-                    min={min}
-                    max={max}
-                    step={step}
-                    value={maxValue}
-                    onChange={handleMaxChange}
-                    onMouseOver={() => setActiveThumb('max')}
-                    onMouseLeave={() => setActiveThumb(null)}
-                    onTouchStart={() => setActiveThumb('max')}
-                    onTouchEnd={() => setActiveThumb(null)}
-                    className="dual-slider-input"
-                    style={{ zIndex: activeThumb === 'max' ? 40 : 30 }}
-                />
+                        {/* Max Thumb Input */}
+                        <input
+                            type="range"
+                            min={min}
+                            max={max}
+                            step={step}
+                            value={maxValue}
+                            onChange={handleMaxChange}
+                            onMouseOver={() => setActiveThumb('max')}
+                            onMouseLeave={() => setActiveThumb(null)}
+                            onTouchStart={() => setActiveThumb('max')}
+                            onTouchEnd={() => setActiveThumb(null)}
+                            className="dual-slider-input"
+                            style={{ zIndex: activeThumb === 'max' ? 40 : 30 }}
+                        />
 
-                {/* Tick marks */}
-                <div className="absolute top-5 inset-x-0 flex justify-between px-0 text-[9px] text-slate-300 font-black pointer-events-none uppercase tracking-tighter">
-                    <span>{formatValue(min)}</span>
-                    <span className="opacity-0 sm:opacity-100">{formatValue(min + (max - min) / 2)}</span>
-                    <span>{formatValue(max)}+</span>
-                </div>
+                        {/* Tick marks */}
+                        <div className="absolute top-5 inset-x-0 flex justify-between px-0 text-[9px] text-slate-300 font-black pointer-events-none uppercase tracking-tighter">
+                            <span>{formatValue(min)}</span>
+                            <span className="opacity-0 sm:opacity-100">{formatValue(min + (max - min) / 2)}</span>
+                            <span>{formatValue(max)}+</span>
+                        </div>
 
-                {/* Custom Min Thumb Visual */}
-                <div
-                    className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'min' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
-                    style={{ left: `${getPercent(minValue)}%`, zIndex: activeThumb === 'min' || minValue > max - step * 2 ? 40 : 30 }}
-                >
-                    <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
-                </div>
+                        {/* Custom Min Thumb Visual */}
+                        <div
+                            className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'min' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
+                            style={{ left: `${getPercent(minValue)}%`, zIndex: activeThumb === 'min' || minValue > max - step * 2 ? 40 : 30 }}
+                        >
+                            <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
+                        </div>
 
-                {/* Custom Max Thumb Visual */}
-                <div
-                    className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'max' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
-                    style={{ left: `${getPercent(maxValue)}%`, zIndex: activeThumb === 'max' ? 40 : 30 }}
-                >
-                    <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
+                        {/* Custom Max Thumb Visual */}
+                        <div
+                            className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'max' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
+                            style={{ left: `${getPercent(maxValue)}%`, zIndex: activeThumb === 'max' ? 40 : 30 }}
+                        >
+                            <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
