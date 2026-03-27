@@ -576,7 +576,7 @@ export default function PropertiesClient({
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     <div className="lg:col-span-4 mb-8">
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
-                            <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+                            <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full min-w-0 sm:w-fit border border-slate-200 shadow-sm overflow-x-auto overscroll-x-contain touch-pan-x no-scrollbar">
                                 <button
                                     type="button"
                                     onClick={() => applyListingTypeTab('all')}

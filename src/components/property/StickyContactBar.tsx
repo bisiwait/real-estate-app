@@ -53,12 +53,12 @@ export default function StickyContactBar({
     }
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden pointer-events-none">
+        <div className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-full lg:hidden pointer-events-none">
             {/* Gradient backdrop */}
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-transparent h-full -top-4 pointer-events-none" />
 
-            <div className="relative bg-white border-t border-slate-100 p-3 pb-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pointer-events-auto">
-                <div className="container mx-auto flex items-center justify-center gap-3">
+            <div className="relative min-w-0 max-w-full bg-white border-t border-slate-100 p-3 pb-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pointer-events-auto">
+                <div className="container mx-auto flex min-w-0 max-w-full items-center justify-center gap-2 sm:gap-3 px-1">
                     {/* Phone Call Button - Only show if phoneNumber exists */}
                     {phoneNumber && (
                         <a

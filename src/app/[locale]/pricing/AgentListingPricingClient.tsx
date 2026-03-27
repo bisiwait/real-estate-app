@@ -457,7 +457,7 @@ export default function AgentListingPricingClient({
                 </div>
 
                 <div className="mx-auto max-w-5xl -mx-1 px-1 sm:mx-auto sm:px-0">
-                    <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-md [-webkit-overflow-scrolling:touch]">
+                    <div className="min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-3xl border border-slate-200 bg-white shadow-md [-webkit-overflow-scrolling:touch]">
                         <table className="w-full min-w-[640px] border-collapse text-left">
                             <thead>
                                 <tr className="bg-slate-50">

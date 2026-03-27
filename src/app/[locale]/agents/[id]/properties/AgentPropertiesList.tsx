@@ -147,7 +147,7 @@ export default function AgentPropertiesList({
                     </div>
 
                     <div className="mt-4">
-                        <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+                        <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full min-w-0 sm:w-fit border border-slate-200 shadow-sm overflow-x-auto overscroll-x-contain touch-pan-x no-scrollbar">
                             {[
                                 { label: 'すべて', value: 'all' },
                                 { label: '賃貸', value: 'rent' },

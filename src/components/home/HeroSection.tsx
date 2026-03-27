@@ -13,7 +13,7 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
     const tabSubLabelHidden = locale === 'en';
 
     return (
-        <div className="relative isolate pt-14">
+        <div className="relative isolate min-w-0 max-w-full overflow-x-hidden pt-14">
             {/* Background image */}
             <div className="absolute inset-0 -z-10">
                 <Image

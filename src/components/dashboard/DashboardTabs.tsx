@@ -17,7 +17,7 @@ export default function DashboardTabs({ activeTab, onTabChange, dict }: Dashboar
     ];
 
     return (
-        <div className="flex bg-white/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar scroll-smooth shadow-lg shadow-navy-primary/5">
+        <div className="flex min-w-0 bg-white/90 backdrop-blur-md p-1.5 rounded-2xl border border-slate-200 overflow-x-auto overscroll-x-contain touch-pan-x no-scrollbar scroll-smooth shadow-lg shadow-navy-primary/5">
             {tabs.map((tab) => (
                 <button
                     key={tab.id}

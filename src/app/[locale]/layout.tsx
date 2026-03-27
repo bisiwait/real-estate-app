@@ -82,11 +82,11 @@ export default async function RootLayout({
 
   return (
     <html lang={htmlLang}>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased bg-background`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased bg-background min-w-0`}>
         <AuthProvider>
           <SearchCountProvider>
             <Header dict={dict} />
-            <main className="min-h-[calc(100vh-80px)]">
+            <main className="min-h-[calc(100vh-80px)] min-w-0 w-full max-w-full">
               <Breadcrumb labels={dict.labels as unknown as Record<string, string>} />
               {children}
             </main>

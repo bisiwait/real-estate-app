@@ -35,8 +35,8 @@ export default function Header({ dict }: { dict: any }) {
     ]
 
     return (
-        <header className="border-b border-slate-100 sticky top-0 z-[100] bg-white">
-            <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+        <header className="border-b border-slate-100 sticky top-0 z-[100] bg-white w-full max-w-full min-w-0 overflow-x-hidden">
+            <div className="container mx-auto px-4 h-20 flex min-w-0 max-w-full items-center justify-between gap-2">
                 {/* Logo */}
                 <Link href={`/${currentLocale}`} className="flex items-center relative z-[110] active:scale-95 transition-transform duration-200 shrink-0 min-w-0 py-0">
                     <img
