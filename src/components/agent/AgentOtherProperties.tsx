@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import PropertyCard from '../property/PropertyCard'
 import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation } from 'swiper/modules'
 import 'swiper/css'
+import 'swiper/css/navigation'
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 
 interface AgentOtherPropertiesProps {
     agentId: string
@@ -90,10 +93,15 @@ export default function AgentOtherProperties({ agentId, currentPropertyId, agent
                 </div>
             </div>
 
-            <div className="relative -mx-4 px-4 overflow-visible pt-2">
+            <div className="relative -mx-4 overflow-visible px-4 pt-2 md:px-10">
                 <Swiper
+                    modules={[Navigation]}
                     spaceBetween={24}
                     slidesPerView={1.2}
+                    navigation={{
+                        nextEl: '.swiper-agent-next',
+                        prevEl: '.swiper-agent-prev',
+                    }}
                     breakpoints={{
                         640: { slidesPerView: 2.2 },
                         1024: { slidesPerView: 3.2 },
@@ -114,6 +122,25 @@ export default function AgentOtherProperties({ agentId, currentPropertyId, agent
                         )
                     })}
                 </Swiper>
+
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-20 hidden w-12 md:block">
+                    <button
+                        type="button"
+                        aria-label="Previous"
+                        className="swiper-agent-prev pointer-events-auto absolute top-1/2 left-0 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-100 bg-white text-navy-primary shadow-lg transition-all hover:bg-navy-primary hover:text-white disabled:pointer-events-none disabled:opacity-0"
+                    >
+                        <ArrowRight className="h-5 w-5 rotate-180" />
+                    </button>
+                </div>
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-20 hidden w-12 md:block">
+                    <button
+                        type="button"
+                        aria-label="Next"
+                        className="swiper-agent-next pointer-events-auto absolute top-1/2 right-0 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-100 bg-white text-navy-primary shadow-lg transition-all hover:bg-navy-primary hover:text-white disabled:pointer-events-none disabled:opacity-0"
+                    >
+                        <ArrowRight className="h-5 w-5" />
+                    </button>
+                </div>
             </div>
         </div>
     )
