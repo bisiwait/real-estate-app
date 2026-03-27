@@ -15,6 +15,7 @@ import {
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 
 interface AgentPropertiesListProps {
+    locale: string
     agent: any
     agentId: string
     properties: any[]
@@ -23,7 +24,15 @@ interface AgentPropertiesListProps {
     sort: string
 }
 
+function typeTabHref(locale: string, agentId: string, tabType: string, sort: string) {
+    const p = new URLSearchParams()
+    p.set('type', tabType)
+    if (sort && sort !== 'newest') p.set('sort', sort)
+    return `/${locale}/agents/${agentId}/properties?${p.toString()}`
+}
+
 export default function AgentPropertiesList({
+    locale,
     agent,
     agentId,
     properties,
@@ -47,7 +56,7 @@ export default function AgentPropertiesList({
                 <div className="flex flex-col gap-6 mb-10 pb-8 border-b border-slate-200">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
-                            <Link href={`/agents/${agentId}`} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-navy-primary transition-colors mb-4 group">
+                            <Link href={`/${locale}/agents/${agentId}`} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-navy-primary transition-colors mb-4 group">
                                 <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
                                 プロフィールに戻る
                             </Link>
@@ -85,27 +94,37 @@ export default function AgentPropertiesList({
                         </div>
                     </div>
 
-                    {/* Filter Tabs */}
-                    <div className="flex flex-wrap gap-2 mt-4">
-                        {[
-                            { label: 'すべて', value: 'all' },
-                            { label: '賃貸', value: 'rent' },
-                            { label: '売買', value: 'sell' },
-                            { label: 'プレセール', value: 'presale' }
-                        ].map((tab) => (
-                            <Link
-                                key={tab.value}
-                                href={`/agents/${agentId}/properties?type=${tab.value}`}
-                                className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${type === tab.value
-                                    ? 'bg-navy-primary text-white shadow-lg shadow-navy-primary/20'
-                                    : tab.value === 'presale'
-                                        ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-                                        : 'bg-white text-slate-400 hover:text-navy-primary hover:bg-slate-50 border border-slate-100'
-                                    }`}
-                            >
-                                {tab.label}
-                            </Link>
-                        ))}
+                    {/* Filter tabs: 物件一覧（PropertiesClient）と同じピル＋軽いトランジション */}
+                    <div className="mt-4">
+                        <div className="flex flex-wrap gap-1 sm:gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+                            {[
+                                { label: 'すべて', value: 'all' },
+                                { label: '賃貸', value: 'rent' },
+                                { label: '売買', value: 'sell' },
+                                { label: 'プレセール', value: 'presale' }
+                            ].map((tab) => {
+                                const active = type === tab.value
+                                const isPresale = tab.value === 'presale'
+                                return (
+                                    <Link
+                                        key={tab.value}
+                                        href={typeTabHref(locale, agentId, tab.value, sort)}
+                                        scroll={false}
+                                        className={`flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all duration-200 ease-out active:scale-[0.98] ${
+                                            active
+                                                ? isPresale
+                                                    ? 'bg-amber-500 text-white shadow-lg'
+                                                    : 'bg-navy-primary text-white shadow-lg'
+                                                : isPresale
+                                                    ? 'text-slate-400 hover:text-amber-500 hover:bg-slate-50'
+                                                    : 'text-slate-400 hover:text-navy-primary hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </Link>
+                                )
+                            })}
+                        </div>
                     </div>
                 </div>
 
@@ -113,7 +132,7 @@ export default function AgentPropertiesList({
                 {properties && properties.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {properties.map(property => (
-                            <Link key={property.id} href={`/properties/${property.id}`} className="group block bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all overflow-hidden relative flex flex-col h-full">
+                            <Link key={property.id} href={`/${locale}/properties/${property.id}`} className="group block bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all overflow-hidden relative flex flex-col h-full">
                                 {/* Property Card Thumbnail */}
                                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-50 shrink-0">
                                     {property.images && property.images.length > 0 ? (

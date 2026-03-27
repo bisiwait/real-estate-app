@@ -4,8 +4,8 @@ import AgentPropertiesList from './AgentPropertiesList'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AgentPropertiesPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-    const { id: agentId } = await params;
+export default async function AgentPropertiesPage({ params, searchParams }: { params: Promise<{ locale: string; id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+    const { locale, id: agentId } = await params;
     const searchParamsObj = await searchParams;
 
     // We use the admin client here to bypass RLS on the profiles table since public read isn't enabled
@@ -86,6 +86,7 @@ export default async function AgentPropertiesPage({ params, searchParams }: { pa
 
     return (
         <AgentPropertiesList
+            locale={locale}
             agent={agent}
             agentId={agentId}
             properties={properties || []}
