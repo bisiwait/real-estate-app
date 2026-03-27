@@ -414,8 +414,8 @@ export default function AgentListingPricingClient({
                             <div className="mb-10 mt-6 flex-1 space-y-5">
                                 {proHighlights.map((h) => (
                                     <div key={h.title} className="flex gap-4">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-navy-primary/15 bg-navy-primary/5 text-navy-primary shadow-sm">
-                                            <h.icon className="h-5 w-5" />
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-navy-primary/15 bg-navy-primary/5 text-navy-primary shadow-sm">
+                                            <h.icon className="h-4 w-4" />
                                         </div>
                                         <div>
                                             <h4 className="font-black text-navy-secondary">{h.title}</h4>
@@ -495,12 +495,30 @@ export default function AgentListingPricingClient({
                             </thead>
                             <tbody className="divide-y divide-slate-200">
                                 <CmpRow label={p.row_listings} free={p.feat_unlimited_listings_free} premium={p.feat_unlimited_listings_pro} />
-                                <CmpRow label={p.row_priority} free={false} premium={true} labelMultiline />
+                                <CmpRow
+                                    label={p.row_priority}
+                                    labelDesktop={p.row_priority_desktop}
+                                    free={false}
+                                    premium={true}
+                                    labelMultiline
+                                />
                                 <CmpRow label={p.row_inquiry} free={true} premium={true} />
                                 <CmpRow label={p.row_profile} free={true} premium={true} />
                                 <CmpRow label={p.row_line} free={true} premium={true} />
-                                <CmpRow label={p.row_ai} free={false} premium={true} />
-                                <CmpRow label={p.row_presale} free={false} premium={true} />
+                                <CmpRow
+                                    label={p.row_ai}
+                                    labelDesktop={p.row_ai_desktop}
+                                    free={false}
+                                    premium={true}
+                                    labelMultiline
+                                />
+                                <CmpRow
+                                    label={p.row_presale}
+                                    labelDesktop={p.row_presale_desktop}
+                                    free={false}
+                                    premium={true}
+                                    labelMultiline
+                                />
                                 <CmpRow label={p.row_pdf} free={false} premium={true} />
                                 <CmpRow label={p.row_badge} free={false} premium={true} />
                             </tbody>
@@ -511,7 +529,7 @@ export default function AgentListingPricingClient({
 
             {/* Final CTA */}
             <section className="container mx-auto px-4 pb-20 text-center">
-                <h2 className="mx-auto max-w-4xl text-sm font-black leading-tight tracking-tight text-navy-secondary whitespace-nowrap sm:text-base md:whitespace-normal md:text-3xl lg:text-5xl">
+                <h2 className="mx-auto max-w-4xl text-xl font-black leading-snug tracking-tight text-navy-secondary whitespace-nowrap sm:text-2xl md:whitespace-normal md:text-4xl lg:text-5xl">
                     {p.cta_final_title}
                 </h2>
                 <p className="mx-auto mt-4 max-w-xl text-slate-600">{p.cta_final_sub}</p>
@@ -711,11 +729,14 @@ function FeatureRow({ label, value, muted }: { label: string; value: string; mut
 
 function CmpRow({
     label,
+    labelDesktop,
     free,
     premium,
     labelMultiline,
 }: {
     label: string;
+    /** md 以上で1行表示するラベル（改行入り label 用）。未指定時は改行を除去 */
+    labelDesktop?: string;
     free: boolean | string;
     premium: boolean | string;
     labelMultiline?: boolean;
@@ -747,7 +768,7 @@ function CmpRow({
     };
 
     const labelIsMultiline = labelMultiline || label.includes("\n");
-    const labelOneLine = label.replace(/\n/g, "");
+    const mdLabel = labelDesktop ?? label.replace(/\n/g, "");
 
     return (
         <tr className="transition-colors hover:bg-slate-50/80">
@@ -757,7 +778,7 @@ function CmpRow({
                 {labelIsMultiline ? (
                     <>
                         <span className="whitespace-pre-line md:hidden">{label}</span>
-                        <span className="hidden md:inline md:whitespace-nowrap">{labelOneLine}</span>
+                        <span className="hidden md:inline md:whitespace-nowrap">{mdLabel}</span>
                     </>
                 ) : (
                     label
