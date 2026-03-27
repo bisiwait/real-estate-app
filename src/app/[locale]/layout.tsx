@@ -1,5 +1,5 @@
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/layout/Header";
@@ -25,6 +25,14 @@ const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
 });
+
+/** スマホでのピンチ拡大を抑止（viewport はページ全体に適用） */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
