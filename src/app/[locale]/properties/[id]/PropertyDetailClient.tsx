@@ -163,6 +163,50 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
         translateTitleOnDemand();
     }, [activeLang, property?.id, property?.title_en, property?.title_th, translatingTitle]);
 
+    // Hooks は早期 return より前で常に同じ順序で呼ぶ（loading 中に useMemo をスキップするとクラッシュする）
+    const projectDisplayName = useMemo(() => {
+        const proj = property?.project
+        if (!proj) return '-'
+        const name = proj.name || ''
+        const nameJp = proj.name_jp || ''
+        if (locale === 'jp' && name && nameJp) {
+            return `${name} (${nameJp})`
+        }
+        return name || nameJp || '-'
+    }, [property?.project, locale])
+
+    const displayTitle = useMemo(() => {
+        if (!property) return ''
+        if (activeLang === 'en' && property.title_en) return property.title_en
+        if (activeLang === 'th' && property.title_th) return property.title_th
+        return property.title_ja || property.title || ''
+    }, [property, activeLang])
+
+    const mapSearchHint = useMemo(() => {
+        if (!property) return null
+        const parts = [displayTitle, property.building_name, projectDisplayName].filter(
+            (s): s is string => typeof s === 'string' && s.trim().length > 0 && s !== '-'
+        )
+        return parts.join(' ').trim() || null
+    }, [displayTitle, property, projectDisplayName])
+
+    const openMapsHref = useMemo(
+        () =>
+            propertyProjectOpenMapsUrl(property?.project ?? null, {
+                mapSearchHint,
+            }),
+        [
+            property?.project?.google_maps_share_url,
+            property?.project?.google_place_id,
+            property?.project?.latitude,
+            property?.project?.longitude,
+            property?.project?.name,
+            property?.project?.name_jp,
+            mapSearchHint,
+            property?.project,
+        ]
+    )
+
     if (loading || !dict || !property) {
         return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
     }
@@ -170,47 +214,6 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
     const translateTag = (tag: string) => (dict.property.tags as any)?.[tag] || tag;
     const translateArea = (areaName: string) => (dict.property.db_locations as any)?.[areaName] || areaName;
-
-    const getDisplayTitle = () => {
-        if (activeLang === 'en' && property.title_en) return property.title_en;
-        if (activeLang === 'th' && property.title_th) return property.title_th;
-        return property.title_ja || property.title;
-    };
-    const displayTitle = getDisplayTitle();
-
-    const getProjectDisplayName = (proj: any) => {
-        if (!proj) return '-';
-        const name = proj.name || '';
-        const nameJp = proj.name_jp || '';
-        if (locale === 'jp' && name && nameJp) {
-            return `${name} (${nameJp})`;
-        }
-        return name || nameJp || '-';
-    };
-    const projectDisplayName = getProjectDisplayName(property.project)
-
-    const mapSearchHint = useMemo(() => {
-        const parts = [displayTitle, property.building_name, projectDisplayName].filter(
-            (s): s is string => typeof s === 'string' && s.trim().length > 0 && s !== '-'
-        )
-        return parts.join(' ').trim() || null
-    }, [displayTitle, property.building_name, projectDisplayName])
-
-    const openMapsHref = useMemo(
-        () =>
-            propertyProjectOpenMapsUrl(property.project, {
-                mapSearchHint,
-            }),
-        [
-            property.project?.google_maps_share_url,
-            property.project?.google_place_id,
-            property.project?.latitude,
-            property.project?.longitude,
-            property.project?.name,
-            property.project?.name_jp,
-            mapSearchHint,
-        ]
-    )
 
     const amenityTags = (property.tags || []).filter((t: string) => typeof t === 'string' && t.trim().length > 0)
     const sharedFacilitiesList = (property.project?.facilities || property.project_facilities || []).filter(
