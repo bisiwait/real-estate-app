@@ -92,28 +92,28 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
     return (
         <div className="bg-slate-50 min-h-screen">
             {/* Dynamic Header Background */}
-            <div className="bg-navy-secondary h-48 md:h-64 relative overflow-hidden">
+            <div className="relative min-h-[10.5rem] overflow-hidden bg-navy-secondary pb-6 md:h-64 md:pb-0">
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,#ffffff_0%,transparent_50%)]" />
+                    <div className="absolute top-0 left-0 h-full w-full bg-[radial-gradient(circle_at_20%_30%,#ffffff_0%,transparent_50%)]" />
                 </div>
-                <div className="container mx-auto px-4 pt-10 relative z-10">
-                    <Link href={`/${locale}`} className="inline-flex items-center text-white/80 hover:text-white mb-8 transition-all hover:-translate-x-1 underline-offset-4 hover:underline text-sm font-bold">
+                <div className="container relative z-10 mx-auto px-4 pt-4 md:pt-10">
+                    <Link href={`/${locale}`} className="mb-3 inline-flex items-center text-sm font-bold text-white/80 transition-all hover:-translate-x-1 hover:text-white hover:underline hover:underline-offset-4 md:mb-8">
                         <ChevronLeft size={16} className="mr-1" />
                         {dict.labels.back_to_top}
                     </Link>
-                    <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 flex items-center justify-center">
-                            <LayoutDashboard className="text-white w-6 h-6" />
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md md:h-12 md:w-12">
+                            <LayoutDashboard className="h-5 w-5 text-white md:h-6 md:w-6" />
                         </div>
-                        <div>
-                            <h1 className="text-3xl font-black text-white tracking-tight">{dict.labels.mypage}</h1>
-                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">{dict.common.dashboard}</p>
+                        <div className="min-w-0 pt-0.5">
+                            <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">{dict.labels.mypage}</h1>
+                            <p className="mt-1 hidden text-[10px] font-black uppercase tracking-[0.2em] text-white/70 md:block">{dict.common.dashboard}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 -mt-16 pb-24">
+            <div className="container mx-auto -mt-8 px-4 pb-24 md:-mt-16">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Sidebar / Top Nav for Mobile */}
                     <div className="lg:col-span-12">
