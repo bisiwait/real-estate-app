@@ -303,7 +303,8 @@ export default function AgentListingPricingClient({
                         <p className="mt-4 text-sm font-medium text-slate-600 md:text-base">{p.plans_section_subtitle}</p>
                     </div>
 
-                    <div className="mx-auto mb-8 flex max-w-6xl flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
+                    {/* デスクトップ: プラン全体の上に表示。スマホは Pro カード内のみ */}
+                    <div className="mx-auto mb-8 hidden max-w-6xl flex-col items-stretch justify-between gap-4 xl:flex xl:flex-row xl:items-center">
                         <div className="text-sm font-black text-navy-secondary">
                             {p.billing_label}
                             <span className="ml-2 font-bold text-slate-500">（{p.billing_monthly} / {p.billing_yearly}）</span>
@@ -390,6 +391,26 @@ export default function AgentListingPricingClient({
                                     {p.plan_pro_roi_note}
                                 </p>
                             </div>
+
+                            <div className="mb-8 mt-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 xl:hidden">
+                                <div className="mb-3 text-xs font-black text-navy-secondary">
+                                    {p.billing_label}
+                                    <span className="ml-1.5 font-bold text-slate-500">（{p.billing_monthly} / {p.billing_yearly}）</span>
+                                </div>
+                                <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
+                                    <span className={`text-xs font-black ${!isAnnual ? "text-navy-secondary" : "text-slate-500"}`}>
+                                        {p.billing_monthly}
+                                    </span>
+                                    <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
+                                    <span className={`text-right text-xs font-black ${isAnnual ? "text-navy-secondary" : "text-slate-500"}`}>
+                                        <span className="block sm:inline">{p.billing_yearly}</span>
+                                        <span className="mt-0.5 inline-flex items-center rounded-full border border-navy-primary/20 bg-navy-primary/5 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-navy-primary sm:ml-2">
+                                            {p.billing_yearly_badge}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+
                             <div className="mb-10 mt-6 flex-1 space-y-5">
                                 {proHighlights.map((h) => (
                                     <div key={h.title} className="flex gap-4">
@@ -458,23 +479,23 @@ export default function AgentListingPricingClient({
 
                 <div className="mx-auto max-w-5xl -mx-1 px-1 sm:mx-auto sm:px-0">
                     <div className="min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-3xl border border-slate-200 bg-white shadow-md [-webkit-overflow-scrolling:touch]">
-                        <table className="w-full min-w-[640px] border-collapse text-left">
+                        <table className="w-full min-w-[480px] table-fixed border-collapse text-left md:min-w-[640px] md:table-auto">
                             <thead>
                                 <tr className="bg-slate-50">
-                                    <th className="whitespace-nowrap p-4 text-xs font-bold uppercase tracking-widest text-slate-500 md:p-6">
+                                    <th className="w-[22%] min-w-0 max-w-[5.5rem] p-2 text-[9px] font-bold uppercase leading-tight tracking-tight text-slate-500 md:w-auto md:max-w-none md:whitespace-nowrap md:p-6 md:text-xs md:tracking-widest">
                                         {p.table_feature}
                                     </th>
-                                    <th className="whitespace-nowrap border-l border-slate-200 p-4 text-center text-sm font-black text-navy-secondary md:p-6">
+                                    <th className="w-[39%] border-l border-slate-200 p-2 text-center text-[11px] font-black leading-tight text-navy-secondary md:w-auto md:whitespace-nowrap md:p-6 md:text-sm">
                                         {p.table_free}
                                     </th>
-                                    <th className="whitespace-nowrap border-l border-slate-200 bg-navy-primary/5 p-4 text-center text-sm font-black text-navy-primary md:p-6">
+                                    <th className="w-[39%] border-l border-slate-200 bg-navy-primary/5 p-2 text-center text-[11px] font-black leading-tight text-navy-primary md:w-auto md:whitespace-nowrap md:p-6 md:text-sm">
                                         {p.table_pro}
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200">
                                 <CmpRow label={p.row_listings} free={p.feat_unlimited_listings_free} premium={p.feat_unlimited_listings_pro} />
-                                <CmpRow label={p.row_priority} free={false} premium={true} />
+                                <CmpRow label={p.row_priority} free={false} premium={true} labelMultiline />
                                 <CmpRow label={p.row_inquiry} free={true} premium={true} />
                                 <CmpRow label={p.row_profile} free={true} premium={true} />
                                 <CmpRow label={p.row_line} free={true} premium={true} />
@@ -490,7 +511,7 @@ export default function AgentListingPricingClient({
 
             {/* Final CTA */}
             <section className="container mx-auto px-4 pb-20 text-center">
-                <h2 className="mx-auto max-w-4xl text-3xl font-black leading-tight tracking-tight text-navy-secondary md:text-5xl">
+                <h2 className="mx-auto max-w-4xl text-sm font-black leading-tight tracking-tight text-navy-secondary whitespace-nowrap sm:text-base md:whitespace-normal md:text-3xl lg:text-5xl">
                     {p.cta_final_title}
                 </h2>
                 <p className="mx-auto mt-4 max-w-xl text-slate-600">{p.cta_final_sub}</p>
@@ -688,13 +709,23 @@ function FeatureRow({ label, value, muted }: { label: string; value: string; mut
     );
 }
 
-function CmpRow({ label, free, premium }: { label: string; free: boolean | string; premium: boolean | string }) {
+function CmpRow({
+    label,
+    free,
+    premium,
+    labelMultiline,
+}: {
+    label: string;
+    free: boolean | string;
+    premium: boolean | string;
+    labelMultiline?: boolean;
+}) {
     const cell = (val: boolean | string, highlight?: boolean) => {
-        const base = `border-l border-slate-200 p-3 text-center align-middle md:p-5 ${highlight ? "bg-navy-primary/5" : ""}`;
+        const base = `border-l border-slate-200 p-2 text-center align-middle md:p-5 ${highlight ? "bg-navy-primary/5" : ""}`;
         if (typeof val === "string") {
             return (
                 <td className={base}>
-                    <span className="inline-block max-w-[220px] text-xs font-bold leading-snug text-navy-secondary md:max-w-none md:text-sm">
+                    <span className="inline-block max-w-[200px] text-[10px] font-bold leading-snug text-navy-secondary md:max-w-[220px] md:text-sm lg:max-w-none">
                         {val}
                     </span>
                 </td>
@@ -703,21 +734,35 @@ function CmpRow({ label, free, premium }: { label: string; free: boolean | strin
         return (
             <td className={base}>
                 {val ? (
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50">
-                        <Check className="h-5 w-5 text-emerald-600" />
+                    <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 md:h-9 md:w-9">
+                        <Check className="h-4 w-4 text-emerald-600 md:h-5 md:w-5" />
                     </div>
                 ) : (
-                    <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100">
-                        <X className="h-4 w-4 text-slate-400" />
+                    <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 md:h-9 md:w-9">
+                        <X className="h-3.5 w-3.5 text-slate-400 md:h-4 md:w-4" />
                     </div>
                 )}
             </td>
         );
     };
 
+    const labelIsMultiline = labelMultiline || label.includes("\n");
+    const labelOneLine = label.replace(/\n/g, "");
+
     return (
         <tr className="transition-colors hover:bg-slate-50/80">
-            <td className="whitespace-nowrap p-3 text-xs font-bold text-navy-secondary md:p-5 md:text-sm">{label}</td>
+            <td
+                className={`min-w-0 max-w-[5.5rem] p-2 text-[10px] font-bold leading-snug text-navy-secondary md:max-w-none md:p-5 md:text-sm md:leading-normal ${labelIsMultiline ? "" : "whitespace-normal md:whitespace-nowrap"}`}
+            >
+                {labelIsMultiline ? (
+                    <>
+                        <span className="whitespace-pre-line md:hidden">{label}</span>
+                        <span className="hidden md:inline md:whitespace-nowrap">{labelOneLine}</span>
+                    </>
+                ) : (
+                    label
+                )}
+            </td>
             {cell(free, false)}
             {cell(premium, true)}
         </tr>
