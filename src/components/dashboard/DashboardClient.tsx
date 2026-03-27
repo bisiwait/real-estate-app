@@ -7,6 +7,7 @@ import {
     Users,
     ChevronRight,
     LayoutDashboard,
+    PlusCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 import LeadsView from '@/components/dashboard/LeadsView'
@@ -28,6 +29,7 @@ interface DashboardClientProps {
     initialLeads: any[]
     leadsCount: number
     locale: string
+    activePlan: string
 }
 
 export default function DashboardClient({
@@ -39,7 +41,8 @@ export default function DashboardClient({
     initialInquiries,
     initialLeads,
     leadsCount,
-    locale
+    locale,
+    activePlan,
 }: DashboardClientProps) {
     const [tab, setTab] = useState(initialTab)
     const [filter, setFilter] = useState(initialFilter)
@@ -112,6 +115,26 @@ export default function DashboardClient({
                     <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                     <span>リード ({leadsCount})</span>
                 </button>
+            </div>
+
+            {/* スマホ: タブ直下に物件登録系 CTA（ヘッダーでは md 以上のみ表示） */}
+            <div className="md:hidden flex flex-col gap-2">
+                {activePlan === 'premium' && (
+                    <Link
+                        href={`/${locale}/dashboard/presale`}
+                        className="flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-amber-600"
+                    >
+                        <Building2 className="h-4 w-4 shrink-0" />
+                        <span>プレセール投稿</span>
+                    </Link>
+                )}
+                <Link
+                    href={`/${locale}/list-property`}
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-navy-primary shadow-md transition-all hover:bg-slate-50"
+                >
+                    <PlusCircle className="h-4 w-4 shrink-0" />
+                    <span>物件を新規掲載する</span>
+                </Link>
             </div>
 
             {/* Content Area */}

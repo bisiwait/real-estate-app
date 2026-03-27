@@ -110,10 +110,10 @@ export default async function DashboardPage({
                             </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
+                        <div className="hidden md:flex flex-col sm:flex-row gap-2 sm:gap-3 w-full md:w-auto">
                             {activePlan === 'premium' && (
                                 <Link
-                                    href="/dashboard/presale"
+                                    href={`/${locale}/dashboard/presale`}
                                     className="bg-amber-500 text-white px-4 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-amber-600 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
                                 >
                                     <Building2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -121,7 +121,7 @@ export default async function DashboardPage({
                                 </Link>
                             )}
                             <Link
-                                href="/list-property"
+                                href={`/${locale}/list-property`}
                                 className="bg-white text-navy-primary px-4 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-slate-50 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
                             >
                                 <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -203,6 +203,7 @@ export default async function DashboardPage({
                             leadsCount={leads.length}
                             initialLeads={leads}
                             locale={locale}
+                            activePlan={activePlan}
                         />
                     </div>
 
