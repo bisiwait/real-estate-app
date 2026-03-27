@@ -490,7 +490,7 @@ export default function AgentListingPricingClient({
                 </div>
 
                 <div className="w-full min-w-0 max-w-5xl">
-                    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md">
+                    <div className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-md md:rounded-3xl">
                         <table className="w-full min-w-0 table-fixed border-collapse text-left">
                             <thead>
                                 <tr className="bg-slate-50">
