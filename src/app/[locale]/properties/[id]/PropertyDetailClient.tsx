@@ -11,7 +11,6 @@ const PropertyGallery = dynamic(() => import('@/components/property/PropertyGall
 const RelatedProperties = dynamic(() => import('@/components/property/RelatedProperties'), { ssr: false })
 const AgentOtherProperties = dynamic(() => import('@/components/agent/AgentOtherProperties'), { ssr: false })
 const InquiryForm = dynamic(() => import('@/components/property/InquiryForm'), { ssr: false })
-const PropertyLocationMap = dynamic(() => import('@/components/property/PropertyLocationMap'), { ssr: false })
 
 import PropertyDescription from '@/components/property/PropertyDescription'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
@@ -303,15 +302,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                             </SectionBox>
                         ) : null}
 
-                        <div className="space-y-4 pt-4">
-                            <PropertyLocationMap
-                                mapsShareUrl={property.project?.google_maps_share_url}
-                                googlePlaceId={property.project?.google_place_id}
-                                latitude={property.project?.latitude}
-                                longitude={property.project?.longitude}
-                                propertyTitle={displayTitle}
-                                openInMapsUrl={openMapsHref}
-                            />
+                        <div className="pt-4">
                             <a href={openMapsHref} target="_blank" rel="noopener noreferrer" className="flex w-full justify-center gap-2 rounded-2xl bg-[#2A4076] py-4 font-bold text-white shadow-lg hover:bg-[#1A2B56]">
                                 <MapPin className="h-4 w-4" /> {dict.property.view_on_google_maps}
                             </a>
