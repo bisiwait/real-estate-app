@@ -200,9 +200,9 @@ export default function PriceRangeSlider({
                 </div>
             </div>
 
-            {/* Visual Slider: padding では bg が全幅に見えるため、lg 未満は幅を絞った子でトラックを短く表示 */}
+            {/* Visual Slider: lg 未満はわずかに幅を絞りつつ、大きなつまみ用に十分なトラック幅を確保 */}
             <div className="mb-8 w-full min-w-0">
-                <div className="mx-auto w-[82%] min-w-0 max-w-full lg:w-full">
+                <div className="mx-auto w-[96%] min-w-0 max-w-full lg:w-full">
                     <div
                         className="flex flex-col gap-2 px-8 lg:px-4"
                         onMouseLeave={(e) => {
