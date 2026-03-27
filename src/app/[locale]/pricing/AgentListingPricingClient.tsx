@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -120,6 +120,10 @@ export default function AgentListingPricingClient({
         : `${p.plan_pro_price_month} ${p.plan_pro_currency} ${p.plan_pro_per_month}`;
 
     const trialBillingNote = p.trial_note_billing.replace("{date}", billingStartDateLabel);
+
+    const scrollToPlanCompare = useCallback(() => {
+        document.getElementById("plan-compare")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, []);
 
     const openConfirm = () => {
         setConfirmError(null);
@@ -266,10 +270,15 @@ export default function AgentListingPricingClient({
                             )}
                         </div>
 
-                        <div className="mt-10 flex flex-col items-center gap-2 text-slate-400">
+                        <button
+                            type="button"
+                            onClick={scrollToPlanCompare}
+                            className="mt-10 flex flex-col items-center gap-2 text-slate-400 transition-colors hover:text-navy-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-primary/30 focus-visible:ring-offset-2 rounded-lg"
+                            aria-label={p.compare_title}
+                        >
                             <span className="text-[10px] font-bold uppercase tracking-widest">{p.scroll_hint}</span>
-                            <ChevronDown className="h-5 w-5" />
-                        </div>
+                            <ChevronDown className="h-5 w-5" aria-hidden />
+                        </button>
                     </div>
                 </div>
             </section>
@@ -470,7 +479,7 @@ export default function AgentListingPricingClient({
             </section>
 
             {/* Comparison table — horizontal scroll on narrow screens */}
-            <section className="container mx-auto px-4 pb-16 md:pb-24">
+            <section id="plan-compare" className="scroll-mt-20 container mx-auto px-4 pb-16 md:scroll-mt-24 md:pb-24">
                 <div className="mx-auto mb-10 max-w-5xl text-center">
                     <h2 className="text-3xl font-black text-navy-secondary md:text-5xl">{p.compare_title}</h2>
                     <p className="mt-3 text-sm font-medium text-slate-600 md:text-base">{p.compare_subtitle}</p>
@@ -529,7 +538,7 @@ export default function AgentListingPricingClient({
 
             {/* Final CTA */}
             <section className="container mx-auto px-4 pb-20 text-center">
-                <h2 className="mx-auto max-w-4xl text-xl font-black leading-snug tracking-tight text-navy-secondary whitespace-nowrap sm:text-2xl md:whitespace-normal md:text-4xl lg:text-5xl">
+                <h2 className="mx-auto max-w-4xl text-3xl font-black text-navy-secondary md:text-5xl">
                     {p.cta_final_title}
                 </h2>
                 <p className="mx-auto mt-4 max-w-xl text-slate-600">{p.cta_final_sub}</p>
