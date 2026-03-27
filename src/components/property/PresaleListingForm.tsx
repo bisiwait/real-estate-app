@@ -28,6 +28,7 @@ import imageCompression from 'browser-image-compression'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Globe } from 'lucide-react'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
+import { finiteCoord } from '@/lib/google-maps-url'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -97,6 +98,11 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         longitude: 100.8824,
         google_place_id: ''
     })
+    const [linkedProjectMap, setLinkedProjectMap] = useState<{
+        google_place_id: string
+        latitude: number
+        longitude: number
+    } | null>(null)
 
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState(false)
@@ -237,6 +243,23 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         }
         fetchInitialData()
     }, [supabase])
+
+    useEffect(() => {
+        if (!formData.project_id || showNewProjectForm || formData.project_id === 'new') {
+            setLinkedProjectMap(null)
+            return
+        }
+        const p = projects.find((x) => x.id === formData.project_id)
+        if (!p) {
+            setLinkedProjectMap(null)
+            return
+        }
+        setLinkedProjectMap({
+            google_place_id: p.google_place_id || '',
+            latitude: finiteCoord(p.latitude, 12.9236),
+            longitude: finiteCoord(p.longitude, 100.8824),
+        })
+    }, [formData.project_id, showNewProjectForm, projects])
 
     const uploadImages = async (propertyId: string) => {
         const uploadedUrls: string[] = []
@@ -422,7 +445,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
             if (updateError) throw updateError
 
-            if (!showNewProjectForm && formData.project_id && isAdmin) {
+            if (!showNewProjectForm && formData.project_id && isAdmin && linkedProjectMap) {
                 const { error: projectSyncError } = await supabase
                     .from('projects')
                     .update({
@@ -430,7 +453,10 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         year_built: formData.year_built,
                         total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
                         total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
-                        developer: formData.developer
+                        developer: formData.developer,
+                        google_place_id: linkedProjectMap.google_place_id?.trim() || null,
+                        latitude: linkedProjectMap.latitude,
+                        longitude: linkedProjectMap.longitude,
                     })
                     .eq('id', formData.project_id)
 
@@ -649,6 +675,47 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                 </div>
                             </div>
                         )}
+
+                        {isAdmin && linkedProjectMap && !showNewProjectForm && formData.project_id && (
+                            <div className="space-y-4 rounded-3xl border border-amber-200 bg-amber-50/50 p-6">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-amber-900">
+                                    管理者: 紐づくプロジェクトの地図・Place ID
+                                </h4>
+                                <GoogleMapsShareLinkField
+                                    onResolved={(data) =>
+                                        setLinkedProjectMap((prev) =>
+                                            prev
+                                                ? {
+                                                      ...prev,
+                                                      google_place_id:
+                                                          data.google_place_id != null
+                                                              ? data.google_place_id
+                                                              : prev.google_place_id,
+                                                      latitude: data.latitude ?? prev.latitude,
+                                                      longitude: data.longitude ?? prev.longitude,
+                                                  }
+                                                : null
+                                        )
+                                    }
+                                    onManualPlaceId={(id) =>
+                                        setLinkedProjectMap((prev) => (prev ? { ...prev, google_place_id: id } : null))
+                                    }
+                                />
+                                <CoordinatePicker
+                                    lat={linkedProjectMap.latitude}
+                                    lng={linkedProjectMap.longitude}
+                                    googlePlaceId={linkedProjectMap.google_place_id}
+                                    placeNameHint={
+                                        projects.find((p) => p.id === formData.project_id)?.name || formData.building_name
+                                    }
+                                    onChange={(lat, lng) =>
+                                        setLinkedProjectMap((prev) =>
+                                            prev ? { ...prev, latitude: lat, longitude: lng } : null
+                                        )
+                                    }
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div>
@@ -702,10 +769,16 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                             onResolved={(data) =>
                                                 setProjectForm((prev) => ({
                                                     ...prev,
-                                                    google_place_id: data.google_place_id ?? '',
+                                                    google_place_id:
+                                                        data.google_place_id != null
+                                                            ? data.google_place_id
+                                                            : prev.google_place_id,
                                                     latitude: data.latitude ?? prev.latitude,
                                                     longitude: data.longitude ?? prev.longitude,
                                                 }))
+                                            }
+                                            onManualPlaceId={(id) =>
+                                                setProjectForm((prev) => ({ ...prev, google_place_id: id }))
                                             }
                                         />
                                         <CoordinatePicker

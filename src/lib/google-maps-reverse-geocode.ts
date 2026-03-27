@@ -1,7 +1,34 @@
 import { isLikelyGooglePlaceId } from '@/lib/google-maps-parse'
 
+type GeoResult = {
+  place_id?: string
+  types?: string[]
+}
+
+function pickPlaceIdFromResults(results: GeoResult[]): string | null {
+  const priority = [
+    'lodging',
+    'establishment',
+    'point_of_interest',
+    'tourist_attraction',
+    'premise',
+    'subpremise',
+    'street_address',
+    'route',
+  ] as const
+  for (const t of priority) {
+    const hit = results.find((r) => r.types?.includes(t))
+    const pid = hit?.place_id
+    if (typeof pid === 'string' && isLikelyGooglePlaceId(pid)) return pid.trim()
+  }
+  const first = results[0]?.place_id
+  return typeof first === 'string' && isLikelyGooglePlaceId(first) ? first.trim() : null
+}
+
 /**
  * 緯度経度から Geocoding API で place_id を取得（API キーが無ければ null）。
+ * 注意: キーに「HTTP リファラー」制限があるとサーバーからの呼び出しは REQUEST_DENIED になりがち。
+ * その場合はブラウザ Geocoder（browserReverseGeocodeToPlaceId）に任せる。
  */
 export async function reverseGeocodeToPlaceId(
   lat: number,
@@ -20,12 +47,16 @@ export async function reverseGeocodeToPlaceId(
     const res = await fetch(u.toString(), { signal: AbortSignal.timeout(10000) })
     const data = (await res.json()) as {
       status?: string
-      results?: Array<{ place_id?: string }>
+      error_message?: string
+      results?: GeoResult[]
     }
-    if (data.status !== 'OK' || !data.results?.length) return null
-    const pid = data.results[0].place_id
-    if (typeof pid === 'string' && isLikelyGooglePlaceId(pid)) return pid.trim()
-    return null
+    if (data.status !== 'OK' || !data.results?.length) {
+      if (process.env.NODE_ENV === 'development' && data.status && data.status !== 'ZERO_RESULTS') {
+        console.warn('[reverseGeocodeToPlaceId]', data.status, data.error_message || '')
+      }
+      return null
+    }
+    return pickPlaceIdFromResults(data.results)
   } catch {
     return null
   }

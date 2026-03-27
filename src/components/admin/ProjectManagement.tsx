@@ -484,10 +484,16 @@ export default function AdminProjectManagement() {
                                         onResolved={(data) =>
                                             setFormData((prev) => ({
                                                 ...prev,
-                                                google_place_id: data.google_place_id ?? '',
+                                                google_place_id:
+                                                    data.google_place_id != null
+                                                        ? data.google_place_id
+                                                        : prev.google_place_id ?? '',
                                                 latitude: data.latitude ?? prev.latitude ?? 12.9236,
                                                 longitude: data.longitude ?? prev.longitude ?? 100.8824,
                                             }))
+                                        }
+                                        onManualPlaceId={(id) =>
+                                            setFormData((prev) => ({ ...prev, google_place_id: id }))
                                         }
                                     />
                                     <CoordinatePicker

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Link2, Loader2 } from 'lucide-react'
+import { browserReverseGeocodeToPlaceId } from '@/lib/browser-geocode-place-id'
 import { normalizeStoredGooglePlaceId } from '@/lib/google-maps-parse'
 
 export type ResolvedMapsFields = {
@@ -12,19 +13,22 @@ export type ResolvedMapsFields = {
 
 type Props = {
   onResolved: (data: ResolvedMapsFields) => void
+  /** Place ID のみ手入力で反映（共有リンクと併用可） */
+  onManualPlaceId?: (placeId: string) => void
   className?: string
 }
 
-export default function GoogleMapsShareLinkField({ onResolved, className }: Props) {
+export default function GoogleMapsShareLinkField({ onResolved, onManualPlaceId, className }: Props) {
   const [url, setUrl] = useState('')
+  const [manualPid, setManualPid] = useState('')
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ tone: 'ok' | 'warn' | 'err'; text: string } | null>(null)
 
   const handleResolve = async () => {
     const trimmed = url.trim()
     if (!trimmed) return
     setBusy(true)
-    setMessage(null)
+    setNotice(null)
     try {
       const res = await fetch('/api/maps/resolve-share-link', {
         method: 'POST',
@@ -55,16 +59,33 @@ export default function GoogleMapsShareLinkField({ onResolved, className }: Prop
         throw new Error('リンクから Place ID または座標を取得できませんでした')
       }
 
+      let finalPid = placeId
+      if (!finalPid && lat !== null && lng !== null) {
+        try {
+          finalPid = await browserReverseGeocodeToPlaceId(lat, lng)
+        } catch {
+          /* キー未設定・ブロック時はスキップ */
+        }
+      }
+
       onResolved({
-        google_place_id: placeId,
+        google_place_id: finalPid,
         latitude: lat,
         longitude: lng,
       })
 
-      if (placeId) setMessage('Place ID を取得しました（地図表示で優先されます）')
-      else setMessage('座標を取得しました')
+      if (finalPid) {
+        setNotice({ tone: 'ok', text: 'Place ID を取得しました（保存すると DB に書き込まれます）' })
+      } else if (lat !== null && lng !== null) {
+        setNotice({
+          tone: 'warn',
+          text: '座標のみ取得しました。Place ID は未取得です。下の手入力に ChIJ… を貼るか、ブラウザで Geocoding がブロックされていないかご確認ください。',
+        })
+      } else {
+        setNotice({ tone: 'ok', text: '座標を取得しました' })
+      }
     } catch (e: unknown) {
-      setMessage(e instanceof Error ? e.message : 'エラーが発生しました')
+      setNotice({ tone: 'err', text: e instanceof Error ? e.message : 'エラーが発生しました' })
     } finally {
       setBusy(false)
     }
@@ -94,16 +115,50 @@ export default function GoogleMapsShareLinkField({ onResolved, className }: Prop
           取り込む
         </button>
       </div>
-      {message && (
+      {notice && (
         <p
-          className={`mt-2 text-[10px] font-bold ${message.includes('取得しました') ? 'text-emerald-600' : 'text-red-500'}`}
+          className={`mt-2 text-[10px] font-bold ${
+            notice.tone === 'ok' ? 'text-emerald-600' : notice.tone === 'warn' ? 'text-amber-700' : 'text-red-500'
+          }`}
         >
-          {message}
+          {notice.text}
         </p>
       )}
       <p className="mt-1.5 text-[9px] font-medium leading-relaxed text-slate-400">
         共有メニューからコピーした短縮 URL でも構いません。取得できた場合は Place ID を保存し、無理な場合は座標を更新します。
       </p>
+
+      {onManualPlaceId ? (
+        <div className="mt-4 border-t border-slate-100 pt-3">
+          <label className="mb-1 ml-1 block text-[9px] font-black uppercase tracking-widest text-slate-400">
+            Place ID 手入力（ChIJ…）
+          </label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <input
+              type="text"
+              placeholder="ChIJ..."
+              value={manualPid}
+              onChange={(e) => setManualPid(e.target.value)}
+              className="min-h-[42px] flex-1 rounded-lg border border-slate-100 bg-white px-3 py-2.5 font-mono text-[11px] font-bold text-navy-secondary outline-none focus:ring-2 focus:ring-navy-primary"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const t = manualPid.trim()
+                if (!normalizeStoredGooglePlaceId(t)) {
+                  setNotice({ tone: 'err', text: 'Place ID の形式が正しくありません（ChIJ で始まる英数字など）' })
+                  return
+                }
+                onManualPlaceId(t)
+                setNotice({ tone: 'ok', text: 'Place ID を反映しました（保存で DB に書き込み）' })
+              }}
+              className="flex h-[42px] shrink-0 items-center justify-center rounded-lg border-2 border-slate-100 bg-white px-4 text-[11px] font-black text-navy-secondary shadow-sm transition-all hover:border-navy-primary"
+            >
+              反映
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
