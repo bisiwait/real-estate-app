@@ -117,25 +117,27 @@ export default function DashboardClient({
                 </button>
             </div>
 
-            {/* スマホ: タブ直下に物件登録系 CTA（ヘッダーでは md 以上のみ表示） */}
-            <div className="md:hidden flex flex-col gap-2">
-                {activePlan === 'premium' && (
+            {/* スマホ: 物件タブのときだけタブ直下に登録系 CTA */}
+            {tab === 'properties' && (
+                <div className="md:hidden flex flex-col gap-2">
+                    {activePlan === 'premium' && (
+                        <Link
+                            href={`/${locale}/dashboard/presale`}
+                            className="flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-amber-600"
+                        >
+                            <Building2 className="h-4 w-4 shrink-0" />
+                            <span>プレセール投稿</span>
+                        </Link>
+                    )}
                     <Link
-                        href={`/${locale}/dashboard/presale`}
-                        className="flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-amber-600"
+                        href={`/${locale}/list-property`}
+                        className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-navy-primary shadow-md transition-all hover:bg-slate-50"
                     >
-                        <Building2 className="h-4 w-4 shrink-0" />
-                        <span>プレセール投稿</span>
+                        <PlusCircle className="h-4 w-4 shrink-0" />
+                        <span>物件を新規掲載する</span>
                     </Link>
-                )}
-                <Link
-                    href={`/${locale}/list-property`}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-navy-primary shadow-md transition-all hover:bg-slate-50"
-                >
-                    <PlusCircle className="h-4 w-4 shrink-0" />
-                    <span>物件を新規掲載する</span>
-                </Link>
-            </div>
+                </div>
+            )}
 
             {/* Content Area */}
             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
