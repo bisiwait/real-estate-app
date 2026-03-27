@@ -36,9 +36,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: dict.metadata.title,
     description: dict.metadata.description,
     icons: {
-      icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
-      apple: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+      icon: [
+        { url: '/favicon.ico', type: 'image/x-icon', sizes: 'any' },
+        { url: '/favicon.svg', type: 'image/svg+xml' },
+      ],
     },
+    manifest: '/site.webmanifest',
     openGraph: {
       type: 'website',
       siteName: 'Chonburi Home',

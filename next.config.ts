@@ -45,8 +45,6 @@ function legacyHostRedirects(): Array<{
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      // ブラウザのデフォルト取得先。SVG ファビコンと同一アセットを返す。
-      { source: "/favicon.ico", destination: "/favicon.svg", permanent: false },
       ...legacyHostRedirects(),
       {
         source: "/:path*",
