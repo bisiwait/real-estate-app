@@ -521,7 +521,7 @@
         "select_at_least_one": "Select at least one property",
         "loading": "Loading…",
         "not_found": "Could not load properties",
-        "swipe_hint": "Swipe right to compare",
+        "swipe_hint": "*Swipe right to compare.",
         "line_inquiry": "Contact via LINE"
     },
     "agent_plan": {

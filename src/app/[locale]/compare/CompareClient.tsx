@@ -286,6 +286,11 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                     </Link>
                     <h1 className="text-2xl md:text-3xl font-black">{c.title}</h1>
                     <p className="text-slate-400 text-sm mt-2">{c.subtitle}</p>
+                    {!loading && properties.length > 1 && c.swipe_hint ? (
+                        <p className="mt-1.5 text-xs font-medium text-slate-400/90 md:hidden">
+                            {c.swipe_hint}
+                        </p>
+                    ) : null}
                 </div>
             </div>
 
