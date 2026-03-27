@@ -70,7 +70,7 @@ export default function AgentOtherProperties({ agentId, currentPropertyId, agent
         return null
     }
 
-    const agentListingsUrl = `/${locale}/agents/${agentId}`
+    const agentListingsUrl = `/${locale}/agents/${agentId}/properties`
 
     return (
         <div className="mt-16 mb-8 space-y-6">
