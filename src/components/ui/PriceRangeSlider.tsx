@@ -107,6 +107,16 @@ export default function PriceRangeSlider({
         }
     }, [initialMin, initialMax, min, max]);
 
+    useEffect(() => {
+        const end = () => setActiveThumb(null);
+        window.addEventListener('pointerup', end);
+        window.addEventListener('pointercancel', end);
+        return () => {
+            window.removeEventListener('pointerup', end);
+            window.removeEventListener('pointercancel', end);
+        };
+    }, []);
+
     const handleMinChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = Math.min(Number(event.target.value), maxValue - step);
         setMinValue(value);
@@ -131,6 +141,11 @@ export default function PriceRangeSlider({
         }
         return options;
     }, [min, max, step]);
+
+    // 2 本の range を重ねるため、デフォルトは MIN を手前に（左つまみが反応する）。
+    // ドラッグ中はアクティブ側を最前面にし、トラックは pointer-events:none で貫通させる。
+    const minInputZ = activeThumb === 'max' ? 32 : 50;
+    const maxInputZ = activeThumb === 'min' ? 32 : 45;
 
     return (
         <div className="w-full min-w-0 max-w-full flex flex-col pt-6 pb-4">
@@ -188,7 +203,12 @@ export default function PriceRangeSlider({
             {/* Visual Slider: padding では bg が全幅に見えるため、lg 未満は幅を絞った子でトラックを短く表示 */}
             <div className="mb-8 w-full min-w-0">
                 <div className="mx-auto w-[82%] min-w-0 max-w-full lg:w-full">
-                    <div className="relative h-1.5 w-full min-w-0 rounded-full bg-slate-100 px-4">
+                    <div
+                        className="relative h-1.5 w-full min-w-0 rounded-full bg-slate-100 px-4"
+                        onMouseLeave={(e) => {
+                            if (e.buttons === 0) setActiveThumb(null);
+                        }}
+                    >
                         {/* Active Range Line */}
                         <div
                             ref={rangeRef}
@@ -207,8 +227,11 @@ export default function PriceRangeSlider({
                     top: -10px;
                     height: 20px;
                     opacity: 0;
-                    z-index: 30;
                     margin: 0;
+                    touch-action: none;
+                  }
+                  .dual-slider-input::-webkit-slider-runnable-track {
+                    pointer-events: none;
                   }
                   .dual-slider-input::-webkit-slider-thumb {
                     -webkit-appearance: none;
@@ -218,6 +241,9 @@ export default function PriceRangeSlider({
                     height: 32px;
                     border-radius: 50%;
                     cursor: pointer;
+                  }
+                  .dual-slider-input::-moz-range-track {
+                    pointer-events: none;
                   }
                   .dual-slider-input::-moz-range-thumb {
                     pointer-events: auto;
@@ -229,23 +255,7 @@ export default function PriceRangeSlider({
                   }
                 `}} />
 
-                        {/* Min Thumb Input */}
-                        <input
-                            type="range"
-                            min={min}
-                            max={max}
-                            step={step}
-                            value={minValue}
-                            onChange={handleMinChange}
-                            onMouseOver={() => setActiveThumb('min')}
-                            onMouseLeave={() => setActiveThumb(null)}
-                            onTouchStart={() => setActiveThumb('min')}
-                            onTouchEnd={() => setActiveThumb(null)}
-                            className="dual-slider-input"
-                            style={{ zIndex: activeThumb === 'min' || minValue > max - step * 2 ? 40 : 30 }}
-                        />
-
-                        {/* Max Thumb Input */}
+                        {/* Max を先に描画し、Min を上に重ねる（後勝ちスタック） */}
                         <input
                             type="range"
                             min={min}
@@ -253,12 +263,21 @@ export default function PriceRangeSlider({
                             step={step}
                             value={maxValue}
                             onChange={handleMaxChange}
-                            onMouseOver={() => setActiveThumb('max')}
-                            onMouseLeave={() => setActiveThumb(null)}
-                            onTouchStart={() => setActiveThumb('max')}
-                            onTouchEnd={() => setActiveThumb(null)}
+                            onPointerDown={() => setActiveThumb('max')}
                             className="dual-slider-input"
-                            style={{ zIndex: activeThumb === 'max' ? 40 : 30 }}
+                            style={{ zIndex: maxInputZ }}
+                        />
+
+                        <input
+                            type="range"
+                            min={min}
+                            max={max}
+                            step={step}
+                            value={minValue}
+                            onChange={handleMinChange}
+                            onPointerDown={() => setActiveThumb('min')}
+                            className="dual-slider-input"
+                            style={{ zIndex: minInputZ }}
                         />
 
                         {/* Tick marks */}
@@ -271,7 +290,7 @@ export default function PriceRangeSlider({
                         {/* Custom Min Thumb Visual */}
                         <div
                             className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'min' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
-                            style={{ left: `${getPercent(minValue)}%`, zIndex: activeThumb === 'min' || minValue > max - step * 2 ? 40 : 30 }}
+                            style={{ left: `${getPercent(minValue)}%`, zIndex: minInputZ + 5 }}
                         >
                             <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
                         </div>
@@ -279,7 +298,7 @@ export default function PriceRangeSlider({
                         {/* Custom Max Thumb Visual */}
                         <div
                             className={`absolute w-6 h-6 bg-white border-2 border-navy-primary rounded-full shadow-lg top-1/2 -mt-3 -ml-3 pointer-events-none transition-all flex items-center justify-center ${activeThumb === 'max' ? 'scale-125 ring-4 ring-navy-primary/10' : ''}`}
-                            style={{ left: `${getPercent(maxValue)}%`, zIndex: activeThumb === 'max' ? 40 : 30 }}
+                            style={{ left: `${getPercent(maxValue)}%`, zIndex: maxInputZ + 5 }}
                         >
                             <div className="w-1.5 h-1.5 bg-navy-primary rounded-full" />
                         </div>
