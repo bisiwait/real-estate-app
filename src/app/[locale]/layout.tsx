@@ -37,9 +37,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: dict.metadata.description,
     icons: {
       icon: [
-        { url: '/favicon.ico', type: 'image/x-icon', sizes: 'any' },
-        { url: '/favicon.svg', type: 'image/svg+xml' },
+        {
+          url: '/favicon.ico?v=2',
+          type: 'image/x-icon',
+          sizes: 'any',
+        },
       ],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
     },
     manifest: '/site.webmanifest',
     openGraph: {
