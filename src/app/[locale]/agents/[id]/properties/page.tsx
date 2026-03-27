@@ -1,12 +1,12 @@
-import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import { getDictionary } from '@/lib/i18n/get-dictionary'
 import AgentPropertiesList from './AgentPropertiesList'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AgentPropertiesPage({ params, searchParams }: { params: Promise<{ locale: string; id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-    const { locale, id: agentId } = await params;
-    const searchParamsObj = await searchParams;
+    const { locale, id: agentId } = await params
+    const searchParamsObj = await searchParams
+    const dict = await getDictionary(locale)
 
     // We use the admin client here to bypass RLS on the profiles table since public read isn't enabled
     const { createClient } = await import('@supabase/supabase-js')
@@ -86,6 +86,7 @@ export default async function AgentPropertiesPage({ params, searchParams }: { pa
 
     return (
         <AgentPropertiesList
+            dict={dict}
             locale={locale}
             agent={agent}
             agentId={agentId}
