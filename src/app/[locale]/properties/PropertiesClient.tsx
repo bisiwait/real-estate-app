@@ -372,7 +372,7 @@ export default function PropertiesClient({
     const resultsBusy = loading || isFilterNavPending
 
     const renderFilterPanel = (opts?: { showApplyButton?: boolean }) => (
-        <div className="space-y-8">
+        <div className="min-w-0 max-w-full space-y-8">
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
                     <MapPin className="w-3 h-3 mr-2" />
@@ -447,7 +447,7 @@ export default function PropertiesClient({
                             {dict.property.budget}
                         </h3>
                     </div>
-                    <div className="px-2">
+                    <div className="min-w-0 max-w-full px-0 sm:px-2">
                         <PriceRangeSlider
                             key={draft.type}
                             min={draft.type === 'rent' ? PRICE_RANGES.min : SALE_PRICE_RANGES.min}
@@ -744,23 +744,27 @@ export default function PropertiesClient({
             </div>
 
             {isFilterDrawerOpen && (
-                <div className="fixed inset-0 z-[100] lg:hidden">
+                <div className="fixed inset-0 z-[100] lg:hidden overflow-x-hidden">
                     <div className="absolute inset-0 bg-navy-secondary/60 backdrop-blur-sm" onClick={() => setIsFilterDrawerOpen(false)} />
-                    <div className="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300 p-8 flex flex-col">
-                        <div className="flex items-center justify-between mb-8 shrink-0">
-                            <h2 className="text-xl font-black text-navy-secondary">{dict.property.search_drawer_title}</h2>
+                    <div className="absolute right-2 top-2 bottom-2 flex w-[min(24rem,calc(100vw-1rem))] flex-col rounded-2xl border border-slate-100 bg-white shadow-2xl animate-in slide-in-from-right duration-300 min-w-0 box-border">
+                        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5">
+                            <h2 className="min-w-0 text-lg font-black leading-tight text-navy-secondary sm:text-xl">
+                                {dict.property.search_drawer_title}
+                            </h2>
                             <button
                                 type="button"
                                 onClick={() => setIsFilterDrawerOpen(false)}
-                                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                                className="shrink-0 p-2 hover:bg-slate-100 rounded-full transition-colors"
                             >
                                 <X className="w-6 h-6 text-slate-400" />
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto min-h-0">{renderFilterPanel()}</div>
+                        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 pb-4 pt-2 sm:px-5">
+                            {renderFilterPanel()}
+                        </div>
 
-                        <div className="mt-6 pt-4 border-t border-slate-100 shrink-0 space-y-3">
+                        <div className="shrink-0 space-y-3 border-t border-slate-100 px-4 py-4 sm:px-5">
                             <button
                                 type="button"
                                 onClick={() => applyFilters({ closeDrawer: true })}

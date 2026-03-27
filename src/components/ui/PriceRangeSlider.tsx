@@ -133,10 +133,10 @@ export default function PriceRangeSlider({
     }, [min, max, step]);
 
     return (
-        <div className="w-full flex flex-col pt-6 pb-4">
+        <div className="w-full min-w-0 max-w-full flex flex-col pt-6 pb-4">
             {/* Dropdown Selects Row */}
-            <div className="flex items-center gap-2 mb-8">
-                <div className="relative flex-1">
+            <div className="flex min-w-0 items-center gap-2 mb-8">
+                <div className="relative min-w-0 flex-1">
                     <span className="absolute -top-5 left-1 text-[10px] text-slate-400 font-bold uppercase tracking-tight">Price Min</span>
                     <select
                         value={minValue}
@@ -159,9 +159,9 @@ export default function PriceRangeSlider({
                     </div>
                 </div>
 
-                <span className="text-slate-300 font-black mt-1">~</span>
+                <span className="shrink-0 text-slate-300 font-black mt-1">~</span>
 
-                <div className="relative flex-1">
+                <div className="relative min-w-0 flex-1">
                     <span className="absolute -top-5 left-1 text-[10px] text-slate-400 font-bold uppercase tracking-tight">Price Max</span>
                     <select
                         value={maxValue}
@@ -185,8 +185,8 @@ export default function PriceRangeSlider({
                 </div>
             </div>
 
-            {/* Visual Slider */}
-            <div className="relative w-full h-1.5 bg-slate-100 rounded-full mb-8 px-1">
+            {/* Visual Slider（つまみが -ml-3 で中心合わせのため、左右に余白を確保） */}
+            <div className="relative w-full min-w-0 h-1.5 bg-slate-100 rounded-full mb-8 px-4">
                 {/* Active Range Line */}
                 <div
                     ref={rangeRef}
@@ -260,7 +260,7 @@ export default function PriceRangeSlider({
                 />
 
                 {/* Tick marks */}
-                <div className="absolute top-5 left-0 w-full flex justify-between px-1 text-[9px] text-slate-300 font-black pointer-events-none uppercase tracking-tighter">
+                <div className="absolute top-5 inset-x-0 flex justify-between px-0 text-[9px] text-slate-300 font-black pointer-events-none uppercase tracking-tighter">
                     <span>{formatValue(min)}</span>
                     <span className="opacity-0 sm:opacity-100">{formatValue(min + (max - min) / 2)}</span>
                     <span>{formatValue(max)}+</span>
