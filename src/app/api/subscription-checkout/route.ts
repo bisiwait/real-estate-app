@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || getPublicSiteUrl()
+    const origin = req.headers.get('origin') || getPublicSiteUrl()
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

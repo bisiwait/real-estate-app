@@ -3,10 +3,7 @@ import stripe from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 import { getPublicSiteUrl } from '@/lib/site-url'
 
-const BASE_URL =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    getPublicSiteUrl()
+const BASE_URL = getPublicSiteUrl()
 
 export async function POST() {
     try {

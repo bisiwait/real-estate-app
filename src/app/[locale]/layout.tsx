@@ -39,6 +39,24 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
       apple: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
     },
+    openGraph: {
+      type: 'website',
+      siteName: 'Chonburi Home',
+      locale: locale === 'jp' ? 'ja_JP' : locale === 'th' ? 'th_TH' : 'en_US',
+      url: `${baseUrl}/${locale}`,
+      images: [
+        {
+          url: '/logo_800.svg',
+          width: 800,
+          height: 400,
+          alt: 'Chonburi Home',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: ['/logo_800.svg'],
+    },
     alternates: {
       languages: {
         'ja': `${baseUrl}/jp`,

@@ -10,8 +10,12 @@ const corsHeaders = {
 }
 
 function getSiteOrigin(): string {
-    const raw = Deno.env.get('NEXT_PUBLIC_SITE_URL') || Deno.env.get('SITE_URL') || 'https://chonburihome.com'
-    return raw.replace(/\/$/, '')
+    const raw = Deno.env.get('NEXT_PUBLIC_SITE_URL') || Deno.env.get('SITE_URL')
+    const trimmed = raw?.trim()
+    if (!trimmed) {
+        throw new Error('Edge Function: set NEXT_PUBLIC_SITE_URL or SITE_URL (public site origin, no trailing slash)')
+    }
+    return trimmed.replace(/\/$/, '')
 }
 
 serve(async (req) => {

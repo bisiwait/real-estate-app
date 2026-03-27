@@ -16,7 +16,11 @@ serve(async (req) => {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         const lineAccessToken = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN')!
-        const siteUrl = Deno.env.get('NEXT_PUBLIC_SITE_URL') || 'https://chonburihome.com'
+        const siteUrlRaw = Deno.env.get('NEXT_PUBLIC_SITE_URL') || Deno.env.get('SITE_URL')
+        if (!siteUrlRaw?.trim()) {
+            throw new Error('Set NEXT_PUBLIC_SITE_URL or SITE_URL for property links in LINE messages')
+        }
+        const siteUrl = siteUrlRaw.trim().replace(/\/$/, '')
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 

@@ -1,24 +1,46 @@
 /**
- * サーバー側メタデータ・OGP・絶対 URL 用。
- * 優先: NEXT_PUBLIC_SITE_URL → NEXT_PUBLIC_BASE_URL → VERCEL_URL → 本番フォールバック
+ * 公開サイトのオリジン（末尾スラッシュなし）。
+ * メタデータ・OGP・Stripe の success_url、メール内リンクなどに使用。
+ *
+ * 優先順位: NEXT_PUBLIC_SITE_URL → NEXT_PUBLIC_BASE_URL → VERCEL_URL（プレビュー用）
+ * 本番で独自ドメインの OGP を正しく出すには、Vercel（Production）で
+ * NEXT_PUBLIC_SITE_URL=https://chonburihome.com を必ず設定してください。
  */
-export const CANONICAL_SITE_ORIGIN = 'https://chonburihome.com'
 
 function trimOrigin(s: string): string {
     return s.trim().replace(/\/$/, '')
 }
 
-export function getPublicSiteUrl(): string {
-    const a = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SITE_URL && trimOrigin(process.env.NEXT_PUBLIC_SITE_URL)
-    const b = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_URL && trimOrigin(process.env.NEXT_PUBLIC_BASE_URL)
-    for (const u of [a, b]) {
-        if (u && /^https?:\/\//i.test(u)) return u
+function firstValidHttpUrl(...candidates: (string | undefined)[]): string | null {
+    for (const raw of candidates) {
+        if (!raw) continue
+        const u = trimOrigin(raw)
+        if (/^https?:\/\//i.test(u)) return u
     }
-    if (typeof process !== 'undefined' && process.env.VERCEL_URL) {
+    return null
+}
+
+export function getPublicSiteUrl(): string {
+    const fromEnv = firstValidHttpUrl(process.env.NEXT_PUBLIC_SITE_URL, process.env.NEXT_PUBLIC_BASE_URL)
+    if (fromEnv) return fromEnv
+
+    // Vercel Production では独自ドメインの OGP・リダイレクトと一致させるため、明示 URL を必須にする
+    if (process.env.VERCEL_ENV === 'production') {
+        throw new Error(
+            '[getPublicSiteUrl] Vercel Production では NEXT_PUBLIC_SITE_URL（例: https://chonburihome.com）が必須です。'
+        )
+    }
+
+    if (process.env.VERCEL_URL) {
         return `https://${trimOrigin(process.env.VERCEL_URL)}`
     }
-    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
-        return CANONICAL_SITE_ORIGIN
+
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error(
+            '[getPublicSiteUrl] 本番ビルドには NEXT_PUBLIC_SITE_URL（または NEXT_PUBLIC_BASE_URL）の設定が必要です。'
+        )
     }
+
+    // ローカル開発: .env.local に NEXT_PUBLIC_SITE_URL を推奨（未設定時のみフォールバック）
     return 'http://localhost:3000'
 }

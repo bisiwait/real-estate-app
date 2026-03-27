@@ -35,7 +35,9 @@ Vercel（またはホスティング先）の **Environment Variables** で次�
 
 **Supabase（Authentication → URL Configuration）** でも Site URL・Redirect URLs を `https://chonburihome.com/...` に更新してください。
 
-旧ホストから `https://chonburihome.com` へ 308 リダイレクトが必要な場合は、ホスティング先の **Environment Variables** に `LEGACY_REDIRECT_HOSTS` を設定します（カンマ区切りのホスト名。例: `old-project.example.com,preview.example.dev`）。リダイレクト先は常に `https://chonburihome.com` です。
+旧ホストから本番オリジンへ 308 リダイレクトが必要な場合は、**`NEXT_PUBLIC_SITE_URL` を本番 URL に設定したうえで**、ホスティング先の **Environment Variables** に `LEGACY_REDIRECT_HOSTS` を設定します（カンマ区切りのホスト名。例: `old-project.vercel.app`）。リダイレクト先は `NEXT_PUBLIC_SITE_URL` と同じオリジンです。
+
+**注意:** `next build`（本番モード）と `getPublicSiteUrl()` は `NEXT_PUBLIC_SITE_URL`（または Vercel 上の `VERCEL_URL`）に依存します。Vercel **Production** では OGP・リダイレクトのため **`NEXT_PUBLIC_SITE_URL=https://chonburihome.com` を必須**にしてください。
 
 ## 4. 本番環境の最適化
 

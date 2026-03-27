@@ -75,7 +75,8 @@ async function testPresale() {
         console.error('Property creation failed:', propErr)
     } else {
         console.log('Successfully created presale property:', property?.id)
-        console.log('View it at: http://localhost:3000/properties/' + property?.id)
+        const site = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '')
+        console.log(`View it at: ${site}/jp/properties/${property?.id}`)
     }
 }
 

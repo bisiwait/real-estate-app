@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase/server';
+import { getPublicSiteUrl } from '@/lib/site-url';
 import { NextRequest, NextResponse } from 'next/server';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'dummy_key_for_build');
@@ -49,6 +50,8 @@ export async function POST(req: NextRequest) {
         console.log(`Sending inquiry notification to: ${agentEmail} for property: ${property.title}`);
 
         // 2. Send email via Resend
+        const dashboardUrl = `${getPublicSiteUrl()}/jp/dashboard`;
+
         const { data, error } = await resend.emails.send({
             from: 'Chonburi Home <onboarding@resend.dev>',
             to: [agentEmail],
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
           </div>
 
           <div style="margin-top: 40px; text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="background-color: #1e293b; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 8px;">ダッシュボードで確認する</a>
+            <a href="${dashboardUrl}" style="background-color: #1e293b; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 8px;">ダッシュボードで確認する</a>
           </div>
           
           <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; text-align: center;">

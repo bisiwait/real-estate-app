@@ -3,12 +3,19 @@ namespace NodeJS {
         NEXT_PUBLIC_SUPABASE_URL: string;
         NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
         SUPABASE_SERVICE_ROLE_KEY: string;
+        /** 本番: https://chonburihome.com（末尾スラッシュなし）。Vercel Production では必須。 */
         NEXT_PUBLIC_SITE_URL?: string;
         NEXT_PUBLIC_BASE_URL?: string;
+        /** Vercel が注入（production / preview / development） */
+        VERCEL_ENV?: string;
+        VERCEL_URL?: string;
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: string;
         /** サーバー専用（任意）。未設定時は Geocoding 逆引きに NEXT_PUBLIC_GOOGLE_MAPS_API_KEY を使う */
         GOOGLE_MAPS_SERVER_KEY?: string;
         STRIPE_SECRET_KEY: string;
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: string;
+        RESEND_API_KEY?: string;
+        /** next.config の旧ホスト → 本番への 308 用（カンマ区切りホスト名） */
+        LEGACY_REDIRECT_HOSTS?: string;
     }
 }

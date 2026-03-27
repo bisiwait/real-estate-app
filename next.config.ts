@@ -1,5 +1,26 @@
 import type { NextConfig } from "next";
 
+/** www 除外・レガシーホスト向けリダイレクトの宛先（末尾スラッシュなし）。 */
+function redirectDestinationBase(): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (raw && /^https:\/\//i.test(raw)) return raw;
+  if (process.env.NEXT_PUBLIC_BASE_URL?.trim()) {
+    const b = process.env.NEXT_PUBLIC_BASE_URL.trim().replace(/\/$/, "");
+    if (/^https:\/\//i.test(b)) return b;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.trim().replace(/\/$/, "")}`;
+  }
+  if (process.env.NODE_ENV !== "production") {
+    return "http://localhost:3000";
+  }
+  throw new Error(
+    "next.config: 本番ビルドでは NEXT_PUBLIC_SITE_URL（例: https://chonburihome.com）を設定してください。"
+  );
+}
+
+const SITE_ORIGIN = redirectDestinationBase();
+
 /** カンマ区切りの旧ホスト名。未設定の場合はレガシー向け host リダイレクトを追加しない。 */
 function legacyHostRedirects(): Array<{
   source: string;
@@ -16,7 +37,7 @@ function legacyHostRedirects(): Array<{
     .map((host) => ({
       source: "/:path*",
       has: [{ type: "host" as const, value: host }],
-      destination: "https://chonburihome.com/:path*",
+      destination: `${SITE_ORIGIN}/:path*`,
       permanent: true,
     }));
 }
@@ -30,7 +51,7 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.chonburihome.com" }],
-        destination: "https://chonburihome.com/:path*",
+        destination: `${SITE_ORIGIN}/:path*`,
         permanent: true,
       },
     ];

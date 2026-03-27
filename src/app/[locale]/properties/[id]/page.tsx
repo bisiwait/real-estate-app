@@ -39,7 +39,10 @@ export async function generateMetadata(
             : 'Pattaya & Sriracha real estate listing on Chonburi Home.'
 
         const baseUrl = getPublicSiteUrl()
-        let imageUrl = `${baseUrl}/og-default.png`
+        let imageUrl = `${baseUrl}/logo_800.svg`
+        let ogImageType: 'image/jpeg' | 'image/svg+xml' = 'image/svg+xml'
+        let ogWidth = 800
+        let ogHeight = 400
         if (property.images?.[0]) {
             const firstImage = property.images[0]
             let baseImageUrl = ''
@@ -49,9 +52,12 @@ export async function generateMetadata(
                 const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`
                 baseImageUrl = `${baseUrl}${path}`
             }
-            
+
             // 1. Next.js の自動エスケープ (& -> &amp;) を避けるため、パラメータを1つ (?format=jpg) に絞る
             imageUrl = `${baseImageUrl}?format=jpg`
+            ogImageType = 'image/jpeg'
+            ogWidth = 1200
+            ogHeight = 630
         }
 
         const pageUrl = `${baseUrl}/${locale}/properties/${id}`
@@ -68,10 +74,10 @@ export async function generateMetadata(
                     {
                         url: imageUrl,
                         secureUrl: imageUrl,
-                        width: 1200,
-                        height: 630,
+                        width: ogWidth,
+                        height: ogHeight,
                         alt: title,
-                        type: 'image/jpeg',
+                        type: ogImageType,
                     },
                 ],
                 locale: locale === 'jp' ? 'ja_JP' : locale === 'th' ? 'th_TH' : 'en_US',

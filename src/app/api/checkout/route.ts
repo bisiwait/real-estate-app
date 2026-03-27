@@ -4,11 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveSubscriptionPriceId, type SubscriptionBillingInterval } from '@/lib/stripe-subscription-prices'
 import { getPublicSiteUrl } from '@/lib/site-url'
 
-// NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_SITE_URL → getPublicSiteUrl()（本番は chonburihome.com 等）
-const BASE_URL =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    getPublicSiteUrl()
+const BASE_URL = getPublicSiteUrl()
 
 interface CheckoutRequestBody {
     priceId?: string
