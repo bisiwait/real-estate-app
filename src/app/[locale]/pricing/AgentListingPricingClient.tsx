@@ -273,7 +273,7 @@ export default function AgentListingPricingClient({
                         <button
                             type="button"
                             onClick={scrollToPlanCompare}
-                            className="mt-10 flex flex-col items-center gap-2 text-slate-400 transition-colors hover:text-navy-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-primary/30 focus-visible:ring-offset-2 rounded-lg"
+                            className="mx-auto mt-10 flex flex-col items-center gap-2 text-slate-400 transition-colors hover:text-navy-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-primary/30 focus-visible:ring-offset-2 rounded-lg"
                             aria-label={p.compare_title}
                         >
                             <span className="text-[10px] font-bold uppercase tracking-widest">{p.scroll_hint}</span>
@@ -479,16 +479,19 @@ export default function AgentListingPricingClient({
             </section>
 
             {/* Comparison table — horizontal scroll on narrow screens */}
-            <section id="plan-compare" className="scroll-mt-20 container mx-auto px-4 pb-16 md:scroll-mt-24 md:pb-24">
-                <div className="mx-auto mb-10 max-w-5xl text-center">
-                    <h2 className="text-3xl font-black text-navy-secondary md:text-5xl">{p.compare_title}</h2>
-                    <p className="mt-3 text-sm font-medium text-slate-600 md:text-base">{p.compare_subtitle}</p>
+            <section
+                id="plan-compare"
+                className="scroll-mt-20 container mx-auto flex flex-col items-center px-4 pb-16 md:scroll-mt-24 md:pb-24"
+            >
+                <div className="mb-10 w-full max-w-5xl text-center">
+                    <h2 className="text-center text-3xl font-black text-navy-secondary md:text-5xl">{p.compare_title}</h2>
+                    <p className="mt-3 text-center text-sm font-medium text-slate-600 md:text-base">{p.compare_subtitle}</p>
                     <div className="mx-auto mt-6 h-1 w-24 bg-gradient-to-r from-transparent via-navy-primary to-transparent" />
                 </div>
 
-                <div className="mx-auto max-w-5xl -mx-1 px-1 sm:mx-auto sm:px-0">
-                    <div className="min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-3xl border border-slate-200 bg-white shadow-md [-webkit-overflow-scrolling:touch]">
-                        <table className="w-full min-w-[480px] table-fixed border-collapse text-left md:min-w-[640px] md:table-auto">
+                <div className="w-full max-w-5xl">
+                    <div className="overflow-x-auto overscroll-x-contain rounded-3xl border border-slate-200 bg-white text-center shadow-md touch-pan-x [-webkit-overflow-scrolling:touch]">
+                        <table className="inline-table w-full min-w-[480px] table-fixed border-collapse text-left align-top md:table md:w-full md:min-w-[640px] md:table-auto">
                             <thead>
                                 <tr className="bg-slate-50">
                                     <th className="w-[22%] min-w-0 max-w-[5.5rem] p-2 text-[9px] font-bold uppercase leading-tight tracking-tight text-slate-500 md:w-auto md:max-w-none md:whitespace-nowrap md:p-6 md:text-xs md:tracking-widest">
