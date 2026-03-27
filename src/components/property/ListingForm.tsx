@@ -1040,14 +1040,12 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         {isAdmin && linkedProjectMap && !showNewProjectForm && formData.project_id && (
                             <div className="space-y-4 rounded-3xl border border-amber-200 bg-amber-50/50 p-6">
                                 <h4 className="text-xs font-black uppercase tracking-widest text-amber-900">
-                                    管理者: 紐づくプロジェクトの地図・Place ID
+                                    管理者: 紐づくプロジェクトの位置情報
                                 </h4>
-                                <p className="text-[10px] font-medium leading-relaxed text-amber-800/90">
-                                    「リンクだけ保存」で <code className="rounded bg-white/80 px-1">google_maps_share_url</code> を、そのまま物件ページで表示・開くリンクに使えます。
-                                </p>
                                 <GoogleMapsShareLinkField
-                                    onShareUrlOnly={(u) =>
-                                        setLinkedProjectMap((prev) => (prev ? { ...prev, google_maps_share_url: u } : null))
+                                    shareUrl={linkedProjectMap.google_maps_share_url}
+                                    onShareUrlChange={(v) =>
+                                        setLinkedProjectMap((prev) => (prev ? { ...prev, google_maps_share_url: v } : null))
                                     }
                                     onResolved={(data) =>
                                         setLinkedProjectMap((prev) =>
@@ -1065,9 +1063,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                                   }
                                                 : null
                                         )
-                                    }
-                                    onManualPlaceId={(id) =>
-                                        setLinkedProjectMap((prev) => (prev ? { ...prev, google_place_id: id } : null))
                                     }
                                 />
                                 <CoordinatePicker
@@ -1147,8 +1142,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
                                     <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
                                         <GoogleMapsShareLinkField
-                                            onShareUrlOnly={(u) =>
-                                                setProjectForm((prev) => ({ ...prev, google_maps_share_url: u }))
+                                            shareUrl={projectForm.google_maps_share_url}
+                                            onShareUrlChange={(v) =>
+                                                setProjectForm((prev) => ({ ...prev, google_maps_share_url: v }))
                                             }
                                             onResolved={(data) =>
                                                 setProjectForm((prev) => ({
@@ -1160,9 +1156,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                                     latitude: data.latitude ?? prev.latitude,
                                                     longitude: data.longitude ?? prev.longitude,
                                                 }))
-                                            }
-                                            onManualPlaceId={(id) =>
-                                                setProjectForm((prev) => ({ ...prev, google_place_id: id }))
                                             }
                                         />
                                         <CoordinatePicker

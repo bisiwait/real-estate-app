@@ -485,8 +485,9 @@ export default function AdminProjectManagement() {
                                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
                                 <div className="h-auto space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                                     <GoogleMapsShareLinkField
-                                        onShareUrlOnly={(u) =>
-                                            setFormData((prev) => ({ ...prev, google_maps_share_url: u }))
+                                        shareUrl={formData.google_maps_share_url ?? ''}
+                                        onShareUrlChange={(v) =>
+                                            setFormData((prev) => ({ ...prev, google_maps_share_url: v }))
                                         }
                                         onResolved={(data) =>
                                             setFormData((prev) => ({
@@ -500,9 +501,6 @@ export default function AdminProjectManagement() {
                                                 latitude: data.latitude ?? prev.latitude ?? 12.9236,
                                                 longitude: data.longitude ?? prev.longitude ?? 100.8824,
                                             }))
-                                        }
-                                        onManualPlaceId={(id) =>
-                                            setFormData((prev) => ({ ...prev, google_place_id: id }))
                                         }
                                     />
                                     <CoordinatePicker

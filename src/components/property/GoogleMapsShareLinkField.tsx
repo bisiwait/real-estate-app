@@ -14,48 +14,74 @@ export type ResolvedMapsFields = {
 }
 
 type Props = {
+  /** 現在の共有リンク（DB または未保存の入力）。設定済みならここに表示されます */
+  shareUrl: string
+  onShareUrlChange: (value: string) => void
   onResolved: (data: ResolvedMapsFields) => void
-  /** 解析せず共有 URL のみ反映（座標・Place ID は触らない） */
-  onShareUrlOnly?: (normalizedUrl: string) => void
-  /** Place ID のみ手入力で反映（共有リンクと併用可） */
-  onManualPlaceId?: (placeId: string) => void
   className?: string
 }
 
 export default function GoogleMapsShareLinkField({
+  shareUrl,
+  onShareUrlChange,
   onResolved,
-  onShareUrlOnly,
-  onManualPlaceId,
   className,
 }: Props) {
-  const [url, setUrl] = useState('')
-  const [manualPid, setManualPid] = useState('')
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<{ tone: 'ok' | 'warn' | 'err'; text: string } | null>(null)
 
-  const handleResolve = async () => {
-    const trimmed = url.trim()
+  const handleApply = async () => {
+    const trimmed = shareUrl.trim()
     if (!trimmed) return
+
+    const normShare = normalizeStoredMapsShareUrl(trimmed)
+    if (!normShare) {
+      setNotice({
+        tone: 'err',
+        text: 'Google マップの共有 URL として無効です（maps.app.goo.gl / google.com/maps など）',
+      })
+      return
+    }
+
+    onShareUrlChange(normShare)
+
     setBusy(true)
     setNotice(null)
+
+    const toNum = (v: unknown): number | null => {
+      if (typeof v === 'number' && Number.isFinite(v)) return v
+      if (typeof v === 'string' && v.trim() !== '') {
+        const n = parseFloat(v)
+        return Number.isFinite(n) ? n : null
+      }
+      return null
+    }
+
+    const applyLinkOnly = (tone: 'ok' | 'warn', text: string) => {
+      onResolved({
+        google_place_id: null,
+        latitude: null,
+        longitude: null,
+        maps_share_url: normShare,
+      })
+      setNotice({ tone, text })
+    }
+
     try {
       const res = await fetch('/api/maps/resolve-share-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: trimmed }),
+        body: JSON.stringify({ url: normShare }),
       })
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(typeof data.error === 'string' ? data.error : '解析に失敗しました')
-      }
+      const data = (await res.json().catch(() => ({}))) as Record<string, unknown>
 
-      const toNum = (v: unknown): number | null => {
-        if (typeof v === 'number' && Number.isFinite(v)) return v
-        if (typeof v === 'string' && v.trim() !== '') {
-          const n = parseFloat(v)
-          return Number.isFinite(n) ? n : null
-        }
-        return null
+      if (!res.ok) {
+        const msg = typeof data.error === 'string' ? data.error : '解析に失敗しました'
+        applyLinkOnly(
+          'warn',
+          `共有リンクはフォームに反映しました。${msg}（物件ページではこのリンクで表示・開けます）保存で確定します。`,
+        )
+        return
       }
 
       const rawPid = data.google_place_id
@@ -63,10 +89,6 @@ export default function GoogleMapsShareLinkField({
         typeof rawPid === 'string' && normalizeStoredGooglePlaceId(rawPid) ? rawPid.trim() : null
       const lat = toNum(data.latitude)
       const lng = toNum(data.longitude)
-
-      if (!placeId && (lat === null || lng === null)) {
-        throw new Error('リンクから Place ID または座標を取得できませんでした')
-      }
 
       let finalPid = placeId
       if (!finalPid && lat !== null && lng !== null) {
@@ -77,8 +99,6 @@ export default function GoogleMapsShareLinkField({
         }
       }
 
-      const normShare = normalizeStoredMapsShareUrl(trimmed)
-
       onResolved({
         google_place_id: finalPid,
         latitude: lat,
@@ -87,45 +107,29 @@ export default function GoogleMapsShareLinkField({
       })
 
       if (finalPid) {
-        setNotice({ tone: 'ok', text: 'Place ID を取得しました（保存すると DB に書き込まれます）' })
+        setNotice({
+          tone: 'ok',
+          text: '共有リンク・座標・Place ID を反映しました。保存で確定します。',
+        })
       } else if (lat !== null && lng !== null) {
         setNotice({
           tone: 'warn',
-          text: '座標のみ取得しました。Place ID は未取得です。下の手入力に ChIJ… を貼るか、ブラウザで Geocoding がブロックされていないかご確認ください。',
+          text: '共有リンクと座標を反映しました。Place ID は未取得です。保存で確定します。',
         })
       } else {
-        setNotice({ tone: 'ok', text: '座標を取得しました' })
+        setNotice({
+          tone: 'warn',
+          text: '共有リンクのみ反映しました（座標・Place ID は取得できませんでした）。保存で確定します。',
+        })
       }
-    } catch (e: unknown) {
-      setNotice({ tone: 'err', text: e instanceof Error ? e.message : 'エラーが発生しました' })
+    } catch {
+      applyLinkOnly(
+        'warn',
+        '共有リンクはフォームに反映しました。通信エラーのため座標は取得できませんでした。保存で確定します。',
+      )
     } finally {
       setBusy(false)
     }
-  }
-
-  const handleLinkOnlySave = () => {
-    const norm = normalizeStoredMapsShareUrl(url.trim())
-    if (!norm) {
-      setNotice({
-        tone: 'err',
-        text: 'Google マップの共有 URL として無効です（maps.app.goo.gl / google.com/maps など）',
-      })
-      return
-    }
-    if (onShareUrlOnly) {
-      onShareUrlOnly(norm)
-    } else {
-      onResolved({
-        google_place_id: null,
-        latitude: null,
-        longitude: null,
-        maps_share_url: norm,
-      })
-    }
-    setNotice({
-      tone: 'ok',
-      text: '共有リンクのみ保存対象にしました（解析不要。保存ボタンで DB に反映）',
-    })
   }
 
   return (
@@ -138,26 +142,18 @@ export default function GoogleMapsShareLinkField({
           type="url"
           inputMode="url"
           placeholder="https://maps.app.goo.gl/..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          value={shareUrl}
+          onChange={(e) => onShareUrlChange(e.target.value)}
           className="min-h-[42px] flex-1 rounded-lg border border-slate-100 bg-white px-3 py-2.5 text-xs font-bold text-navy-secondary outline-none focus:ring-2 focus:ring-navy-primary"
         />
         <button
           type="button"
-          onClick={handleResolve}
-          disabled={busy || !url.trim()}
+          onClick={handleApply}
+          disabled={busy || !shareUrl.trim()}
           className="flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-lg border-2 border-slate-100 bg-white px-4 text-[11px] font-black text-navy-secondary shadow-sm transition-all hover:border-navy-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
           取り込む
-        </button>
-        <button
-          type="button"
-          onClick={handleLinkOnlySave}
-          disabled={busy || !url.trim()}
-          className="flex min-h-[42px] shrink-0 items-center justify-center rounded-lg border-2 border-slate-200 bg-slate-50 px-3 text-[10px] font-black text-slate-600 shadow-sm transition-all hover:border-navy-primary hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          リンクだけ保存
         </button>
       </div>
       {notice && (
@@ -170,40 +166,8 @@ export default function GoogleMapsShareLinkField({
         </p>
       )}
       <p className="mt-1.5 text-[9px] font-medium leading-relaxed text-slate-400">
-        「リンクだけ保存」なら Place ID なしで共有 URL をそのまま DB に保存し、物件ページではそのリンクで開いたり埋め込み表示します。「取り込む」は座標・Place ID も可能な範囲で取得します。
+        共有リンクを正規化し、可能な範囲で座標・Place ID も取り込みます。取得できない場合でもリンクはフォームに残り、物件ページで表示・開けます。
       </p>
-
-      {onManualPlaceId ? (
-        <div className="mt-4 border-t border-slate-100 pt-3">
-          <label className="mb-1 ml-1 block text-[9px] font-black uppercase tracking-widest text-slate-400">
-            Place ID 手入力（ChIJ…）
-          </label>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-            <input
-              type="text"
-              placeholder="ChIJ..."
-              value={manualPid}
-              onChange={(e) => setManualPid(e.target.value)}
-              className="min-h-[42px] flex-1 rounded-lg border border-slate-100 bg-white px-3 py-2.5 font-mono text-[11px] font-bold text-navy-secondary outline-none focus:ring-2 focus:ring-navy-primary"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const t = manualPid.trim()
-                if (!normalizeStoredGooglePlaceId(t)) {
-                  setNotice({ tone: 'err', text: 'Place ID の形式が正しくありません（ChIJ で始まる英数字など）' })
-                  return
-                }
-                onManualPlaceId(t)
-                setNotice({ tone: 'ok', text: 'Place ID を反映しました（保存で DB に書き込み）' })
-              }}
-              className="flex h-[42px] shrink-0 items-center justify-center rounded-lg border-2 border-slate-100 bg-white px-4 text-[11px] font-black text-navy-secondary shadow-sm transition-all hover:border-navy-primary"
-            >
-              反映
-            </button>
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }
