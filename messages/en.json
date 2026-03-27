@@ -170,6 +170,7 @@
         "favorites": "Favorites",
         "search_properties": "Find Properties",
         "mypage": "My Page",
+        "agents": "Agents",
         "loading": "Loading...",
         "load_more": "Load More",
         "view_all": "View All",
@@ -710,5 +711,15 @@
         "completion": "Completion:",
         "price_range": "Price Range:",
         "view_details": "View Project Details"
+    },
+    "agents_page": {
+        "meta_title": "Agents | Chonburi Home",
+        "meta_description": "Meet agents listing properties in Pattaya and Sriracha on Chonburi Home.",
+        "hero_title": "Agents",
+        "hero_subtitle": "Browse profiles and listings from agents with published properties.",
+        "listings_label": "Published listings",
+        "empty_title": "No agents found",
+        "empty_desc": "There are no agents with published listings right now.",
+        "verified": "Verified"
     }
 }

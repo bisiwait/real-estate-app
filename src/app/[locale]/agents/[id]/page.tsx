@@ -26,6 +26,7 @@ import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 export default function AgentProfilePage() {
     const params = useParams()
     const agentId = params?.id as string
+    const locale = (params?.locale as string) || 'jp'
     
     const [agent, setAgent] = useState<any>(null)
     const [properties, setProperties] = useState<any[]>([])
@@ -118,10 +119,19 @@ export default function AgentProfilePage() {
                     <div className="lg:col-span-2">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-xl font-normal text-navy-secondary">担当物件</h2>
-                            {totalListings > 4 && <Link href={`/agents/${agentId}/properties`} className="text-sm font-normal text-navy-primary bg-navy-primary/5 px-4 py-2 rounded-xl">全 {totalListings} 件</Link>}
+                            {totalListings > 4 && (
+                                <Link
+                                    href={`/${locale}/agents/${agentId}/properties`}
+                                    className="text-sm font-normal text-navy-primary bg-navy-primary/5 px-4 py-2 rounded-xl"
+                                >
+                                    全 {totalListings} 件
+                                </Link>
+                            )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {properties.map(p => <PropertyCard key={p.id} property={p} />)}
+                            {properties.map((p) => (
+                                <PropertyCard key={p.id} property={p} locale={locale} />
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -161,9 +171,12 @@ function ContactBtn({ href, label, icon: Icon, color }: any) {
     )
 }
 
-function PropertyCard({ property }: any) {
+function PropertyCard({ property, locale }: { property: any; locale: string }) {
     return (
-        <Link href={`/properties/${property.id}`} className="group block bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all overflow-hidden">
+        <Link
+            href={`/${locale}/properties/${property.id}`}
+            className="group block bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all overflow-hidden"
+        >
             <div className="relative aspect-[4/3] bg-slate-50 overflow-hidden">
                 {property.images?.[0] ? <Image src={property.images[0]} alt={property.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="absolute inset-0 flex items-center justify-center"><Building2 className="opacity-20" /></div>}
             </div>
