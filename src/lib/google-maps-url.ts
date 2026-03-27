@@ -1,4 +1,4 @@
-import { normalizeStoredGooglePlaceId } from '@/lib/google-maps-parse'
+import { normalizeStoredGooglePlaceId, normalizeStoredMapsShareUrl } from '@/lib/google-maps-parse'
 
 /** パタヤ周辺のデフォルト（座標未設定時） */
 export const DEFAULT_MAP_LAT = 12.9236
@@ -73,6 +73,8 @@ export function googleMapsUrlFromPlaceId(placeId: string, placeNameHint?: string
 }
 
 export type ProjectMapFields = {
+  /** 共有リンクをそのまま保存（Place ID より優先して開く・埋め込みに利用） */
+  google_maps_share_url?: string | null
   google_place_id?: string | null
   latitude?: unknown
   longitude?: unknown
@@ -94,6 +96,8 @@ export function propertyProjectOpenMapsUrl(
   context?: PropertyProjectMapsContext
 ): string {
   if (!project) return googleMapsUrlFromLatLng(DEFAULT_MAP_LAT, DEFAULT_MAP_LNG)
+  const share = normalizeStoredMapsShareUrl(project.google_maps_share_url ?? null)
+  if (share) return share
   const pid = normalizeStoredGooglePlaceId(project.google_place_id ?? null)
   if (pid) {
     const fromContext = context?.mapSearchHint?.trim()

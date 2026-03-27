@@ -48,6 +48,7 @@ interface Project {
     latitude: number | null
     longitude: number | null
     google_place_id?: string | null
+    google_maps_share_url?: string | null
     developer_id?: string | null
     average_price_sqm?: number | null
     total_units?: number | null
@@ -82,6 +83,7 @@ export default function AdminProjectManagement() {
         latitude: 12.9236,
         longitude: 100.8824,
         google_place_id: '',
+        google_maps_share_url: '',
         developer_id: '',
         total_units: null,
         facilities: []
@@ -217,6 +219,7 @@ export default function AdminProjectManagement() {
             latitude: 12.9236,
             longitude: 100.8824,
             google_place_id: '',
+            google_maps_share_url: '',
             developer_id: '',
             total_units: null,
             facilities: []
@@ -241,6 +244,7 @@ export default function AdminProjectManagement() {
                 latitude: formData.latitude,
                 longitude: formData.longitude,
                 google_place_id: formData.google_place_id?.trim() || null,
+                google_maps_share_url: formData.google_maps_share_url?.trim() || null,
                 developer_id: formData.developer_id || null,
                 total_units: formData.total_units,
                 facilities: formData.facilities || []
@@ -481,6 +485,9 @@ export default function AdminProjectManagement() {
                                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
                                 <div className="h-auto space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                                     <GoogleMapsShareLinkField
+                                        onShareUrlOnly={(u) =>
+                                            setFormData((prev) => ({ ...prev, google_maps_share_url: u }))
+                                        }
                                         onResolved={(data) =>
                                             setFormData((prev) => ({
                                                 ...prev,
@@ -488,6 +495,8 @@ export default function AdminProjectManagement() {
                                                     data.google_place_id != null
                                                         ? data.google_place_id
                                                         : prev.google_place_id ?? '',
+                                                google_maps_share_url:
+                                                    data.maps_share_url ?? prev.google_maps_share_url ?? '',
                                                 latitude: data.latitude ?? prev.latitude ?? 12.9236,
                                                 longitude: data.longitude ?? prev.longitude ?? 100.8824,
                                             }))
@@ -500,6 +509,7 @@ export default function AdminProjectManagement() {
                                         lat={formData.latitude || 12.9236}
                                         lng={formData.longitude || 100.8824}
                                         googlePlaceId={formData.google_place_id}
+                                        mapsShareUrl={formData.google_maps_share_url}
                                         placeNameHint={
                                             [formData.name_jp, formData.name]
                                                 .filter((s): s is string => typeof s === 'string' && s.trim().length > 0)

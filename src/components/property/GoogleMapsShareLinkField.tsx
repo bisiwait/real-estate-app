@@ -3,22 +3,31 @@
 import { useState } from 'react'
 import { Link2, Loader2 } from 'lucide-react'
 import { browserReverseGeocodeToPlaceId } from '@/lib/browser-geocode-place-id'
-import { normalizeStoredGooglePlaceId } from '@/lib/google-maps-parse'
+import { normalizeStoredGooglePlaceId, normalizeStoredMapsShareUrl } from '@/lib/google-maps-parse'
 
 export type ResolvedMapsFields = {
   google_place_id: string | null
   latitude: number | null
   longitude: number | null
+  /** 貼り付けた共有 URL（そのまま DB 保存・表示用） */
+  maps_share_url: string | null
 }
 
 type Props = {
   onResolved: (data: ResolvedMapsFields) => void
+  /** 解析せず共有 URL のみ反映（座標・Place ID は触らない） */
+  onShareUrlOnly?: (normalizedUrl: string) => void
   /** Place ID のみ手入力で反映（共有リンクと併用可） */
   onManualPlaceId?: (placeId: string) => void
   className?: string
 }
 
-export default function GoogleMapsShareLinkField({ onResolved, onManualPlaceId, className }: Props) {
+export default function GoogleMapsShareLinkField({
+  onResolved,
+  onShareUrlOnly,
+  onManualPlaceId,
+  className,
+}: Props) {
   const [url, setUrl] = useState('')
   const [manualPid, setManualPid] = useState('')
   const [busy, setBusy] = useState(false)
@@ -68,10 +77,13 @@ export default function GoogleMapsShareLinkField({ onResolved, onManualPlaceId, 
         }
       }
 
+      const normShare = normalizeStoredMapsShareUrl(trimmed)
+
       onResolved({
         google_place_id: finalPid,
         latitude: lat,
         longitude: lng,
+        maps_share_url: normShare,
       })
 
       if (finalPid) {
@@ -89,6 +101,31 @@ export default function GoogleMapsShareLinkField({ onResolved, onManualPlaceId, 
     } finally {
       setBusy(false)
     }
+  }
+
+  const handleLinkOnlySave = () => {
+    const norm = normalizeStoredMapsShareUrl(url.trim())
+    if (!norm) {
+      setNotice({
+        tone: 'err',
+        text: 'Google マップの共有 URL として無効です（maps.app.goo.gl / google.com/maps など）',
+      })
+      return
+    }
+    if (onShareUrlOnly) {
+      onShareUrlOnly(norm)
+    } else {
+      onResolved({
+        google_place_id: null,
+        latitude: null,
+        longitude: null,
+        maps_share_url: norm,
+      })
+    }
+    setNotice({
+      tone: 'ok',
+      text: '共有リンクのみ保存対象にしました（解析不要。保存ボタンで DB に反映）',
+    })
   }
 
   return (
@@ -114,6 +151,14 @@ export default function GoogleMapsShareLinkField({ onResolved, onManualPlaceId, 
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
           取り込む
         </button>
+        <button
+          type="button"
+          onClick={handleLinkOnlySave}
+          disabled={busy || !url.trim()}
+          className="flex min-h-[42px] shrink-0 items-center justify-center rounded-lg border-2 border-slate-200 bg-slate-50 px-3 text-[10px] font-black text-slate-600 shadow-sm transition-all hover:border-navy-primary hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          リンクだけ保存
+        </button>
       </div>
       {notice && (
         <p
@@ -125,7 +170,7 @@ export default function GoogleMapsShareLinkField({ onResolved, onManualPlaceId, 
         </p>
       )}
       <p className="mt-1.5 text-[9px] font-medium leading-relaxed text-slate-400">
-        共有メニューからコピーした短縮 URL でも構いません。取得できた場合は Place ID を保存し、無理な場合は座標を更新します。
+        「リンクだけ保存」なら Place ID なしで共有 URL をそのまま DB に保存し、物件ページではそのリンクで開いたり埋め込み表示します。「取り込む」は座標・Place ID も可能な範囲で取得します。
       </p>
 
       {onManualPlaceId ? (

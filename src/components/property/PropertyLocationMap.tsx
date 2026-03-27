@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
-import { normalizeStoredGooglePlaceId } from '@/lib/google-maps-parse'
+import { normalizeStoredGooglePlaceId, normalizeStoredMapsShareUrl } from '@/lib/google-maps-parse'
 import { DEFAULT_MAP_LAT, DEFAULT_MAP_LNG, finiteCoord } from '@/lib/google-maps-url'
 
 function escapeHtml(s: string): string {
@@ -14,6 +14,8 @@ function escapeHtml(s: string): string {
 }
 
 type Props = {
+  /** 保存した共有リンク（最優先で iframe 表示・openInMapsUrl と一致） */
+  mapsShareUrl?: string | null
   googlePlaceId?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -22,6 +24,7 @@ type Props = {
 }
 
 export default function PropertyLocationMap({
+  mapsShareUrl,
   googlePlaceId,
   latitude,
   longitude,
@@ -32,7 +35,10 @@ export default function PropertyLocationMap({
   const [loadError, setLoadError] = useState<string | null>(null)
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
+  const safeShare = normalizeStoredMapsShareUrl(mapsShareUrl ?? null)
+
   useEffect(() => {
+    if (safeShare) return
     if (!apiKey) {
       setLoadError(null)
       return
@@ -113,7 +119,27 @@ export default function PropertyLocationMap({
       cancelled = true
       if (containerRef.current) containerRef.current.innerHTML = ''
     }
-  }, [apiKey, googlePlaceId, latitude, longitude, propertyTitle, openInMapsUrl])
+  }, [safeShare, apiKey, googlePlaceId, latitude, longitude, propertyTitle, openInMapsUrl])
+
+  if (safeShare) {
+    return (
+      <div className="w-full space-y-2">
+        <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
+          <iframe
+            title="Google マップ"
+            src={safeShare}
+            className="h-full w-full border-0"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        </div>
+        <p className="text-center text-[10px] leading-relaxed text-slate-500">
+          登録した共有リンクをそのまま表示しています。Google の仕様で枠内が空になる場合は、下のボタンから同じ場所を開いてください。
+        </p>
+      </div>
+    )
+  }
 
   if (!apiKey) {
     return (

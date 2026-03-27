@@ -72,6 +72,7 @@ interface Project {
     latitude?: number
     longitude?: number
     google_place_id?: string | null
+    google_maps_share_url?: string | null
 }
 
 interface ListingFormProps {
@@ -99,11 +100,13 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         developer_id: '',
         latitude: 12.9236,
         longitude: 100.8824,
-        google_place_id: ''
+        google_place_id: '',
+        google_maps_share_url: ''
     })
     /** 管理者が「既存プロジェクト」選択時に地図・Place ID を編集して同期する */
     const [linkedProjectMap, setLinkedProjectMap] = useState<{
         google_place_id: string
+        google_maps_share_url: string
         latitude: number
         longitude: number
     } | null>(null)
@@ -278,6 +281,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         }
         setLinkedProjectMap({
             google_place_id: (p as Project).google_place_id || '',
+            google_maps_share_url: (p as Project).google_maps_share_url || '',
             latitude: finiteCoord(p.latitude, 12.9236),
             longitude: finiteCoord(p.longitude, 100.8824),
         })
@@ -594,6 +598,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         latitude: projectForm.latitude,
                         longitude: projectForm.longitude,
                         google_place_id: projectForm.google_place_id?.trim() || null,
+                        google_maps_share_url: projectForm.google_maps_share_url?.trim() || null,
                         facilities: formData.project_facilities
                     })
                     .select()
@@ -727,6 +732,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
                         developer: formData.developer,
                         google_place_id: linkedProjectMap.google_place_id?.trim() || null,
+                        google_maps_share_url: linkedProjectMap.google_maps_share_url?.trim() || null,
                         latitude: linkedProjectMap.latitude,
                         longitude: linkedProjectMap.longitude,
                     })
@@ -1037,9 +1043,12 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     管理者: 紐づくプロジェクトの地図・Place ID
                                 </h4>
                                 <p className="text-[10px] font-medium leading-relaxed text-amber-800/90">
-                                    既存プロジェクトを選んで掲載する場合も、ここで共有リンク取り込み・保存すると <code className="rounded bg-white/80 px-1">projects.google_place_id</code> が更新されます。
+                                    「リンクだけ保存」で <code className="rounded bg-white/80 px-1">google_maps_share_url</code> を、そのまま物件ページで表示・開くリンクに使えます。
                                 </p>
                                 <GoogleMapsShareLinkField
+                                    onShareUrlOnly={(u) =>
+                                        setLinkedProjectMap((prev) => (prev ? { ...prev, google_maps_share_url: u } : null))
+                                    }
                                     onResolved={(data) =>
                                         setLinkedProjectMap((prev) =>
                                             prev
@@ -1049,6 +1058,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                                           data.google_place_id != null
                                                               ? data.google_place_id
                                                               : prev.google_place_id,
+                                                      google_maps_share_url:
+                                                          data.maps_share_url ?? prev.google_maps_share_url,
                                                       latitude: data.latitude ?? prev.latitude,
                                                       longitude: data.longitude ?? prev.longitude,
                                                   }
@@ -1063,6 +1074,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     lat={linkedProjectMap.latitude}
                                     lng={linkedProjectMap.longitude}
                                     googlePlaceId={linkedProjectMap.google_place_id}
+                                    mapsShareUrl={linkedProjectMap.google_maps_share_url}
                                     placeNameHint={
                                         projects.find((p) => p.id === formData.project_id)?.name || formData.building_name
                                     }
@@ -1135,11 +1147,16 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
                                     <div className="h-auto p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
                                         <GoogleMapsShareLinkField
+                                            onShareUrlOnly={(u) =>
+                                                setProjectForm((prev) => ({ ...prev, google_maps_share_url: u }))
+                                            }
                                             onResolved={(data) =>
                                                 setProjectForm((prev) => ({
                                                     ...prev,
                                                     google_place_id:
                                                         data.google_place_id != null ? data.google_place_id : prev.google_place_id,
+                                                    google_maps_share_url:
+                                                        data.maps_share_url ?? prev.google_maps_share_url,
                                                     latitude: data.latitude ?? prev.latitude,
                                                     longitude: data.longitude ?? prev.longitude,
                                                 }))
@@ -1152,6 +1169,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                             lat={projectForm.latitude}
                                             lng={projectForm.longitude}
                                             googlePlaceId={projectForm.google_place_id}
+                                            mapsShareUrl={projectForm.google_maps_share_url}
                                             placeNameHint={projectForm.name}
                                             onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })}
                                         />

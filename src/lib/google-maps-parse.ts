@@ -219,3 +219,21 @@ export function isAllowedGoogleMapsLinkHost(hostname: string): boolean {
   if (h === 'maps.google.com' || h.endsWith('.app.goo.gl')) return true
   return false
 }
+
+/**
+ * DB 保存・iframe 表示用に共有 URL を正規化（許可ドメインのみ）。
+ */
+export function normalizeStoredMapsShareUrl(raw: string | null | undefined): string | null {
+  if (raw == null) return null
+  let s = String(raw).trim()
+  if (!s) return null
+  if (!/^https?:\/\//i.test(s)) s = `https://${s}`
+  try {
+    const u = new URL(s)
+    if (!isAllowedGoogleMapsLinkHost(u.hostname)) return null
+    u.hash = ''
+    return u.toString()
+  } catch {
+    return null
+  }
+}

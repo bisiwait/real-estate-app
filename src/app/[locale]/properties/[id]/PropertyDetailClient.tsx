@@ -202,6 +202,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 mapSearchHint,
             }),
         [
+            property.project?.google_maps_share_url,
             property.project?.google_place_id,
             property.project?.latitude,
             property.project?.longitude,
@@ -301,6 +302,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
 
                         <div className="space-y-4 pt-4">
                             <PropertyLocationMap
+                                mapsShareUrl={property.project?.google_maps_share_url}
                                 googlePlaceId={property.project?.google_place_id}
                                 latitude={property.project?.latitude}
                                 longitude={property.project?.longitude}

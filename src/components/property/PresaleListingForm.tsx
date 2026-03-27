@@ -61,6 +61,7 @@ interface Project {
     latitude?: number
     longitude?: number
     google_place_id?: string | null
+    google_maps_share_url?: string | null
 }
 
 interface PresaleListingFormProps {
@@ -96,10 +97,12 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         developer_id: '',
         latitude: 12.9236,
         longitude: 100.8824,
-        google_place_id: ''
+        google_place_id: '',
+        google_maps_share_url: ''
     })
     const [linkedProjectMap, setLinkedProjectMap] = useState<{
         google_place_id: string
+        google_maps_share_url: string
         latitude: number
         longitude: number
     } | null>(null)
@@ -256,6 +259,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         }
         setLinkedProjectMap({
             google_place_id: p.google_place_id || '',
+            google_maps_share_url: p.google_maps_share_url || '',
             latitude: finiteCoord(p.latitude, 12.9236),
             longitude: finiteCoord(p.longitude, 100.8824),
         })
@@ -330,6 +334,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         latitude: projectForm.latitude,
                         longitude: projectForm.longitude,
                         google_place_id: projectForm.google_place_id?.trim() || null,
+                        google_maps_share_url: projectForm.google_maps_share_url?.trim() || null,
                         facilities: formData.project_facilities
                     })
                     .select()
@@ -455,6 +460,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
                         developer: formData.developer,
                         google_place_id: linkedProjectMap.google_place_id?.trim() || null,
+                        google_maps_share_url: linkedProjectMap.google_maps_share_url?.trim() || null,
                         latitude: linkedProjectMap.latitude,
                         longitude: linkedProjectMap.longitude,
                     })
@@ -682,6 +688,11 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     管理者: 紐づくプロジェクトの地図・Place ID
                                 </h4>
                                 <GoogleMapsShareLinkField
+                                    onShareUrlOnly={(u) =>
+                                        setLinkedProjectMap((prev) =>
+                                            prev ? { ...prev, google_maps_share_url: u } : null
+                                        )
+                                    }
                                     onResolved={(data) =>
                                         setLinkedProjectMap((prev) =>
                                             prev
@@ -691,6 +702,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                                           data.google_place_id != null
                                                               ? data.google_place_id
                                                               : prev.google_place_id,
+                                                      google_maps_share_url:
+                                                          data.maps_share_url ?? prev.google_maps_share_url,
                                                       latitude: data.latitude ?? prev.latitude,
                                                       longitude: data.longitude ?? prev.longitude,
                                                   }
@@ -705,6 +718,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     lat={linkedProjectMap.latitude}
                                     lng={linkedProjectMap.longitude}
                                     googlePlaceId={linkedProjectMap.google_place_id}
+                                    mapsShareUrl={linkedProjectMap.google_maps_share_url}
                                     placeNameHint={
                                         projects.find((p) => p.id === formData.project_id)?.name || formData.building_name
                                     }
@@ -766,6 +780,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">位置情報 (MAP)</label>
                                     <div className="h-auto space-y-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                                         <GoogleMapsShareLinkField
+                                            onShareUrlOnly={(u) =>
+                                                setProjectForm((prev) => ({ ...prev, google_maps_share_url: u }))
+                                            }
                                             onResolved={(data) =>
                                                 setProjectForm((prev) => ({
                                                     ...prev,
@@ -773,6 +790,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                                         data.google_place_id != null
                                                             ? data.google_place_id
                                                             : prev.google_place_id,
+                                                    google_maps_share_url:
+                                                        data.maps_share_url ?? prev.google_maps_share_url,
                                                     latitude: data.latitude ?? prev.latitude,
                                                     longitude: data.longitude ?? prev.longitude,
                                                 }))
@@ -785,6 +804,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                             lat={projectForm.latitude}
                                             lng={projectForm.longitude}
                                             googlePlaceId={projectForm.google_place_id}
+                                            mapsShareUrl={projectForm.google_maps_share_url}
                                             placeNameHint={projectForm.name}
                                             onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })}
                                         />

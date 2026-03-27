@@ -1,7 +1,7 @@
 'use client'
 
 import { MapPin } from 'lucide-react'
-import { normalizeStoredGooglePlaceId } from '@/lib/google-maps-parse'
+import { normalizeStoredGooglePlaceId, normalizeStoredMapsShareUrl } from '@/lib/google-maps-parse'
 import {
     DEFAULT_MAP_LAT,
     DEFAULT_MAP_LNG,
@@ -17,16 +17,28 @@ interface CoordinatePickerProps {
     googlePlaceId?: string | null
     /** Place 表示用（プロジェクト名など）。Place ID があるときに渡すと左パネル表示になりやすい */
     placeNameHint?: string | null
+    /** 保存した共有リンク（最優先で「Googleマップで開く」） */
+    mapsShareUrl?: string | null
     onChange: (lat: number, lng: number) => void
 }
 
-export default function CoordinatePicker({ lat, lng, googlePlaceId, placeNameHint, onChange }: CoordinatePickerProps) {
+export default function CoordinatePicker({
+    lat,
+    lng,
+    googlePlaceId,
+    placeNameHint,
+    mapsShareUrl,
+    onChange,
+}: CoordinatePickerProps) {
     const displayLat = finiteCoord(lat, DEFAULT_MAP_LAT)
     const displayLng = finiteCoord(lng, DEFAULT_MAP_LNG)
     const pid = normalizeStoredGooglePlaceId(googlePlaceId ?? null)
-    const mapsHref = pid
-        ? googleMapsUrlFromPlaceId(pid, placeNameHint)
-        : googleMapsUrlFromLatLng(displayLat, displayLng)
+    const safeShare = normalizeStoredMapsShareUrl(mapsShareUrl ?? null)
+    const mapsHref = safeShare
+        ? safeShare
+        : pid
+          ? googleMapsUrlFromPlaceId(pid, placeNameHint)
+          : googleMapsUrlFromLatLng(displayLat, displayLng)
 
     return (
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">
