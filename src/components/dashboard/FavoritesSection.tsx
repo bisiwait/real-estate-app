@@ -136,7 +136,7 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                 </button>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 bg-white/90 p-1.5 rounded-2xl w-full sm:w-fit border border-slate-200 shadow-sm mb-8">
+            <div className="grid w-full grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-white/90 p-1 shadow-sm mb-8 sm:flex sm:w-fit sm:gap-2 sm:p-1.5">
                 {tabButtons.map(({ id, label }) => {
                     const count = favoritesByTab[id].length;
                     const active = activeTab === id;
@@ -146,7 +146,7 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                             type="button"
                             onClick={() => setActiveTab(id)}
                             className={clsx(
-                                "flex-1 sm:flex-none whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all",
+                                "flex min-w-0 w-full items-center justify-center gap-0.5 whitespace-nowrap rounded-xl px-1 py-2.5 text-center text-[11px] font-black transition-all sm:w-auto sm:flex-none sm:gap-0 sm:px-6 sm:text-sm",
                                 active && id === "presale" && "bg-amber-500 text-white shadow-lg",
                                 active && id !== "presale" && "bg-navy-primary text-white shadow-lg",
                                 !active && id === "presale" && "text-slate-400 hover:text-amber-500 hover:bg-amber-50",
