@@ -136,8 +136,8 @@ export default async function DashboardPage({
                     <FlashMessage message="プロフィール情報を更新しました。" duration={3000} />
                 )}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Stats Sidebar */}
-                    <div className="lg:col-span-1 space-y-6">
+                    {/* Stats Sidebar — スマホでは要望ボタンはページ下部（メインの下）へ */}
+                    <div className="order-1 lg:col-span-1 space-y-6">
                         {/* Subscription Status (Trial countdown / Portal link) */}
                         <SubscriptionStatus profile={profile} />
 
@@ -186,22 +186,29 @@ export default async function DashboardPage({
                             </div>
                         </div>
 
-                        {/* Feedback Form */}
-                        <FeedbackForm />
+                        <div className="hidden lg:block">
+                            <FeedbackForm />
+                        </div>
                     </div>
 
-                    {/* Main area (Client Component for fast tab switching) */}
-                    <DashboardClient 
-                        initialTab={tab}
-                        initialFilter={filter}
-                        initialStatus={status}
-                        profile={profile}
-                        initialProperties={properties || []}
-                        initialInquiries={inquiries}
-                        leadsCount={leads.length}
-                        initialLeads={leads}
-                        locale={locale}
-                    />
+                    {/* Main area (Client Component for fast tab switching) — lg:contents でグリッド列配置を維持 */}
+                    <div className="order-2 min-w-0 lg:contents">
+                        <DashboardClient
+                            initialTab={tab}
+                            initialFilter={filter}
+                            initialStatus={status}
+                            profile={profile}
+                            initialProperties={properties || []}
+                            initialInquiries={inquiries}
+                            leadsCount={leads.length}
+                            initialLeads={leads}
+                            locale={locale}
+                        />
+                    </div>
+
+                    <div className="order-3 lg:hidden">
+                        <FeedbackForm />
+                    </div>
                 </div>
             </div>
         </div >
