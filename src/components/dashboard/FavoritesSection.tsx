@@ -168,32 +168,39 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                 </p>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                    <AnimatePresence mode="popLayout">
+                    <AnimatePresence initial={false}>
                         {tabList.map((property) => (
                             <motion.div
                                 key={property.id}
-                                layout
-                                initial={{ opacity: 0, scale: 0.96 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.96 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
                                 className="relative"
                             >
-                                <label className="absolute top-4 left-4 z-30 flex cursor-pointer items-center gap-2 rounded-lg bg-white/95 px-3 py-2 shadow-md border border-slate-100 backdrop-blur-sm">
-                                    <input
-                                        type="checkbox"
-                                        checked={compareIds.includes(property.id)}
-                                        onChange={() => toggleCompare(property.id)}
-                                        className="h-4 w-4 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
-                                    />
-                                    <span className="text-[10px] font-black uppercase tracking-wide text-navy-secondary">
-                                        {cmp.compare_toggle}
-                                    </span>
-                                </label>
                                 <PropertyCard
                                     property={property}
                                     dict={dict}
                                     hideFavoriteButton
                                     openDetailInNewTab
+                                    imageOverlay={
+                                        <label
+                                            className="absolute bottom-3 left-3 z-20 flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-100 bg-white/95 px-2.5 py-1.5 shadow-md backdrop-blur-sm"
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={compareIds.includes(property.id)}
+                                                onChange={() => toggleCompare(property.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="h-4 w-4 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                                            />
+                                            <span className="text-[10px] font-black uppercase tracking-wide text-navy-secondary">
+                                                {cmp.compare_toggle}
+                                            </span>
+                                        </label>
+                                    }
                                 />
                                 <button
                                     type="button"

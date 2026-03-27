@@ -1,4 +1,5 @@
 'use client'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Bath, Dog, BedDouble } from 'lucide-react'
@@ -39,6 +40,7 @@ export default function PropertyCard({
     imagePriority = false,
     hideFavoriteButton = false,
     openDetailInNewTab = false,
+    imageOverlay,
 }: {
     property: any
     dict: any
@@ -46,6 +48,8 @@ export default function PropertyCard({
     hideFavoriteButton?: boolean
     /** 画像・本文とも物件詳細を別タブで開く */
     openDetailInNewTab?: boolean
+    /** 画像エリア（aspect 4/3）内に重ねるオーバーレイ（例: 比較用チェック） */
+    imageOverlay?: ReactNode
 }) {
     const params = useParams()
     const locale = params?.locale as string || 'jp'
@@ -180,6 +184,7 @@ export default function PropertyCard({
                     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-shadow hover:shadow-lg">
                         <div className="relative w-full shrink-0 aspect-[4/3] overflow-hidden bg-slate-100">
                             {imageSection}
+                            {imageOverlay}
                         </div>
                         {bodySection}
                     </div>
@@ -193,6 +198,7 @@ export default function PropertyCard({
                     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-lg">
                         <div className="relative w-full shrink-0 aspect-[4/3] overflow-hidden bg-slate-100">
                             {imageSection}
+                            {imageOverlay}
                         </div>
                         {bodySection}
                     </div>

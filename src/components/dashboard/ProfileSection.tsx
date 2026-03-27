@@ -38,7 +38,7 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
                                 {dict.labels.line_linked}
                             </span>
                         )}
-                        <span className="px-3 py-1 bg-navy-primary/5 text-navy-primary text-[10px] font-black rounded-full border border-navy-primary/10">
+                        <span className="hidden px-3 py-1 bg-navy-primary/5 text-navy-primary text-[10px] font-black rounded-full border border-navy-primary/10 md:inline-flex">
                             {dict.labels.regular_member}
                         </span>
                         <Link

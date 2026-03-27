@@ -66,11 +66,11 @@ export default async function FavoritesPage({ params }: { params: { locale: stri
         }))
 
     return (
-        <div className="bg-slate-50 min-h-screen pb-20">
-            {/* Header */}
-            <div className="bg-navy-secondary text-white pt-20 pb-24 relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-400 rounded-full blur-3xl -mr-32 -mt-32 opacity-20" />
+        <div className="min-h-screen overflow-x-hidden bg-slate-50 pb-20 [overflow-anchor:none]">
+            {/* Header（大きな blur はスクロール時の合成コストが高いため控えめに） */}
+            <div className="relative overflow-hidden bg-navy-secondary pb-24 pt-20 text-white">
+                <div className="pointer-events-none absolute inset-0 opacity-[0.07]">
+                    <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-red-400" />
                 </div>
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="flex items-center space-x-4 mb-6">
