@@ -520,6 +520,7 @@
         "select_at_least_one": "เลือกอย่างน้อย 1 รายการ",
         "loading": "กำลังโหลด…",
         "not_found": "โหลดข้อมูลไม่สำเร็จ",
+        "swipe_hint": "ปัดไปทางขวาเพื่อเปรียบเทียบ",
         "line_inquiry": "สอบถามทาง LINE"
     },
     "agent_plan": {

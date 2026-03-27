@@ -97,9 +97,19 @@ export default function CompareMobileSwipeView({
     onRequireAuth,
 }: CompareMobileSwipeViewProps) {
     const LABEL_W = "w-[5.75rem] min-w-[5.75rem] max-w-[5.75rem]";
+    const swipeHint = (c as Record<string, string>).swipe_hint;
 
     return (
-        <div className="flex min-w-0">
+        <div className="flex min-w-0 flex-col">
+            {properties.length > 1 && swipeHint ? (
+                <p
+                    className="mb-2 rounded-xl border border-cyan-500/25 bg-gradient-to-r from-navy-primary/[0.07] to-cyan-500/[0.06] px-3 py-2 text-center text-[11px] font-bold leading-snug text-navy-secondary"
+                    role="note"
+                >
+                    {swipeHint}
+                </p>
+            ) : null}
+            <div className="flex min-w-0">
             <aside
                 className={clsx(
                     LABEL_W,
@@ -141,6 +151,7 @@ export default function CompareMobileSwipeView({
                         onRequireAuth={onRequireAuth}
                     />
                 ))}
+            </div>
             </div>
         </div>
     );
