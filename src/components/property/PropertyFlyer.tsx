@@ -27,6 +27,8 @@ interface PropertyFlyerProps {
         line_id?: string;
     };
     qrCodeUrl: string;
+    /** PDF 1 ページ目用: 物件紹介本文は別ページに回す（画像分割で行が切れないようにする） */
+    pdfOmitDescriptionBody?: boolean;
 }
 
 /** PDF用: HTMLを除き、改行を残してプレーンテキスト化 */
@@ -68,7 +70,12 @@ function generateHighlights(property: PropertyFlyerProps['property']): string[] 
     return result.slice(0, 5);
 }
 
-export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, qrCodeUrl }) => {
+export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({
+    property,
+    agent,
+    qrCodeUrl,
+    pdfOmitDescriptionBody = false,
+}) => {
     const autoHighlights = generateHighlights(property);
     const IMPORTANT_KEYWORDS = ["ペット可", "バスタブ", "洗濯機", "駅近", "家具付", "角部屋", "オーシャン"];
     const tagHighlights = (property.tags || []).filter(tag =>
@@ -77,12 +84,14 @@ export const PropertyFlyer: React.FC<PropertyFlyerProps> = ({ property, agent, q
     const allHighlights = Array.from(new Set([...autoHighlights, ...tagHighlights])).slice(0, 6);
     const mainFacilities = (property.shared_facilities || []).slice(0, 6);
 
-    const descJa = property.description
-        ? htmlToPlainText(property.description, 900)
-        : '';
-    const descEn = property.description_en
-        ? htmlToPlainText(property.description_en, 700)
-        : '';
+    const descJa =
+        !pdfOmitDescriptionBody && property.description
+            ? htmlToPlainText(property.description, 900)
+            : '';
+    const descEn =
+        !pdfOmitDescriptionBody && property.description_en
+            ? htmlToPlainText(property.description_en, 700)
+            : '';
 
     return (
         <div style={{

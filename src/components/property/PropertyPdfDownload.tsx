@@ -3,6 +3,11 @@
 import Script from 'next/script';
 import React, { useState, useEffect, useRef } from 'react';
 import { PropertyFlyer } from './PropertyFlyer';
+import {
+    htmlToPlainTextForPdf,
+    mmToPx,
+    splitPlainTextIntoPdfChunks,
+} from '@/lib/property-pdf-description-split';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -286,10 +291,6 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
                 return;
             }
 
-            console.log('Converting canvas to image/jpeg...');
-
-            // Convert canvas to compressed JPEG
-            const imgData = canvas.toDataURL('image/jpeg', 0.8);
             const pdf = new jsPDF({
                 orientation: 'p',
                 unit: 'mm',
@@ -300,22 +301,109 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
 
-            const imgWidthMm = pageWidth;
-            const imgHeightMm = (canvas.height * imgWidthMm) / canvas.width;
-
-            if (imgHeightMm <= pageHeight + 0.5) {
-                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidthMm, imgHeightMm, undefined, 'FAST');
-            } else {
-                let heightLeft = imgHeightMm;
+            const addCanvasPage = (c: HTMLCanvasElement, opts: { newPage: boolean }) => {
+                if (opts.newPage) pdf.addPage();
+                const imgDataUrl = c.toDataURL('image/jpeg', 0.85);
+                const imgW = pageWidth;
+                const imgH = (c.height * imgW) / c.width;
+                if (imgH <= pageHeight + 0.5) {
+                    pdf.addImage(imgDataUrl, 'JPEG', 0, 0, imgW, imgH, undefined, 'FAST');
+                    return;
+                }
+                let heightLeft = imgH;
                 let y = 0;
                 while (heightLeft > 0) {
-                    pdf.addImage(imgData, 'JPEG', 0, y, imgWidthMm, imgHeightMm, undefined, 'FAST');
+                    pdf.addImage(imgDataUrl, 'JPEG', 0, y, imgW, imgH, undefined, 'FAST');
                     heightLeft -= pageHeight;
                     if (heightLeft > 0) {
                         pdf.addPage();
                         y -= pageHeight;
                     }
                 }
+            };
+
+            // 1 ページ目: チラシ本体（物件紹介本文は含めない → 長文の行途中で画像分割しない）
+            addCanvasPage(canvas, { newPage: false });
+
+            const contentWidthPx = mmToPx(178);
+            const maxTextHeightPx = mmToPx(248);
+
+            const captureDescriptionPage = async (title: string, bodyText: string) => {
+                const outer = document.createElement('div');
+                outer.style.cssText = [
+                    'box-sizing:border-box',
+                    'width:210mm',
+                    'min-height:297mm',
+                    'background:#ffffff',
+                    'padding:14mm 16mm',
+                    'font-family:"Noto Sans JP","Hiragino Sans",Meiryo,sans-serif',
+                    'color:#1e293b',
+                ].join(';');
+
+                const heading = document.createElement('div');
+                heading.textContent = title;
+                heading.style.cssText = [
+                    'font-size:11px',
+                    'font-weight:900',
+                    'color:#2A4076',
+                    'border-bottom:2px solid #2A4076',
+                    'padding-bottom:2px',
+                    'margin-bottom:2mm',
+                    'display:inline-block',
+                ].join(';');
+
+                const p = document.createElement('p');
+                p.textContent = bodyText;
+                p.style.cssText = [
+                    'margin:0',
+                    'font-size:11px',
+                    'line-height:1.65',
+                    'color:#475569',
+                    'white-space:pre-line',
+                    'word-break:break-word',
+                    'overflow-wrap:break-word',
+                ].join(';');
+
+                outer.appendChild(heading);
+                outer.appendChild(p);
+                document.body.appendChild(outer);
+
+                await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+                let descCanvas: HTMLCanvasElement | null = null;
+                for (let a = 0; a < 3; a++) {
+                    try {
+                        descCanvas = await html2canvas(outer, {
+                            scale: 2,
+                            useCORS: true,
+                            allowTaint: false,
+                            logging: false,
+                            backgroundColor: '#ffffff',
+                        });
+                        if (descCanvas) break;
+                    } catch {
+                        /* retry */
+                    }
+                    await sleep(300);
+                }
+                outer.remove();
+                return descCanvas;
+            };
+
+            const jaPlain = property.description ? htmlToPlainTextForPdf(property.description) : '';
+            const jaChunks = splitPlainTextIntoPdfChunks(jaPlain, contentWidthPx, maxTextHeightPx);
+            for (let i = 0; i < jaChunks.length; i++) {
+                const title = i === 0 ? '物件紹介' : '物件紹介（続き）';
+                const dc = await captureDescriptionPage(title, jaChunks[i]);
+                if (dc) addCanvasPage(dc, { newPage: true });
+            }
+
+            const enPlain = property.description_en ? htmlToPlainTextForPdf(property.description_en) : '';
+            const enChunks = splitPlainTextIntoPdfChunks(enPlain, contentWidthPx, maxTextHeightPx);
+            for (let i = 0; i < enChunks.length; i++) {
+                const title = i === 0 ? 'English Description' : 'English Description (cont.)';
+                const dc = await captureDescriptionPage(title, enChunks[i]);
+                if (dc) addCanvasPage(dc, { newPage: true });
             }
 
             pdf.save(`Property_${property.reference_id || property.id.slice(0, 8)}.pdf`);
@@ -340,7 +428,7 @@ export default function PropertyPdfDownload({ property, agent, dict, iconOnly }:
             }}
         >
             <div ref={flyerRef} style={{ width: '210mm', minHeight: '297mm', height: 'auto', backgroundColor: 'white' }}>
-                <PropertyFlyer {...flyerData} />
+                <PropertyFlyer {...flyerData} pdfOmitDescriptionBody />
             </div>
         </div>
     );
