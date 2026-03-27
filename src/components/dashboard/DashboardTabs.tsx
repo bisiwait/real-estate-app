@@ -31,7 +31,7 @@ export default function DashboardTabs({ activeTab, onTabChange, dict }: Dashboar
                     key={tab.id}
                     type="button"
                     onClick={() => onTabChange(tab.id)}
-                    className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-center text-[10px] font-black leading-tight transition-all sm:flex-row sm:gap-2 sm:px-3 sm:py-3 sm:text-xs ${activeTab === tab.id
+                    className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-2 text-center text-[10px] font-black leading-tight transition-all sm:flex-row sm:items-center sm:justify-center sm:gap-1.5 sm:px-3 sm:py-3 sm:text-xs ${activeTab === tab.id
                         ? "text-white"
                         : "text-slate-500 hover:bg-navy-primary/5 hover:text-navy-primary"
                         }`}
@@ -44,7 +44,7 @@ export default function DashboardTabs({ activeTab, onTabChange, dict }: Dashboar
                         />
                     )}
                     <tab.icon className="relative z-10 h-3.5 w-3.5 shrink-0 sm:h-3.5 sm:w-3.5" strokeWidth={2.25} aria-hidden />
-                    <span className="relative z-10 w-full break-words [overflow-wrap:anywhere] sm:line-clamp-none">
+                    <span className="relative z-10 w-full break-words [overflow-wrap:anywhere] sm:w-auto sm:shrink sm:text-left sm:line-clamp-none">
                         {tab.labelMobile ? (
                             <>
                                 <span className="line-clamp-2 sm:hidden">{tab.labelMobile}</span>
