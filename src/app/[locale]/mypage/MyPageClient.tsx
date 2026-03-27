@@ -157,7 +157,12 @@ function SettingsSection({ handleLogout, dict, locale }: { handleLogout: () => v
                         aria-expanded={passwordOpen}
                         className="group flex w-full items-center justify-between p-6 text-left transition-all hover:bg-navy-primary/5"
                     >
-                        <span className="font-bold text-navy-secondary">{dict.labels.settings_password_section_title}</span>
+                        <span className="font-bold text-navy-secondary md:hidden">
+                            {dict.labels.settings_password_section_title_short ?? dict.labels.settings_password_section_title}
+                        </span>
+                        <span className="hidden font-bold text-navy-secondary md:inline">
+                            {dict.labels.settings_password_section_title}
+                        </span>
                         <ChevronRight
                             size={18}
                             className={`shrink-0 text-slate-300 transition-transform group-hover:text-navy-primary ${passwordOpen ? "rotate-90" : "group-hover:translate-x-1"}`}

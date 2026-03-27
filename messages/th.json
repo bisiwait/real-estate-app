@@ -186,6 +186,7 @@
         "edit_profile": "แก้ไขโปรไฟล์",
         "change_email_pass": "เปลี่ยนอีเมล/รหัสผ่าน",
         "settings_password_section_title": "เปลี่ยนรหัสผ่านเข้าสู่ระบบ",
+        "settings_password_section_title_short": "เปลี่ยนรหัสผ่าน",
         "settings_password_current": "รหัสผ่านปัจจุบัน",
         "settings_password_new": "รหัสผ่านใหม่",
         "settings_password_confirm": "ยืนยันรหัสผ่านใหม่",

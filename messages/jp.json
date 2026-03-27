@@ -213,6 +213,7 @@
         "edit_profile": "プロフィール編集",
         "change_email_pass": "メール・パスワード変更",
         "settings_password_section_title": "ログインパスワードの変更",
+        "settings_password_section_title_short": "パスワード変更",
         "settings_password_current": "現在のパスワード",
         "settings_password_new": "新しいパスワード",
         "settings_password_confirm": "新しいパスワード（確認）",

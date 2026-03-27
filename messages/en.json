@@ -187,6 +187,7 @@
         "edit_profile": "Edit Profile",
         "change_email_pass": "Change Email/Password",
         "settings_password_section_title": "Change login password",
+        "settings_password_section_title_short": "Change password",
         "settings_password_current": "Current password",
         "settings_password_new": "New password",
         "settings_password_confirm": "Confirm new password",
