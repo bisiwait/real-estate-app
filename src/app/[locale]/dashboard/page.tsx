@@ -105,7 +105,7 @@ export default async function DashboardPage({
                                 <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                             </div>
                             <div className="min-w-0">
-                                <h1 className="text-xl sm:text-3xl font-black tracking-tight truncate text-slate-400">
+                                <h1 className="text-xl sm:text-3xl font-black tracking-tight truncate !text-slate-400">
                                     ダッシュボード
                                 </h1>
                                 <p className="text-slate-400 text-[10px] sm:text-sm font-medium mt-0.5 sm:mt-1 uppercase tracking-widest">Listing Management</p>
