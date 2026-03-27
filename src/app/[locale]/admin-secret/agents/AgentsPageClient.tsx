@@ -2,7 +2,7 @@
 
 import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, ArrowLeft, Download, Filter, LayoutDashboard } from "lucide-react";
+import { ChevronLeft, ArrowLeft, Filter, LayoutDashboard } from "lucide-react";
 import AgentPerformanceTable from "@/components/admin/AgentPerformanceTable";
 import nextDynamic from "next/dynamic";
 
@@ -58,15 +58,8 @@ export default function AgentsPageClient() {
                         </p>
                     </div>
 
-                    <div className="flex gap-3">
-                        <button
-                            type="button"
-                            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl font-black text-sm text-navy-secondary hover:border-navy-primary transition-all shadow-sm"
-                        >
-                            <Download size={16} />
-                            レポート出力
-                        </button>
-                        {!selectedAgentId && (
+                    {!selectedAgentId && (
+                        <div className="flex gap-3">
                             <button
                                 type="button"
                                 className="flex items-center gap-2 px-6 py-3 bg-navy-primary text-white rounded-2xl font-black text-sm hover:bg-blue-600 transition-all shadow-md"
@@ -74,8 +67,8 @@ export default function AgentsPageClient() {
                                 <Filter size={16} />
                                 詳細フィルタ
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {selectedAgentId ? (

@@ -51,7 +51,6 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
     // Profile Settings States
     const [isVerified, setIsVerified] = useState(false)
     const [isSuspended, setIsSuspended] = useState(false)
-    const [listingLimit, setListingLimit] = useState(10)
     const [adminNote, setAdminNote] = useState('')
 
     useEffect(() => {
@@ -70,7 +69,6 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                 setAgentData(profile)
                 setIsVerified(profile.is_verified || false)
                 setIsSuspended(profile.is_suspended || false)
-                setListingLimit(profile.max_listings || 10)
                 setAdminNote(profile.admin_notes || '')
 
                 // 2. Fetch Stale Properties (updated > 30 days ago)
@@ -152,7 +150,6 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                 .update({
                     is_verified: isVerified,
                     is_suspended: isSuspended,
-                    max_listings: listingLimit,
                     admin_notes: adminNote
                 })
                 .eq('id', agentId)
@@ -349,45 +346,30 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                             管理コントロール
                         </h4>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10">
-                                    <div className="flex items-center gap-3">
-                                        <ShieldCheck className={isVerified ? "text-emerald-400" : "text-slate-400"} />
-                                        <span className="text-sm font-black">認証済みエージェント</span>
-                                    </div>
-                                    <button
-                                        onClick={() => setIsVerified(!isVerified)}
-                                        className={`w-12 h-6 rounded-full relative transition-colors ${isVerified ? 'bg-emerald-500' : 'bg-slate-600'}`}
-                                    >
-                                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isVerified ? 'right-1' : 'left-1'}`} />
-                                    </button>
+                        <div className="space-y-6 max-w-xl">
+                            <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <div className="flex items-center gap-3">
+                                    <ShieldCheck className={isVerified ? "text-emerald-400" : "text-slate-400"} />
+                                    <span className="text-sm font-black">認証済みエージェント</span>
                                 </div>
-                                <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10">
-                                    <div className="flex items-center gap-3">
-                                        <Ban className={isSuspended ? "text-red-400" : "text-slate-400"} />
-                                        <span className="text-sm font-black">アカウント一時停止</span>
-                                    </div>
-                                    <button
-                                        onClick={() => setIsSuspended(!isSuspended)}
-                                        className={`w-12 h-6 rounded-full relative transition-colors ${isSuspended ? 'bg-red-500' : 'bg-slate-600'}`}
-                                    >
-                                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isSuspended ? 'right-1' : 'left-1'}`} />
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={() => setIsVerified(!isVerified)}
+                                    className={`w-12 h-6 rounded-full relative transition-colors ${isVerified ? 'bg-emerald-500' : 'bg-slate-600'}`}
+                                >
+                                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isVerified ? 'right-1' : 'left-1'}`} />
+                                </button>
                             </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">掲載上限数</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        value={listingLimit}
-                                        onChange={(e) => setListingLimit(parseInt(e.target.value) || 0)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-black outline-none focus:ring-2 focus:ring-navy-primary"
-                                    />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">件</span>
+                            <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <div className="flex items-center gap-3">
+                                    <Ban className={isSuspended ? "text-red-400" : "text-slate-400"} />
+                                    <span className="text-sm font-black">アカウント一時停止</span>
                                 </div>
+                                <button
+                                    onClick={() => setIsSuspended(!isSuspended)}
+                                    className={`w-12 h-6 rounded-full relative transition-colors ${isSuspended ? 'bg-red-500' : 'bg-slate-600'}`}
+                                >
+                                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isSuspended ? 'right-1' : 'left-1'}`} />
+                                </button>
                             </div>
                         </div>
                     </div>
