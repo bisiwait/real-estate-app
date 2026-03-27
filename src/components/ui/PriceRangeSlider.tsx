@@ -185,8 +185,8 @@ export default function PriceRangeSlider({
                 </div>
             </div>
 
-            {/* Visual Slider（つまみが -ml-3 で中心合わせのため、左右に余白を確保） */}
-            <div className="relative w-full min-w-0 h-1.5 bg-slate-100 rounded-full mb-8 px-4">
+            {/* Visual Slider（つまみが -ml-3 で中心合わせのため、左右に余白を確保。lg 未満はバーを少し短く） */}
+            <div className="relative w-full min-w-0 h-1.5 bg-slate-100 rounded-full mb-8 px-6 lg:px-4">
                 {/* Active Range Line */}
                 <div
                     ref={rangeRef}
