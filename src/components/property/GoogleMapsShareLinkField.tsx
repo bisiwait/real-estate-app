@@ -36,12 +36,20 @@ export default function GoogleMapsShareLinkField({ onResolved, className }: Prop
         throw new Error(typeof data.error === 'string' ? data.error : '解析に失敗しました')
       }
 
+      const toNum = (v: unknown): number | null => {
+        if (typeof v === 'number' && Number.isFinite(v)) return v
+        if (typeof v === 'string' && v.trim() !== '') {
+          const n = parseFloat(v)
+          return Number.isFinite(n) ? n : null
+        }
+        return null
+      }
+
+      const rawPid = data.google_place_id
       const placeId =
-        typeof data.google_place_id === 'string' && normalizeStoredGooglePlaceId(data.google_place_id)
-          ? data.google_place_id.trim()
-          : null
-      const lat = typeof data.latitude === 'number' && Number.isFinite(data.latitude) ? data.latitude : null
-      const lng = typeof data.longitude === 'number' && Number.isFinite(data.longitude) ? data.longitude : null
+        typeof rawPid === 'string' && normalizeStoredGooglePlaceId(rawPid) ? rawPid.trim() : null
+      const lat = toNum(data.latitude)
+      const lng = toNum(data.longitude)
 
       if (!placeId && (lat === null || lng === null)) {
         throw new Error('リンクから Place ID または座標を取得できませんでした')

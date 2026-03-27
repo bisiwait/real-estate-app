@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import {
+  enrichParsedFromHtml,
+  hasCompleteParsedCoords,
   isAllowedGoogleMapsLinkHost,
+  isShortGoogleMapsShareHost,
   parseResolvedGoogleMapsUrl,
 } from '@/lib/google-maps-parse'
+import { reverseGeocodeToPlaceId } from '@/lib/google-maps-reverse-geocode'
 
 export const runtime = 'nodejs'
 
@@ -17,14 +21,25 @@ function mergeParsed(
   }
 }
 
-function extractMapsUrlsFromHtml(html: string): string[] {
-  const out: string[] = []
-  const re = /https?:\/\/(?:www\.)?google\.com\/maps[^"'\\s<>]*/gi
-  let m: RegExpExecArray | null
-  while ((m = re.exec(html)) !== null) {
-    out.push(m[0])
+function mustFetchRemote(href: string, parsed: ReturnType<typeof parseResolvedGoogleMapsUrl>): boolean {
+  let u: URL
+  try {
+    u = new URL(href)
+  } catch {
+    return true
   }
-  return out
+
+  if (!isAllowedGoogleMapsLinkHost(u.hostname)) return false
+
+  // 短縮リンクは必ず追従（初回 parse では情報が無い／res.url だけでは足りないことがある）
+  if (isShortGoogleMapsShareHost(u.hostname)) return true
+
+  // 完全な maps URL で place_id も座標も取れているなら fetch 不要
+  if (parsed.placeId && hasCompleteParsedCoords(parsed)) return false
+  if (parsed.placeId) return false
+  if (hasCompleteParsedCoords(parsed)) return false
+
+  return true
 }
 
 export async function POST(req: Request) {
@@ -49,56 +64,54 @@ export async function POST(req: Request) {
   let finalUrl = href
   let parsed = parseResolvedGoogleMapsUrl(finalUrl)
 
-  const needsFetch = !parsed.placeId && parsed.latitude === undefined
+  let u: URL
+  try {
+    u = new URL(href)
+  } catch {
+    return NextResponse.json({ error: 'URL の形式が正しくありません' }, { status: 400 })
+  }
 
-  if (needsFetch) {
-    let u: URL
-    try {
-      u = new URL(href)
-    } catch {
-      return NextResponse.json({ error: 'URL の形式が正しくありません' }, { status: 400 })
-    }
+  if (!isAllowedGoogleMapsLinkHost(u.hostname)) {
+    return NextResponse.json(
+      { error: 'Google マップの共有リンクのみ対応しています' },
+      { status: 400 }
+    )
+  }
 
-    if (!isAllowedGoogleMapsLinkHost(u.hostname)) {
-      return NextResponse.json(
-        { error: 'Google マップの共有リンクのみ対応しています' },
-        { status: 400 }
-      )
-    }
-
+  if (mustFetchRemote(href, parsed)) {
     try {
       const res = await fetch(href, {
         redirect: 'follow',
         headers: {
           'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (compatible; ChonburiHome/1.0)',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          Accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
         },
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(20000),
       })
 
-      finalUrl = res.url
-
-      parsed = parseResolvedGoogleMapsUrl(finalUrl)
+      finalUrl = res.url || href
+      parsed = mergeParsed(parsed, parseResolvedGoogleMapsUrl(finalUrl))
 
       const ct = res.headers.get('content-type') || ''
-      if (!parsed.placeId && parsed.latitude === undefined && ct.includes('text/html')) {
+      if (ct.includes('text/html')) {
         const html = await res.text()
-        const candidates = extractMapsUrlsFromHtml(html)
-        for (const c of candidates) {
-          const p = parseResolvedGoogleMapsUrl(c)
-          parsed = mergeParsed(parsed, p)
-          if (parsed.placeId || (parsed.latitude !== undefined && parsed.longitude !== undefined)) {
-            break
-          }
-        }
+        parsed = enrichParsedFromHtml(html, parsed)
       }
     } catch {
       return NextResponse.json(
-        { error: 'リンクを取得できませんでした。長い URL を直接貼り付けてお試しください。' },
+        { error: 'リンクを取得できませんでした。ブラウザで開いたあとの長い URL を貼り付けてお試しください。' },
         { status: 502 }
       )
     }
+  }
+
+  // 座標はあるが Place ID が無い → Geocoding で place_id を補完
+  if (!parsed.placeId && hasCompleteParsedCoords(parsed)) {
+    const pid = await reverseGeocodeToPlaceId(parsed.latitude!, parsed.longitude!)
+    if (pid) parsed = { ...parsed, placeId: pid }
   }
 
   return NextResponse.json({

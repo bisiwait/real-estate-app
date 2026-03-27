@@ -72,13 +72,92 @@ function extractCoordsFromText(text: string): { lat: number; lng: number } | und
 
 function extractPlaceIdFromText(text: string): string | undefined {
   const u = tryDecode(text)
-  const chij = u.match(/\b(ChIJ[A-Za-z0-9_-]{20,})\b/)
+  // ChIJ の後ろの長さは可変のため、プレフィックス＋許可文字で拾い、長さは isLikely で検証
+  const chij = u.match(/\b(ChIJ[A-Za-z0-9_-]+)\b/)
   if (chij && isLikelyGooglePlaceId(chij[1])) return chij[1]
 
-  const inData = u.match(/[!&]1s(ChIJ[A-Za-z0-9_-]{20,})\b/)
+  const inData = u.match(/[!&]1s(ChIJ[A-Za-z0-9_-]+)\b/)
   if (inData && isLikelyGooglePlaceId(inData[1])) return inData[1]
 
   return undefined
+}
+
+export function hasCompleteParsedCoords(p: ParsedMapsLocation): boolean {
+  return (
+    p.latitude !== undefined &&
+    p.longitude !== undefined &&
+    Number.isFinite(p.latitude) &&
+    Number.isFinite(p.longitude)
+  )
+}
+
+/** HTML 内の Google マップ URL を列挙 */
+export function extractMapsUrlsFromHtml(html: string): string[] {
+  const out: string[] = []
+  const re = /https?:\/\/(?:www\.)?google\.com\/maps[^"'\\s<>]*/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(html)) !== null) {
+    out.push(m[0].replace(/&amp;/g, '&'))
+  }
+  return out
+}
+
+function extractCanonicalMapsLikeUrls(html: string): string[] {
+  const out: string[] = []
+  const og = html.match(/property=["']og:url["']\s+content=["']([^"']+)["']/i)
+  if (og?.[1] && og[1].includes('google.com/maps')) {
+    out.push(og[1].replace(/&amp;/g, '&'))
+  }
+  const can = html.match(/rel=["']canonical["']\s+href=["']([^"']+)["']/i)
+  if (can?.[1] && can[1].includes('google.com/maps')) {
+    out.push(can[1].replace(/&amp;/g, '&'))
+  }
+  return out
+}
+
+/**
+ * 短縮リンクのランディング HTML などから、不足している place_id / 座標を補完する。
+ */
+export function enrichParsedFromHtml(html: string, base: ParsedMapsLocation): ParsedMapsLocation {
+  if (!html) return { ...base }
+  const out: ParsedMapsLocation = { ...base }
+
+  const decoded = html
+    .replace(/&amp;/g, '&')
+    .replace(/&#x26;/gi, '&')
+    .replace(/\\u0026/g, '&')
+
+  if (!out.placeId) {
+    const chij = decoded.match(/\b(ChIJ[A-Za-z0-9_-]+)\b/)
+    if (chij && isLikelyGooglePlaceId(chij[1])) out.placeId = chij[1]
+  }
+
+  const urlCandidates = [...extractCanonicalMapsLikeUrls(html), ...extractMapsUrlsFromHtml(html)]
+  for (const raw of urlCandidates) {
+    const p = parseResolvedGoogleMapsUrl(raw)
+    if (!out.placeId && p.placeId) out.placeId = p.placeId
+    if (out.latitude === undefined && p.latitude !== undefined) out.latitude = p.latitude
+    if (out.longitude === undefined && p.longitude !== undefined) out.longitude = p.longitude
+  }
+
+  if (!hasCompleteParsedCoords(out)) {
+    const c = extractCoordsFromText(decoded)
+    if (c) {
+      if (out.latitude === undefined) out.latitude = c.lat
+      if (out.longitude === undefined) out.longitude = c.lng
+    }
+  }
+
+  return out
+}
+
+/** maps.app.goo.gl / goo.gl など、必ず HTTP で解決すべきホスト */
+export function isShortGoogleMapsShareHost(hostname: string): boolean {
+  const h = hostname.toLowerCase()
+  if (h === 'goo.gl' || h === 'g.co') return true
+  if (h.endsWith('.app.goo.gl')) return true
+  if (h.includes('goo.gl') && !h.endsWith('google.com') && h !== 'maps.google.com') return true
+  return false
 }
 
 /**
