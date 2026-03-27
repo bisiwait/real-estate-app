@@ -50,15 +50,25 @@ export function googleMapsUrlFromLatLng(
 }
 
 /**
- * Place ID で Google マップの該当施設ページを開く（公式の検索 URL）。
+ * Place ID で Google マップの該当施設ページを開く。
+ *
+ * - 施設名が分かるときは [Maps URL の検索形式](https://developers.google.com/maps/documentation/urls/get-started#search-action)
+ *   `query` + `query_place_id` で左パネル付きの Place 表示になりやすい。
+ * - 名前が無いときは `q=place_id:...`（従来どおりブラウザでよく使われる形式）。
  */
-export function googleMapsUrlFromPlaceId(placeId: string): string {
+export function googleMapsUrlFromPlaceId(placeId: string, placeNameHint?: string | null): string {
   const id = normalizeStoredGooglePlaceId(placeId)
   if (!id) return googleMapsUrlFromLatLng(DEFAULT_MAP_LAT, DEFAULT_MAP_LNG)
-  const url = new URL('https://www.google.com/maps/search/')
-  url.searchParams.set('api', '1')
-  url.searchParams.set('query_place_id', id)
-  url.searchParams.set('query', '\u00a0')
+  const hint = typeof placeNameHint === 'string' ? placeNameHint.trim() : ''
+  if (hint.length > 0) {
+    const url = new URL('https://www.google.com/maps/search/')
+    url.searchParams.set('api', '1')
+    url.searchParams.set('query', hint)
+    url.searchParams.set('query_place_id', id)
+    return url.toString()
+  }
+  const url = new URL('https://www.google.com/maps')
+  url.searchParams.set('q', `place_id:${id}`)
   return url.toString()
 }
 
@@ -66,15 +76,33 @@ export type ProjectMapFields = {
   google_place_id?: string | null
   latitude?: unknown
   longitude?: unknown
+  name?: string | null
+  name_jp?: string | null
 } | null
   | undefined
+
+export type PropertyProjectMapsContext = {
+  /** マップの Place 表示用（物件タイトル・建物名など） */
+  mapSearchHint?: string | null
+}
 
 /**
  * 物件に紐づくプロジェクトについて、マップで開く URL（Place ID 優先、無効時は座標）。
  */
-export function propertyProjectOpenMapsUrl(project: ProjectMapFields): string {
+export function propertyProjectOpenMapsUrl(
+  project: ProjectMapFields,
+  context?: PropertyProjectMapsContext
+): string {
   if (!project) return googleMapsUrlFromLatLng(DEFAULT_MAP_LAT, DEFAULT_MAP_LNG)
   const pid = normalizeStoredGooglePlaceId(project.google_place_id ?? null)
-  if (pid) return googleMapsUrlFromPlaceId(pid)
+  if (pid) {
+    const fromContext = context?.mapSearchHint?.trim()
+    const fromProject = [project.name_jp, project.name]
+      .filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+      .join(' ')
+      .trim()
+    const hint = fromContext || fromProject || null
+    return googleMapsUrlFromPlaceId(pid, hint)
+  }
   return googleMapsUrlFromLatLng(Number(project.latitude), Number(project.longitude))
 }

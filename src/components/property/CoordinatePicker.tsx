@@ -15,14 +15,18 @@ interface CoordinatePickerProps {
     lng: number | null | undefined
     /** 有効なときは「Googleマップで開く」が Place の公式ページへ遷移 */
     googlePlaceId?: string | null
+    /** Place 表示用（プロジェクト名など）。Place ID があるときに渡すと左パネル表示になりやすい */
+    placeNameHint?: string | null
     onChange: (lat: number, lng: number) => void
 }
 
-export default function CoordinatePicker({ lat, lng, googlePlaceId, onChange }: CoordinatePickerProps) {
+export default function CoordinatePicker({ lat, lng, googlePlaceId, placeNameHint, onChange }: CoordinatePickerProps) {
     const displayLat = finiteCoord(lat, DEFAULT_MAP_LAT)
     const displayLng = finiteCoord(lng, DEFAULT_MAP_LNG)
     const pid = normalizeStoredGooglePlaceId(googlePlaceId ?? null)
-    const mapsHref = pid ? googleMapsUrlFromPlaceId(pid) : googleMapsUrlFromLatLng(displayLat, displayLng)
+    const mapsHref = pid
+        ? googleMapsUrlFromPlaceId(pid, placeNameHint)
+        : googleMapsUrlFromLatLng(displayLat, displayLng)
 
     return (
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">

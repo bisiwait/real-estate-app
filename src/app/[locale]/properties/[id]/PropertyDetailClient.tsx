@@ -178,11 +178,6 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     };
     const displayTitle = getDisplayTitle();
 
-    const openMapsHref = useMemo(
-        () => propertyProjectOpenMapsUrl(property.project),
-        [property.project?.google_place_id, property.project?.latitude, property.project?.longitude]
-    )
-
     const getProjectDisplayName = (proj: any) => {
         if (!proj) return '-';
         const name = proj.name || '';
@@ -193,6 +188,28 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
         return name || nameJp || '-';
     };
     const projectDisplayName = getProjectDisplayName(property.project)
+
+    const mapSearchHint = useMemo(() => {
+        const parts = [displayTitle, property.building_name, projectDisplayName].filter(
+            (s): s is string => typeof s === 'string' && s.trim().length > 0 && s !== '-'
+        )
+        return parts.join(' ').trim() || null
+    }, [displayTitle, property.building_name, projectDisplayName])
+
+    const openMapsHref = useMemo(
+        () =>
+            propertyProjectOpenMapsUrl(property.project, {
+                mapSearchHint,
+            }),
+        [
+            property.project?.google_place_id,
+            property.project?.latitude,
+            property.project?.longitude,
+            property.project?.name,
+            property.project?.name_jp,
+            mapSearchHint,
+        ]
+    )
 
     const amenityTags = (property.tags || []).filter((t: string) => typeof t === 'string' && t.trim().length > 0)
     const sharedFacilitiesList = (property.project?.facilities || property.project_facilities || []).filter(

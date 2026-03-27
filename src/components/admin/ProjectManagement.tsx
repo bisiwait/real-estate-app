@@ -494,6 +494,12 @@ export default function AdminProjectManagement() {
                                         lat={formData.latitude || 12.9236}
                                         lng={formData.longitude || 100.8824}
                                         googlePlaceId={formData.google_place_id}
+                                        placeNameHint={
+                                            [formData.name_jp, formData.name]
+                                                .filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+                                                .join(' ')
+                                                .trim() || null
+                                        }
                                         onChange={(lat, lng) => setFormData({ ...formData, latitude: lat, longitude: lng })}
                                     />
                                 </div>

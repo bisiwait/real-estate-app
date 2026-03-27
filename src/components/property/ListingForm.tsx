@@ -1077,6 +1077,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                             lat={projectForm.latitude}
                                             lng={projectForm.longitude}
                                             googlePlaceId={projectForm.google_place_id}
+                                            placeNameHint={projectForm.name}
                                             onChange={(lat, lng) => setProjectForm({ ...projectForm, latitude: lat, longitude: lng })}
                                         />
                                     </div>
