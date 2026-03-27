@@ -249,7 +249,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                             <ChevronLeft className="w-4 h-4 mr-1" />
                             {c.back_mypage}
                         </Link>
-                        <h1 className="text-2xl md:text-3xl font-black">{c.title}</h1>
+                        <h1 className="text-2xl font-black text-white md:text-3xl">{c.title}</h1>
                     </div>
                 </div>
                 <div className="container mx-auto px-4 max-w-lg text-center py-20">
@@ -284,8 +284,8 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                         <ChevronLeft className="w-4 h-4 mr-1" />
                         {c.back_mypage}
                     </Link>
-                    <h1 className="text-2xl md:text-3xl font-black">{c.title}</h1>
-                    <p className="text-slate-400 text-sm mt-2">{c.subtitle}</p>
+                    <h1 className="text-2xl font-black text-white md:text-3xl">{c.title}</h1>
+                    <p className="mt-2 text-sm text-slate-300">{c.subtitle}</p>
                     {!loading && properties.length > 1 && c.swipe_hint ? (
                         <p className="mt-1.5 text-xs font-medium text-slate-400/90 md:hidden">
                             {c.swipe_hint}

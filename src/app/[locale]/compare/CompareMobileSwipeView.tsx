@@ -1,9 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import LineContactButton from "@/components/property/LineContactButton";
 import { clsx } from "clsx";
 import {
@@ -56,6 +57,38 @@ function getViewLabel(p: any, c: Record<string, string>) {
     return "—";
 }
 
+function MobileCompareImageBadges({ property: p, dict }: { property: any; dict: any }) {
+    const d = dict.property || {};
+    return (
+        <div className="pointer-events-none absolute left-2 top-2 right-2 z-10 flex max-h-10 flex-wrap gap-1 overflow-hidden">
+            {p.status === "contracted" && (
+                <span className="rounded-md bg-purple-600 px-1.5 py-0.5 text-[8px] font-normal uppercase tracking-wider text-white shadow-md">
+                    {d.contracted}
+                </span>
+            )}
+            {p.status === "under_negotiation" && (
+                <span className="rounded-md bg-blue-600 px-1.5 py-0.5 text-[8px] font-normal uppercase tracking-wider text-white shadow-md">
+                    {d.under_negotiation}
+                </span>
+            )}
+            {p.is_presale && (
+                <span className="shrink-0 rounded-md bg-amber-500 px-1.5 py-0.5 text-[8px] font-normal tracking-wide text-white shadow-sm">
+                    {d.presale}
+                </span>
+            )}
+            {Array.isArray(p.tags) &&
+                p.tags.slice(0, p.is_presale ? 1 : 2).map((tag: string) => (
+                    <span
+                        key={tag}
+                        className="max-w-[88px] shrink-0 truncate rounded-md bg-white/90 px-1.5 py-0.5 text-[8px] font-normal text-navy-primary shadow-sm backdrop-blur-sm"
+                    >
+                        {d.tags?.[tag] || tag}
+                    </span>
+                ))}
+        </div>
+    );
+}
+
 type FacilityRow = CompareFacilityRow & { label: string };
 
 function mobileCompareRowClass(rowIndex: number, facilityCount: number): string {
@@ -97,6 +130,39 @@ export default function CompareMobileSwipeView({
     onRequireAuth,
 }: CompareMobileSwipeViewProps) {
     const LABEL_W = "w-[5.75rem] min-w-[5.75rem] max-w-[5.75rem]";
+    const ck = c as Record<string, string>;
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canPrev, setCanPrev] = useState(false);
+    const [canNext, setCanNext] = useState(false);
+
+    const updateScrollState = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const { scrollLeft, scrollWidth, clientWidth } = el;
+        setCanPrev(scrollLeft > 6);
+        setCanNext(scrollLeft < scrollWidth - clientWidth - 6);
+    }, []);
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        updateScrollState();
+        el.addEventListener("scroll", updateScrollState, { passive: true });
+        const ro = new ResizeObserver(updateScrollState);
+        ro.observe(el);
+        return () => {
+            el.removeEventListener("scroll", updateScrollState);
+            ro.disconnect();
+        };
+    }, [properties.length, updateScrollState]);
+
+    const scrollByColumn = (dir: -1 | 1) => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const col = el.querySelector("[data-compare-col]") as HTMLElement | null;
+        const w = col?.offsetWidth ?? Math.round(el.clientWidth * 0.85);
+        el.scrollBy({ left: dir * w, behavior: "smooth" });
+    };
 
     return (
         <div className="flex min-w-0">
@@ -121,26 +187,57 @@ export default function CompareMobileSwipeView({
                 <LabelRows c={c} facilityRows={facilityRows} />
             </aside>
 
-            <div
-                className={clsx(
-                    "flex min-w-0 flex-1 flex-row snap-x snap-mandatory overflow-x-auto overscroll-x-contain pb-1",
-                    "[-webkit-overflow-scrolling:touch]"
+            <div className="relative min-w-0 flex-1">
+                {properties.length > 1 && (
+                    <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-40 flex items-center justify-between px-0.5">
+                        <button
+                            type="button"
+                            className={clsx(
+                                "pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-secondary/90 text-white shadow-lg transition-opacity",
+                                !canPrev && "pointer-events-none opacity-35"
+                            )}
+                            onClick={() => scrollByColumn(-1)}
+                            aria-label={ck.scroll_prev}
+                            disabled={!canPrev}
+                        >
+                            <ChevronLeft className="h-5 w-5" aria-hidden />
+                        </button>
+                        <button
+                            type="button"
+                            className={clsx(
+                                "pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-secondary/90 text-white shadow-lg transition-opacity",
+                                !canNext && "pointer-events-none opacity-35"
+                            )}
+                            onClick={() => scrollByColumn(1)}
+                            aria-label={ck.scroll_next}
+                            disabled={!canNext}
+                        >
+                            <ChevronRight className="h-5 w-5" aria-hidden />
+                        </button>
+                    </div>
                 )}
-            >
-                {properties.map((p) => (
-                    <PropertySwipeColumn
-                        key={p.id}
-                        property={p}
-                        locale={locale}
-                        dict={dict}
-                        c={c}
-                        facilityRows={facilityRows}
-                        origin={origin}
-                        user={user}
-                        removeId={removeId}
-                        onRequireAuth={onRequireAuth}
-                    />
-                ))}
+                <div
+                    ref={scrollRef}
+                    className={clsx(
+                        "flex min-h-0 min-w-0 flex-1 flex-row snap-x snap-mandatory overflow-x-auto overscroll-x-contain pb-1",
+                        "[-webkit-overflow-scrolling:touch]"
+                    )}
+                >
+                    {properties.map((p) => (
+                        <PropertySwipeColumn
+                            key={p.id}
+                            property={p}
+                            locale={locale}
+                            dict={dict}
+                            c={c}
+                            facilityRows={facilityRows}
+                            origin={origin}
+                            user={user}
+                            removeId={removeId}
+                            onRequireAuth={onRequireAuth}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     );
@@ -213,6 +310,7 @@ function PropertySwipeColumn({
 
     return (
         <div
+            data-compare-col
             className={clsx(
                 "snap-center shrink-0",
                 "w-[calc(100vw-5.75rem-1rem)] max-w-[360px]",
@@ -253,6 +351,7 @@ function PropertySwipeColumn({
                         className="object-cover"
                         sizes="(max-width: 768px) 85vw, 320px"
                     />
+                    <MobileCompareImageBadges property={p} dict={dict} />
                 </Link>
                 <p className="line-clamp-2 min-h-[2.25rem] shrink-0 text-[11px] font-bold leading-snug text-slate-600">
                     {regionName(p) ? `${regionName(p)} ・ ` : ""}

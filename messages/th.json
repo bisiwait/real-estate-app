@@ -521,6 +521,8 @@
         "loading": "กำลังโหลด…",
         "not_found": "โหลดข้อมูลไม่สำเร็จ",
         "swipe_hint": "※ปัดไปทางขวาเพื่อเปรียบเทียบ",
+        "scroll_prev": "ประกาศก่อนหน้า",
+        "scroll_next": "ประกาศถัดไป",
         "line_inquiry": "สอบถามทาง LINE"
     },
     "agent_plan": {
