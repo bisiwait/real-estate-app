@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LayoutDashboard, LogOut, ChevronLeft, Loader2, Settings as SettingsIcon, ChevronRight, User, Heart, MessageSquare, Building2, Globe, Mail, Phone, Trash2, Calendar, Bell, Search } from "lucide-react";
+import { LayoutDashboard, LogOut, ChevronLeft, Loader2, Settings as SettingsIcon, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import ProfileSection from "@/components/dashboard/ProfileSection";
@@ -161,6 +161,7 @@ function SettingsSection({
     locale: string;
 }) {
     const [passwordOpen, setPasswordOpen] = useState(false);
+    const [notificationOpen, setNotificationOpen] = useState(false);
 
     return (
         <div className="p-12 max-w-2xl mx-auto space-y-10">
@@ -173,7 +174,7 @@ function SettingsSection({
             </div>
 
             <div className="space-y-4">
-                <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/profile/edit`} />
+                <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/profile/edit`} variant="inverse" />
                 <div className="overflow-hidden rounded-2xl border border-transparent bg-slate-50 transition-all hover:border-navy-primary/20">
                     <button
                         type="button"
@@ -199,13 +200,32 @@ function SettingsSection({
                         </div>
                     ) : null}
                 </div>
-                <NotificationSettingsSection
-                    user={user}
-                    profile={profile}
-                    onProfilePatch={onProfilePatch}
-                    dict={dict}
-                    locale={locale}
-                />
+                <div className="overflow-hidden rounded-2xl border border-transparent bg-slate-50 transition-all hover:border-navy-primary/20">
+                    <button
+                        type="button"
+                        onClick={() => setNotificationOpen((o) => !o)}
+                        aria-expanded={notificationOpen}
+                        className="group flex w-full items-center justify-between p-6 text-left transition-all hover:bg-navy-primary/5"
+                    >
+                        <span className="font-bold text-navy-secondary">{dict.labels.notification_settings}</span>
+                        <ChevronRight
+                            size={18}
+                            className={`shrink-0 text-slate-300 transition-transform group-hover:text-navy-primary ${notificationOpen ? "rotate-90" : "group-hover:translate-x-1"}`}
+                            aria-hidden
+                        />
+                    </button>
+                    {notificationOpen ? (
+                        <div className="border-t border-slate-200/80 px-4 pb-5 pt-1 sm:px-6">
+                            <NotificationSettingsSection
+                                user={user}
+                                profile={profile}
+                                onProfilePatch={onProfilePatch}
+                                dict={dict}
+                                locale={locale}
+                            />
+                        </div>
+                    ) : null}
+                </div>
             </div>
 
             <div className="pt-10 border-t border-slate-100">
@@ -221,14 +241,26 @@ function SettingsSection({
     );
 }
 
-function SettingsLink({ label, href }: { label: string, href: string }) {
+function SettingsLink({ label, href, variant = "default" }: { label: string; href: string; variant?: "default" | "inverse" }) {
+    const inverse = variant === "inverse";
     return (
         <Link
             href={href}
-            className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl hover:bg-navy-primary/5 hover:border-navy-primary/20 border border-transparent transition-all group"
+            className={
+                inverse
+                    ? "group flex items-center justify-between rounded-2xl border border-navy-primary bg-navy-primary p-6 text-white transition-all hover:border-navy-secondary hover:bg-navy-secondary"
+                    : "group flex items-center justify-between rounded-2xl border border-transparent bg-slate-50 p-6 transition-all hover:border-navy-primary/20 hover:bg-navy-primary/5"
+            }
         >
-            <span className="font-bold text-navy-secondary">{label}</span>
-            <ChevronRight size={18} className="text-slate-300 group-hover:text-navy-primary group-hover:translate-x-1 transition-all" />
+            <span className={`font-bold ${inverse ? "text-white" : "text-navy-secondary"}`}>{label}</span>
+            <ChevronRight
+                size={18}
+                className={
+                    inverse
+                        ? "text-white/80 transition-all group-hover:translate-x-1 group-hover:text-white"
+                        : "text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-navy-primary"
+                }
+            />
         </Link>
     );
 }

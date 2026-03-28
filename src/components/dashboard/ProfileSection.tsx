@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { User, Mail, Phone, MessageSquare, Globe, Pencil } from "lucide-react";
+import { User, Mail, Phone, MessageSquare, Pencil } from "lucide-react";
 
 interface ProfileSectionProps {
     user: any;
@@ -38,15 +38,12 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
                                 {dict.labels.line_linked}
                             </span>
                         )}
-                        <span className="hidden px-3 py-1 bg-navy-primary/5 text-navy-primary text-[10px] font-black rounded-full border border-navy-primary/10 md:inline-flex">
-                            {dict.labels.regular_member}
-                        </span>
                         <Link
                             href={`/${locale}/profile/edit`}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-black shadow-md shadow-rose-600/20 transition-colors"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-navy-primary text-white text-sm font-black shadow-md shadow-navy-primary/25 transition-colors hover:bg-navy-secondary"
                         >
-                            <Pencil className="w-4 h-4" />
-                            {dict.labels.edit_profile_cta}
+                            <Pencil className="h-4 w-4 shrink-0 text-white" aria-hidden />
+                            <span className="text-white">{dict.labels.edit_profile_cta}</span>
                         </Link>
                     </div>
                 </div>
@@ -56,16 +53,6 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
                 <InfoCard icon={Mail} label={dict.labels.email_label} value={user?.email} />
                 <InfoCard icon={Phone} label={dict.labels.phone_label} value={profile?.phone || dict.labels.not_registered} />
                 <InfoCard icon={MessageSquare} label={dict.labels.line_contact_label ?? dict.labels.line_id_label} value={profile?.line_id || dict.labels.not_registered} />
-            </div>
-
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
-                    <Globe size={12} className="mr-2" />
-                    {dict.labels.bio_title}
-                </h3>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                    {profile?.bio || dict.labels.bio_not_set}
-                </p>
             </div>
         </motion.div>
     );

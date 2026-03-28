@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ChevronLeft, Loader2, X } from "lucide-react";
+import { Home, Loader2, X } from "lucide-react";
 import LineContactButton from "@/components/property/LineContactButton";
 import ContactAuthRequiredModal from "@/components/property/ContactAuthRequiredModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,6 +44,31 @@ function regionName(p: any) {
 function areaName(p: any, dict: any) {
     const raw = p.area?.name || p.area_name || "";
     return (dict.property?.db_locations as Record<string, string>)?.[raw] || raw || "—";
+}
+
+function CompareBreadcrumb({ locale, dict, compareTitle }: { locale: string; dict: any; compareTitle: string }) {
+    const homeLabel = dict.common?.home ?? "Home";
+    return (
+        <nav className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-bold text-white/85" aria-label="Breadcrumb">
+            <Link
+                href={`/${locale}`}
+                className="inline-flex items-center rounded-md hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:ring-2 focus-visible:ring-white/40"
+                aria-label={homeLabel}
+            >
+                <Home className="h-4 w-4" aria-hidden />
+            </Link>
+            <span className="text-white/45 select-none" aria-hidden>
+                &gt;
+            </span>
+            <Link href={`/${locale}/mypage`} className="hover:text-white">
+                {dict.labels?.mypage ?? "My Page"}
+            </Link>
+            <span className="text-white/45 select-none" aria-hidden>
+                &gt;
+            </span>
+            <span className="text-white">{compareTitle}</span>
+        </nav>
+    );
 }
 
 /** タグからシービュー／シティービューを判定 */
@@ -242,13 +267,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
             <div className="min-h-screen bg-slate-50 pb-20">
                 <div className="bg-navy-secondary text-white pt-8 pb-12">
                     <div className="container mx-auto px-4 max-w-3xl">
-                        <Link
-                            href={`/${locale}/mypage?tab=favorites`}
-                            className="inline-flex items-center text-white/80 hover:text-white text-sm font-bold mb-6"
-                        >
-                            <ChevronLeft className="w-4 h-4 mr-1" />
-                            {c.back_mypage}
-                        </Link>
+                        <CompareBreadcrumb locale={locale} dict={dict} compareTitle={c.title} />
                         <h1 className="text-2xl font-black !text-white md:text-3xl">{c.title}</h1>
                     </div>
                 </div>
@@ -277,13 +296,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
             />
             <div className="bg-navy-secondary text-white pt-8 pb-10">
                 <div className="container mx-auto px-4 max-w-6xl">
-                    <Link
-                        href={`/${locale}/mypage?tab=favorites`}
-                        className="inline-flex items-center text-white/80 hover:text-white text-sm font-bold mb-6"
-                    >
-                        <ChevronLeft className="w-4 h-4 mr-1" />
-                        {c.back_mypage}
-                    </Link>
+                    <CompareBreadcrumb locale={locale} dict={dict} compareTitle={c.title} />
                     <h1 className="text-2xl font-black !text-white md:text-3xl">{c.title}</h1>
                     <p className="mt-2 text-sm text-slate-400">{c.subtitle}</p>
                     {!loading && properties.length > 1 && c.swipe_hint ? (

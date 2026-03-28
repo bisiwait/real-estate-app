@@ -212,7 +212,7 @@
         "notify_line_linked_badge": "เชื่อม LINE แล้ว",
         "notify_prefs_saved": "บันทึกการตั้งค่าการแจ้งเตือนแล้ว",
         "notify_prefs_save_error": "บันทึกไม่สำเร็จ โปรดลองอีกครั้งในภายหลัง",
-        "notify_prefs_footer_note": "การส่งแจ้งเตือนจริงจะเปิดใช้งานในอนาคต การตั้งค่าจะถูกเก็บในบัญชีของคุณ",
+        "notify_prefs_footer_note": "การส่งแจ้งเตือนจริงจะเปิดใช้งานในอนาคต การตั้งค่าจะถูกบันทึกในบัญชีของคุณ",
         "notify_line_oauth_missing_origin": "ไม่สามารถเริ่มเชื่อม LINE: ยังไม่ได้ตั้งค่า URL เว็บไซต์ (NEXT_PUBLIC_SITE_URL)",
         "notify_line_oauth_error": "ไม่สามารถเริ่มเชื่อม LINE ได้",
         "notify_line_custom_provider_hint": "Supabase ไม่มี provider \"line\" ในตัว ให้เพิ่ม LINE เป็น Custom OAuth/OIDC ที่ Authentication → Providers แล้วตั้งค่า identifier (เช่น custom:line) ให้ตรงกับ NEXT_PUBLIC_SUPABASE_LINE_PROVIDER (ค่าเริ่มต้น custom:line) Issuer: https://access.line.me",

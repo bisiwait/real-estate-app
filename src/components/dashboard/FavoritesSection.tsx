@@ -126,7 +126,12 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
                     type="button"
                     onClick={goCompare}
                     disabled={compareIds.length === 0}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary text-white font-black px-6 py-3.5 shadow-lg shadow-navy-primary/20 hover:bg-navy-secondary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                    className={clsx(
+                        "inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary px-6 py-3.5 font-black text-white shadow-lg shadow-navy-primary/20 transition-all duration-100",
+                        "hover:bg-navy-secondary hover:shadow-md",
+                        "active:scale-[0.97] active:translate-y-px active:shadow-inner active:brightness-95",
+                        "disabled:pointer-events-none disabled:opacity-40 disabled:active:scale-100 disabled:active:shadow-lg disabled:active:brightness-100"
+                    )}
                 >
                     <GitCompareArrows className="w-5 h-5" />
                     {cmp.compare_btn}

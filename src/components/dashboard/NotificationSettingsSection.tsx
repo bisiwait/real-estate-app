@@ -5,7 +5,7 @@ import type { Provider, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import Switch from "@/components/ui/Switch";
-import { Bell, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { getAuthSiteOrigin } from "@/lib/auth/site-origin";
 import { buildOAuthSignInRedirectUrl } from "@/lib/auth/auth-callback-url";
 import { setAuthReturnToCookie } from "@/lib/auth/auth-return-cookie";
@@ -26,6 +26,7 @@ function isLineLinked(user: User | null, profile: ProfileRow | null, lineProvide
     return ids.some((i) => i.provider === lineProviderId || i.provider === "line");
 }
 
+/** マイページ設定アコーディオン内用（見出しは親のボタン側） */
 export default function NotificationSettingsSection({
     user,
     profile,
@@ -50,7 +51,6 @@ export default function NotificationSettingsSection({
     const notifyNewMatching = profile?.notify_new_matching === true;
     const notifyPriceDrop = profile?.notify_price_drop === true;
     const notifyViaLine = profile?.notify_via_line === true;
-    const notifyViaEmail = profile?.notify_via_email !== false;
 
     const persist = useCallback(
         async (updates: Record<string, boolean>, key: string) => {
@@ -94,19 +94,11 @@ export default function NotificationSettingsSection({
     };
 
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy-primary/10 text-navy-primary">
-                    <Bell className="h-5 w-5" aria-hidden />
-                </div>
-                <div>
-                    <h4 className="text-lg font-black text-navy-secondary">{l.notification_settings}</h4>
-                    <p className="text-xs font-bold text-slate-400">{l.notify_prefs_subtitle}</p>
-                </div>
-            </div>
+        <div className="space-y-6 pt-1">
+            <p className="text-xs font-bold text-slate-500">{l.notify_prefs_subtitle}</p>
 
             <div className="divide-y divide-slate-100 border-t border-slate-100">
-                <div className="flex items-start justify-between gap-4 py-5">
+                <div className="flex items-start justify-between gap-4 py-4">
                     <div className="min-w-0 flex-1">
                         <p className="font-bold text-navy-secondary">{l.notify_new_matching_title}</p>
                         <p className="mt-1 text-sm font-medium text-slate-500">{l.notify_new_matching_desc}</p>
@@ -121,7 +113,7 @@ export default function NotificationSettingsSection({
                     </div>
                 </div>
 
-                <div className="flex items-start justify-between gap-4 py-5">
+                <div className="flex items-start justify-between gap-4 py-4">
                     <div className="min-w-0 flex-1">
                         <p className="font-bold text-navy-secondary">{l.notify_price_drop_title}</p>
                         <p className="mt-1 text-sm font-medium text-slate-500">{l.notify_price_drop_desc}</p>
@@ -137,11 +129,11 @@ export default function NotificationSettingsSection({
                 </div>
             </div>
 
-            <div className="mt-8">
+            <div>
                 <p className="mb-3 text-xs font-black uppercase tracking-widest text-slate-400">{l.notify_channel_heading}</p>
 
                 {!lineLinked ? (
-                    <div className="mb-5 rounded-2xl border border-[#06C755]/25 bg-[#06C755]/5 p-4">
+                    <div className="mb-4 rounded-2xl border border-[#06C755]/25 bg-[#06C755]/5 p-4">
                         <p className="mb-3 text-sm font-bold text-navy-secondary">{l.notify_line_unlinked_hint}</p>
                         <p className="mb-3 text-xs font-medium leading-relaxed text-slate-600">{l.notify_line_custom_provider_hint}</p>
                         <button
@@ -155,11 +147,11 @@ export default function NotificationSettingsSection({
                         </button>
                     </div>
                 ) : (
-                    <p className="mb-4 text-sm font-bold text-emerald-700">{l.notify_line_linked_badge}</p>
+                    <p className="mb-3 text-sm font-bold text-emerald-700">{l.notify_line_linked_badge}</p>
                 )}
 
-                <div className="space-y-1 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-                    <div className="flex items-center justify-between gap-4 py-3">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                    <div className="flex items-center justify-between gap-4 py-1">
                         <span className="text-sm font-bold text-navy-secondary">{l.notify_via_line_label}</span>
                         <div className="flex items-center gap-2">
                             {savingKey === "via_line" ? <Loader2 className="h-5 w-5 animate-spin text-navy-primary" /> : null}
@@ -170,17 +162,6 @@ export default function NotificationSettingsSection({
                                     void persist({ notify_via_line: v }, "via_line");
                                 }}
                                 disabled={!!savingKey || !lineLinked}
-                            />
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-4 border-t border-slate-200/80 py-3">
-                        <span className="text-sm font-bold text-navy-secondary">{l.notify_via_email_label}</span>
-                        <div className="flex items-center gap-2">
-                            {savingKey === "via_email" ? <Loader2 className="h-5 w-5 animate-spin text-navy-primary" /> : null}
-                            <Switch
-                                checked={notifyViaEmail}
-                                onCheckedChange={(v) => void persist({ notify_via_email: v }, "via_email")}
-                                disabled={!!savingKey}
                             />
                         </div>
                     </div>

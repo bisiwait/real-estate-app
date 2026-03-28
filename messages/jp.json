@@ -239,7 +239,7 @@
         "notify_line_linked_badge": "LINE連携済み",
         "notify_prefs_saved": "通知設定を保存しました",
         "notify_prefs_save_error": "保存に失敗しました。しばらくしてからお試しください。",
-        "notify_prefs_footer_note": "※ 実際の通知配信は順次対応予定です。ここでの設定はアカウントに保存されます。",
+        "notify_prefs_footer_note": "※ 実際の通知配信は順次対応予定です。設定内容はアカウントに保存されます。",
         "notify_line_oauth_missing_origin": "サイトURL（NEXT_PUBLIC_SITE_URL）が未設定のためLINE連携を開始できません。",
         "notify_line_oauth_error": "LINE連携を開始できませんでした",
         "notify_line_custom_provider_hint": "Supabase には組み込みの「line」プロバイダがありません。Authentication → Providers で LINE を Custom OAuth/OIDC として追加し、識別子（例: custom:line）を環境変数 NEXT_PUBLIC_SUPABASE_LINE_PROVIDER に合わせてください（未設定時は custom:line）。Issuer は https://access.line.me が使えます。",
