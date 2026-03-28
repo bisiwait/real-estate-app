@@ -715,6 +715,10 @@
                 "a": "It may have been rented/sold and removed from the site."
             },
             {
+                "q": "Do I need to register to use “Save to favorites” or “New listing alerts”?",
+                "a": "Yes. Saving specific listings as favorites and receiving automatic notifications when new properties that match your criteria are published (system notifications) require a free member account."
+            },
+            {
                 "q": "My LINE ID can’t be found.",
                 "a": "In LINE, turn on “Allow others to add me by ID”, or copy your add-friend URL from your profile and register that instead."
             },
@@ -729,10 +733,6 @@
             {
                 "q": "How do I delete my account?",
                 "a": "From My Page → Settings you can leave the service and request data removal."
-            },
-            {
-                "q": "I found a bug on the site.",
-                "a": "Please report it via “Bug report (LINE)” in the footer. We may not reply individually, but we use reports to improve the site."
             }
         ]
     },
