@@ -60,12 +60,6 @@ function CompareBreadcrumb({ locale, dict, compareTitle }: { locale: string; dic
             <span className="text-white/45 select-none" aria-hidden>
                 &gt;
             </span>
-            <Link href={`/${locale}/mypage`} className="hover:text-white">
-                {dict.labels?.mypage ?? "My Page"}
-            </Link>
-            <span className="text-white/45 select-none" aria-hidden>
-                &gt;
-            </span>
             <span className="text-white">{compareTitle}</span>
         </nav>
     );
