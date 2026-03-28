@@ -186,6 +186,19 @@ export async function POST(req: Request) {
                     try {
                         const sub = await stripe.subscriptions.retrieve(subscriptionId)
                         trialEnd = sub.trial_end
+                        // トライアル付きサブスクなら「初回トライアル消化済み」にする（再 Checkout で trial を付けない）
+                        if (sub.trial_end != null) {
+                            const { error: trialFlagError } = await supabaseAdmin
+                                .from('profiles')
+                                .update({
+                                    stripe_trial_consumed_at: new Date().toISOString(),
+                                    updated_at: new Date().toISOString(),
+                                })
+                                .eq('id', userId)
+                            if (trialFlagError) {
+                                console.warn('[webhook] stripe_trial_consumed_at update skipped:', trialFlagError.message)
+                            }
+                        }
                     } catch (e) {
                         console.warn('[webhook] Could not retrieve subscription trial_end:', e)
                     }
@@ -243,6 +256,14 @@ export async function POST(req: Request) {
                         .then(({ error: e }) => {
                             if (e) console.warn('[webhook] auto_renew update skipped:', e.message)
                         })
+                } else if (
+                    sub.status === 'canceled' ||
+                    sub.status === 'unpaid' ||
+                    sub.status === 'incomplete_expired'
+                ) {
+                    // 支払不能・キャンセル完了などはフリーに戻す（past_due は猶予のため維持）
+                    await deactivatePremium(userId)
+                    console.log(`[webhook] Premium deactivated (subscription ${sub.status}) for user: ${userId}`)
                 }
                 break
             }

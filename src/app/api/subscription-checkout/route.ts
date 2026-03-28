@@ -22,6 +22,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { data: profileRow } = await supabase
+      .from('profiles')
+      .select('stripe_trial_consumed_at')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const trialAlreadyUsed = Boolean(profileRow?.stripe_trial_consumed_at)
+
     const origin = req.headers.get('origin') || getPublicSiteUrl()
 
     const session = await stripe.checkout.sessions.create({
@@ -42,7 +50,7 @@ export async function POST(req: Request) {
         },
       ],
       subscription_data: {
-        trial_period_days: 30,
+        ...(trialAlreadyUsed ? {} : { trial_period_days: 30 }),
         metadata: {
           userId: user.id,
           plan: 'premium',

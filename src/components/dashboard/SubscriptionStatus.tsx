@@ -7,9 +7,10 @@ import { differenceInDays, parseISO, format } from 'date-fns'
 
 interface SubscriptionStatusProps {
     profile: any
+    locale?: string
 }
 
-export default function SubscriptionStatus({ profile }: SubscriptionStatusProps) {
+export default function SubscriptionStatus({ profile, locale = 'jp' }: SubscriptionStatusProps) {
     const [portalLoading, setPortalLoading] = useState(false)
     const [portalError, setPortalError] = useState<string | null>(null)
 
@@ -99,7 +100,7 @@ export default function SubscriptionStatus({ profile }: SubscriptionStatusProps)
 
             {isExpired ? (
                 <Link
-                    href="/pricing"
+                    href={`/${locale}/pricing`}
                     className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
                 >
                     <span>プランを再開する</span>

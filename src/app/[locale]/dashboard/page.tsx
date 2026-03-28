@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import PremiumPromoCard from '@/components/dashboard/PremiumPromoCard'
 import SubscriptionStatus from '@/components/dashboard/SubscriptionStatus'
+import { getEffectivePlan } from '@/lib/utils/plan'
 import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
@@ -37,12 +38,11 @@ export default async function DashboardPage({
     // Fetch Profile (plan / subscription fields)
     const { data: profile } = await supabase
         .from('profiles')
-        .select('plan, plan_type, full_name, phone, current_period_end, auto_renew')
+        .select('plan, plan_type, full_name, phone, current_period_end, auto_renew, is_admin')
         .eq('id', user.id)
         .single()
 
-    // Determine the active plan (prefer plan_type from new system, fallback to legacy plan)
-    const activePlan = profile?.plan_type || profile?.plan || 'free'
+    const activePlan = getEffectivePlan(profile)
 
     // Fetch Properties
     const { data: properties } = await supabase
@@ -141,7 +141,7 @@ export default async function DashboardPage({
                     {/* Stats Sidebar — スマホでは要望ボタンはページ下部（メインの下）へ */}
                     <div className="order-1 lg:col-span-1 space-y-6">
                         {/* Subscription Status (Trial countdown / Portal link) */}
-                        <SubscriptionStatus profile={profile} />
+                        <SubscriptionStatus profile={profile} locale={locale} />
 
                         {/* プラン表示（フリープラン時のみ。プレミアムは別カード） */}
                         {activePlan !== 'premium' && (

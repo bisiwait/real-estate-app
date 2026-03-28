@@ -1,12 +1,15 @@
 "use client";
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { AlertTriangle, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import PresaleListingForm from '@/components/property/PresaleListingForm'
+import { isPremiumActive } from '@/lib/utils/plan'
 
 export default function PresalePropertyPage() {
+    const params = useParams()
+    const locale = (params?.locale as string) || 'jp'
     const [isPremium, setIsPremium] = useState<boolean | null>(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
@@ -23,11 +26,11 @@ export default function PresalePropertyPage() {
 
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('plan, plan_type')
+                .select('plan, plan_type, current_period_end, is_admin')
                 .eq('id', user.id)
                 .single()
 
-            setIsPremium(profile?.plan_type === 'premium' || profile?.plan === 'premium')
+            setIsPremium(isPremiumActive(profile))
             setLoading(false)
         }
 
@@ -51,14 +54,22 @@ export default function PresalePropertyPage() {
                     </div>
                     <h2 className="text-2xl font-black text-navy-secondary mb-4">プレミアプラン限定機能です</h2>
                     <p className="text-slate-500 mb-10 leading-relaxed">
-                        プレセール（新築投資案件）の投稿機能は、プレミアプランをご利用のエージェント様のみ解放されております。
+                        プレセール（新築投資案件）の投稿機能は、契約有効なプレミアムプランのエージェント様のみご利用いただけます。プランの更新は料金ページからどうぞ。
                     </p>
-                    <Link
-                        href="/dashboard"
-                        className="w-full bg-navy-primary text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-navy-secondary transition-all shadow-lg hover:shadow-xl"
-                    >
-                        <span>ダッシュボードへ戻る</span>
-                    </Link>
+                    <div className="flex flex-col gap-3">
+                        <Link
+                            href={`/${locale}/pricing`}
+                            className="w-full bg-amber-500 text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-amber-600 transition-all shadow-lg"
+                        >
+                            <span>料金・プランを見る</span>
+                        </Link>
+                        <Link
+                            href={`/${locale}/dashboard`}
+                            className="w-full border-2 border-slate-200 bg-white text-navy-secondary py-4 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-slate-50 transition-all"
+                        >
+                            <span>ダッシュボードへ戻る</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
         )
@@ -69,7 +80,7 @@ export default function PresalePropertyPage() {
             <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                     <Link
-                        href="/dashboard"
+                        href={`/${locale}/dashboard`}
                         className="inline-flex items-center space-x-2 text-slate-400 hover:text-navy-primary font-bold mb-8 transition-colors group"
                     >
                         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />

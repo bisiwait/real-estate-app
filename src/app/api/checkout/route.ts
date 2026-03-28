@@ -46,6 +46,14 @@ export async function POST(req: Request) {
             )
         }
 
+        const { data: profileRow } = await supabase
+            .from('profiles')
+            .select('stripe_trial_consumed_at')
+            .eq('id', user.id)
+            .maybeSingle()
+
+        const trialAlreadyUsed = Boolean(profileRow?.stripe_trial_consumed_at)
+
         const session = await stripe.checkout.sessions.create({
             mode: 'subscription',
             payment_method_types: ['card'],
@@ -56,8 +64,11 @@ export async function POST(req: Request) {
                 },
             ],
             subscription_data: {
-                // 30日間の無料トライアルを付与
-                trial_period_days: 30,
+                ...(trialAlreadyUsed
+                    ? {}
+                    : {
+                          trial_period_days: 30,
+                      }),
                 metadata: {
                     userId: user.id,
                 },

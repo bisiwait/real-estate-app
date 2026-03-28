@@ -19,6 +19,7 @@ import LineContactButton from '@/components/property/LineContactButton'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
+import { isPremium } from '@/lib/utils/plan'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -82,7 +83,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     const [translatingTitle, setTranslatingTitle] = useState(false)
     const [profile, setProfile] = useState<any>(null)
 
-    const isPremium = profile?.plan === 'premium' || profile?.plan_type === 'premium'
+    const viewerHasPremium = isPremium(profile)
 
     const contactPrefill = useMemo(() => {
         if (!user) return null
@@ -112,7 +113,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
             if (user) {
                 const { data: pData } = await supabase
                     .from('profiles')
-                    .select('plan, plan_type, full_name, phone, line_id, email')
+                    .select('plan, plan_type, full_name, phone, line_id, email, current_period_end, is_admin')
                     .eq('id', user.id)
                     .single()
                 if (pData) setProfile(pData)
@@ -269,7 +270,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                             </div>
                         </div>
  
-                        <PropertyDescription description={property.description} descriptionEn={property.description_en} descriptionTh={property.description_th} dict={dict} activeLang={activeLang} setActiveLang={setActiveLang} isPremium={isPremium} />
+                        <PropertyDescription description={property.description} descriptionEn={property.description_en} descriptionTh={property.description_th} dict={dict} activeLang={activeLang} setActiveLang={setActiveLang} isPremium={viewerHasPremium} />
 
                         {amenityTags.length > 0 ? (
                             <SectionBox title={translateTag("こだわり設備")} icon={Gem}>

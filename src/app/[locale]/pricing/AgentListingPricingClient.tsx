@@ -24,6 +24,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { addDays } from "date-fns";
 import Switch from "@/components/ui/Switch";
+import { isPremiumActive } from "@/lib/utils/plan";
 
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY ?? "";
 const STRIPE_PRICE_ID_YEARLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY ?? "";
@@ -66,10 +67,37 @@ export default function AgentListingPricingClient({
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmError, setConfirmError] = useState<string | null>(null);
     const [authResolved, setAuthResolved] = useState(false);
-    const [isPremium, setIsPremium] = useState(false);
+    const [planProfile, setPlanProfile] = useState<{
+        plan?: string | null;
+        plan_type?: string | null;
+        current_period_end?: string | null;
+        stripe_trial_consumed_at?: string | null;
+        is_admin?: boolean | null;
+    } | null>(null);
+
+    const isPremium = isPremiumActive(planProfile);
+    const trialConsumed = Boolean(planProfile?.stripe_trial_consumed_at);
 
     const stripeCheckoutReady = Boolean(stripeFromServer) || stripePriceIdsReady();
     const trialDisabledForUser = authResolved && !!user && (!stripeCheckoutReady || isPremium);
+
+    const ctaProLabel =
+        trialDisabledForUser ? (isPremium ? p.trial_disabled_premium : p.trial_disabled_stripe) : trialConsumed ? p.subscribe_pro_btn : p.trial_btn;
+
+    const showTrialBillingInModal =
+        authResolved &&
+        !!user &&
+        !trialConsumed &&
+        !isPremium &&
+        stripeCheckoutReady &&
+        !trialDisabledForUser;
+    const showPayImmediateInModal =
+        authResolved &&
+        !!user &&
+        trialConsumed &&
+        !isPremium &&
+        stripeCheckoutReady &&
+        !trialDisabledForUser;
 
     const pricingPath = `/${locale}/pricing`;
     const signupWithReturn = `/${locale}/agent/signup?redirect=${encodeURIComponent(pricingPath)}`;
@@ -84,13 +112,13 @@ export default function AgentListingPricingClient({
                 if (!u) {
                     setUser(null);
                     setIsAgent(false);
-                    setIsPremium(false);
+                    setPlanProfile(null);
                     return;
                 }
                 setUser({ id: u.id });
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("user_role, is_admin, plan_type, plan")
+                    .select("user_role, is_admin, plan_type, plan, current_period_end, stripe_trial_consumed_at")
                     .eq("id", u.id)
                     .maybeSingle();
                 const agent =
@@ -98,7 +126,7 @@ export default function AgentListingPricingClient({
                     profile?.user_role === "admin" ||
                     profile?.is_admin === true;
                 setIsAgent(!!agent);
-                setIsPremium(profile?.plan_type === "premium" || profile?.plan === "premium");
+                setPlanProfile(profile ?? null);
             } finally {
                 if (!cancelled) setAuthResolved(true);
             }
@@ -433,6 +461,11 @@ export default function AgentListingPricingClient({
                                     </div>
                                 ))}
                             </div>
+                            {authResolved && user && trialConsumed && !isPremium && stripeCheckoutReady ? (
+                                <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/90 p-3 text-[11px] font-medium leading-relaxed text-amber-950">
+                                    {p.trial_consumed_banner}
+                                </div>
+                            ) : null}
                             <button
                                 type="button"
                                 onClick={openConfirm}
@@ -447,15 +480,17 @@ export default function AgentListingPricingClient({
                                 className="agent-plan-shimmer flex w-full items-center justify-center gap-2 rounded-2xl bg-navy-primary py-4 text-lg font-black text-white shadow-md transition-all hover:bg-navy-secondary disabled:pointer-events-auto disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : null}
-                                {trialDisabledForUser
-                                    ? isPremium
-                                        ? p.trial_disabled_premium
-                                        : p.trial_disabled_stripe
-                                    : p.trial_btn}
+                                {ctaProLabel}
                                 {!trialDisabledForUser ? <ArrowRight className="h-6 w-6" /> : null}
                             </button>
                             <p className="mt-4 text-center text-[10px] font-bold text-slate-500">
-                                {trialDisabledForUser && !isPremium ? p.stripe_not_configured_notice : p.trial_note}
+                                {trialDisabledForUser
+                                    ? isPremium
+                                        ? null
+                                        : p.stripe_not_configured_notice
+                                    : trialConsumed
+                                      ? p.trial_note_repeat
+                                      : p.trial_note}
                             </p>
                         </div>
                     </div>
@@ -576,11 +611,7 @@ export default function AgentListingPricingClient({
                         className="inline-flex items-center justify-center gap-2 rounded-2xl border border-navy-primary/30 bg-navy-primary/5 px-10 py-4 text-lg font-black text-navy-primary transition-all hover:bg-navy-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                        {trialDisabledForUser
-                            ? isPremium
-                                ? p.trial_disabled_premium
-                                : p.trial_disabled_stripe
-                            : p.trial_btn}
+                        {ctaProLabel}
                     </button>
                 </div>
             </section>
@@ -633,10 +664,16 @@ export default function AgentListingPricingClient({
                                 )}
                             </div>
 
-                            {!(authResolved && user && trialDisabledForUser) ? (
+                            {showTrialBillingInModal ? (
                                 <div className="rounded-2xl border border-navy-primary/25 bg-navy-primary/5 p-4">
                                     <div className="text-xl font-black text-navy-primary">{p.modal_today_title}</div>
                                     <p className="mt-2 text-sm font-medium text-slate-600">{trialBillingNote}</p>
+                                </div>
+                            ) : null}
+                            {showPayImmediateInModal ? (
+                                <div className="rounded-2xl border border-amber-100 bg-amber-50/90 p-4">
+                                    <div className="text-xl font-black text-amber-950">{p.modal_pay_start_title}</div>
+                                    <p className="mt-2 text-sm font-medium text-amber-950/90">{p.trial_note_pay_immediate}</p>
                                 </div>
                             ) : null}
 
