@@ -174,7 +174,7 @@ function SettingsSection({
             </div>
 
             <div className="space-y-4">
-                <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/profile/edit`} variant="inverse" />
+                <SettingsLink label={dict.labels.edit_profile} href={`/${locale}/profile/edit`} />
                 <div className="overflow-hidden rounded-2xl border border-transparent bg-slate-50 transition-all hover:border-navy-primary/20">
                     <button
                         type="button"
@@ -241,25 +241,16 @@ function SettingsSection({
     );
 }
 
-function SettingsLink({ label, href, variant = "default" }: { label: string; href: string; variant?: "default" | "inverse" }) {
-    const inverse = variant === "inverse";
+function SettingsLink({ label, href }: { label: string; href: string }) {
     return (
         <Link
             href={href}
-            className={
-                inverse
-                    ? "group flex items-center justify-between rounded-2xl border border-navy-primary bg-navy-primary p-6 text-white transition-all hover:border-navy-secondary hover:bg-navy-secondary"
-                    : "group flex items-center justify-between rounded-2xl border border-transparent bg-slate-50 p-6 transition-all hover:border-navy-primary/20 hover:bg-navy-primary/5"
-            }
+            className="group flex items-center justify-between rounded-2xl border border-transparent bg-slate-50 p-6 transition-all hover:border-navy-primary/20 hover:bg-navy-primary/5"
         >
-            <span className={`font-bold ${inverse ? "text-white" : "text-navy-secondary"}`}>{label}</span>
+            <span className="font-bold text-navy-secondary">{label}</span>
             <ChevronRight
                 size={18}
-                className={
-                    inverse
-                        ? "text-white/80 transition-all group-hover:translate-x-1 group-hover:text-white"
-                        : "text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-navy-primary"
-                }
+                className="text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-navy-primary"
             />
         </Link>
     );

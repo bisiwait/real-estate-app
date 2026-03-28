@@ -110,8 +110,8 @@ export default function ProfileEditClient({
                         <ChevronLeft className="w-4 h-4 mr-1" />
                         {l.back_to_mypage}
                     </Link>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">{l.profile_edit_title}</h1>
-                    <p className="text-slate-400 text-sm mt-2 font-medium">{l.profile_edit_subtitle}</p>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tight !text-white">{l.profile_edit_title}</h1>
+                    <p className="mt-2 text-sm font-medium text-white/75">{l.profile_edit_subtitle}</p>
                 </div>
             </div>
 
