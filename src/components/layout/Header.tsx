@@ -24,6 +24,9 @@ export default function Header({ dict }: { dict: any }) {
 
     const segments = pathname.split('/')
     const currentLocale = ['jp', 'en', 'th'].includes(segments[1]) ? segments[1] : 'jp'
+    const isComparePage = segments[2] === 'compare'
+    const homeLabel = dict.common?.home ?? 'Home'
+    const compareTitle = dict.compare?.title ?? 'Compare'
 
     const navLinks = [
         { href: `/${currentLocale}/properties`, label: dict.common.properties, icon: Search },
@@ -35,10 +38,11 @@ export default function Header({ dict }: { dict: any }) {
     ]
 
     return (
-        <header className="border-b border-slate-100 sticky top-0 z-[100] bg-white w-full max-w-full min-w-0">
-            <div className="container mx-auto flex h-20 min-w-0 max-w-full items-center justify-between gap-2 px-4">
+        <header className="relative border-b border-slate-100 sticky top-0 z-[100] w-full min-w-0 max-w-full bg-white">
+            <div className="container mx-auto min-w-0 max-w-full px-4">
+                <div className="flex h-20 min-w-0 max-w-full items-center justify-between gap-2">
                 {/* Logo */}
-                <Link href={`/${currentLocale}`} className="flex min-w-0 max-w-full shrink-0 items-center overflow-x-hidden py-0 relative z-[110] transition-transform duration-200 active:scale-95">
+                <Link href={`/${currentLocale}`} className="relative z-[110] flex min-w-0 max-w-full shrink-0 items-center overflow-x-hidden py-0 transition-transform duration-200 active:scale-95">
                     <img
                         src="/logo_row_1000_2.svg"
                         alt="Chonburi Home"
@@ -94,11 +98,37 @@ export default function Header({ dict }: { dict: any }) {
                         {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
                     </button>
                 </div>
+                </div>
+
+                {isComparePage ? (
+                    <nav
+                        className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-slate-100 py-3 text-sm font-bold text-slate-600"
+                        aria-label="Breadcrumb"
+                    >
+                        <Link
+                            href={`/${currentLocale}`}
+                            className="inline-flex items-center rounded-md text-navy-primary hover:bg-slate-100 hover:text-navy-secondary focus-visible:outline focus-visible:ring-2 focus-visible:ring-navy-primary/30"
+                            aria-label={homeLabel}
+                        >
+                            <Home className="h-4 w-4" aria-hidden />
+                        </Link>
+                        <span className="select-none text-slate-300" aria-hidden>
+                            &gt;
+                        </span>
+                        <Link href={`/${currentLocale}/mypage`} className="hover:text-navy-primary">
+                            {dict.labels?.mypage ?? 'My Page'}
+                        </Link>
+                        <span className="select-none text-slate-300" aria-hidden>
+                            &gt;
+                        </span>
+                        <span className="text-navy-secondary">{compareTitle}</span>
+                    </nav>
+                ) : null}
             </div>
 
             {/* Mobile Navigation Drawer - Simplified Full Width Dropdown */}
             <div className={cn(
-                "lg:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-100 shadow-2xl transition-all duration-300 origin-top overflow-hidden z-[90]",
+                "lg:hidden absolute top-full left-0 w-full bg-white border-b border-slate-100 shadow-2xl transition-all duration-300 origin-top overflow-hidden z-[90]",
                 isMenuOpen ? "max-h-[90vh] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
             )}>
                 <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-40px)]">
