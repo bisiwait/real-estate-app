@@ -272,7 +272,7 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">返信を作成する</label>
                                     <div className="relative">
                                         <textarea
-                                            rows={3}
+                                            rows={6}
                                             className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
                                             placeholder="返信内容を入力してください..."
                                             value={replyText}
