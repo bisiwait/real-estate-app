@@ -5,7 +5,17 @@ import { usePathname } from 'next/navigation'
 import { ChevronRight, Home } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-export default function Breadcrumb({ labels = {} }: { labels?: Record<string, string> }) {
+export default function Breadcrumb({
+    labels = {},
+    comparePageTitle,
+    homeAriaLabel,
+}: {
+    labels?: Record<string, string>
+    /** /compare 用の末尾ラベル（dict.compare.title） */
+    comparePageTitle?: string
+    /** ホームアイコン用（dict.common.home） */
+    homeAriaLabel?: string
+}) {
     const pathname = usePathname()
     const [dynamicLabel, setDynamicLabel] = useState<string | null>(null)
 
@@ -43,8 +53,49 @@ export default function Breadcrumb({ labels = {} }: { labels?: Record<string, st
     const isListPropertyPage =
         displaySegments.length === 1 && displaySegments[0] === 'list-property'
 
+    // 物件比較: ホーム › マイページ › タイトル（区切りは他ページと同じ ChevronRight）
+    const isComparePage = displaySegments.length === 1 && displaySegments[0] === 'compare'
+
     const dashboardLabel = labels['dashboard'] || 'Dashboard'
     const listPropertyLabel = labels['list-property'] || 'List Property'
+    const mypageLabel = labels['mypage'] || 'My Page'
+    const compareLabel = comparePageTitle || labels['compare'] || 'Compare'
+
+    if (isComparePage) {
+        const mypageHref = `/${currentLocale}/mypage`
+        return (
+            <nav aria-label="Breadcrumb" className="border-b border-slate-200 bg-slate-50 py-2 sm:py-3">
+                <div className="container mx-auto min-w-0 max-w-full px-3 sm:px-4">
+                    <ol className="flex min-w-0 touch-pan-x items-center space-x-1 overflow-x-auto overscroll-x-contain whitespace-nowrap text-xs text-slate-500 sm:space-x-2 sm:text-sm">
+                        <li>
+                            <Link
+                                href={`/${currentLocale}`}
+                                className="flex items-center transition-colors hover:text-navy-primary"
+                                aria-label={homeAriaLabel || 'Home'}
+                            >
+                                <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+                            </Link>
+                        </li>
+                        <li className="flex items-center">
+                            <ChevronRight className="mx-0.5 h-3 w-3 flex-shrink-0 text-slate-400 sm:mx-1 sm:h-4 sm:w-4" aria-hidden />
+                            <Link href={mypageHref} className="transition-colors hover:text-navy-primary">
+                                {mypageLabel}
+                            </Link>
+                        </li>
+                        <li className="flex items-center">
+                            <ChevronRight className="mx-0.5 h-3 w-3 flex-shrink-0 text-slate-400 sm:mx-1 sm:h-4 sm:w-4" aria-hidden />
+                            <span
+                                className="max-w-[150px] truncate font-bold text-navy-secondary sm:max-w-none"
+                                aria-current="page"
+                            >
+                                {compareLabel}
+                            </span>
+                        </li>
+                    </ol>
+                </div>
+            </nav>
+        )
+    }
 
     if (isListPropertyPage) {
         const dashboardHref = `/${currentLocale}/dashboard`

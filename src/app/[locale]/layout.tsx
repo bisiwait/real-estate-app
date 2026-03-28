@@ -95,7 +95,11 @@ export default async function RootLayout({
           <SearchCountProvider>
             <Header dict={dict} />
             <main className="min-h-[calc(100vh-80px)] min-w-0 w-full max-w-full">
-              <Breadcrumb labels={dict.labels as unknown as Record<string, string>} />
+              <Breadcrumb
+              labels={dict.labels as unknown as Record<string, string>}
+              comparePageTitle={dict.compare?.title}
+              homeAriaLabel={dict.common?.home}
+            />
               {children}
             </main>
             <Toaster />
