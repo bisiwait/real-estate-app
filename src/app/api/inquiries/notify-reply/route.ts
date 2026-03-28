@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import {
     getResendFromAddress,
     RESEND_DOMAIN_HINT_JA,
+    RESEND_FROM_FORMAT_HINT_JA,
+    resendErrorInvalidFrom,
     resendErrorNeedsVerifiedDomain,
 } from '@/lib/resend-from'
 
@@ -109,8 +111,10 @@ export async function POST(req: NextRequest) {
 
         if (sendErr) {
             const msg = sendErr.message || String(sendErr)
-            console.error('[notify-reply] Resend error:', sendErr)
-            const hint = resendErrorNeedsVerifiedDomain(msg) ? RESEND_DOMAIN_HINT_JA : undefined
+            console.error('[notify-reply] Resend error:', sendErr, 'from=', from)
+            let hint: string | undefined
+            if (resendErrorNeedsVerifiedDomain(msg)) hint = RESEND_DOMAIN_HINT_JA
+            else if (resendErrorInvalidFrom(msg)) hint = RESEND_FROM_FORMAT_HINT_JA
             return NextResponse.json({ error: msg, hint, sent: false }, { status: 502 })
         }
 
