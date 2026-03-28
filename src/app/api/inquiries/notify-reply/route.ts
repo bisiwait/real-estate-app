@@ -81,11 +81,23 @@ export async function POST(req: NextRequest) {
             )
         }
 
+        const { data: agentProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', user.id)
+            .maybeSingle()
+
+        const agentEmail =
+            agentProfile?.email?.trim() || user.email?.trim() || ''
+        const agentDisplayName = agentProfile?.full_name?.trim() || '担当エージェント'
+
         const propertyTitle =
             (inquiry as { property?: { title?: string } | null }).property?.title ?? '物件'
         const inquirerName = inquiry.inquirer_name?.trim() || 'お客様'
         const safeMessage = escapeHtml(message)
         const safeTitle = escapeHtml(propertyTitle)
+        const safeAgentName = escapeHtml(agentDisplayName)
+        const safeAgentEmail = escapeHtml(agentEmail)
 
         const from = getResendFromAddress()
 
@@ -93,16 +105,24 @@ export async function POST(req: NextRequest) {
         const { data: sent, error: sendErr } = await resend.emails.send({
             from,
             to: [to],
+            // From は検証済みドメイン必須のためプラットフォーム宛。メールソフトの「返信」は担当者へ届く。
+            ...(agentEmail ? { replyTo: agentEmail } : {}),
             subject: `【返信】「${propertyTitle}」についてのお問い合わせ`,
             html: `
         <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
           <h2>${escapeHtml(inquirerName)} 様</h2>
-          <p>お問い合わせいただいた物件「<strong>${safeTitle}</strong>」について、担当者より返信が届きました。</p>
+          <p>お問い合わせいただいた物件「<strong>${safeTitle}</strong>」について、担当より返信です。</p>
+          <p style="font-size: 14px; color: #475569; margin: 16px 0;">
+            <strong>担当:</strong> ${safeAgentName}
+            ${agentEmail ? `<br><strong>連絡先メール:</strong> <a href="mailto:${encodeURIComponent(agentEmail)}" style="color: #2563eb;">${safeAgentEmail}</a>` : ''}
+          </p>
           <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee; margin: 20px 0;">
             <p style="margin-top: 0; font-weight: bold; color: #666;">返信内容:</p>
             <p style="white-space: pre-wrap;">${safeMessage}</p>
           </div>
-          <p style="font-size: 13px; color: #64748b;">※本メールはシステムによる自動送信です。</p>
+          <p style="font-size: 13px; color: #64748b;">
+            ※送信元アドレスはお知らせ配信用です。<strong>「返信」ボタンでお返事いただくと、担当（${safeAgentName}）のメールアドレス宛に届きます。</strong>直接ご連絡いただくこともできます。
+          </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
           <p style="font-size: 12px; color: #999;">Chonburi Home</p>
         </div>
