@@ -95,6 +95,28 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
 
             if (error) throw error
 
+            const messageToNotify = replyText.trim()
+            try {
+                const notifyRes = await fetch('/api/inquiries/notify-reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        inquiry_id: inquiryId,
+                        message: messageToNotify,
+                    }),
+                })
+                if (!notifyRes.ok) {
+                    const errJson = (await notifyRes.json().catch(() => ({}))) as { error?: string }
+                    console.warn(
+                        '[InquiryList] notify-reply:',
+                        notifyRes.status,
+                        errJson.error || notifyRes.statusText
+                    )
+                }
+            } catch (notifyErr) {
+                console.warn('[InquiryList] notify-reply fetch failed:', notifyErr)
+            }
+
             // Update local state
             setInquiries(prev => prev.map(inq => {
                 if (inq.id === inquiryId) {
