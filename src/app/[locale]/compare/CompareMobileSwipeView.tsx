@@ -471,6 +471,7 @@ function PropertySwipeColumn({
                             url,
                             refId: p.reference_id || p.id?.slice(0, 8),
                             agentId: p.user_id,
+                            agentLineContact: p.agent_line_id ?? null,
                         }}
                         isLoggedIn={!!user}
                         onRequireAuth={onRequireAuth}

@@ -201,7 +201,22 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
 
             const orderMap = new Map(ids.map((id, i) => [id, i]));
             const sorted = [...data].sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
-            setProperties(sorted);
+
+            const ownerIds = [...new Set(sorted.map((p) => p.user_id).filter(Boolean))] as string[];
+            let withLine = sorted;
+            if (ownerIds.length > 0) {
+                const { data: profs } = await supabase
+                    .from("profiles")
+                    .select("id, line_id")
+                    .in("id", ownerIds);
+                const lineByUser = new Map((profs ?? []).map((row) => [row.id, row.line_id as string | null]));
+                withLine = sorted.map((p) => ({
+                    ...p,
+                    agent_line_id: p.user_id ? lineByUser.get(p.user_id) ?? null : null,
+                }));
+            }
+
+            setProperties(withLine);
             setLoading(false);
         })();
 
@@ -530,6 +545,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                                             url,
                                                             refId: p.reference_id || p.id?.slice(0, 8),
                                                             agentId: p.user_id,
+                                                            agentLineContact: p.agent_line_id ?? null,
                                                         }}
                                                         isLoggedIn={!!user}
                                                         onRequireAuth={() => setContactAuthOpen(true)}

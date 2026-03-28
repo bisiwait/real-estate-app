@@ -116,7 +116,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 if (initialProperty?.user_id) {
                     const { data: aData } = await supabase
                         .from('profiles')
-                        .select('phone, full_name')
+                        .select('phone, full_name, line_id')
                         .eq('id', initialProperty.user_id)
                         .maybeSingle()
                     setAgent(aData)
@@ -343,7 +343,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                         <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
                             <LineContactButton
-                                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }}
+                                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id, agentLineContact: agent?.line_id ?? null }}
                                 variant="full"
                                 dict={dict}
                                 isLoggedIn={!!user}
@@ -371,7 +371,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 </div>
             </div>
             <StickyContactBar
-                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id }}
+                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id, agentLineContact: agent?.line_id ?? null }}
                 phoneNumber={agent?.phone}
                 dict={dict}
                 isLoggedIn={!!user}

@@ -63,6 +63,40 @@ function lineAppUrlFromHttps(httpsUrl: string): string | null {
  * - line.me のパス形式（スキームなし）→ https を付与
  * - それ以外 → @ を除去し、`https://line.me/R/ti/p/~` 形式（パスは encode）
  */
+/** 物件ページの「LINE問い合わせ」で開く URL。公式の @BasicId なら oaMessage で下書き付き、その他は友だち追加／トーク用 URL（下書きなし）。 */
+export type LineInquiryEntryMode = 'oa_prefill' | 'open_chat'
+
+export function buildLineInquiryEntryUrl(
+  lineContact: string | null | undefined,
+  prefilledMessage: string
+): { url: string; mode: LineInquiryEntryMode } | null {
+  const raw = (lineContact ?? '').trim()
+  if (!raw) return null
+
+  if (/^https?:\/\//i.test(raw)) {
+    return { url: raw, mode: 'open_chat' }
+  }
+
+  if (/^line\.me\//i.test(raw) || /^www\.line\.me\//i.test(raw)) {
+    const full = `https://${raw.replace(/^https?:\/\//i, '').trim()}`
+    return { url: full, mode: 'open_chat' }
+  }
+
+  if (raw.startsWith('@') && raw.length > 1) {
+    const basicId = raw
+    const msg = prefilledMessage.trim()
+    const q = msg ? `?${encodeURIComponent(msg)}` : ''
+    return {
+      url: `https://line.me/R/oaMessage/${basicId}/${q}`,
+      mode: 'oa_prefill',
+    }
+  }
+
+  const friendUrl = buildLineContactUrl(raw)
+  if (!friendUrl) return null
+  return { url: friendUrl, mode: 'open_chat' }
+}
+
 export function buildLeadLineReplyUrls(
   lineContact: string | null | undefined
 ): { httpsUrl: string; appUrl: string | null } | null {

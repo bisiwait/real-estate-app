@@ -11,6 +11,7 @@ interface PropertyInfo {
     url: string
     refId?: string
     agentId?: string
+    agentLineContact?: string | null
 }
 
 interface StickyContactBarProps {

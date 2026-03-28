@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
-import { MessageCircle, X } from 'lucide-react'
+import { MessageCircle, X, Copy } from 'lucide-react'
+import { toast } from 'sonner'
+import { buildLineInquiryEntryUrl } from '@/lib/line-contact-url'
 
-const LINE_ID = '@164exdsf'
 const MD_MIN_PX = 768
 
 /**
@@ -20,13 +21,15 @@ function shouldShowLineQrModal(): boolean {
   return !window.matchMedia('(pointer: coarse)').matches
 }
 
-interface PropertyInfo {
+export interface PropertyInfo {
   id: string
   title: string
   price?: string
   url?: string
   refId?: string
   agentId?: string
+  /** 出品エージェントの profiles.line_id（LINE ID / 友だち追加 URL / 公式 @BasicId） */
+  agentLineContact?: string | null
 }
 
 interface LineContactButtonProps {
@@ -60,6 +63,12 @@ function buildPropertyDetailUrl(
   return `${window.location.origin}/${locale}/properties/${property.id}`
 }
 
+function displayLineContactLabel(raw: string): string {
+  const t = raw.trim()
+  if (t.length <= 48) return t
+  return `${t.slice(0, 45)}…`
+}
+
 export default function LineContactButton({
   property,
   dict,
@@ -81,8 +90,17 @@ export default function LineContactButton({
     return `${body}\n\n${detailUrl}`
   }, [rawMsg, property.title, detailUrl])
 
-  const lineMessageUrl = `https://line.me/R/oaMessage/${LINE_ID}/?${encodeURIComponent(inquiryMessage)}`
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(lineMessageUrl)}`
+  const agentLine = (property.agentLineContact ?? '').trim()
+  const entry = useMemo(
+    () => buildLineInquiryEntryUrl(agentLine || null, inquiryMessage),
+    [agentLine, inquiryMessage]
+  )
+
+  const lineOpenUrl = entry?.url ?? ''
+  const entryMode = entry?.mode
+  const qrSrc = lineOpenUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=2&data=${encodeURIComponent(lineOpenUrl)}`
+    : ''
 
   useEffect(() => {
     if (!modalOpen) return
@@ -115,11 +133,22 @@ export default function LineContactButton({
     }
   }, [property.id])
 
+  const copyInquiryMessage = useCallback(async () => {
+    if (!inquiryMessage.trim()) return
+    try {
+      await navigator.clipboard.writeText(inquiryMessage)
+      toast.success(pr.line_copy_inquiry_success ?? 'コピーしました')
+    } catch {
+      toast.error(pr.line_copy_inquiry_fail ?? 'コピーに失敗しました')
+    }
+  }, [inquiryMessage, pr.line_copy_inquiry_fail, pr.line_copy_inquiry_success])
+
   const handleLineContact = async () => {
     if (!isLoggedIn) {
       onRequireAuth?.()
       return
     }
+    if (!entry) return
 
     await logInquiry()
 
@@ -128,7 +157,7 @@ export default function LineContactButton({
       return
     }
 
-    window.location.href = lineMessageUrl
+    window.location.href = lineOpenUrl
   }
 
   const baseClasses =
@@ -136,8 +165,16 @@ export default function LineContactButton({
       ? 'flex flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-[#06C755] bg-white text-[#06C755] font-black uppercase text-center transition-all active:scale-95 shadow-sm shadow-[#06C755]/10'
       : 'flex w-full items-center justify-center gap-2 rounded-lg border border-[#06C755] bg-white py-3 font-bold text-[#06C755] shadow-sm transition-all hover:bg-[#06C755] hover:text-white'
 
+  const disabledClasses =
+    'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 shadow-none hover:bg-slate-100 hover:text-slate-400'
+
+  const modalHint =
+    entryMode === 'oa_prefill'
+      ? (pr.line_modal_scan_hint ?? '')
+      : (pr.line_modal_scan_hint_paste ?? pr.line_modal_scan_hint ?? '')
+
   const modal =
-    modalOpen && typeof document !== 'undefined'
+    modalOpen && entry && typeof document !== 'undefined'
       ? createPortal(
           <div
             className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6"
@@ -158,7 +195,7 @@ export default function LineContactButton({
                 className="absolute right-3 top-3 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
                 aria-label={pr.line_modal_close_aria ?? 'Close'}
               >
-                <X className="h-5 w-5" />
+                <X className="w-5 h-5" />
               </button>
               <h2
                 id="line-modal-title"
@@ -178,14 +215,24 @@ export default function LineContactButton({
                   />
                 </div>
                 <p className="text-center text-sm leading-relaxed text-slate-600">
-                  {pr.line_modal_scan_hint ?? ''}
+                  {modalHint}
                 </p>
+                {entryMode === 'open_chat' && inquiryMessage.trim() ? (
+                  <button
+                    type="button"
+                    onClick={() => void copyInquiryMessage()}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#06C755]/40 bg-[#06C755]/5 py-3 text-sm font-bold text-[#025c2c] transition hover:bg-[#06C755]/10"
+                  >
+                    <Copy className="h-4 w-4 shrink-0" aria-hidden />
+                    {pr.line_copy_inquiry_message ?? '問い合わせ文をコピー'}
+                  </button>
+                ) : null}
                 <div className="w-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-center">
                   <p className="text-xs font-medium text-slate-500">
-                    {pr.line_modal_id_label ?? 'LINE ID'}
+                    {pr.line_modal_id_label_agent ?? pr.line_modal_id_label ?? 'LINE'}
                   </p>
-                  <p className="mt-1 font-mono text-base font-semibold text-slate-900">
-                    {LINE_ID}
+                  <p className="mt-1 break-all font-mono text-sm font-semibold text-slate-900">
+                    {displayLineContactLabel(agentLine)}
                   </p>
                 </div>
               </div>
@@ -195,11 +242,35 @@ export default function LineContactButton({
         )
       : null
 
+  if (!entry) {
+    return (
+      <button
+        type="button"
+        disabled
+        title={pr.line_not_configured_hint ?? ''}
+        className={`${baseClasses} ${disabledClasses} ${className}`}
+      >
+        <MessageCircle
+          className={variant === 'icon' ? 'h-5 w-5' : 'h-5 w-5'}
+          fill="currentColor"
+          strokeWidth={0}
+        />
+        <span
+          className={
+            variant === 'icon' ? 'text-[10px] leading-tight px-1' : ''
+          }
+        >
+          {pr.line_inquiry_btn ?? 'LINE'}
+        </span>
+      </button>
+    )
+  }
+
   return (
     <>
       <button
         type="button"
-        onClick={handleLineContact}
+        onClick={() => void handleLineContact()}
         className={`${baseClasses} ${className}`}
       >
         <MessageCircle
@@ -207,7 +278,11 @@ export default function LineContactButton({
           fill="currentColor"
           strokeWidth={0}
         />
-        <span className={variant === 'icon' ? 'text-[10px] leading-tight px-1' : ''}>
+        <span
+          className={
+            variant === 'icon' ? 'text-[10px] leading-tight px-1' : ''
+          }
+        >
           {pr.line_inquiry_btn ?? 'LINE'}
         </span>
       </button>
