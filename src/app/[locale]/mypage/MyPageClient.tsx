@@ -10,6 +10,7 @@ import ProfileSection from "@/components/dashboard/ProfileSection";
 import FavoritesSection from "@/components/dashboard/FavoritesSection";
 import SavedSearchesSection from "@/components/dashboard/SavedSearchesSection";
 import UserPasswordChangeForm from "@/components/dashboard/UserPasswordChangeForm";
+import NotificationSettingsSection from "@/components/dashboard/NotificationSettingsSection";
 
 export default function MyPageClient({ dict, locale }: { dict: any, locale: string }) {
     const [activeTab, setActiveTab] = useState("profile");
@@ -127,7 +128,16 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
                         )}
                         {activeTab === "favorites" && <FavoritesSection favorites={favorites} dict={dict} locale={locale} />}
                         {activeTab === "searches" && <SavedSearchesSection searches={searches} dict={dict} locale={locale} />}
-                        {activeTab === "settings" && <SettingsSection handleLogout={handleLogout} dict={dict} locale={locale} />}
+                        {activeTab === "settings" && (
+                            <SettingsSection
+                                user={user}
+                                profile={profile}
+                                onProfilePatch={(patch) => setProfile((prev: any) => (prev ? { ...prev, ...patch } : prev))}
+                                handleLogout={handleLogout}
+                                dict={dict}
+                                locale={locale}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
@@ -135,7 +145,21 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
     );
 }
 
-function SettingsSection({ handleLogout, dict, locale }: { handleLogout: () => void, dict: any, locale: string }) {
+function SettingsSection({
+    user,
+    profile,
+    onProfilePatch,
+    handleLogout,
+    dict,
+    locale,
+}: {
+    user: any;
+    profile: any;
+    onProfilePatch: (patch: Record<string, unknown>) => void;
+    handleLogout: () => void;
+    dict: any;
+    locale: string;
+}) {
     const [passwordOpen, setPasswordOpen] = useState(false);
 
     return (
@@ -175,7 +199,13 @@ function SettingsSection({ handleLogout, dict, locale }: { handleLogout: () => v
                         </div>
                     ) : null}
                 </div>
-                <SettingsLink label={dict.labels.notification_settings} href="#" />
+                <NotificationSettingsSection
+                    user={user}
+                    profile={profile}
+                    onProfilePatch={onProfilePatch}
+                    dict={dict}
+                    locale={locale}
+                />
             </div>
 
             <div className="pt-10 border-t border-slate-100">

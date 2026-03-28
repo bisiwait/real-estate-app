@@ -6,11 +6,21 @@ interface SwitchProps {
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
     label?: string;
+    disabled?: boolean;
 }
 
-export default function Switch({ checked, onCheckedChange, label }: SwitchProps) {
+export default function Switch({ checked, onCheckedChange, label, disabled }: SwitchProps) {
     return (
-        <div className="flex items-center justify-between group cursor-pointer" onClick={() => onCheckedChange(!checked)}>
+        <div
+            role="switch"
+            aria-checked={checked}
+            aria-disabled={disabled ?? false}
+            className={`flex items-center justify-between group ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+            onClick={() => {
+                if (disabled) return;
+                onCheckedChange(!checked);
+            }}
+        >
             {label && <span className="text-sm font-bold text-navy-secondary select-none">{label}</span>}
             <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${checked ? 'bg-navy-primary' : 'bg-slate-200'}`}>
                 <motion.div
