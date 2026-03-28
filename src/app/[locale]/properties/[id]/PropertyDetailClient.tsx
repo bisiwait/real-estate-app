@@ -1,7 +1,7 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
-import { useParams, usePathname, useSearchParams } from 'next/navigation'
-import { useState, useEffect, useMemo } from 'react'
+import { useParams, usePathname } from 'next/navigation'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { useAuth } from '@/contexts/AuthContext'
@@ -66,13 +66,17 @@ interface PropertyDetailClientProps {
 export default function PropertyDetailClient({ initialProperty }: PropertyDetailClientProps) {
     const params = useParams()
     const pathname = usePathname()
-    const searchParams = useSearchParams()
-    const id = params?.id as string
+    const rawParamId = params?.id
+    const id =
+        (Array.isArray(rawParamId) ? rawParamId[0] : rawParamId) ||
+        initialProperty?.id ||
+        ''
     const locale = (params?.locale as string) || 'jp'
     const { user } = useAuth()
     const [contactAuthOpen, setContactAuthOpen] = useState(false)
 
-    const returnPath = `${pathname || `/${locale}/properties/${id}`}${searchParams?.toString() ? `?${searchParams}` : ''}`
+    // useSearchParams は親の Suspense と相性でエラーバウンダリに落ちることがあるため、pathname のみで戻り先を組み立てる
+    const returnPath = pathname || `/${locale}/properties/${id}`
     
     // サーバーから受け取った初期データを使用
     const [property, setProperty] = useState<any>(initialProperty)
@@ -82,8 +86,14 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     const [activeLang, setActiveLang] = useState<'jp' | 'en' | 'th'>(locale as any || 'jp')
     const [translatingTitle, setTranslatingTitle] = useState(false)
     const [profile, setProfile] = useState<any>(null)
+    /** 同一物件×言語でタイトル翻訳 API を連打しない（失敗時もループさせない） */
+    const titleTranslateAttemptKey = useRef<string>('')
 
     const viewerHasPremium = isPremium(profile)
+
+    useEffect(() => {
+        titleTranslateAttemptKey.current = ''
+    }, [property?.id, activeLang])
 
     const contactPrefill = useMemo(() => {
         if (!user) return null
@@ -98,70 +108,89 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     useEffect(() => {
         window.scrollTo(0, 0);
         const fetchClientData = async () => {
-            const supabase = createClient()
-            // 辞書と追加データのみクライアントで取得
-            const d = await getDictionary(locale)
-            setDict(d)
+            try {
+                const supabase = createClient()
+                const d = await getDictionary(locale)
+                setDict(d)
 
-            // エージェント情報の取得
-            if (initialProperty?.user_id) {
-                const { data: aData } = await supabase.from('profiles').select('phone, full_name').eq('id', initialProperty.user_id).single()
-                setAgent(aData)
-            }
+                if (initialProperty?.user_id) {
+                    const { data: aData } = await supabase
+                        .from('profiles')
+                        .select('phone, full_name')
+                        .eq('id', initialProperty.user_id)
+                        .maybeSingle()
+                    setAgent(aData)
+                }
 
-            // ログインユーザーのプラン・問い合わせ用プロフィール
-            if (user) {
-                const { data: pData } = await supabase
-                    .from('profiles')
-                    .select('plan, plan_type, full_name, phone, line_id, email, current_period_end, is_admin')
-                    .eq('id', user.id)
-                    .single()
-                if (pData) setProfile(pData)
-            } else {
+                if (user) {
+                    const { data: pData, error: profileErr } = await supabase
+                        .from('profiles')
+                        .select('plan, plan_type, full_name, phone, line_id, email, current_period_end, is_admin')
+                        .eq('id', user.id)
+                        .maybeSingle()
+                    if (profileErr) {
+                        console.warn('[PropertyDetail] profile fetch:', profileErr.message)
+                        setProfile(null)
+                    } else {
+                        setProfile(pData ?? null)
+                    }
+                } else {
+                    setProfile(null)
+                }
+            } catch (e) {
+                console.error('[PropertyDetail] fetchClientData:', e)
+                try {
+                    setDict(await getDictionary('jp'))
+                } catch {
+                    setDict({ property: { tags: {}, db_locations: {} }, labels: {}, common: {} } as any)
+                }
                 setProfile(null)
+            } finally {
+                setLoading(false)
             }
-
-            setLoading(false)
         }
         fetchClientData()
     }, [id, locale, user, initialProperty])
 
     useEffect(() => {
         const translateTitleOnDemand = async () => {
-            if (!property || translatingTitle) return;
-            
-            const needsEn = activeLang === 'en' && !property.title_en;
-            const needsTh = activeLang === 'th' && !property.title_th;
-            
-            if (needsEn || needsTh) {
-                setTranslatingTitle(true);
-                try {
-                    const res = await fetch(`/api/translate`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            id: property.id, 
-                            title: property.title_ja || property.title 
-                        })
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        setProperty((prev: any) => ({
-                            ...prev,
-                            title_en: data.title_en || prev.title_en,
-                            title_th: data.title_th || prev.title_th
-                        }));
-                    }
-                } catch (error) {
-                    console.error("Failed to translate title:", error);
-                } finally {
-                    setTranslatingTitle(false);
-                }
-            }
-        };
+            if (!property || translatingTitle) return
 
-        translateTitleOnDemand();
-    }, [activeLang, property?.id, property?.title_en, property?.title_th, translatingTitle]);
+            const needsEn = activeLang === 'en' && !property.title_en
+            const needsTh = activeLang === 'th' && !property.title_th
+            if (!needsEn && !needsTh) return
+
+            const attemptKey = `${property.id}:${activeLang}`
+            if (titleTranslateAttemptKey.current === attemptKey) return
+            titleTranslateAttemptKey.current = attemptKey
+
+            setTranslatingTitle(true)
+            try {
+                const res = await fetch(`/api/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: property.id,
+                        title: property.title_ja || property.title,
+                    }),
+                })
+                if (res.ok) {
+                    const data = await res.json()
+                    setProperty((prev: any) => ({
+                        ...prev,
+                        title_en: data.title_en || prev.title_en,
+                        title_th: data.title_th || prev.title_th,
+                    }))
+                }
+            } catch (error) {
+                console.error('Failed to translate title:', error)
+            } finally {
+                setTranslatingTitle(false)
+            }
+        }
+
+        translateTitleOnDemand()
+    }, [activeLang, property?.id, property?.title_en, property?.title_th, translatingTitle])
 
     // Hooks は早期 return より前で常に同じ順序で呼ぶ（loading 中に useMemo をスキップするとクラッシュする）
     const projectDisplayName = useMemo(() => {
@@ -212,8 +241,8 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     }
 
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
-    const translateTag = (tag: string) => (dict.property.tags as any)?.[tag] || tag;
-    const translateArea = (areaName: string) => (dict.property.db_locations as any)?.[areaName] || areaName;
+    const translateTag = (tag: string) => (dict.property?.tags as any)?.[tag] || tag;
+    const translateArea = (areaName: string) => (dict.property?.db_locations as any)?.[areaName] || areaName;
 
     const amenityTags = (property.tags || []).filter((t: string) => typeof t === 'string' && t.trim().length > 0)
     const sharedFacilitiesList = (property.project?.facilities || property.project_facilities || []).filter(
