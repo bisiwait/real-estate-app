@@ -260,7 +260,9 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                                                         minute: '2-digit'
                                                     })}
                                                 </p>
-                                                <p className="text-sm text-slate-700 leading-relaxed">{reply.message}</p>
+                                                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+                                                    {reply.message}
+                                                </p>
                                             </div>
                                         ))}
                                     </div>
