@@ -99,6 +99,7 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
             try {
                 const notifyRes = await fetch('/api/inquiries/notify-reply', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         inquiry_id: inquiryId,
@@ -107,11 +108,15 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                 })
                 if (!notifyRes.ok) {
                     const errJson = (await notifyRes.json().catch(() => ({}))) as { error?: string }
-                    console.warn(
-                        '[InquiryList] notify-reply:',
-                        notifyRes.status,
-                        errJson.error || notifyRes.statusText
-                    )
+                    const detail = errJson.error || notifyRes.statusText
+                    console.warn('[InquiryList] notify-reply:', notifyRes.status, detail)
+                    if (notifyRes.status === 401) {
+                        alert(
+                            '返信は保存されましたが、通知メール用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。'
+                        )
+                    } else if (notifyRes.status === 502 || notifyRes.status === 503) {
+                        alert(`通知メールの送信に失敗しました: ${detail}`)
+                    }
                 }
             } catch (notifyErr) {
                 console.warn('[InquiryList] notify-reply fetch failed:', notifyErr)

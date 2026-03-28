@@ -40,10 +40,23 @@ export async function POST(req: NextRequest) {
             .single()
 
         if (inqError || !inquiry) {
+            console.warn('[notify-reply] inquiry select:', inqError?.message)
             return NextResponse.json({ error: 'お問い合わせが見つかりません。' }, { status: 404 })
         }
 
-        if (inquiry.owner_id !== user.id) {
+        const isOwner = inquiry.owner_id === user.id
+        let isAdminUser = false
+        if (!isOwner) {
+            const { data: prof } = await supabase
+                .from('profiles')
+                .select('is_admin, user_role')
+                .eq('id', user.id)
+                .maybeSingle()
+            isAdminUser = prof?.is_admin === true || prof?.user_role === 'admin'
+        }
+
+        if (!isOwner && !isAdminUser) {
+            console.warn('[notify-reply] forbidden', { userId: user.id, ownerId: inquiry.owner_id })
             return NextResponse.json({ error: 'このお問い合わせに返信する権限がありません。' }, { status: 403 })
         }
 
@@ -67,9 +80,12 @@ export async function POST(req: NextRequest) {
         const safeMessage = escapeHtml(message)
         const safeTitle = escapeHtml(propertyTitle)
 
+        const from =
+            process.env.RESEND_FROM?.trim() || 'Chonburi Home <onboarding@resend.dev>'
+
         const resend = new Resend(apiKey)
         const { data: sent, error: sendErr } = await resend.emails.send({
-            from: 'Chonburi Home <onboarding@resend.dev>',
+            from,
             to: [to],
             subject: `【返信】「${propertyTitle}」についてのお問い合わせ`,
             html: `

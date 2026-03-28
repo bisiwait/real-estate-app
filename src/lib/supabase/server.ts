@@ -21,6 +21,10 @@ export function createRouteHandlerSupabaseClient(request: NextRequest, response:
     })
 }
 
+/**
+ * Server Component / Route Handler 共通。
+ * Next.js App Router では getAll/setAll が推奨（チャンク Cookie 対応）。get のみだと API Route でセッションが読めないことがある。
+ */
 export async function createClient() {
     const cookieStore = await cookies()
 
@@ -29,25 +33,16 @@ export async function createClient() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value
+                getAll() {
+                    return cookieStore.getAll()
                 },
-                set(name: string, value: string, options: CookieOptions) {
+                setAll(cookiesToSet) {
                     try {
-                        cookieStore.set({ name, value, ...options })
-                    } catch (error) {
-                        // The `set` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
-                    }
-                },
-                remove(name: string, options: CookieOptions) {
-                    try {
-                        cookieStore.set({ name, value: '', ...options })
-                    } catch (error) {
-                        // The `remove` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options as CookieOptions)
+                        )
+                    } catch {
+                        // Server Component 等で set できない場合は無視（middleware が更新する）
                     }
                 },
             },
