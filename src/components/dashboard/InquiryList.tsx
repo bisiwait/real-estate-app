@@ -107,7 +107,10 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                     }),
                 })
                 if (!notifyRes.ok) {
-                    const errJson = (await notifyRes.json().catch(() => ({}))) as { error?: string }
+                    const errJson = (await notifyRes.json().catch(() => ({}))) as {
+                        error?: string
+                        hint?: string
+                    }
                     const detail = errJson.error || notifyRes.statusText
                     console.warn('[InquiryList] notify-reply:', notifyRes.status, detail)
                     if (notifyRes.status === 401) {
@@ -115,7 +118,8 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                             '返信は保存されましたが、通知メール用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。'
                         )
                     } else if (notifyRes.status === 502 || notifyRes.status === 503) {
-                        alert(`通知メールの送信に失敗しました: ${detail}`)
+                        const hint = errJson.hint ? `\n\n${errJson.hint}` : ''
+                        alert(`通知メールの送信に失敗しました: ${detail}${hint}`)
                     }
                 }
             } catch (notifyErr) {

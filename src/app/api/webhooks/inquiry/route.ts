@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getPublicSiteUrl } from '@/lib/site-url';
 import { NextRequest, NextResponse } from 'next/server';
+import { getResendFromAddress } from '@/lib/resend-from';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'dummy_key_for_build');
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
         const dashboardUrl = `${getPublicSiteUrl()}/jp/dashboard`;
 
         const { data, error } = await resend.emails.send({
-            from: 'Chonburi Home <onboarding@resend.dev>',
+            from: getResendFromAddress(),
             to: [agentEmail],
             subject: `【新着】物件「${property.title}」にお問い合わせがありました`,
             html: `

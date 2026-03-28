@@ -15,7 +15,10 @@ namespace NodeJS {
         STRIPE_SECRET_KEY: string;
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: string;
         RESEND_API_KEY?: string;
-        /** Resend の From（例: Chonburi Home <noreply@yourdomain.com>）。未設定時は onboarding@resend.dev */
+        /**
+         * Resend の From（必須に近い: 任意宛先へ送るには resend.com/domains でドメイン検証後、
+         * 「Chonburi Home <noreply@検証済みドメイン>」形式で設定。未設定だとテスト用制限のまま）
+         */
         RESEND_FROM?: string;
         /** next.config の旧ホスト → 本番への 308 用（カンマ区切りホスト名） */
         LEGACY_REDIRECT_HOSTS?: string;

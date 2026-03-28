@@ -1,6 +1,11 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import {
+    getResendFromAddress,
+    RESEND_DOMAIN_HINT_JA,
+    resendErrorNeedsVerifiedDomain,
+} from '@/lib/resend-from'
 
 function escapeHtml(text: string): string {
     return text
@@ -80,8 +85,7 @@ export async function POST(req: NextRequest) {
         const safeMessage = escapeHtml(message)
         const safeTitle = escapeHtml(propertyTitle)
 
-        const from =
-            process.env.RESEND_FROM?.trim() || 'Chonburi Home <onboarding@resend.dev>'
+        const from = getResendFromAddress()
 
         const resend = new Resend(apiKey)
         const { data: sent, error: sendErr } = await resend.emails.send({
@@ -104,8 +108,10 @@ export async function POST(req: NextRequest) {
         })
 
         if (sendErr) {
+            const msg = sendErr.message || String(sendErr)
             console.error('[notify-reply] Resend error:', sendErr)
-            return NextResponse.json({ error: sendErr.message, sent: false }, { status: 502 })
+            const hint = resendErrorNeedsVerifiedDomain(msg) ? RESEND_DOMAIN_HINT_JA : undefined
+            return NextResponse.json({ error: msg, hint, sent: false }, { status: 502 })
         }
 
         return NextResponse.json({ success: true, sent: true, id: sent?.id })
