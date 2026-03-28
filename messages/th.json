@@ -215,6 +215,7 @@
         "notify_prefs_footer_note": "การส่งแจ้งเตือนจริงจะเปิดใช้งานในอนาคต การตั้งค่าจะถูกเก็บในบัญชีของคุณ",
         "notify_line_oauth_missing_origin": "ไม่สามารถเริ่มเชื่อม LINE: ยังไม่ได้ตั้งค่า URL เว็บไซต์ (NEXT_PUBLIC_SITE_URL)",
         "notify_line_oauth_error": "ไม่สามารถเริ่มเชื่อม LINE ได้",
+        "notify_line_custom_provider_hint": "Supabase ไม่มี provider \"line\" ในตัว ให้เพิ่ม LINE เป็น Custom OAuth/OIDC ที่ Authentication → Providers แล้วตั้งค่า identifier (เช่น custom:line) ให้ตรงกับ NEXT_PUBLIC_SUPABASE_LINE_PROVIDER (ค่าเริ่มต้น custom:line) Issuer: https://access.line.me",
         "saved_searches": "การค้นหาที่บันทึกไว้",
         "saved_searches_tab_short": "เงื่อนไข",
         "saved_date": "วันที่บันทึก",

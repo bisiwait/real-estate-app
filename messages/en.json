@@ -216,6 +216,7 @@
         "notify_prefs_footer_note": "Delivery of notifications will be enabled in a future update. Your choices are stored on your account.",
         "notify_line_oauth_missing_origin": "Cannot start LINE link: site URL (NEXT_PUBLIC_SITE_URL) is not set.",
         "notify_line_oauth_error": "Could not start LINE linking",
+        "notify_line_custom_provider_hint": "Supabase has no built-in \"line\" provider. Add LINE as a Custom OAuth/OIDC provider under Authentication → Providers and match its identifier (e.g. custom:line) to NEXT_PUBLIC_SUPABASE_LINE_PROVIDER (defaults to custom:line). Issuer URL: https://access.line.me",
         "saved_searches": "Saved Searches",
         "saved_searches_tab_short": "Criteria",
         "saved_date": "Saved Date",

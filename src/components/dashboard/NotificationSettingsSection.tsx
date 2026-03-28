@@ -9,6 +9,7 @@ import { Bell, Loader2 } from "lucide-react";
 import { getAuthSiteOrigin } from "@/lib/auth/site-origin";
 import { buildOAuthSignInRedirectUrl } from "@/lib/auth/auth-callback-url";
 import { setAuthReturnToCookie } from "@/lib/auth/auth-return-cookie";
+import { getLineOAuthProviderId } from "@/lib/auth/line-oauth-provider";
 
 type ProfileRow = {
     id: string;
@@ -19,10 +20,10 @@ type ProfileRow = {
     notify_via_email?: boolean | null;
 };
 
-function isLineLinked(user: User | null, profile: ProfileRow | null): boolean {
+function isLineLinked(user: User | null, profile: ProfileRow | null, lineProviderId: string): boolean {
     if (profile?.line_user_id && String(profile.line_user_id).trim() !== "") return true;
     const ids = user?.identities ?? [];
-    return ids.some((i) => i.provider === "line");
+    return ids.some((i) => i.provider === lineProviderId || i.provider === "line");
 }
 
 export default function NotificationSettingsSection({
@@ -40,10 +41,11 @@ export default function NotificationSettingsSection({
 }) {
     const l = dict.labels;
     const supabase = useMemo(() => createClient(), []);
+    const lineProviderId = useMemo(() => getLineOAuthProviderId(), []);
     const [savingKey, setSavingKey] = useState<string | null>(null);
     const [lineLoading, setLineLoading] = useState(false);
 
-    const lineLinked = isLineLinked(user, profile);
+    const lineLinked = isLineLinked(user, profile, lineProviderId);
 
     const notifyNewMatching = profile?.notify_new_matching === true;
     const notifyPriceDrop = profile?.notify_price_drop === true;
@@ -80,7 +82,7 @@ export default function NotificationSettingsSection({
         try {
             setAuthReturnToCookie(`/${locale}/mypage?tab=settings`);
             const { error } = await supabase.auth.linkIdentity({
-                provider: "line" as Provider,
+                provider: lineProviderId as Provider,
                 options: { redirectTo: buildOAuthSignInRedirectUrl(origin, locale) },
             });
             if (error) throw error;
@@ -141,6 +143,7 @@ export default function NotificationSettingsSection({
                 {!lineLinked ? (
                     <div className="mb-5 rounded-2xl border border-[#06C755]/25 bg-[#06C755]/5 p-4">
                         <p className="mb-3 text-sm font-bold text-navy-secondary">{l.notify_line_unlinked_hint}</p>
+                        <p className="mb-3 text-xs font-medium leading-relaxed text-slate-600">{l.notify_line_custom_provider_hint}</p>
                         <button
                             type="button"
                             onClick={() => void handleLineLink()}
