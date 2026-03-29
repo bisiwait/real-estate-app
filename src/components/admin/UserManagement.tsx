@@ -21,16 +21,22 @@ import {
 import { getErrorMessage } from '@/lib/utils/errors'
 import { adminResetPassword } from '@/app/actions/adminAuth'
 
-type UserRoleFilter = 'agent' | 'general';
+export type AdminUserManagementVariant = 'agent' | 'general'
 
-export default function AdminUserManagement({ locale }: { locale: string }) {
+export default function AdminUserManagement({
+    locale,
+    variant,
+}: {
+    locale: string
+    /** 管理者ダッシュボードのタブごとに固定（エージェント / 一般ユーザー） */
+    variant: AdminUserManagementVariant
+}) {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [resettingPassword, setResettingPassword] = useState<string | null>(null)
     const [newPassword, setNewPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
-    const [roleFilter, setRoleFilter] = useState<UserRoleFilter>('agent')
 
     // Pagination & Search States
     const [searchQuery, setSearchQuery] = useState('')
@@ -129,11 +135,10 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
         const isAgentRole = user.user_role === 'agent' ||
             (user.property_count !== undefined && user.property_count > 0);
 
-        // Step 1: Role Filter
-        if (roleFilter === 'agent') {
-            if (!isAgentRole) return false;
+        if (variant === 'agent') {
+            if (!isAgentRole) return false
         } else {
-            if (isAgentRole) return false;
+            if (isAgentRole) return false
         }
 
         // Step 2: Search Query
@@ -152,7 +157,7 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
     // Reset page on search or filter change
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchQuery, roleFilter])
+    }, [searchQuery, variant])
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
@@ -160,14 +165,18 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-lg md:text-xl font-black text-navy-secondary">エージェント・ユーザー管理</h2>
+                            <h2 className="text-lg md:text-xl font-black text-navy-secondary">
+                                {variant === 'agent' ? 'エージェント会員' : '一般ユーザー会員'}
+                            </h2>
                             {!loading && (
                                 <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
                                     {filteredUsers.length}件
                                 </span>
                             )}
                         </div>
-                        <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">User Management</p>
+                        <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                            {variant === 'agent' ? 'Agent accounts' : 'End-user accounts'}
+                        </p>
                     </div>
 
                     <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
@@ -191,23 +200,6 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
                             )}
                         </div>
 
-                        {/* Tab UI */}
-                        <div className="flex items-center w-full md:w-auto overflow-hidden">
-                            <div className="flex bg-white p-1 rounded-xl border border-slate-200 w-full md:w-auto">
-                                <button
-                                    onClick={() => setRoleFilter('agent')}
-                                    className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${roleFilter === 'agent' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
-                                >
-                                    エージェント
-                                </button>
-                                <button
-                                    onClick={() => setRoleFilter('general')}
-                                    className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${roleFilter === 'general' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
-                                >
-                                    一般ユーザー
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -235,7 +227,7 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
                             <div className="flex items-start gap-3 md:gap-4">
                                 {/* Avatar */}
                                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-navy-primary/5 flex items-center justify-center flex-shrink-0">
-                                    {roleFilter === 'agent' ? <Building2 className="w-5 h-5 text-navy-primary/50" /> : <UserCircle className="w-5 h-5 text-slate-400" />}
+                                    {variant === 'agent' ? <Building2 className="w-5 h-5 text-navy-primary/50" /> : <UserCircle className="w-5 h-5 text-slate-400" />}
                                 </div>
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
@@ -244,14 +236,14 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
                                             {user.full_name || user.email || 'Anonymous'}
                                             {user.user_role === 'admin' && <ShieldCheck className="w-3 h-3 ml-1 text-amber-500 inline" />}
                                         </p>
-                                        {roleFilter === 'agent' && (
+                                        {variant === 'agent' && (
                                             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${user.plan === 'premium' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
                                                 {user.plan === 'premium' ? 'Premium' : 'Free'}
                                             </span>
                                         )}
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-0.5">{user.email}</p>
-                                    {roleFilter === 'agent' && (
+                                    {variant === 'agent' && (
                                         <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                             <div className="flex items-center gap-1">
                                                 <span className="text-[10px] font-bold text-navy-primary">{user.property_count || 0}</span>
@@ -290,7 +282,7 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-                                            {roleFilter === 'agent' ? (
+                                            {variant === 'agent' ? (
                                                 <>
                                                     <Link
                                                         href={`/${locale}/admin-secret/agents?agent=${user.id}`}
@@ -385,8 +377,19 @@ export default function AdminUserManagement({ locale }: { locale: string }) {
 
             <div className="bg-slate-50 p-6 border-t border-slate-100">
                 <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
-                    ※ ユーザーの役割（エージェント/一般）は、物件の投稿履歴に基づいて自動的に分類されます。<br />
-                    不審な操作はログを確認し、必要に応じてプロフィールを一時停止してください。
+                    {variant === 'agent' ? (
+                        <>
+                            ※ エージェント会員は <code className="text-slate-500">user_role = agent</code>、または掲載物件があるプロフィールに含まれます。
+                            <br />
+                            不審な操作はログを確認し、必要に応じてプランやアカウントを見直してください。
+                        </>
+                    ) : (
+                        <>
+                            ※ 一般ユーザー会員は、上記に該当しない会員（お問い合わせ・お気に入り等の利用者）です。
+                            <br />
+                            詳細は各行の「詳細」からプロフィール・パスワードを管理できます。
+                        </>
+                    )}
                 </p>
             </div>
         </div>

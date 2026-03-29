@@ -4,7 +4,7 @@ import { useState } from 'react'
 import {
     BarChart3,
     Home,
-    Users,
+    UserCircle,
     MessageSquare,
     Mail,
     TrendingUp,
@@ -25,7 +25,15 @@ import AdminFeedbackManagement from './FeedbackManagement'
 import AdminInquiriesPanel from './AdminInquiriesPanel'
 import type { AdminMailInquiryRow, AdminLineLeadRow } from '@/lib/supabase/fetch-admin-inquiries'
 
-type TabId = 'overview' | 'projects' | 'developers' | 'properties' | 'users' | 'feedback' | 'inquiries'
+type TabId =
+    | 'overview'
+    | 'projects'
+    | 'developers'
+    | 'properties'
+    | 'agents'
+    | 'general_users'
+    | 'feedback'
+    | 'inquiries'
 
 interface Props {
     pendingCount: number
@@ -107,9 +115,13 @@ export default function AdminDashboardClient({
                         </span>
                     )}
                 </button>
-                <button onClick={() => setTab('users')} className={`${tabClass('users')} sm:flex-1 h-12 sm:h-auto`}>
-                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">会員</span>
+                <button onClick={() => setTab('agents')} className={`${tabClass('agents')} sm:flex-1 h-12 sm:h-auto`}>
+                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-[9px] sm:text-sm whitespace-nowrap">エージェント</span>
+                </button>
+                <button onClick={() => setTab('general_users')} className={`${tabClass('general_users')} sm:flex-1 h-12 sm:h-auto`}>
+                    <UserCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-[9px] sm:text-sm whitespace-nowrap">ユーザー</span>
                 </button>
                 <button onClick={() => setTab('inquiries')} className={`${tabClass('inquiries')} sm:flex-1 h-12 sm:h-auto`}>
                     <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -186,14 +198,15 @@ export default function AdminDashboardClient({
                         <Sparkles className="w-16 h-16 text-navy-primary/10 mx-auto mb-6" />
                         <h3 className="text-2xl font-black text-navy-secondary mb-4">管理者ダッシュボードへようこそ</h3>
                         <p className="text-slate-500 max-w-lg mx-auto leading-relaxed">
-                            上記のタブから、プロジェクト（建物マスター）、物件の承認プロセス、エージェントや一般ユーザーの管理を個別に行うことができます。
+                            上記のタブから、プロジェクト（建物マスター）、物件の承認、エージェント会員・一般ユーザー会員の管理、問い合わせや要望への対応を行えます。
                         </p>
                     </div>
                 )}
                 {tab === 'projects' && <AdminProjectManagement />}
                 {tab === 'developers' && <AdminDeveloperManagement />}
                 {tab === 'properties' && <AdminPropertyManagement />}
-                {tab === 'users' && <AdminUserManagement locale={locale} />}
+                {tab === 'agents' && <AdminUserManagement locale={locale} variant="agent" />}
+                {tab === 'general_users' && <AdminUserManagement locale={locale} variant="general" />}
                 {tab === 'inquiries' && (
                     <AdminInquiriesPanel
                         locale={locale}
