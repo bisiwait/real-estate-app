@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import {
     BarChart3,
     Home,
@@ -57,6 +57,19 @@ export default function AdminDashboardClient({
     lineLeads,
 }: Props) {
     const [tab, setTab] = useState<TabId>(initialTab)
+    const [feedbackTabBadge, setFeedbackTabBadge] = useState(newFeedbackCount)
+    const consumedNewFeedbackBadgeIds = useRef(new Set<string>())
+
+    /** 未対応（new）のカウントから1件分ずらす（展開 or ステータス変更で1回だけ） */
+    const consumeNewFeedbackBadgeIfNeeded = useCallback((feedbackId: string) => {
+        if (consumedNewFeedbackBadgeIds.current.has(feedbackId)) return
+        consumedNewFeedbackBadgeIds.current.add(feedbackId)
+        setFeedbackTabBadge((n) => Math.max(0, n - 1))
+    }, [])
+
+    const selectTab = (id: TabId) => {
+        setTab(id)
+    }
 
     const tabClass = (id: TabId) =>
         `flex min-h-12 flex-1 basis-[calc(50%-4px)] items-center justify-center space-x-1.5 rounded-xl py-2.5 font-black transition-all cursor-pointer sm:min-h-0 sm:basis-auto sm:flex-none sm:px-3 sm:py-3.5 md:flex-1 ${
@@ -94,19 +107,19 @@ export default function AdminDashboardClient({
 
             {/* Tab Navigation */}
             <div className="mb-6 flex flex-wrap gap-1 rounded-2xl border border-slate-100 bg-white p-1 shadow-md sm:mb-10">
-                <button onClick={() => setTab('overview')} className={`${tabClass('overview')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('overview')} className={`${tabClass('overview')} sm:flex-1 h-12 sm:h-auto`}>
                     <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">概要</span>
                 </button>
-                <button onClick={() => setTab('projects')} className={`${tabClass('projects')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('projects')} className={`${tabClass('projects')} sm:flex-1 h-12 sm:h-auto`}>
                     <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">プロジェクト</span>
                 </button>
-                <button onClick={() => setTab('developers')} className={`${tabClass('developers')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('developers')} className={`${tabClass('developers')} sm:flex-1 h-12 sm:h-auto`}>
                     <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">開発</span>
                 </button>
-                <button onClick={() => setTab('properties')} className={`${tabClass('properties')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('properties')} className={`${tabClass('properties')} sm:flex-1 h-12 sm:h-auto`}>
                     <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">承認</span>
                     {pendingCount > 0 && (
@@ -115,24 +128,24 @@ export default function AdminDashboardClient({
                         </span>
                     )}
                 </button>
-                <button onClick={() => setTab('agents')} className={`${tabClass('agents')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('agents')} className={`${tabClass('agents')} sm:flex-1 h-12 sm:h-auto`}>
                     <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">エージェント</span>
                 </button>
-                <button onClick={() => setTab('general_users')} className={`${tabClass('general_users')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('general_users')} className={`${tabClass('general_users')} sm:flex-1 h-12 sm:h-auto`}>
                     <UserCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">ユーザー</span>
                 </button>
-                <button onClick={() => setTab('inquiries')} className={`${tabClass('inquiries')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('inquiries')} className={`${tabClass('inquiries')} sm:flex-1 h-12 sm:h-auto`}>
                     <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">問い合わせ</span>
                 </button>
-                <button onClick={() => setTab('feedback')} className={`${tabClass('feedback')} sm:flex-1 h-12 sm:h-auto`}>
+                <button onClick={() => selectTab('feedback')} className={`${tabClass('feedback')} sm:flex-1 h-12 sm:h-auto`}>
                     <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span className="text-[9px] sm:text-sm whitespace-nowrap">要望</span>
-                    {newFeedbackCount > 0 && (
+                    {feedbackTabBadge > 0 && (
                         <span className="bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ml-1 min-w-[1.2rem] text-center">
-                            {newFeedbackCount}
+                            {feedbackTabBadge}
                         </span>
                     )}
                 </button>
@@ -214,7 +227,9 @@ export default function AdminDashboardClient({
                         lineLeads={lineLeads}
                     />
                 )}
-                {tab === 'feedback' && <AdminFeedbackManagement />}
+                {tab === 'feedback' && (
+                    <AdminFeedbackManagement onConsumeNewFeedbackBadge={consumeNewFeedbackBadgeIfNeeded} />
+                )}
             </div>
         </>
     )

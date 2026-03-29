@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { 
     Lightbulb, 
@@ -21,7 +22,12 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
-export default function AdminFeedbackManagement() {
+export default function AdminFeedbackManagement({
+    onConsumeNewFeedbackBadge,
+}: {
+    /** 未対応（new）を「見た」扱いにしたときバッジを1減らす（同一IDは1回のみ） */
+    onConsumeNewFeedbackBadge?: (feedbackId: string) => void
+}) {
     const [feedbacks, setFeedbacks] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -34,8 +40,7 @@ export default function AdminFeedbackManagement() {
 
     const fetchFeedbacks = async () => {
         setLoading(true)
-        console.log('Fetching feedbacks with status filter:', statusFilter)
-        
+
         let query = supabase
             .from('feedback')
             .select('*, profile:profiles(full_name, email)')
@@ -50,23 +55,34 @@ export default function AdminFeedbackManagement() {
         if (error) {
             console.error('Error fetching feedbacks:', error)
         } else {
-            console.log('Fetched feedbacks count:', data?.length)
             setFeedbacks(data || [])
         }
         setLoading(false)
     }
 
     const updateStatus = async (id: string, newStatus: string) => {
-        console.log('Updating feedback status:', id, newStatus)
-        const { error } = await supabase
-            .from('feedback')
-            .update({ status: newStatus })
-            .eq('id', id)
+        const prevStatus = feedbacks.find((f) => f.id === id)?.status
+        try {
+            const res = await fetch('/api/admin/feedback-status', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status: newStatus }),
+            })
+            const data = (await res.json().catch(() => ({}))) as { error?: string }
 
-        if (error) {
-            console.error('Error updating status:', error)
-        } else {
-            setFeedbacks(feedbacks.map(f => f.id === id ? { ...f, status: newStatus } : f))
+            if (!res.ok) {
+                toast.error(data.error || 'ステータスの更新に失敗しました')
+                return
+            }
+
+            setFeedbacks((prev) => prev.map((f) => (f.id === id ? { ...f, status: newStatus } : f)))
+            if (prevStatus === 'new' && newStatus !== 'new') {
+                onConsumeNewFeedbackBadge?.(id)
+            }
+            toast.success('ステータスを保存しました')
+        } catch (e) {
+            console.error('Error updating status:', e)
+            toast.error('ステータスの更新に失敗しました')
         }
     }
 
@@ -145,7 +161,16 @@ export default function AdminFeedbackManagement() {
                             >
                                 <div 
                                     className="p-4 md:p-6 cursor-pointer flex items-center justify-between gap-4"
-                                    onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                                    onClick={() => {
+                                        if (expandedId === item.id) {
+                                            setExpandedId(null)
+                                            return
+                                        }
+                                        setExpandedId(item.id)
+                                        if (item.status === 'new') {
+                                            onConsumeNewFeedbackBadge?.(item.id)
+                                        }
+                                    }}
                                 >
                                     <div className="flex-1 min-w-0 space-y-2">
                                         <div className="flex items-center gap-2 flex-wrap">
@@ -194,19 +219,31 @@ export default function AdminFeedbackManagement() {
                                             <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
                                                 <span className="text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-widest mr-1 md:mr-2 whitespace-nowrap">ステータス変更:</span>
                                                 <button 
-                                                    onClick={() => updateStatus(item.id, 'new')}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        void updateStatus(item.id, 'new')
+                                                    }}
                                                     className={cn("px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all whitespace-nowrap", item.status === 'new' ? "bg-rose-500 text-white shadow-md" : "bg-slate-100 text-slate-400 hover:bg-slate-200")}
                                                 >
                                                     未対応
                                                 </button>
                                                 <button 
-                                                    onClick={() => updateStatus(item.id, 'in_progress')}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        void updateStatus(item.id, 'in_progress')
+                                                    }}
                                                     className={cn("px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all whitespace-nowrap", item.status === 'in_progress' ? "bg-blue-500 text-white shadow-md" : "bg-slate-100 text-slate-400 hover:bg-slate-200")}
                                                 >
                                                     進行中
                                                 </button>
                                                 <button 
-                                                    onClick={() => updateStatus(item.id, 'completed')}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        void updateStatus(item.id, 'completed')
+                                                    }}
                                                     className={cn("px-3 md:px-4 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition-all whitespace-nowrap", item.status === 'completed' ? "bg-emerald-500 text-white shadow-md" : "bg-slate-100 text-slate-400 hover:bg-slate-200")}
                                                 >
                                                     対応済
