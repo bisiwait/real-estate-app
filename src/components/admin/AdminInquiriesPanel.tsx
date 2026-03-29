@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Mail, MessageCircle, ExternalLink, Home, User } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Mail, MessageCircle, ExternalLink, Home, User, X, Calendar, Hash } from 'lucide-react'
 import type {
   AdminMailInquiryRow,
   AdminLineLeadRow,
@@ -45,6 +45,18 @@ export default function AdminInquiriesPanel({
   lineLeads,
 }: Props) {
   const [sub, setSub] = useState<SubTab>('mail')
+  const [mailDetail, setMailDetail] = useState<AdminMailInquiryRow | null>(null)
+
+  const closeMailDetail = useCallback(() => setMailDetail(null), [])
+
+  useEffect(() => {
+    if (!mailDetail) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMailDetail()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [mailDetail, closeMailDetail])
 
   const propertyHref = (id: string) => `/${locale}/properties/${id}`
 
@@ -100,11 +112,12 @@ export default function AdminInquiriesPanel({
                     <th className="px-4 py-3">問い合わせ者</th>
                     <th className="px-4 py-3">内容</th>
                     <th className="px-4 py-3">未読</th>
+                    <th className="px-4 py-3 w-24">操作</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {mailInquiries.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-50/50">
+                    <tr key={row.id} className="hover:bg-slate-50/50 align-top">
                       <td className="whitespace-nowrap px-4 py-3 font-bold text-navy-secondary">
                         {formatDt(row.created_at)}
                       </td>
@@ -145,6 +158,15 @@ export default function AdminInquiriesPanel({
                           <span className="text-xs text-slate-400">既読</span>
                         )}
                       </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => setMailDetail(row)}
+                          className="rounded-lg border border-navy-primary/25 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
+                        >
+                          詳細
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -153,6 +175,116 @@ export default function AdminInquiriesPanel({
           </div>
         </div>
       )}
+
+      {mailDetail ? (
+        <div
+          className="fixed inset-0 z-[220] overflow-y-auto overscroll-y-contain"
+          role="presentation"
+        >
+          <div
+            className="flex min-h-full justify-center items-start sm:items-center px-4 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:py-8 bg-navy-primary/50 backdrop-blur-sm"
+            onClick={closeMailDetail}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="admin-mail-inquiry-detail-title"
+              className="my-4 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl border border-slate-100 bg-white shadow-2xl touch-pan-y sm:my-0 sm:max-h-[min(90dvh,calc(100dvh-4rem))]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-5 py-4">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Mail className="h-5 w-5 shrink-0 text-navy-primary" />
+                  <h2 id="admin-mail-inquiry-detail-title" className="truncate text-base font-black text-navy-secondary">
+                    メール問い合わせ詳細
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeMailDetail}
+                  className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-200 hover:text-navy-secondary"
+                  aria-label="閉じる"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-5 p-5">
+                <dl className="space-y-4 text-sm">
+                  <div className="flex gap-3">
+                    <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
+                    <div>
+                      <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">受信日時</dt>
+                      <dd className="mt-1 font-bold text-navy-secondary">{formatDt(mailDetail.created_at)}</dd>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Hash className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
+                    <div className="min-w-0 flex-1">
+                      <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">お問い合わせID</dt>
+                      <dd className="mt-1 break-all font-mono text-xs text-slate-600">{mailDetail.id}</dd>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Home className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
+                    <div className="min-w-0 flex-1">
+                      <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">物件</dt>
+                      <dd className="mt-1">
+                        <a
+                          href={propertyHref(mailDetail.property_id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-bold text-navy-primary hover:underline"
+                        >
+                          {mailDetail.property_title || mailDetail.property_id}
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                        </a>
+                      </dd>
+                    </div>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">掲載エージェント</dt>
+                    <dd className="mt-1 font-bold text-navy-secondary">{mailDetail.owner_name || '—'}</dd>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">問い合わせ者</dt>
+                    <dd className="mt-2 space-y-1">
+                      <p className="font-bold text-navy-secondary">{mailDetail.inquirer_name}</p>
+                      <p className="break-all text-slate-600">{mailDetail.inquirer_email}</p>
+                      {mailDetail.inquirer_phone ? (
+                        <p className="text-slate-600">{mailDetail.inquirer_phone}</p>
+                      ) : (
+                        <p className="text-xs text-slate-400">電話: 未入力</p>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">ステータス</dt>
+                    <dd>
+                      {!mailDetail.is_read ? (
+                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">
+                          未読
+                        </span>
+                      ) : (
+                        <span className="text-sm font-bold text-slate-500">既読</span>
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">お問い合わせ内容</h3>
+                  <div className="mt-2 max-h-[50vh] overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="whitespace-pre-wrap break-words text-sm font-medium leading-relaxed text-slate-800">
+                      {mailDetail.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {sub === 'line' && (
         <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
