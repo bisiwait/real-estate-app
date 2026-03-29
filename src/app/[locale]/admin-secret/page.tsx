@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import AdminDashboardClient from '@/components/admin/AdminDashboardClient'
 import {
     fetchAdminMailInquiries,
@@ -19,16 +19,17 @@ export default async function AdminSecretDashboard({
         redirect('/')
     }
 
-    const supabase = await createClient()
+    const supabaseAdmin = await createAdminClient()
 
+    // RLS の差・is_admin() 判定のずれで inquiries が空になることがあるため、管理者画面は service role で集計する
     const [mailInquiries, lineLeads] = await Promise.all([
-        fetchAdminMailInquiries(supabase),
-        fetchAdminLineLeads(supabase),
+        fetchAdminMailInquiries(supabaseAdmin),
+        fetchAdminLineLeads(supabaseAdmin),
     ])
 
-    const { data: properties } = await supabase.from('properties').select('status, is_approved')
-    const { data: contacts } = await supabase.from('inquiries').select('id, created_at')
-    const { data: feedbacks } = await supabase.from('feedback').select('id, status')
+    const { data: properties } = await supabaseAdmin.from('properties').select('status, is_approved')
+    const { data: contacts } = await supabaseAdmin.from('inquiries').select('id, created_at')
+    const { data: feedbacks } = await supabaseAdmin.from('feedback').select('id, status')
 
     const pendingCount = properties?.filter(p => !p.is_approved).length || 0
     const activeCount = properties?.filter(p => p.is_approved && p.status === 'published').length || 0

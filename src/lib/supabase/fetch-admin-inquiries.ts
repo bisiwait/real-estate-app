@@ -31,6 +31,7 @@ export type AdminLineLeadRow = {
   inquirer_line_id: string | null
 }
 
+/** 管理者ダッシュボード専用。RLS を避けるため service role の Supabase クライアントを渡すこと。 */
 export async function fetchAdminMailInquiries(
   supabase: SupabaseClient
 ): Promise<AdminMailInquiryRow[]> {
@@ -77,6 +78,7 @@ export async function fetchAdminMailInquiries(
   }))
 }
 
+/** 管理者ダッシュボード専用。`fetchAdminMailInquiries` と同様 service role クライアント推奨。 */
 export async function fetchAdminLineLeads(
   supabase: SupabaseClient
 ): Promise<AdminLineLeadRow[]> {
