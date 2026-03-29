@@ -556,8 +556,8 @@ export default function PropertiesClient({
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
-                            <h1 className="text-4xl font-black mb-2 tracking-tight text-slate-400">{dict.property.search_title}</h1>
-                            <p className="text-slate-400 text-sm font-medium tracking-wide">{dict.property.luxury_listings}</p>
+                            <h1 className="text-4xl font-black mb-2 tracking-tight !text-white">{dict.property.search_title}</h1>
+                            <p className="text-sm font-medium tracking-wide !text-white">{dict.property.luxury_listings}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-4">
                             <SaveSearchButton dict={dict} />
