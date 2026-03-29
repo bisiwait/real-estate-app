@@ -295,17 +295,28 @@ export default function ProfileEditClient({
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
-                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50/80 p-3 sm:p-4">
+                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50/80 p-2 sm:p-4">
+                                {/* 767px 以下は縦長スマホ用、それ以上は横長PC用（picture の media で切替） */}
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={
-                                        lineGuide === "iphone"
-                                            ? "/images/line-profile-link-guide/iphone.png"
-                                            : "/images/line-profile-link-guide/android.png"
-                                    }
-                                    alt=""
-                                    className="mx-auto w-full max-w-full object-contain"
-                                />
+                                <picture>
+                                    <source
+                                        media="(max-width: 767px)"
+                                        srcSet={
+                                            lineGuide === "iphone"
+                                                ? "/images/line-profile-link-guide/iphone-mobile.png"
+                                                : "/images/line-profile-link-guide/android-mobile.png"
+                                        }
+                                    />
+                                    <img
+                                        src={
+                                            lineGuide === "iphone"
+                                                ? "/images/line-profile-link-guide/iphone.png"
+                                                : "/images/line-profile-link-guide/android.png"
+                                        }
+                                        alt=""
+                                        className="mx-auto w-full max-w-full object-contain object-top"
+                                    />
+                                </picture>
                             </div>
                             <div className="border-t border-slate-100 bg-white px-4 py-3 sm:px-5">
                                 <button
