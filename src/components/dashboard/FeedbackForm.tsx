@@ -3,12 +3,6 @@
 import React, { useState } from 'react'
 import { Lightbulb, X, Loader2, Send } from 'lucide-react'
 import { toast } from 'sonner'
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
-
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs))
-}
 
 export default function FeedbackForm() {
     const [isOpen, setIsOpen] = useState(false)
@@ -60,9 +54,16 @@ export default function FeedbackForm() {
             </button>
 
             {isOpen && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-navy-primary/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <div
+                    className="fixed inset-0 z-[200] overflow-y-auto overscroll-y-contain animate-in fade-in duration-200"
+                    role="presentation"
+                >
+                    <div
+                        className="flex min-h-full justify-center items-start sm:items-center px-4 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:py-8 bg-navy-primary/60 backdrop-blur-sm"
+                        onClick={() => setIsOpen(false)}
+                    >
                     <div 
-                        className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                        className="bg-white rounded-3xl w-full max-w-lg max-h-[calc(100dvh-2rem)] sm:max-h-[min(90dvh,calc(100dvh-4rem))] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200 touch-pan-y"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
@@ -135,6 +136,7 @@ export default function FeedbackForm() {
                                 )}
                             </button>
                         </form>
+                    </div>
                     </div>
                 </div>
             )}
