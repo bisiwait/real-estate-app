@@ -72,11 +72,16 @@ export default function AdminDashboardClient({
     }
 
     const tabClass = (id: TabId) =>
-        `flex min-h-12 flex-1 basis-[calc(50%-4px)] items-center justify-center space-x-1.5 rounded-xl py-2.5 font-black transition-all cursor-pointer sm:min-h-0 sm:basis-auto sm:flex-none sm:px-3 sm:py-3.5 md:flex-1 ${
+        `flex min-h-14 flex-1 basis-[calc(50%-4px)] items-center justify-center gap-1.5 px-0.5 rounded-xl py-3 font-black transition-all cursor-pointer sm:min-h-0 sm:basis-auto sm:flex-none sm:gap-2 sm:px-3 sm:py-3.5 md:flex-1 ${
             tab === id
                 ? 'bg-navy-primary text-white shadow-lg'
                 : 'text-slate-400 hover:bg-slate-50 hover:text-navy-secondary'
         }`
+
+    const tabIconClass = 'h-5 w-5 shrink-0 sm:h-4 sm:w-4'
+    const tabLabelClass = 'text-xs leading-tight sm:text-sm whitespace-nowrap'
+    const tabBadgeClass =
+        'ml-0.5 min-w-[1.35rem] rounded-full px-1.5 py-0.5 text-center text-[10px] font-black sm:ml-1 sm:text-[9px]'
 
     return (
         <>
@@ -107,46 +112,42 @@ export default function AdminDashboardClient({
 
             {/* Tab Navigation */}
             <div className="mb-6 flex flex-wrap gap-1 rounded-2xl border border-slate-100 bg-white p-1 shadow-md sm:mb-10">
-                <button onClick={() => selectTab('overview')} className={`${tabClass('overview')} sm:flex-1 h-12 sm:h-auto`}>
-                    <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">概要</span>
+                <button onClick={() => selectTab('overview')} className={`${tabClass('overview')} sm:flex-1`}>
+                    <BarChart3 className={tabIconClass} />
+                    <span className={tabLabelClass}>概要</span>
                 </button>
-                <button onClick={() => selectTab('projects')} className={`${tabClass('projects')} sm:flex-1 h-12 sm:h-auto`}>
-                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">プロジェクト</span>
+                <button onClick={() => selectTab('projects')} className={`${tabClass('projects')} sm:flex-1`}>
+                    <Building2 className={tabIconClass} />
+                    <span className={tabLabelClass}>プロジェクト</span>
                 </button>
-                <button onClick={() => selectTab('developers')} className={`${tabClass('developers')} sm:flex-1 h-12 sm:h-auto`}>
-                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">開発</span>
+                <button onClick={() => selectTab('developers')} className={`${tabClass('developers')} sm:flex-1`}>
+                    <Building2 className={tabIconClass} />
+                    <span className={tabLabelClass}>開発</span>
                 </button>
-                <button onClick={() => selectTab('properties')} className={`${tabClass('properties')} sm:flex-1 h-12 sm:h-auto`}>
-                    <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">承認</span>
+                <button onClick={() => selectTab('properties')} className={`${tabClass('properties')} sm:flex-1`}>
+                    <Home className={tabIconClass} />
+                    <span className={tabLabelClass}>承認</span>
                     {pendingCount > 0 && (
-                        <span className="bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ml-1 min-w-[1.2rem] text-center">
-                            {pendingCount}
-                        </span>
+                        <span className={`bg-red-500 text-white ${tabBadgeClass}`}>{pendingCount}</span>
                     )}
                 </button>
-                <button onClick={() => selectTab('agents')} className={`${tabClass('agents')} sm:flex-1 h-12 sm:h-auto`}>
-                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">エージェント</span>
+                <button onClick={() => selectTab('agents')} className={`${tabClass('agents')} sm:flex-1`}>
+                    <Building2 className={tabIconClass} />
+                    <span className={tabLabelClass}>エージェント</span>
                 </button>
-                <button onClick={() => selectTab('general_users')} className={`${tabClass('general_users')} sm:flex-1 h-12 sm:h-auto`}>
-                    <UserCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">ユーザー</span>
+                <button onClick={() => selectTab('general_users')} className={`${tabClass('general_users')} sm:flex-1`}>
+                    <UserCircle className={tabIconClass} />
+                    <span className={tabLabelClass}>ユーザー</span>
                 </button>
-                <button onClick={() => selectTab('inquiries')} className={`${tabClass('inquiries')} sm:flex-1 h-12 sm:h-auto`}>
-                    <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">問い合わせ</span>
+                <button onClick={() => selectTab('inquiries')} className={`${tabClass('inquiries')} sm:flex-1`}>
+                    <Mail className={tabIconClass} />
+                    <span className={tabLabelClass}>問い合わせ</span>
                 </button>
-                <button onClick={() => selectTab('feedback')} className={`${tabClass('feedback')} sm:flex-1 h-12 sm:h-auto`}>
-                    <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    <span className="text-[9px] sm:text-sm whitespace-nowrap">要望</span>
+                <button onClick={() => selectTab('feedback')} className={`${tabClass('feedback')} sm:flex-1`}>
+                    <Lightbulb className={tabIconClass} />
+                    <span className={tabLabelClass}>要望</span>
                     {feedbackTabBadge > 0 && (
-                        <span className="bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full ml-1 min-w-[1.2rem] text-center">
-                            {feedbackTabBadge}
-                        </span>
+                        <span className={`bg-amber-500 text-white ${tabBadgeClass}`}>{feedbackTabBadge}</span>
                     )}
                 </button>
             </div>
