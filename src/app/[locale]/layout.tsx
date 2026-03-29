@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/layout/Header";
 import Breadcrumb from "@/components/layout/Breadcrumb";
+import NavigationPendingProvider from "@/components/layout/NavigationPendingProvider";
 import Link from "next/link";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -100,7 +101,7 @@ export default async function RootLayout({
               comparePageTitle={dict.compare?.title}
               homeAriaLabel={dict.common?.home}
             />
-              {children}
+              <NavigationPendingProvider>{children}</NavigationPendingProvider>
             </main>
             <Toaster />
             <footer className="bg-navy-secondary text-white py-16">
