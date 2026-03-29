@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Mail, MessageCircle, ExternalLink, Home, User, X, Calendar, Hash, Reply } from 'lucide-react'
+import { Mail, MessageCircle, ExternalLink, Home, X, Calendar, Hash, Reply } from 'lucide-react'
 import type {
   AdminMailInquiryRow,
   AdminLineLeadRow,
@@ -182,22 +182,18 @@ export default function AdminInquiriesPanel({
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 font-bold text-navy-primary hover:underline"
                         >
-                          <Home className="h-3.5 w-3.5 shrink-0" />
                           <span className="line-clamp-2">{row.property_title || row.property_id.slice(0, 8)}</span>
                           <ExternalLink className="h-3 w-3 shrink-0 opacity-50" />
                         </a>
                       </td>
                       <td className="px-4 py-3 text-slate-600">{row.owner_name || '—'}</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-start gap-2">
-                          <User className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-                          <div>
-                            <p className="font-bold text-navy-secondary">{row.inquirer_name}</p>
-                            <p className="text-xs text-slate-500">{row.inquirer_email}</p>
-                            {row.inquirer_phone ? (
-                              <p className="text-xs text-slate-500">{row.inquirer_phone}</p>
-                            ) : null}
-                          </div>
+                        <div>
+                          <p className="font-bold text-navy-secondary">{row.inquirer_name}</p>
+                          <p className="text-xs text-slate-500">{row.inquirer_email}</p>
+                          {row.inquirer_phone ? (
+                            <p className="text-xs text-slate-500">{row.inquirer_phone}</p>
+                          ) : null}
                         </div>
                       </td>
                       <td className="max-w-xs px-4 py-3">
