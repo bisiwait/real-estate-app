@@ -113,7 +113,7 @@ export default function DashboardClient({
                         }`}
                 >
                     <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <span>リード ({leadsCount})</span>
+                    <span>LINE ({leadsCount})</span>
                 </button>
             </div>
 
