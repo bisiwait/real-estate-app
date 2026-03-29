@@ -72,7 +72,7 @@ export default function AdminDashboardClient({
     }
 
     const tabClass = (id: TabId) =>
-        `flex min-h-14 flex-1 basis-[calc(50%-4px)] items-center justify-center gap-1.5 px-0.5 rounded-xl py-3 font-black transition-all cursor-pointer sm:min-h-0 sm:basis-auto sm:flex-none sm:gap-2 sm:px-3 sm:py-3.5 md:flex-1 ${
+        `flex min-h-14 flex-1 basis-[calc(50%-4px)] items-center justify-start gap-1.5 rounded-xl py-3 pl-2 pr-2 font-black transition-all cursor-pointer sm:min-h-0 sm:basis-auto sm:flex-none sm:gap-2 sm:px-3 sm:py-3.5 md:flex-1 ${
             tab === id
                 ? 'bg-navy-primary text-white shadow-lg'
                 : 'text-slate-400 hover:bg-slate-50 hover:text-navy-secondary'
@@ -111,7 +111,7 @@ export default function AdminDashboardClient({
             </div>
 
             {/* Tab Navigation */}
-            <div className="mb-6 flex flex-wrap gap-1 rounded-2xl border border-slate-100 bg-white p-1 shadow-md sm:mb-10">
+            <div className="mb-6 flex flex-wrap justify-start gap-1 rounded-2xl border border-slate-100 bg-white p-1 shadow-md sm:mb-10">
                 <button onClick={() => selectTab('overview')} className={`${tabClass('overview')} sm:flex-1`}>
                     <BarChart3 className={tabIconClass} />
                     <span className={tabLabelClass}>概要</span>
