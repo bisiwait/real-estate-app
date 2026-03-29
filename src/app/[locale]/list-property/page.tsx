@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import ListingForm from '@/components/property/ListingForm'
@@ -10,6 +10,8 @@ export default function ListPropertyPage() {
     const [loading, setLoading] = useState(true)
     const [isAdmin, setIsAdmin] = useState(false)
     const router = useRouter()
+    const params = useParams()
+    const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
     const supabase = createClient()
 
     useEffect(() => {
@@ -17,7 +19,7 @@ export default function ListPropertyPage() {
             const { data: { user } } = await supabase.auth.getUser()
 
             if (!user) {
-                router.push('/login')
+                router.push(`/${locale}/login`)
                 return
             }
 
@@ -32,7 +34,7 @@ export default function ListPropertyPage() {
         }
 
         checkUserData()
-    }, [supabase, router])
+    }, [supabase, router, locale])
 
     if (loading) {
         return (
@@ -42,7 +44,7 @@ export default function ListPropertyPage() {
         )
     }
 
-    const dashboardPath = isAdmin ? '/admin-secret' : '/dashboard'
+    const dashboardPath = isAdmin ? `/${locale}/admin-secret` : `/${locale}/dashboard`
 
     return (
         <div className="bg-slate-50 min-h-screen py-16">

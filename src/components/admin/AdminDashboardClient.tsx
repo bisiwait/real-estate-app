@@ -90,15 +90,15 @@ export default function AdminDashboardClient({
                 </div>
 
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4">
-                    <Link href="/admin-secret/analytics" className="flex items-center justify-center space-x-2 bg-indigo-50 border border-indigo-100 hover:border-indigo-300 text-indigo-700 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-sm">
+                    <Link href={`/${locale}/admin-secret/analytics`} className="flex items-center justify-center space-x-2 bg-indigo-50 border border-indigo-100 hover:border-indigo-300 text-indigo-700 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-sm">
                         <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         <span>統計・分析</span>
                     </Link>
-                    <Link href="/admin-secret/broadcast" className="flex items-center justify-center space-x-2 bg-white border border-slate-200 hover:border-navy-primary text-navy-secondary px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-sm">
+                    <Link href={`/${locale}/admin-secret/broadcast`} className="flex items-center justify-center space-x-2 bg-white border border-slate-200 hover:border-navy-primary text-navy-secondary px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-sm">
                         <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-navy-primary" />
                         <span>一斉通知</span>
                     </Link>
-                    <Link href="/list-property" className="col-span-2 flex items-center justify-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-md">
+                    <Link href={`/${locale}/list-property`} className="col-span-2 flex items-center justify-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-md">
                         <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />
                         <span>AIで物件を取り込む</span>
                     </Link>

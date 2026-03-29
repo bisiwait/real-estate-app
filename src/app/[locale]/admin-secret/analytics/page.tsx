@@ -1,6 +1,6 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
     BarChart3,
@@ -25,6 +25,8 @@ export const dynamic = 'force-dynamic'
 
 export default function AdminAnalyticsPage() {
     const router = useRouter()
+    const params = useParams()
+    const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
     const [totalLeads, setTotalLeads] = useState(0)
     const [lineLeads, setLineLeads] = useState(0)
     const [phoneLeads, setPhoneLeads] = useState(0)
@@ -100,7 +102,7 @@ export default function AdminAnalyticsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <Link
-                        href="/admin-secret"
+                        href={`/${locale}/admin-secret`}
                         className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-navy-primary mb-4 transition-colors group"
                     >
                         <ArrowLeft className="w-3 h-3 mr-1 group-hover:-translate-x-1 transition-transform" />

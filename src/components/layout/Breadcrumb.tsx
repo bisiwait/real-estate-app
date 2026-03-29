@@ -49,6 +49,10 @@ export default function Breadcrumb({
     // Special handling for dashboard/edit/[id] to avoid "edit" being a link to 404
     const isEditPage = displaySegments[0] === 'dashboard' && displaySegments[1] === 'edit'
 
+    /** /admin-secret/users は一覧ルートが無く 404 になるため、users セグメントはリンクにしない */
+    const isAdminUsersNonRoutableSegment = (segment: string, index: number) =>
+        displaySegments[0] === 'admin-secret' && segment === 'users' && index === 1
+
     // 物件掲載: ホーム > ダッシュボード > 物件掲載（URL は /list-property のまま）
     const isListPropertyPage =
         displaySegments.length === 1 && displaySegments[0] === 'list-property'
@@ -146,8 +150,8 @@ export default function Breadcrumb({
                         const isLast = index === displaySegments.length - 1
                         let label = labels[segment] || segment
 
-                        // Special case: if we are in dashboard/edit/[id], don't link the "edit" segment
                         const isEditSegment = isEditPage && segment === 'edit'
+                        const noLinkSegment = isEditSegment || isAdminUsersNonRoutableSegment(segment, index)
 
                         if (segment.length > 20 && segment.includes('-')) {
                             label = labels['detail'] || 'Detail'
@@ -157,8 +161,10 @@ export default function Breadcrumb({
                             return (
                                 <li key={href} className="hidden sm:flex items-center">
                                     <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mx-0.5 sm:mx-1 text-slate-400 flex-shrink-0" />
-                                    {isLast || isEditSegment ? (
-                                        <span className="font-bold text-navy-secondary" aria-current="page">{label}</span>
+                                    {isLast || noLinkSegment ? (
+                                        <span className="font-bold text-navy-secondary" aria-current={isLast ? 'page' : undefined}>
+                                            {label}
+                                        </span>
                                     ) : (
                                         <Link href={href} className="hover:text-navy-primary transition-colors">{label}</Link>
                                     )}
@@ -169,8 +175,11 @@ export default function Breadcrumb({
                         return (
                             <li key={href} className="flex items-center">
                                 <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mx-0.5 sm:mx-1 text-slate-400 flex-shrink-0" />
-                                {isLast || isEditSegment ? (
-                                    <span className="font-bold text-navy-secondary truncate max-w-[150px] sm:max-w-none" aria-current="page">
+                                {isLast || noLinkSegment ? (
+                                    <span
+                                        className="font-bold text-navy-secondary truncate max-w-[150px] sm:max-w-none"
+                                        aria-current={isLast ? 'page' : undefined}
+                                    >
                                         {dynamicLabel || label}
                                     </span>
                                 ) : (

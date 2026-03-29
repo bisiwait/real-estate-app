@@ -744,7 +744,10 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             }
 
             setSuccess(true)
-            setTimeout(() => router.push(isAdmin ? '/admin-secret' : '/dashboard'), 2000)
+            setTimeout(() => {
+                const loc = typeof params?.locale === 'string' ? params.locale : 'jp'
+                router.push(isAdmin ? `/${loc}/admin-secret` : `/${loc}/dashboard`)
+            }, 2000)
         } catch (err: any) {
             console.error('Submit error:', err)
             setError(err.message)
