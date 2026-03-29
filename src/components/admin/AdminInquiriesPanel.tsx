@@ -1,13 +1,21 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Mail, MessageCircle, ExternalLink, Home, User, X, Calendar, Hash } from 'lucide-react'
+import { Mail, MessageCircle, ExternalLink, Home, User, X, Calendar, Hash, Reply } from 'lucide-react'
 import type {
   AdminMailInquiryRow,
   AdminLineLeadRow,
 } from '@/lib/supabase/fetch-admin-inquiries'
 
 type SubTab = 'mail' | 'line'
+
+type MailReplyRow = {
+  id: string
+  message: string
+  created_at: string
+  sender_id: string | null
+  sender_name: string | null
+}
 
 const TZ = 'Asia/Bangkok'
 
@@ -46,8 +54,16 @@ export default function AdminInquiriesPanel({
 }: Props) {
   const [sub, setSub] = useState<SubTab>('mail')
   const [mailDetail, setMailDetail] = useState<AdminMailInquiryRow | null>(null)
+  const [mailReplies, setMailReplies] = useState<MailReplyRow[] | null>(null)
+  const [mailRepliesLoading, setMailRepliesLoading] = useState(false)
+  const [mailRepliesError, setMailRepliesError] = useState<string | null>(null)
 
-  const closeMailDetail = useCallback(() => setMailDetail(null), [])
+  const closeMailDetail = useCallback(() => {
+    setMailDetail(null)
+    setMailReplies(null)
+    setMailRepliesError(null)
+    setMailRepliesLoading(false)
+  }, [])
 
   useEffect(() => {
     if (!mailDetail) return
@@ -57,6 +73,44 @@ export default function AdminInquiriesPanel({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [mailDetail, closeMailDetail])
+
+  useEffect(() => {
+    if (!mailDetail) {
+      setMailReplies(null)
+      setMailRepliesError(null)
+      setMailRepliesLoading(false)
+      return
+    }
+    let cancelled = false
+    setMailRepliesLoading(true)
+    setMailRepliesError(null)
+    setMailReplies(null)
+
+    fetch(`/api/admin/inquiry-replies?inquiry_id=${encodeURIComponent(mailDetail.id)}`, {
+      credentials: 'include',
+    })
+      .then(async (res) => {
+        const data = (await res.json().catch(() => ({}))) as { error?: string; replies?: MailReplyRow[] }
+        if (!res.ok) throw new Error(data.error || res.statusText)
+        return data.replies ?? []
+      })
+      .then((replies) => {
+        if (!cancelled) setMailReplies(replies)
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setMailRepliesError(e instanceof Error ? e.message : '返信履歴の取得に失敗しました')
+          setMailReplies([])
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setMailRepliesLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [mailDetail?.id])
 
   const propertyHref = (id: string) => `/${locale}/properties/${id}`
 
@@ -189,7 +243,7 @@ export default function AdminInquiriesPanel({
               role="dialog"
               aria-modal="true"
               aria-labelledby="admin-mail-inquiry-detail-title"
-              className="my-4 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl border border-slate-100 bg-white shadow-2xl touch-pan-y sm:my-0 sm:max-h-[min(90dvh,calc(100dvh-4rem))]"
+              className="my-4 w-full max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-3xl border border-slate-100 bg-white shadow-2xl touch-pan-y sm:my-0 sm:max-h-[min(90dvh,calc(100dvh-4rem))]"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-5 py-4">
@@ -274,11 +328,48 @@ export default function AdminInquiriesPanel({
 
                 <div>
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">お問い合わせ内容</h3>
-                  <div className="mt-2 max-h-[50vh] overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="mt-2 max-h-[40vh] overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <p className="whitespace-pre-wrap break-words text-sm font-medium leading-relaxed text-slate-800">
                       {mailDetail.message}
                     </p>
                   </div>
+                </div>
+
+                <div>
+                  <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <Reply className="h-3.5 w-3.5" />
+                    返信履歴（エージェント）
+                  </h3>
+                  {mailRepliesLoading ? (
+                    <p className="mt-3 text-sm font-bold text-slate-400">読み込み中…</p>
+                  ) : mailRepliesError ? (
+                    <p className="mt-3 text-sm font-bold text-red-600">{mailRepliesError}</p>
+                  ) : !mailReplies || mailReplies.length === 0 ? (
+                    <p className="mt-3 text-sm font-bold text-slate-400">まだ返信はありません</p>
+                  ) : (
+                    <ol className="mt-3 space-y-3">
+                      {mailReplies.map((r) => (
+                        <li
+                          key={r.id}
+                          className="rounded-2xl border border-emerald-100/80 bg-emerald-50/40 p-4"
+                        >
+                          <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                            <time className="font-bold text-navy-secondary">{formatDt(r.created_at)}</time>
+                            {r.sender_name ? (
+                              <span className="font-bold text-emerald-800">{r.sender_name}</span>
+                            ) : r.sender_id ? (
+                              <span className="break-all font-mono text-[10px] text-slate-500">{r.sender_id}</span>
+                            ) : (
+                              <span className="text-slate-500">送信者不明</span>
+                            )}
+                          </div>
+                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-800">
+                            {r.message}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
                 </div>
               </div>
             </div>
