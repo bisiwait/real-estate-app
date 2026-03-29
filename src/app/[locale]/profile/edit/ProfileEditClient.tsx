@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { ChevronLeft, Loader2, User, MessageCircle, Phone, CircleHelp } from "lucide-react";
+import { ChevronLeft, Loader2, User, MessageCircle, Phone, CircleHelp, X } from "lucide-react";
 import { normalizeStoredLineContact } from "@/lib/line-contact-url";
 
 type InitialProfile = {
@@ -46,6 +47,21 @@ export default function ProfileEditClient({
     const [lineContact, setLineContact] = useState(() => normalizeStoredLineContact(initial.line_id ?? ""));
     const [phone, setPhone] = useState(snapshot.phone);
     const [saving, setSaving] = useState(false);
+    const [lineGuide, setLineGuide] = useState<"iphone" | "android" | null>(null);
+
+    useEffect(() => {
+        if (!lineGuide) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setLineGuide(null);
+        };
+        document.addEventListener("keydown", onKey);
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            document.body.style.overflow = prev;
+        };
+    }, [lineGuide]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -167,6 +183,27 @@ export default function ProfileEditClient({
                         <p className="mb-3 rounded-lg border border-emerald-100/80 bg-white/80 px-3 py-2.5 text-[11px] leading-relaxed text-slate-600">
                             {lineContactHint}
                         </p>
+                        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                            <span className="text-[11px] font-bold text-emerald-800/90">
+                                {l.line_profile_link_guide_intro ?? ""}
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setLineGuide("iphone")}
+                                    className="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-black text-emerald-800 shadow-sm transition hover:bg-emerald-50"
+                                >
+                                    {l.line_profile_link_guide_iphone ?? "iPhone"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setLineGuide("android")}
+                                    className="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-black text-emerald-800 shadow-sm transition hover:bg-emerald-50"
+                                >
+                                    {l.line_profile_link_guide_android ?? "Android"}
+                                </button>
+                            </div>
+                        </div>
                         <input
                             id="line_contact"
                             type="text"
@@ -223,6 +260,66 @@ export default function ProfileEditClient({
                     </div>
                 </form>
             </div>
+
+            {lineGuide &&
+                typeof document !== "undefined" &&
+                createPortal(
+                    <div
+                        className="fixed inset-0 z-[240] flex items-end justify-center p-0 sm:items-center sm:p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="line-guide-modal-title"
+                    >
+                        <button
+                            type="button"
+                            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+                            aria-label={l.line_profile_link_guide_close_aria ?? "Close"}
+                            onClick={() => setLineGuide(null)}
+                        />
+                        <div className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-slate-200/90 bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl">
+                            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5">
+                                <h2
+                                    id="line-guide-modal-title"
+                                    className="text-sm font-black text-navy-secondary sm:text-base"
+                                >
+                                    {lineGuide === "iphone"
+                                        ? (l.line_profile_link_guide_modal_title_iphone ?? "")
+                                        : (l.line_profile_link_guide_modal_title_android ?? "")}
+                                </h2>
+                                <button
+                                    type="button"
+                                    onClick={() => setLineGuide(null)}
+                                    className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100"
+                                    aria-label={l.line_profile_link_guide_close_aria ?? "Close"}
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50/80 p-3 sm:p-4">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={
+                                        lineGuide === "iphone"
+                                            ? "/images/line-profile-link-guide/iphone.png"
+                                            : "/images/line-profile-link-guide/android.png"
+                                    }
+                                    alt=""
+                                    className="mx-auto w-full max-w-full object-contain"
+                                />
+                            </div>
+                            <div className="border-t border-slate-100 bg-white px-4 py-3 sm:px-5">
+                                <button
+                                    type="button"
+                                    onClick={() => setLineGuide(null)}
+                                    className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white shadow-md transition hover:bg-emerald-700"
+                                >
+                                    {l.line_profile_link_guide_close ?? "閉じる"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )}
         </div>
     );
 }
