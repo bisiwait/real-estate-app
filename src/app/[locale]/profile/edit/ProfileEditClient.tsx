@@ -134,6 +134,7 @@ export default function ProfileEditClient({
             <div className="container mx-auto px-4 max-w-2xl relative z-10 max-md:mt-4 md:-mt-10">
                 <form
                     onSubmit={handleSubmit}
+                    suppressHydrationWarning
                     className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 md:p-10 space-y-8"
                 >
                     <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3.5 text-sm text-slate-600">
@@ -261,76 +262,76 @@ export default function ProfileEditClient({
                 </form>
             </div>
 
-            {lineGuide &&
-                typeof document !== "undefined" &&
-                createPortal(
-                    <div
-                        className="fixed inset-0 z-[240] flex items-end justify-center p-0 sm:items-center sm:p-4"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="line-guide-modal-title"
-                    >
-                        <button
-                            type="button"
-                            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
-                            aria-label={l.line_profile_link_guide_close_aria ?? "Close"}
-                            onClick={() => setLineGuide(null)}
-                        />
-                        <div className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-slate-200/90 bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl">
-                            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5">
-                                <h2
-                                    id="line-guide-modal-title"
-                                    className="text-sm font-black text-navy-secondary sm:text-base"
-                                >
-                                    {lineGuide === "iphone"
-                                        ? (l.line_profile_link_guide_modal_title_iphone ?? "")
-                                        : (l.line_profile_link_guide_modal_title_android ?? "")}
-                                </h2>
-                                <button
-                                    type="button"
-                                    onClick={() => setLineGuide(null)}
-                                    className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100"
-                                    aria-label={l.line_profile_link_guide_close_aria ?? "Close"}
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50/80 p-2 sm:p-4">
-                                {/* 767px 以下は縦長スマホ用、それ以上は横長PC用（picture の media で切替） */}
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <picture>
-                                    <source
-                                        media="(max-width: 767px)"
-                                        srcSet={
-                                            lineGuide === "iphone"
-                                                ? "/images/line-profile-link-guide/iphone-mobile.png"
-                                                : "/images/line-profile-link-guide/android-mobile.png"
-                                        }
-                                    />
-                                    <img
-                                        src={
-                                            lineGuide === "iphone"
-                                                ? "/images/line-profile-link-guide/iphone.png"
-                                                : "/images/line-profile-link-guide/android.png"
-                                        }
-                                        alt=""
-                                        className="mx-auto w-full max-w-full object-contain object-top"
-                                    />
-                                </picture>
-                            </div>
-                            <div className="border-t border-slate-100 bg-white px-4 py-3 sm:px-5">
-                                <button
-                                    type="button"
-                                    onClick={() => setLineGuide(null)}
-                                    className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white shadow-md transition hover:bg-emerald-700"
-                                >
-                                    {l.line_profile_link_guide_close ?? "閉じる"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>,
-                    document.body
-                )}
+            {lineGuide
+                ? createPortal(
+                      <div
+                          className="fixed inset-0 z-[240] flex items-end justify-center p-0 sm:items-center sm:p-4"
+                          role="dialog"
+                          aria-modal="true"
+                          aria-labelledby="line-guide-modal-title"
+                      >
+                          <button
+                              type="button"
+                              className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+                              aria-label={l.line_profile_link_guide_close_aria ?? "Close"}
+                              onClick={() => setLineGuide(null)}
+                          />
+                          <div className="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-slate-200/90 bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-2xl">
+                              <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 sm:px-5">
+                                  <h2
+                                      id="line-guide-modal-title"
+                                      className="text-sm font-black text-navy-secondary sm:text-base"
+                                  >
+                                      {lineGuide === "iphone"
+                                          ? (l.line_profile_link_guide_modal_title_iphone ?? "")
+                                          : (l.line_profile_link_guide_modal_title_android ?? "")}
+                                  </h2>
+                                  <button
+                                      type="button"
+                                      onClick={() => setLineGuide(null)}
+                                      className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100"
+                                      aria-label={l.line_profile_link_guide_close_aria ?? "Close"}
+                                  >
+                                      <X className="h-5 w-5" />
+                                  </button>
+                              </div>
+                              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50/80 p-2 sm:p-4">
+                                  {/* picture はハイドレーション不一致の原因になり得るため、同一DOM＋CSSで表示切替 */}
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                      src={
+                                          lineGuide === "iphone"
+                                              ? "/images/line-profile-link-guide/iphone-mobile.png"
+                                              : "/images/line-profile-link-guide/android-mobile.png"
+                                      }
+                                      alt=""
+                                      className="mx-auto w-full max-w-full object-contain object-top md:hidden"
+                                  />
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                      src={
+                                          lineGuide === "iphone"
+                                              ? "/images/line-profile-link-guide/iphone.png"
+                                              : "/images/line-profile-link-guide/android.png"
+                                      }
+                                      alt=""
+                                      className="mx-auto hidden w-full max-w-full object-contain object-top md:block"
+                                  />
+                              </div>
+                              <div className="border-t border-slate-100 bg-white px-4 py-3 sm:px-5">
+                                  <button
+                                      type="button"
+                                      onClick={() => setLineGuide(null)}
+                                      className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-black text-white shadow-md transition hover:bg-emerald-700"
+                                  >
+                                      {l.line_profile_link_guide_close ?? "閉じる"}
+                                  </button>
+                              </div>
+                          </div>
+                      </div>,
+                      document.body
+                  )
+                : null}
         </div>
     );
 }
