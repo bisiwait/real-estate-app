@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Loader2, X } from "lucide-react";
 import LineContactButton from "@/components/property/LineContactButton";
 import ContactAuthRequiredModal from "@/components/property/ContactAuthRequiredModal";
+import ViewerLineRequiredModal from "@/components/property/ViewerLineRequiredModal";
 import { useAuth } from "@/contexts/AuthContext";
 import {
     COMPARE_FACILITY_ROWS,
@@ -89,6 +90,9 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
     const [loading, setLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
     const [contactAuthOpen, setContactAuthOpen] = useState(false);
+    const [lineViewerModalOpen, setLineViewerModalOpen] = useState(false);
+    const [viewerLineGateReady, setViewerLineGateReady] = useState(false);
+    const [compareViewerLine, setCompareViewerLine] = useState<string | null>(null);
 
     const returnPath = `${pathname || `/${locale}/compare`}${searchParams?.toString() ? `?${searchParams}` : ""}`;
 
@@ -164,6 +168,30 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
             cancelled = true;
         };
     }, [supabase, router, locale]);
+
+    useEffect(() => {
+        if (!authChecked) return;
+        if (!user?.id) {
+            setCompareViewerLine(null);
+            setViewerLineGateReady(true);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            setViewerLineGateReady(false);
+            const { data } = await supabase
+                .from("profiles")
+                .select("line_id")
+                .eq("id", user.id)
+                .maybeSingle();
+            if (cancelled) return;
+            setCompareViewerLine(data?.line_id ?? null);
+            setViewerLineGateReady(true);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [authChecked, user?.id, supabase]);
 
     useEffect(() => {
         if (!authChecked) return;
@@ -283,6 +311,12 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                 dictProperty={dict.property || {}}
                 returnPath={returnPath}
             />
+            <ViewerLineRequiredModal
+                open={lineViewerModalOpen}
+                onClose={() => setLineViewerModalOpen(false)}
+                locale={locale}
+                dictProperty={dict.property || {}}
+            />
             <div className="bg-navy-secondary text-white pt-8 pb-10">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <h1 className="text-2xl font-black !text-white md:text-3xl">{c.title}</h1>
@@ -315,6 +349,9 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                 user={user}
                                 removeId={removeId}
                                 onRequireAuth={() => setContactAuthOpen(true)}
+                                viewerLineContact={compareViewerLine}
+                                viewerLineGateReady={viewerLineGateReady}
+                                onRequireViewerLine={() => setLineViewerModalOpen(true)}
                             />
                         </div>
                         <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
@@ -549,6 +586,9 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                                         }}
                                                         isLoggedIn={!!user}
                                                         onRequireAuth={() => setContactAuthOpen(true)}
+                                                        viewerLineContact={compareViewerLine}
+                                                        viewerLineGateReady={viewerLineGateReady}
+                                                        onRequireViewerLine={() => setLineViewerModalOpen(true)}
                                                     />
                                                 </td>
                                             );

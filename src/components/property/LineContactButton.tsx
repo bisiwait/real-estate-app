@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
-import { MessageCircle, X, Copy } from 'lucide-react'
+import { MessageCircle, X, Copy, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { buildLineInquiryEntryUrl } from '@/lib/line-contact-url'
+import { buildLineInquiryEntryUrl, hasUsableLineContact } from '@/lib/line-contact-url'
 
 const MD_MIN_PX = 768
 
@@ -42,6 +42,15 @@ interface LineContactButtonProps {
   /** false のとき LINE 遷移せずログイン誘導 */
   isLoggedIn?: boolean
   onRequireAuth?: () => void
+  /** ログイン中の問い合わせ者の profiles.line_id（未設定なら LINE 問い合わせ不可） */
+  viewerLineContact?: string | null
+  /**
+   * ログイン時にプロフィール取得が終わったら true。
+   * false のあいだは誤ブロックを防ぐためボタンを待機表示にする。
+   */
+  viewerLineGateReady?: boolean
+  /** LINE 連絡先未登録のとき（登録誘導モーダル） */
+  onRequireViewerLine?: () => void
 }
 
 function formatMessage(template: string, propertyName: string) {
@@ -76,6 +85,9 @@ export default function LineContactButton({
   variant = 'full',
   isLoggedIn = true,
   onRequireAuth,
+  viewerLineContact = null,
+  viewerLineGateReady = true,
+  onRequireViewerLine,
 }: LineContactButtonProps) {
   const params = useParams()
   const locale = (params?.locale as string) || 'jp'
@@ -125,13 +137,23 @@ export default function LineContactButton({
         body: JSON.stringify({ property_id: property.id }),
       })
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string }
+        const j = (await res.json().catch(() => ({}))) as {
+          error?: string
+          code?: string
+        }
         console.error('inquiry_logs API failed', res.status, j)
+        if (res.status === 400 && j.code === 'LINE_CONTACT_REQUIRED') {
+          toast.error(
+            pr.line_viewer_required_toast ??
+              'プロフィールにLINE連絡先を登録してください。'
+          )
+          onRequireViewerLine?.()
+        }
       }
     } catch (e) {
       console.error('Failed to log line inquiry', e)
     }
-  }, [property.id])
+  }, [property.id, pr.line_viewer_required_toast, onRequireViewerLine])
 
   const copyInquiryMessage = useCallback(async () => {
     if (!inquiryMessage.trim()) return
@@ -146,6 +168,11 @@ export default function LineContactButton({
   const handleLineContact = async () => {
     if (!isLoggedIn) {
       onRequireAuth?.()
+      return
+    }
+    if (!viewerLineGateReady) return
+    if (!hasUsableLineContact(viewerLineContact)) {
+      onRequireViewerLine?.()
       return
     }
     if (!entry) return
@@ -266,18 +293,38 @@ export default function LineContactButton({
     )
   }
 
+  const waitingProfile =
+    isLoggedIn && !viewerLineGateReady && Boolean(entry)
+
   return (
     <>
       <button
         type="button"
+        disabled={waitingProfile}
+        title={
+          waitingProfile
+            ? (pr.line_viewer_gate_loading_hint ?? '')
+            : isLoggedIn &&
+                viewerLineGateReady &&
+                !hasUsableLineContact(viewerLineContact)
+              ? (pr.line_viewer_required_title ?? '')
+              : undefined
+        }
         onClick={() => void handleLineContact()}
-        className={`${baseClasses} ${className}`}
+        className={`${baseClasses} ${className} ${waitingProfile ? disabledClasses : ''}`}
       >
-        <MessageCircle
-          className={variant === 'icon' ? 'h-5 w-5' : 'h-5 w-5'}
-          fill="currentColor"
-          strokeWidth={0}
-        />
+        {waitingProfile ? (
+          <Loader2
+            className={variant === 'icon' ? 'h-5 w-5 animate-spin' : 'h-5 w-5 animate-spin'}
+            aria-hidden
+          />
+        ) : (
+          <MessageCircle
+            className={variant === 'icon' ? 'h-5 w-5' : 'h-5 w-5'}
+            fill="currentColor"
+            strokeWidth={0}
+          />
+        )}
         <span
           className={
             variant === 'icon' ? 'text-[10px] leading-tight px-1' : ''

@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { hasUsableLineContact } from '@/lib/line-contact-url'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -50,13 +51,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 })
     }
 
-    const { data: prof } = await admin
+    const { data: viewerProf } = await admin
       .from('profiles')
-      .select('id')
+      .select('id, line_id')
       .eq('id', user.id)
       .maybeSingle()
-    if (!prof) {
+    if (!viewerProf) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
+    }
+    if (!hasUsableLineContact(viewerProf.line_id)) {
+      return NextResponse.json(
+        {
+          error: 'LINE contact required',
+          code: 'LINE_CONTACT_REQUIRED',
+        },
+        { status: 400 }
+      )
     }
 
     const { error: insErr } = await admin.from('inquiry_logs').insert({

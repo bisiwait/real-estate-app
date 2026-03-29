@@ -491,7 +491,14 @@
         "line_not_configured_hint": "ตัวแทนยังไม่ได้ตั้งค่า LINE กรุณาใช้แบบฟอร์มอีเมล",
         "line_copy_inquiry_message": "คัดลอกข้อความสอบถาม",
         "line_copy_inquiry_success": "คัดลอกแล้ว",
-        "line_copy_inquiry_fail": "คัดลอกไม่สำเร็จ"
+        "line_copy_inquiry_fail": "คัดลอกไม่สำเร็จ",
+        "line_viewer_required_title": "ต้องลงทะเบียน LINE ของคุณก่อน",
+        "line_viewer_required_subtitle": "เพื่อให้ตัวแทนตอบกลับทาง LINE ได้",
+        "line_viewer_required_body": "หากต้องการติดต่อทาง LINE กรุณาเพิ่ม LINE ID หรือลิงก์เพิ่มเพื่อนในโปรไฟล์\nหากไม่มี ตัวแทนจะใช้ปุ่มตอบกลับในแดชบอร์ดหาคุณทาง LINE ไม่ได้",
+        "line_viewer_required_bullet": "บันทึกแล้ว กลับมาที่หน้านี้แล้วแตะ LINE อีกครั้ง",
+        "line_viewer_required_cta": "ไปลงทะเบียน LINE ในโปรไฟล์",
+        "line_viewer_required_toast": "กรุณาเพิ่ม LINE ในโปรไฟล์ก่อน",
+        "line_viewer_gate_loading_hint": "กำลังตรวจสอบโปรไฟล์…"
     },
     "compare": {
         "title": "เปรียบเทียบอสังหาริมทรัพย์",

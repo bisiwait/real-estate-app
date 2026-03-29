@@ -20,6 +20,9 @@ interface StickyContactBarProps {
     dict: any
     isLoggedIn?: boolean
     onRequireAuth?: () => void
+    viewerLineContact?: string | null
+    viewerLineGateReady?: boolean
+    onRequireViewerLine?: () => void
 }
 
 export default function StickyContactBar({
@@ -28,6 +31,9 @@ export default function StickyContactBar({
     dict,
     isLoggedIn = true,
     onRequireAuth,
+    viewerLineContact = null,
+    viewerLineGateReady = true,
+    onRequireViewerLine,
 }: StickyContactBarProps) {
     const scrollToInquiry = () => {
         if (!isLoggedIn) {
@@ -88,6 +94,9 @@ export default function StickyContactBar({
                         dict={dict}
                         isLoggedIn={isLoggedIn}
                         onRequireAuth={onRequireAuth}
+                        viewerLineContact={viewerLineContact}
+                        viewerLineGateReady={viewerLineGateReady}
+                        onRequireViewerLine={onRequireViewerLine}
                     />
                 </div>
 

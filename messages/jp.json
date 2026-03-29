@@ -518,7 +518,14 @@
         "line_not_configured_hint": "この物件の担当者はLINE連絡先を登録していません。メールフォームをご利用ください。",
         "line_copy_inquiry_message": "問い合わせ文をコピー",
         "line_copy_inquiry_success": "コピーしました",
-        "line_copy_inquiry_fail": "コピーに失敗しました"
+        "line_copy_inquiry_fail": "コピーに失敗しました",
+        "line_viewer_required_title": "LINE連絡先の登録が必要です",
+        "line_viewer_required_subtitle": "担当エージェントがLINEで返信できるようにするため",
+        "line_viewer_required_body": "LINEで問い合わせるには、マイページのプロフィールにあなたのLINE連絡先（LINE ID または友だち追加URLなど）を登録してください。\n未登録のままでは、担当者がダッシュボードからあなた宛にLINEで返信できません。",
+        "line_viewer_required_bullet": "登録後、このページに戻って再度お試しください。",
+        "line_viewer_required_cta": "プロフィールでLINE連絡先を登録",
+        "line_viewer_required_toast": "先にプロフィールにLINE連絡先を登録してください。",
+        "line_viewer_gate_loading_hint": "プロフィールを確認しています…"
     },
     "compare": {
         "title": "物件比較",

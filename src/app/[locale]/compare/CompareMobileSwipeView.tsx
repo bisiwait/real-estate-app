@@ -115,6 +115,9 @@ type CompareMobileSwipeViewProps = {
     user: any;
     removeId: (id: string) => void;
     onRequireAuth: () => void;
+    viewerLineContact?: string | null;
+    viewerLineGateReady?: boolean;
+    onRequireViewerLine?: () => void;
 };
 
 /** スマホ専用: 左ラベル固定 + 物件カラム横スナップ（md 未満のみ表示） */
@@ -128,6 +131,9 @@ export default function CompareMobileSwipeView({
     user,
     removeId,
     onRequireAuth,
+    viewerLineContact = null,
+    viewerLineGateReady = true,
+    onRequireViewerLine,
 }: CompareMobileSwipeViewProps) {
     const LABEL_W = "w-[5.75rem] min-w-[5.75rem] max-w-[5.75rem]";
     const ck = c as Record<string, string>;
@@ -236,6 +242,9 @@ export default function CompareMobileSwipeView({
                             user={user}
                             removeId={removeId}
                             onRequireAuth={onRequireAuth}
+                            viewerLineContact={viewerLineContact}
+                            viewerLineGateReady={viewerLineGateReady}
+                            onRequireViewerLine={onRequireViewerLine}
                         />
                     ))}
                 </div>
@@ -288,6 +297,9 @@ function PropertySwipeColumn({
     user,
     removeId,
     onRequireAuth,
+    viewerLineContact = null,
+    viewerLineGateReady = true,
+    onRequireViewerLine,
 }: {
     property: any;
     locale: string;
@@ -298,6 +310,9 @@ function PropertySwipeColumn({
     user: any;
     removeId: (id: string) => void;
     onRequireAuth: () => void;
+    viewerLineContact?: string | null;
+    viewerLineGateReady?: boolean;
+    onRequireViewerLine?: () => void;
 }) {
     const title = getTitle(p, locale);
     const priceStr =
@@ -475,6 +490,9 @@ function PropertySwipeColumn({
                         }}
                         isLoggedIn={!!user}
                         onRequireAuth={onRequireAuth}
+                        viewerLineContact={viewerLineContact}
+                        viewerLineGateReady={viewerLineGateReady}
+                        onRequireViewerLine={onRequireViewerLine}
                     />
                 </ValueRow>
             </ul>

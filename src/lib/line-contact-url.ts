@@ -1,3 +1,8 @@
+/** 問い合わせ者の LINE 連絡先として有効か（空・空白のみは false） */
+export function hasUsableLineContact(raw: string | null | undefined): boolean {
+  return normalizeStoredLineContact(raw ?? '').length > 0
+}
+
 /**
  * DB 保存用: 前後の空白を除去。URL らしき値はそのまま、それ以外（ID）では @ をすべて除去（line.me/R/ti/p に @ が入るとアプリでエラーになるため）。
  */

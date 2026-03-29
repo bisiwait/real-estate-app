@@ -17,6 +17,7 @@ import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import LineContactButton from '@/components/property/LineContactButton'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
+import ViewerLineRequiredModal from '@/components/property/ViewerLineRequiredModal'
 import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
 import { isPremium } from '@/lib/utils/plan'
@@ -74,6 +75,8 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     const locale = (params?.locale as string) || 'jp'
     const { user } = useAuth()
     const [contactAuthOpen, setContactAuthOpen] = useState(false)
+    const [lineViewerModalOpen, setLineViewerModalOpen] = useState(false)
+    const [viewerLineGateReady, setViewerLineGateReady] = useState(false)
 
     // useSearchParams は親の Suspense と相性でエラーバウンダリに落ちることがあるため、pathname のみで戻り先を組み立てる
     const returnPath = pathname || `/${locale}/properties/${id}`
@@ -108,6 +111,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     useEffect(() => {
         window.scrollTo(0, 0);
         const fetchClientData = async () => {
+            setViewerLineGateReady(false)
             try {
                 const supabase = createClient()
                 const d = await getDictionary(locale)
@@ -146,6 +150,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 }
                 setProfile(null)
             } finally {
+                setViewerLineGateReady(true)
                 setLoading(false)
             }
         }
@@ -258,6 +263,12 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 dictProperty={dict.property || {}}
                 returnPath={returnPath}
             />
+            <ViewerLineRequiredModal
+                open={lineViewerModalOpen}
+                onClose={() => setLineViewerModalOpen(false)}
+                locale={locale}
+                dictProperty={dict.property || {}}
+            />
             <BreadcrumbUpdater label={displayTitle} />
             <div className="container mx-auto max-w-7xl px-4 pt-6 relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -348,6 +359,9 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                                 dict={dict}
                                 isLoggedIn={!!user}
                                 onRequireAuth={() => setContactAuthOpen(true)}
+                                viewerLineContact={profile?.line_id ?? null}
+                                viewerLineGateReady={viewerLineGateReady}
+                                onRequireViewerLine={() => setLineViewerModalOpen(true)}
                             />
 
                             <div className="mt-8 border-t border-slate-100 pt-8">
@@ -376,6 +390,9 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}
+                viewerLineContact={profile?.line_id ?? null}
+                viewerLineGateReady={viewerLineGateReady}
+                onRequireViewerLine={() => setLineViewerModalOpen(true)}
             />
         </div>
     )

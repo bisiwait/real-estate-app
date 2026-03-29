@@ -492,7 +492,14 @@
         "line_not_configured_hint": "This listing agent has not set a LINE contact. Please use the email form.",
         "line_copy_inquiry_message": "Copy inquiry message",
         "line_copy_inquiry_success": "Copied",
-        "line_copy_inquiry_fail": "Copy failed"
+        "line_copy_inquiry_fail": "Copy failed",
+        "line_viewer_required_title": "Add your LINE contact first",
+        "line_viewer_required_subtitle": "So the listing agent can reply to you on LINE",
+        "line_viewer_required_body": "To contact an agent via LINE, add your LINE ID or add-friend URL in your profile.\nWithout it, the agent cannot use the dashboard shortcut to message you back on LINE.",
+        "line_viewer_required_bullet": "After saving, return here and tap LINE inquiry again.",
+        "line_viewer_required_cta": "Add LINE contact in profile",
+        "line_viewer_required_toast": "Please add your LINE contact in your profile first.",
+        "line_viewer_gate_loading_hint": "Checking your profile…"
     },
     "compare": {
         "title": "Compare properties",
