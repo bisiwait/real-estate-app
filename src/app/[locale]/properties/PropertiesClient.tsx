@@ -17,6 +17,7 @@ import {
     PROPERTY_LIST_PAGE_SIZE,
     type PropertyListSort,
 } from '@/lib/services/propertyListQuery'
+import { cn } from '@/lib/utils'
 
 /** DB の tags 配列と一致（messages の property.tags と同じキー） */
 const OCEAN_VIEW_TAG = 'オーシャンビュー'
