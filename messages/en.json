@@ -341,6 +341,9 @@
         "sale_label": "Sale:",
         "per_month": "THB / Month",
         "pets_allowed": "Pets Allowed",
+        "favorite_login_required": "Sign in to save favorites.",
+        "favorite_add_aria": "Add to favorites",
+        "favorite_remove_aria": "Remove from favorites",
         "cities": {
             "pattaya": "Pattaya",
             "sriracha": "Sriracha"

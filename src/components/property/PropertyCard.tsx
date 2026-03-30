@@ -170,7 +170,12 @@ export default function PropertyCard({
         <div className="relative group h-full">
             {!hideFavoriteButton ? (
                 <div className="absolute top-4 right-4 z-20">
-                    <FavoriteButton propertyId={property.id} />
+                    <FavoriteButton
+                        propertyId={property.id}
+                        loginRequiredMessage={dict.property.favorite_login_required}
+                        favoriteAddAria={dict.property.favorite_add_aria}
+                        favoriteRemoveAria={dict.property.favorite_remove_aria}
+                    />
                 </div>
             ) : null}
 

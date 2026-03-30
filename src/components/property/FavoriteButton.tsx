@@ -9,11 +9,18 @@ import { useAuth } from "@/contexts/AuthContext";
 interface FavoriteButtonProps {
     propertyId: string;
     initialIsFavorite?: boolean;
+    /** 未ログイン時トースト（locale の辞書から渡す） */
+    loginRequiredMessage: string;
+    favoriteAddAria: string;
+    favoriteRemoveAria: string;
 }
 
 export default function FavoriteButton({
     propertyId,
     initialIsFavorite = false,
+    loginRequiredMessage,
+    favoriteAddAria,
+    favoriteRemoveAria,
 }: FavoriteButtonProps) {
     const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
     const [loading, setLoading] = useState(false);
@@ -97,7 +104,7 @@ export default function FavoriteButton({
                     ? "bg-red-500 text-white"
                     : "bg-white/90 text-slate-400 hover:text-red-500"
                     }`}
-                aria-label={isFavorite ? "お気に入りから削除" : "お気に入りに追加"}
+                aria-label={isFavorite ? favoriteRemoveAria : favoriteAddAria}
             >
                 <motion.div
                     animate={isFavorite ? { scale: [1, 1.3, 1] } : {}}
@@ -117,10 +124,10 @@ export default function FavoriteButton({
                         initial={{ opacity: 0, y: 10, x: "-50%" }}
                         animate={{ opacity: 1, y: 0, x: "-50%" }}
                         exit={{ opacity: 0, y: 10, x: "-50%" }}
-                        className="fixed bottom-24 left-1/2 z-[200] flex items-center bg-navy-secondary text-white px-6 py-3 rounded-2xl shadow-2xl whitespace-nowrap border border-white/10"
+                        className="fixed bottom-24 left-1/2 z-[200] flex max-w-[min(22rem,calc(100vw-2rem))] items-center bg-navy-secondary text-white px-6 py-3 rounded-2xl shadow-2xl border border-white/10"
                     >
-                        <AlertCircle className="w-4 h-4 mr-3 text-amber-400" />
-                        <span className="text-xs font-bold">お気に入り機能を利用するにはログインが必要です</span>
+                        <AlertCircle className="w-4 h-4 mr-3 shrink-0 text-amber-400" />
+                        <span className="text-xs font-bold text-left">{loginRequiredMessage}</span>
                     </motion.div>
                 )}
             </AnimatePresence>

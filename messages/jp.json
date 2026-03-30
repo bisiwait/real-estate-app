@@ -367,6 +367,9 @@
         "sale_label": "価格：",
         "per_month": "THB / 月",
         "pets_allowed": "ペット相談可",
+        "favorite_login_required": "お気に入り機能を利用するにはログインが必要です",
+        "favorite_add_aria": "お気に入りに追加",
+        "favorite_remove_aria": "お気に入りから削除",
         "cities": {
             "pattaya": "パタヤ",
             "sriracha": "シラチャ"

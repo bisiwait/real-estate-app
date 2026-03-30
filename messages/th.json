@@ -340,6 +340,9 @@
         "sale_label": "ขาย:",
         "per_month": "บาท / เดือน",
         "pets_allowed": "เลี้ยงสัตว์ได้",
+        "favorite_login_required": "ต้องเข้าสู่ระบบเพื่อใช้รายการโปรด",
+        "favorite_add_aria": "เพิ่มในรายการโปรด",
+        "favorite_remove_aria": "ลบออกจากรายการโปรด",
         "cities": {
             "pattaya": "พัทยา",
             "sriracha": "ศรีราชา"
