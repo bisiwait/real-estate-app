@@ -50,15 +50,15 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               </Link>
             }
           />
-          {/* 横スクロール対応のコンテナ (モバイル向け) */}
-          <div className="flex overflow-x-auto overscroll-x-contain pb-8 -mx-4 px-4 touch-pan-x md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:pb-0 md:px-0 md:mx-0 md:touch-auto snap-x snap-mandatory hide-scrollbar [-webkit-overflow-scrolling:touch]">
+          {/* 賃貸・売買セクションと同様：モバイルは1列で縦並び */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {presales.map((project, idx) => (
-              <div key={project.id} className="min-w-[85vw] sm:min-w-[400px] md:min-w-0 pr-4 md:pr-0 snap-center md:snap-align-none">
+              <div key={project.id} className="h-full">
                 <PresaleCard project={project} dict={dict} imagePriority={idx === 0} />
               </div>
             ))}
             {presales.length === 0 && (
-              <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 w-full">
+              <div className="col-span-full py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
                 現在、注目のプレセール物件はありません。
               </div>
             )}
