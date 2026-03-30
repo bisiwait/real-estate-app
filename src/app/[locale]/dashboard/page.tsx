@@ -38,7 +38,7 @@ export default async function DashboardPage({
     // Fetch Profile (plan / subscription fields)
     const { data: profile } = await supabase
         .from('profiles')
-        .select('plan, plan_type, full_name, phone, current_period_end, auto_renew, is_admin')
+        .select('plan, plan_type, full_name, phone, line_id, current_period_end, auto_renew, is_admin')
         .eq('id', user.id)
         .single()
 

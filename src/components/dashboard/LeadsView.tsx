@@ -10,7 +10,9 @@ import {
   Loader2,
   ChevronDown,
   Copy,
+  AlertCircle,
 } from 'lucide-react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { buildLeadLineReplyUrls } from '@/lib/line-contact-url'
 
@@ -108,6 +110,8 @@ async function copyLineContact(lineId: string | null | undefined) {
 interface LeadsViewProps {
   initialLeads: LeadRow[]
   locale: string
+  /** エージェント本人の LINE ID（未登録時は返信用リンクが使えないため案内を出す） */
+  agentLineId?: string | null
 }
 
 function useMobileUa() {
@@ -130,10 +134,11 @@ function formatInquiryAt(iso: string) {
   })
 }
 
-export default function LeadsView({ initialLeads }: LeadsViewProps) {
+export default function LeadsView({ initialLeads, locale, agentLineId }: LeadsViewProps) {
   const [leads, setLeads] = useState<LeadRow[]>(initialLeads || [])
   const [savingId, setSavingId] = useState<string | null>(null)
   const isMobileUa = useMobileUa()
+  const agentLineMissing = !(agentLineId ?? '').trim()
 
   useEffect(() => {
     setLeads(initialLeads || [])
@@ -163,25 +168,57 @@ export default function LeadsView({ initialLeads }: LeadsViewProps) {
     }
   }, [])
 
+  const agentLineRegisterBanner = agentLineMissing ? (
+    <div className="border-b border-amber-200/80 bg-amber-50/95 px-3 py-4 sm:px-5">
+      <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 lg:mx-0 lg:max-w-none">
+        <div className="flex gap-3 min-w-0">
+          <AlertCircle
+            className="h-5 w-5 shrink-0 text-amber-600 sm:mt-0.5"
+            aria-hidden
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-black text-amber-950">
+              あなたの LINE ID が未登録です
+            </p>
+            <p className="mt-1 text-xs font-bold leading-relaxed text-amber-900/85">
+              お客様への返信用リンクを表示するには、公開プロフィール設定に LINE ID を登録してください。
+            </p>
+          </div>
+        </div>
+        <Link
+          href={`/${locale}/dashboard/settings`}
+          className="inline-flex shrink-0 items-center justify-center rounded-xl bg-navy-primary px-4 py-2.5 text-center text-xs font-black text-white shadow-md transition hover:bg-navy-secondary sm:py-2"
+        >
+          LINE ID を登録する
+        </Link>
+      </div>
+    </div>
+  ) : null
+
   if (!leads || leads.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 px-4 py-16 text-center text-slate-400">
-        <Users className="h-10 w-10 opacity-20" />
-        <p className="text-sm font-bold">まだリード情報がありません。</p>
+      <div className="flex flex-col">
+        {agentLineRegisterBanner}
+        <div className="flex flex-col items-center gap-2 px-4 py-16 text-center text-slate-400">
+          <Users className="h-10 w-10 opacity-20" />
+          <p className="text-sm font-bold">まだリード情報がありません。</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="divide-y divide-slate-200/80">
-      <div className="px-3 py-3 sm:px-4 lg:px-3 lg:py-2">
-        <h3 className="text-base font-black text-navy-secondary lg:text-sm">リード（問い合わせ）詳細</h3>
-        <p className="mt-0.5 text-[11px] text-slate-500 lg:mt-0 lg:text-[10px] lg:leading-snug">
-          LINE で返信し、ステータスを更新してください。
-        </p>
-      </div>
+    <div className="flex flex-col">
+      {agentLineRegisterBanner}
+      <div className="divide-y divide-slate-200/80">
+        <div className="px-3 py-3 sm:px-4 lg:px-3 lg:py-2">
+          <h3 className="text-base font-black text-navy-secondary lg:text-sm">リード（問い合わせ）詳細</h3>
+          <p className="mt-0.5 text-[11px] text-slate-500 lg:mt-0 lg:text-[10px] lg:leading-snug">
+            LINE で返信し、ステータスを更新してください。
+          </p>
+        </div>
 
-      <ul className="divide-y divide-slate-200/80">
+        <ul className="divide-y divide-slate-200/80">
         {leads.map((lead) => {
           const isLine = String(lead.inquiry_type).toLowerCase() === 'line'
           const lineUrls = buildLeadLineReplyUrls(lead.profile?.line_id)
@@ -352,7 +389,8 @@ export default function LeadsView({ initialLeads }: LeadsViewProps) {
             </li>
           )
         })}
-      </ul>
+        </ul>
+      </div>
     </div>
   )
 }
