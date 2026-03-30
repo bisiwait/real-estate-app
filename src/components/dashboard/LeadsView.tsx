@@ -181,9 +181,7 @@ export default function LeadsView({ initialLeads, locale, agentLineId }: LeadsVi
               あなたの LINE ID が未登録です
             </p>
             <p className="mt-1 text-xs font-bold leading-relaxed text-amber-900/85">
-              掲載した物件のお客様からの問い合わせをLINEで受けるには
-              <br />
-              LINE IDの登録が必要です
+              掲載した物件のお客様からの問い合わせをLINEで受けるにはLINE IDの登録が必要です。
               <br />
               プロフィール設定に LINE ID を登録してください。
             </p>
