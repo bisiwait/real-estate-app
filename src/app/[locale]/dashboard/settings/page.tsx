@@ -21,8 +21,8 @@ export default async function SettingsPage() {
                             <Settings className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black tracking-tight">プロフィール設定</h1>
-                            <p className="text-slate-400 text-sm font-medium mt-1 uppercase tracking-widest">Account Settings</p>
+                            <h1 className="text-3xl font-black tracking-tight text-slate-400">プロフィール設定</h1>
+                            <p className="text-sm font-medium mt-1 uppercase tracking-widest text-slate-400">Account Settings</p>
                         </div>
                     </div>
                 </div>
