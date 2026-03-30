@@ -10,18 +10,11 @@ import {
     Home,
     MessageCircle,
     ArrowUpRight,
-    Search,
     ArrowLeft,
     RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
-import nextDynamic from 'next/dynamic'
-const AnalyticsCharts = nextDynamic(() => import('./AnalyticsCharts'), {
-    ssr: false,
-    loading: () => <div className="h-[300px] bg-slate-50/50 animate-pulse rounded-2xl" />
-})
-
-export const dynamic = 'force-dynamic'
+import AnalyticsCharts from './AnalyticsCharts'
 
 export default function AdminAnalyticsPage() {
     const router = useRouter()
@@ -33,68 +26,114 @@ export default function AdminAnalyticsPage() {
     const [topProperties, setTopProperties] = useState<{name: string, count: number}[]>([])
     const [topAgents, setTopAgents] = useState<{name: string, count: number}[]>([])
     const [loading, setLoading] = useState(true)
+    const [fetchError, setFetchError] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
-            const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
+            setFetchError(null)
+            try {
+                const supabase = createClient()
+                const { data: { user } } = await supabase.auth.getUser()
 
-            if (!user) {
-                router.push('/login')
-                return
+                if (!user) {
+                    router.push(`/${locale}/login`)
+                    return
+                }
+
+                const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
+                if (!profile?.is_admin) {
+                    router.push(`/${locale}/dashboard`)
+                    return
+                }
+
+                // ネスト select は agent_id → profiles の複数 FK で壊れやすいため、一覧は * のみ＋別クエリで結合する
+                const { data: leadRows, error: logsError } = await supabase.from('inquiry_logs').select('*')
+
+                if (logsError) {
+                    console.error('[admin analytics] inquiry_logs', logsError)
+                    setFetchError(logsError.message)
+                    return
+                }
+
+                const leads = leadRows ?? []
+                const propertyIds = [...new Set(leads.map((l) => l.property_id).filter(Boolean))] as string[]
+                const agentIds = [...new Set(leads.map((l) => l.agent_id).filter(Boolean))] as string[]
+
+                const { data: props, error: propErr } =
+                    propertyIds.length > 0
+                        ? await supabase.from('properties').select('id, title').in('id', propertyIds)
+                        : { data: [], error: null }
+                if (propErr) console.error('[admin analytics] properties', propErr)
+
+                const { data: agents, error: agentErr } =
+                    agentIds.length > 0
+                        ? await supabase.from('profiles').select('id, full_name').in('id', agentIds)
+                        : { data: [], error: null }
+                if (agentErr) console.error('[admin analytics] profiles (agents)', agentErr)
+
+                const propMap = new Map((props ?? []).map((p) => [p.id as string, (p.title as string) || 'Unknown']))
+                const agentMap = new Map(
+                    (agents ?? []).map((a) => [a.id as string, ((a.full_name as string) || 'Unknown Agent') as string])
+                )
+
+                setTotalLeads(leads.length)
+                setLineLeads(leads.filter((l) => l.inquiry_type === 'line').length)
+                setPhoneLeads(leads.filter((l) => l.inquiry_type === 'phone').length)
+
+                const propertyCounts: Record<string, number> = {}
+                leads.forEach((l) => {
+                    const title = propMap.get(l.property_id) ?? 'Unknown'
+                    propertyCounts[title] = (propertyCounts[title] || 0) + 1
+                })
+                setTopProperties(
+                    Object.entries(propertyCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([name, count]) => ({ name, count }))
+                )
+
+                const agentCounts: Record<string, number> = {}
+                leads.forEach((l) => {
+                    const name = agentMap.get(l.agent_id) ?? 'Unknown Agent'
+                    agentCounts[name] = (agentCounts[name] || 0) + 1
+                })
+                setTopAgents(
+                    Object.entries(agentCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([name, count]) => ({ name, count }))
+                )
+            } catch (e) {
+                console.error('[admin analytics]', e)
+                setFetchError(e instanceof Error ? e.message : 'データの取得に失敗しました')
+            } finally {
+                setLoading(false)
             }
-
-            // Check admin status
-            const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-            if (!profile?.is_admin) {
-                router.push('/dashboard')
-                return
-            }
-
-            // Fetch stats for analytics
-            const { data: leadStats } = await supabase
-                .from('inquiry_logs')
-                .select(`
-                    *,
-                    property:properties(title),
-                    agent:agent_id(full_name)
-                `)
-
-            // Simple aggregation
-            const leads = leadStats || []
-            setTotalLeads(leads.length)
-            setLineLeads(leads.filter(l => l.inquiry_type === 'line').length)
-            setPhoneLeads(leads.filter(l => l.inquiry_type === 'phone').length)
-
-            // Most popular property
-            const propertyCounts: Record<string, number> = {}
-            leads.forEach(l => {
-                const title = l.property?.title || 'Unknown'
-                propertyCounts[title] = (propertyCounts[title] || 0) + 1
-            })
-            setTopProperties(Object.entries(propertyCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([name, count]) => ({ name, count })))
-
-            // Best performing agents
-            const agentCounts: Record<string, number> = {}
-            leads.forEach(l => {
-                const name = l.agent?.full_name || 'Unknown Agent'
-                agentCounts[name] = (agentCounts[name] || 0) + 1
-            })
-            setTopAgents(Object.entries(agentCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([name, count]) => ({ name, count })))
-            
-            setLoading(false)
         }
         fetchData()
-    }, [router])
+    }, [router, locale])
 
     if (loading) {
         return <div className="p-10 flex justify-center items-center min-h-screen"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
+    }
+
+    if (fetchError) {
+        return (
+            <div className="p-4 md:p-10 min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 text-center max-w-lg mx-auto">
+                <p className="text-navy-secondary font-black">分析データを読み込めませんでした</p>
+                <p className="text-sm text-slate-500 font-bold leading-relaxed">{fetchError}</p>
+                <button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 rounded-xl bg-navy-primary text-white font-bold hover:bg-navy-secondary"
+                >
+                    再読み込み
+                </button>
+                <Link href={`/${locale}/admin-secret`} className="text-sm font-bold text-navy-primary hover:underline">
+                    管理者ダッシュボードに戻る
+                </Link>
+            </div>
+        )
     }
 
     return (
