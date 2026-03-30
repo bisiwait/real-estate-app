@@ -59,9 +59,11 @@ export default function PresaleCard({
                     </div>
 
                     <div className="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 className="text-xl font-bold mb-1 truncate">{project.name}</h3>
-                        <div className="flex items-center text-sm font-medium opacity-90">
-                            <MapPin className="w-3.5 h-3.5 mr-1" />
+                        <h3 className="mb-1 truncate text-xl font-bold !text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
+                            {project.name}
+                        </h3>
+                        <div className="flex items-center text-sm font-medium !text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)]">
+                            <MapPin className="mr-1 h-3.5 w-3.5 shrink-0" />
                             {project.area}
                         </div>
                     </div>
