@@ -44,7 +44,7 @@ interface ProfileData {
     auto_renew: boolean
 }
 
-export default function ProfileForm() {
+export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLineId?: boolean }) {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [updatingSubscription, setUpdatingSubscription] = useState(false)
@@ -66,6 +66,7 @@ export default function ProfileForm() {
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const lineIdInputRef = useRef<HTMLInputElement>(null)
     const router = useRouter()
     const params = useParams()
     const locale = params.locale as string
@@ -107,6 +108,17 @@ export default function ProfileForm() {
 
         fetchProfile()
     }, [])
+
+    useEffect(() => {
+        if (!autoFocusLineId || loading) return
+        const t = window.setTimeout(() => {
+            const el = lineIdInputRef.current
+            if (!el) return
+            el.focus()
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 50)
+        return () => window.clearTimeout(t)
+    }, [autoFocusLineId, loading])
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -511,6 +523,7 @@ export default function ProfileForm() {
                             </div>
                             <div className="relative">
                                 <input
+                                    ref={lineIdInputRef}
                                     id="profile-line-id"
                                     type="text"
                                     value={formData.line_id}

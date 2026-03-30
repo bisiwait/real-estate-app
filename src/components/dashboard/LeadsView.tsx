@@ -188,7 +188,7 @@ export default function LeadsView({ initialLeads, locale, agentLineId }: LeadsVi
           </div>
         </div>
         <Link
-          href={`/${locale}/dashboard/settings`}
+          href={`/${locale}/dashboard/settings?focus=line_id`}
           className="inline-flex shrink-0 items-center justify-center rounded-xl bg-navy-primary px-4 py-2.5 text-center text-xs font-black text-white shadow-md transition hover:bg-navy-secondary sm:py-2"
         >
           LINE ID を登録する

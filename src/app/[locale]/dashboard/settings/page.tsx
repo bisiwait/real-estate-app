@@ -3,13 +3,22 @@ import { redirect } from 'next/navigation'
 import { Settings, UserCircle } from 'lucide-react'
 import ProfileForm from '@/components/dashboard/ProfileForm'
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+    searchParams,
+}: {
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
         redirect('/login')
     }
+
+    const sp = await searchParams
+    const focusRaw = sp.focus
+    const focus = Array.isArray(focusRaw) ? focusRaw[0] : focusRaw
+    const autoFocusLineId = focus === 'line_id'
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
@@ -44,7 +53,7 @@ export default async function SettingsPage() {
                                 </div>
                             </div>
 
-                            <ProfileForm />
+                            <ProfileForm autoFocusLineId={autoFocusLineId} />
                         </div>
                     </div>
 
