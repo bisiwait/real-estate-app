@@ -378,83 +378,72 @@ export default function PropertiesClient({
             active ? activeRing : 'border-slate-200 bg-white hover:border-navy-primary/25'
         )
 
-    const renderPreferencesBlock = (opts?: { wideLayout?: boolean }) => {
-        const wide = opts?.wideLayout
-        return (
-            <div className="w-full min-w-0 rounded-2xl border-2 border-navy-primary/15 bg-gradient-to-b from-white to-slate-50/90 p-5 sm:p-6 shadow-sm lg:shadow-md">
-                <h3 className="text-sm font-black text-navy-secondary mb-1 tracking-tight">
-                    {dict.property.preferences_title}
-                </h3>
-                <p className={cn('text-[11px] font-bold text-slate-400', wide ? 'mb-4 sm:mb-5' : 'mb-4')}>
-                    {dict.property.preferences_hint}
-                </p>
-                <div
+    /** 検索パネル内で横幅いっぱいに使う（サイドバー／ドロワー共通） */
+    const renderPreferencesBlock = () => (
+        <div className="w-full min-w-0 rounded-2xl border-2 border-navy-primary/15 bg-gradient-to-b from-white to-slate-50/90 p-4 shadow-sm">
+            <h3 className="text-sm font-black text-navy-secondary mb-1 tracking-tight">
+                {dict.property.preferences_title}
+            </h3>
+            <p className="mb-3 text-[11px] font-bold text-slate-400 leading-relaxed">
+                {dict.property.preferences_hint}
+            </p>
+            <div className="space-y-2.5">
+                <label
                     className={cn(
-                        wide ? 'grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4' : 'space-y-3'
+                        preferenceLabelClass(draft.pets, 'border-amber-400 bg-amber-50/80 shadow-inner'),
+                        'min-w-0 gap-3 px-4 py-3.5 sm:px-5 sm:py-4'
                     )}
                 >
-                    <label
-                        className={cn(
-                            preferenceLabelClass(
-                                draft.pets,
-                                'border-amber-400 bg-amber-50/80 shadow-inner'
-                            ),
-                            wide ? 'px-5 py-5 sm:min-h-[5.75rem] sm:justify-center' : 'px-4 py-4'
-                        )}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={draft.pets}
-                            onChange={() => setDraft((d) => ({ ...d, pets: !d.pets }))}
-                            className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
-                        />
-                        <Dog className="h-6 w-6 shrink-0 text-amber-600" />
-                        <span className="text-sm font-black text-navy-secondary sm:text-base">{dict.property.pets}</span>
-                    </label>
-                    <label
-                        className={cn(
-                            preferenceLabelClass(
-                                draft.bathtub,
-                                'border-sky-400 bg-sky-50/80 shadow-inner'
-                            ),
-                            wide ? 'px-5 py-5 sm:min-h-[5.75rem] sm:justify-center' : 'px-4 py-4'
-                        )}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={draft.bathtub}
-                            onChange={() => setDraft((d) => ({ ...d, bathtub: !d.bathtub }))}
-                            className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
-                        />
-                        <Bath className="h-6 w-6 shrink-0 text-sky-600" />
-                        <span className="text-sm font-black text-navy-secondary sm:text-base">{dict.property.bathtub}</span>
-                    </label>
-                    <label
-                        className={cn(
-                            preferenceLabelClass(
-                                draftOceanView,
-                                'border-cyan-500 bg-cyan-50/80 shadow-inner'
-                            ),
-                            wide ? 'px-5 py-5 sm:min-h-[5.75rem] sm:justify-center' : 'px-4 py-4'
-                        )}
-                    >
-                        <input
-                            type="checkbox"
-                            checked={draftOceanView}
-                            onChange={toggleDraftOceanTag}
-                            className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
-                        />
-                        <Waves className="h-6 w-6 shrink-0 text-cyan-600" />
-                        <span className="text-sm font-black text-navy-secondary sm:text-base">
-                            {dict.property.ocean_view_filter}
-                        </span>
-                    </label>
-                </div>
+                    <input
+                        type="checkbox"
+                        checked={draft.pets}
+                        onChange={() => setDraft((d) => ({ ...d, pets: !d.pets }))}
+                        className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                    />
+                    <Dog className="h-6 w-6 shrink-0 text-amber-600" />
+                    <span className="min-w-0 flex-1 text-left text-sm font-black leading-snug text-navy-secondary">
+                        {dict.property.pets}
+                    </span>
+                </label>
+                <label
+                    className={cn(
+                        preferenceLabelClass(draft.bathtub, 'border-sky-400 bg-sky-50/80 shadow-inner'),
+                        'min-w-0 gap-3 px-4 py-3.5 sm:px-5 sm:py-4'
+                    )}
+                >
+                    <input
+                        type="checkbox"
+                        checked={draft.bathtub}
+                        onChange={() => setDraft((d) => ({ ...d, bathtub: !d.bathtub }))}
+                        className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                    />
+                    <Bath className="h-6 w-6 shrink-0 text-sky-600" />
+                    <span className="min-w-0 flex-1 text-left text-sm font-black leading-snug text-navy-secondary">
+                        {dict.property.bathtub}
+                    </span>
+                </label>
+                <label
+                    className={cn(
+                        preferenceLabelClass(draftOceanView, 'border-cyan-500 bg-cyan-50/80 shadow-inner'),
+                        'min-w-0 gap-3 px-4 py-3.5 sm:px-5 sm:py-4'
+                    )}
+                >
+                    <input
+                        type="checkbox"
+                        checked={draftOceanView}
+                        onChange={toggleDraftOceanTag}
+                        className="h-5 w-5 shrink-0 rounded border-slate-300 text-navy-primary focus:ring-navy-primary"
+                    />
+                    <Waves className="h-6 w-6 shrink-0 text-cyan-600" />
+                    <span className="min-w-0 flex-1 text-left text-sm font-black leading-snug text-navy-secondary">
+                        {dict.property.ocean_view_filter}
+                    </span>
+                </label>
             </div>
-        )
-    }
+        </div>
+    )
 
-    const renderFilterPanel = (opts?: { showApplyButton?: boolean; hidePreferences?: boolean }) => (
+    const renderFilterPanel = (opts?: { showApplyButton?: boolean }) => (
         <div className="min-w-0 max-w-full space-y-8">
             <div>
                 <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
@@ -554,7 +543,7 @@ export default function PropertiesClient({
                 </div>
             )}
 
-            {!opts?.hidePreferences ? renderPreferencesBlock() : null}
+            {renderPreferencesBlock()}
 
             {opts?.showApplyButton ? (
                 <button
@@ -692,13 +681,9 @@ export default function PropertiesClient({
                         </div>
                     </div>
 
-                    <div className="hidden lg:block lg:col-span-4 w-full min-w-0">
-                        {renderPreferencesBlock({ wideLayout: true })}
-                    </div>
-
-                    <aside className="hidden lg:block lg:col-span-1">
-                        <div className="bg-white rounded-3xl shadow-xl p-8 sticky top-28 border border-white/50 backdrop-blur-sm">
-                            {renderFilterPanel({ showApplyButton: true, hidePreferences: true })}
+                    <aside className="hidden lg:block lg:col-span-1 min-w-0">
+                        <div className="bg-white rounded-3xl shadow-xl px-5 py-7 sm:px-6 sm:py-8 sticky top-28 border border-white/50 backdrop-blur-sm">
+                            {renderFilterPanel({ showApplyButton: true })}
                         </div>
                     </aside>
 
