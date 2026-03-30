@@ -495,30 +495,30 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                             連絡先・ウェブ
                         </h3>
 
-                        <div>
-                            <div className="mb-2 ml-1 flex items-center gap-1.5">
-                                <label
-                                    htmlFor="profile-line-id"
-                                    className="text-[10px] font-black uppercase tracking-widest text-slate-400"
-                                >
-                                    LINE ID
-                                </label>
-                                <div className="group relative inline-flex">
+                        <div className="min-w-0">
+                            <div className="group relative mb-2 ml-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                    <label
+                                        htmlFor="profile-line-id"
+                                        className="text-[10px] font-black uppercase tracking-widest text-slate-400"
+                                    >
+                                        LINE ID
+                                    </label>
                                     <button
                                         type="button"
-                                        className="rounded-full p-0.5 text-slate-400 transition-colors hover:text-navy-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-primary/35"
+                                        className="shrink-0 rounded-full p-0.5 text-slate-400 transition-colors hover:text-navy-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-primary/35"
                                         aria-label="LINE ID の登録について"
                                         aria-describedby="profile-line-id-tooltip"
                                     >
                                         <CircleHelp className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
                                     </button>
-                                    <div
-                                        id="profile-line-id-tooltip"
-                                        role="tooltip"
-                                        className="pointer-events-none invisible absolute left-1/2 top-full z-50 mt-1.5 w-64 max-w-[min(16rem,calc(100vw-2rem))] -translate-x-1/2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-[11px] font-bold leading-relaxed text-slate-700 shadow-xl opacity-0 transition-[opacity,visibility] duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 sm:left-0 sm:translate-x-0"
-                                    >
-                                        掲載した物件のお客様からの問い合わせをLINEで受けるにはLINE IDの登録をしてください。
-                                    </div>
+                                </div>
+                                <div
+                                    id="profile-line-id-tooltip"
+                                    role="tooltip"
+                                    className="pointer-events-none invisible absolute left-0 right-0 top-full z-[60] mt-2 box-border w-full max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-[11px] font-bold leading-relaxed text-slate-700 shadow-xl opacity-0 transition-[opacity,visibility] duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 sm:right-auto sm:mt-1.5 sm:w-64 sm:max-w-sm"
+                                >
+                                    掲載した物件のお客様からの問い合わせをLINEで受けるにはLINE IDの登録をしてください。
                                 </div>
                             </div>
                             <div className="relative">
