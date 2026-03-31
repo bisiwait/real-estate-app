@@ -461,7 +461,7 @@
         "inquiry_reply_by_line_desc": "Replies and notices via our official LINE. LINE login starts when you confirm send (friend add required).",
         "inquiry_line_submit_liff_note": "On mobile Chrome, confirm may hand off to the LINE app. When you’re back on the property page, consent again and tap send → confirm to finish.",
         "inquiry_liff_env_required": "“By LINE” requires LIFF ID (NEXT_PUBLIC_LINE_LIFF_ID) to be set on this site.",
-        "inquiry_liff_endpoint_hint": "In LINE Developers → LIFF, set Endpoint URL exactly (lowercase path): https://YOUR_DOMAIN/jp/line/inquiry-bridge. Do not use uppercase /JP/...—the server is case-sensitive and that returns 404. Japanese locale is jp, not ISO ja.",
+        "inquiry_liff_endpoint_hint": "In LINE Developers → LIFF, set Endpoint URL exactly (lowercase path): https://YOUR_DOMAIN/jp/line/inquiry-bridge. Japanese locale is jp, not ISO ja. If you build liff.line.me links by hand, use only the query form: https://liff.line.me/{LIFF_ID}?liff.state=jp%3A{propertyUuid}. A path like .../LIFF_ID/jp:uuid is invalid and will error.",
         "inquiry_liff_profile_scope_hint": "Could not load LINE profile. In the LIFF app settings, enable the profile scope.",
         "inquiry_liff_callback_url_hint": "In the LINE Login channel → Basic settings, add Callback URLs for your site origin (e.g. https://chonburihome.com and https://www.chonburihome.com if you use www). Required for login from external browsers.",
         "inquiry_reply_email_only": "Email only",

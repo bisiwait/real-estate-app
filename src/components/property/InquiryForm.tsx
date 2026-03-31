@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { formatInquirySubmitError, formatLiffError } from '@/lib/utils/inquiry-errors'
+import { buildLiffInquiryHandoffUrl } from '@/lib/line/liff-open-url'
 import { clsx } from 'clsx'
 
 export type InquiryContactPrefill = {
@@ -213,8 +214,7 @@ export default function InquiryForm({
           } catch {
             /* ignore */
           }
-          const state = encodeURIComponent(`${locale}:${propertyId}`)
-          window.location.assign(`https://liff.line.me/${liffId}?liff.state=${state}`)
+          window.location.assign(buildLiffInquiryHandoffUrl(liffId, locale, propertyId))
           return
         }
 
@@ -250,8 +250,7 @@ export default function InquiryForm({
             } catch {
               /* ignore */
             }
-            const state = encodeURIComponent(`${locale}:${propertyId}`)
-            window.location.assign(`https://liff.line.me/${liffId}?liff.state=${state}`)
+            window.location.assign(buildLiffInquiryHandoffUrl(liffId, locale, propertyId))
             return
           }
           liff.login()
