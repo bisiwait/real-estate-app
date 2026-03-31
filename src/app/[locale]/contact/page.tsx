@@ -24,7 +24,10 @@ export default function ContactPage() {
                 {
                     inquirer_name: formData.name,
                     inquirer_email: formData.email,
-                    message: `[${formData.type}] ${formData.message}`
+                    email: formData.email,
+                    message: `[${formData.type}] ${formData.message}`,
+                    preferred_reply_channel: 'email',
+                    line_user_id: null,
                 }
             ])
 

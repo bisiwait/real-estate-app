@@ -12,15 +12,21 @@ type InquiryRecord = {
   property_id?: string
   inquirer_name?: string
   inquirer_email?: string
+  email?: string | null
   inquirer_phone?: string | null
   message?: string
   preferred_reply_channel?: string | null
   line_user_id?: string | null
 }
 
-function channelLabelJa(ch: string | null | undefined): string {
-  if (ch === 'email_and_line') return 'メール ＋ LINE（公式LINE通知）'
-  return 'メールのみ'
+/** DB 値および旧値（email_only / email_and_line）を正規化 */
+function normalizeReplyChannel(ch: string | null | undefined): 'email' | 'line' {
+  if (ch === 'line' || ch === 'email_and_line') return 'line'
+  return 'email'
+}
+
+function channelLabelJa(mode: 'email' | 'line'): string {
+  return mode === 'line' ? 'LINEで返信を希望' : 'メールで返信を希望'
 }
 
 export async function POST(req: NextRequest) {
@@ -58,13 +64,12 @@ export async function POST(req: NextRequest) {
     }
 
     const agentEmail = profile?.email || 'onboarding@resend.dev'
-    const agentName = profile?.full_name || 'Agent'
 
-    const preferred = record.preferred_reply_channel || 'email_only'
+    const replyMethod = normalizeReplyChannel(record.preferred_reply_channel)
     const lineUid = (record.line_user_id || '').trim() || null
 
     console.log(
-      `Sending inquiry notification to: ${agentEmail} for property: ${property.title} (channel: ${preferred})`
+      `Sending inquiry notification to: ${agentEmail} for property: ${property.title} (reply_method: ${replyMethod})`
     )
 
     const dashboardUrl = `${getPublicSiteUrl()}/jp/dashboard`
@@ -72,21 +77,22 @@ export async function POST(req: NextRequest) {
     const channelRow = `
             <tr>
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">返信方法の希望</td>
-              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-weight: bold;">${channelLabelJa(preferred)}</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-weight: bold;">${channelLabelJa(replyMethod)}</td>
             </tr>
             ${
-              lineUid
-                ? `<tr>
+              replyMethod === 'line'
+                ? lineUid
+                  ? `<tr>
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">LINEユーザーID（Messaging）</td>
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-family: monospace; font-size: 12px;">${lineUid}</td>
             </tr>`
-                : preferred === 'email_and_line'
-                  ? `<tr>
+                  : `<tr>
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b;">LINEユーザーID</td>
-              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #94a3b8;">未連携（LIFF未設定または未完了）</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #b45309;">未登録（LIFF 未取得の可能性）</td>
             </tr>`
-                  : ''
-            }`
+                : ''
+            }
+            `
 
     const { data, error } = await resend.emails.send({
       from: getResendFromAddress(),
@@ -147,8 +153,9 @@ export async function POST(req: NextRequest) {
     let linePushOk = false
     let linePushError: string | null = null
 
-    if (preferred === 'email_and_line' && lineUid && lineToken) {
-      const pushBody = `お問い合わせを受け付けました。\n物件「${property.title}」について、担当よりメールまたはLINEにてご連絡します。`
+    if (replyMethod === 'line' && lineUid && lineToken) {
+      const pushBody =
+        process.env.LINE_INQUIRY_THANK_YOU_MESSAGE?.trim() || 'お問い合わせありがとうございます。担当よりご連絡いたします。'
       const pushResult = await lineOfficialPushText(lineUid, pushBody, lineToken)
       linePushOk = pushResult.ok
       if (!pushResult.ok) {
@@ -160,7 +167,7 @@ export async function POST(req: NextRequest) {
     const notificationsMeta = {
       email_sent: true,
       resend_email_id: data?.id ?? null,
-      line_push_attempted: preferred === 'email_and_line' && Boolean(lineUid && lineToken),
+      line_push_attempted: replyMethod === 'line' && Boolean(lineUid && lineToken),
       line_push_ok: linePushOk,
       line_push_error: linePushError,
     }
@@ -175,7 +182,8 @@ export async function POST(req: NextRequest) {
         metadata: {
           source: 'web_form',
           inquiry_id: record.id,
-          preferred_reply_channel: preferred,
+          reply_method: replyMethod,
+          preferred_reply_channel: replyMethod,
           line_user_id: lineUid,
           notifications: notificationsMeta,
         },

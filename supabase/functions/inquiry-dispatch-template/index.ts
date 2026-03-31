@@ -2,19 +2,24 @@
  * 雛形: inquiries INSERT 後の通知振り分け（Database Webhook / pg_net 等から呼び出す想定）
  *
  * 本番の実装は Next.js の `src/app/api/webhooks/inquiry/route.ts` にあります。
- * Edge Function で同じ処理をしたい場合の流れのメモです。
  *
- * 環境変数例（Supabase Secrets）:
- * - RESEND_API_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL
- * - LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN（inquirer への Push 用。公式 OA と同一チャネル）
+ * 分岐:
+ * - 常にエージェントへメール（Resend）
+ * - preferred_reply_channel === 'line' かつ line_user_id あり → 問い合わせ主へ Push（お礼文）
+ * - 'email' のときは Push しない
  *
- * ペイロード例: { record: { id, property_id, preferred_reply_channel, line_user_id, ... } }
+ * inquiry_logs.metadata に reply_method: 'email' | 'line' を残すと管理画面で判別しやすいです。
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+function normalizeReplyChannel(ch: string | null | undefined): 'email' | 'line' {
+  if (ch === 'line' || ch === 'email_and_line') return 'line'
+  return 'email'
 }
 
 serve(async (req) => {
@@ -31,16 +36,19 @@ serve(async (req) => {
       id?: string
     }
 
-    const preferred = record.preferred_reply_channel || 'email_only'
+    const replyMethod = normalizeReplyChannel(record.preferred_reply_channel)
     const lineUid = (record.line_user_id || '').trim()
 
-    // --- 1) 常にエージェントへメール（Resend 等）---
+    // 1) エージェントへメール（常に）
     // await fetch('https://api.resend.com/emails', { ... })
 
-    // --- 2) preferred === 'email_and_line' かつ line_user_id あり → Messaging API Push（受付確認など）---
-    if (preferred === 'email_and_line' && lineUid) {
+    // 2) LINE 返信希望かつ userId あり → Push
+    if (replyMethod === 'line' && lineUid) {
       const token = Deno.env.get('LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN')?.trim()
       if (token) {
+        const text =
+          Deno.env.get('LINE_INQUIRY_THANK_YOU_MESSAGE')?.trim() ||
+          'お問い合わせありがとうございます。担当よりご連絡いたします。'
         const pushRes = await fetch('https://api.line.me/v2/bot/message/push', {
           method: 'POST',
           headers: {
@@ -49,27 +57,20 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             to: lineUid,
-            messages: [
-              {
-                type: 'text',
-                text: 'お問い合わせを受け付けました。担当よりご連絡します。',
-              },
-            ],
+            messages: [{ type: 'text', text }],
           }),
         })
         console.log('[inquiry-dispatch-template] LINE push status', pushRes.status)
       }
     }
 
-    // --- 3) inquiry_logs に metadata で経路を残す（notifications.email_sent / line_push_ok 等）---
-    // const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
-    // await admin.from('inquiry_logs').insert({ inquiry_type: 'form', metadata: { ... } })
+    // 3) inquiry_logs: metadata: { reply_method: replyMethod, ... }
 
     return new Response(
       JSON.stringify({
         ok: true,
-        branch: preferred,
-        line_push_skipped: preferred !== 'email_and_line' || !lineUid,
+        reply_method: replyMethod,
+        line_push_skipped: replyMethod !== 'line' || !lineUid,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )

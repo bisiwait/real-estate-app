@@ -5,14 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { clsx } from 'clsx'
-import { normalizeStoredLineContact } from '@/lib/line-contact-url'
-import LineLiffConnectButton from '@/components/property/LineLiffConnectButton'
 
 export type InquiryContactPrefill = {
   full_name: string | null
   email: string | null
-  phone: string | null
-  line_id: string | null
+  phone?: string | null
+  line_id?: string | null
 }
 
 interface InquiryFormProps {
@@ -42,14 +40,9 @@ export default function InquiryForm({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    lineId: '',
     message: defaultMessage,
   })
-  const [preferredReplyChannel, setPreferredReplyChannel] = useState<'email_only' | 'email_and_line'>(
-    'email_only'
-  )
-  const [lineMessagingUserId, setLineMessagingUserId] = useState<string | null>(null)
+  const [preferredReplyChannel, setPreferredReplyChannel] = useState<'email' | 'line'>('email')
   const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim() || undefined
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -111,8 +104,6 @@ export default function InquiryForm({
       ...prev,
       name: contactPrefill.full_name ?? prev.name,
       email: contactPrefill.email ?? prev.email,
-      phone: contactPrefill.phone ?? prev.phone,
-      lineId: contactPrefill.line_id ?? prev.lineId,
     }))
   }, [isLoggedIn, contactPrefill])
 
@@ -139,16 +130,6 @@ export default function InquiryForm({
       return
     }
 
-    if (preferredReplyChannel === 'email_and_line' && liffId && !lineMessagingUserId) {
-      setError(
-        p.inquiry_liff_required ??
-          'メールとLINEでの返信を希望する場合は、先に「LINEで連携」を完了してください。'
-      )
-      setSubmitPhase('idle')
-      clearConfirmTimer()
-      return
-    }
-
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
       setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
@@ -160,7 +141,34 @@ export default function InquiryForm({
     setLoading(true)
     setError(null)
 
+    let lineUid: string | null = null
+
     try {
+      if (preferredReplyChannel === 'line') {
+        if (!liffId) {
+          setError(
+            p.inquiry_liff_env_required ??
+              '「LINEで受け取る」を利用するにはサイトに LIFF ID（NEXT_PUBLIC_LINE_LIFF_ID）の設定が必要です。'
+          )
+          setSubmitPhase('idle')
+          clearConfirmTimer()
+          setLoading(false)
+          return
+        }
+        const liff = (await import('@line/liff')).default
+        await liff.init({ liffId })
+        if (!liff.isLoggedIn()) {
+          liff.login()
+          setLoading(false)
+          return
+        }
+        const profile = await liff.getProfile()
+        if (!profile?.userId) {
+          throw new Error(p.liff_no_user_id ?? 'LINE ユーザーIDを取得できませんでした')
+        }
+        lineUid = profile.userId
+      }
+
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyId)
 
@@ -172,23 +180,17 @@ export default function InquiryForm({
         return
       }
 
-      const lineTag = p.inquiry_line_contact_message_tag ?? 'LINE'
-      const lineVal = normalizeStoredLineContact(formData.lineId)
-      const lineSuffix = lineVal ? `\n\n[${lineTag}: ${lineVal}]` : ''
-      const messageBody = `${formData.message.trim()}${lineSuffix}`
-
+      const emailTrim = formData.email.trim()
       const { error: submitError } = await supabase.from('inquiries').insert([
         {
           property_id: propertyId,
-          inquirer_name: formData.name,
-          inquirer_email: formData.email,
-          inquirer_phone: formData.phone || null,
-          message: messageBody,
+          inquirer_name: formData.name.trim(),
+          inquirer_email: emailTrim,
+          email: emailTrim,
+          inquirer_phone: null,
+          message: formData.message.trim(),
           preferred_reply_channel: preferredReplyChannel,
-          line_user_id:
-            preferredReplyChannel === 'email_and_line' && lineMessagingUserId
-              ? lineMessagingUserId
-              : null,
+          line_user_id: preferredReplyChannel === 'line' ? lineUid : null,
         },
       ])
 
@@ -216,7 +218,7 @@ export default function InquiryForm({
         </div>
         <h3 className="mb-3 text-lg font-normal text-navy-secondary">{dict.property.inquiry_success_title}</h3>
         <p className="text-sm leading-relaxed text-slate-600">{dict.property.inquiry_success_desc}</p>
-        {officialLineAddFriendUrl ? (
+        {preferredReplyChannel === 'email' && officialLineAddFriendUrl ? (
           <div className="mt-8 rounded-2xl border border-[#06C755]/30 bg-white/90 p-5 shadow-sm">
             <p className="text-sm font-bold text-slate-700">{lineHint}</p>
             <a
@@ -324,33 +326,6 @@ export default function InquiryForm({
             </div>
 
             <div>
-              <label className={fieldLabelClass}>{dict.labels.phone_label}</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+66 00 000 0000"
-                className={fieldInputClass}
-              />
-            </div>
-
-            <div>
-              <label className={fieldLabelClass}>
-                {p.inquiry_line_contact_label ?? p.inquiry_line_id_label}
-              </label>
-              <input
-                type="text"
-                value={formData.lineId}
-                onChange={(e) => setFormData({ ...formData, lineId: e.target.value })}
-                placeholder={p.inquiry_line_contact_placeholder ?? '@example'}
-                className={fieldInputClass}
-              />
-              <p className="mt-1 text-[10px] text-slate-400">
-                {p.inquiry_line_contact_hint ?? p.inquiry_line_id_hint}
-              </p>
-            </div>
-
-            <div>
               <label className={fieldLabelClass}>{dict.labels.inquiry_content_label}</label>
               <textarea
                 rows={4}
@@ -370,7 +345,9 @@ export default function InquiryForm({
                 {p.inquiry_reply_channel_heading ?? '返信方法'}
               </legend>
               <p className="mb-3 text-[11px] leading-relaxed text-slate-500">
-                {p.inquiry_reply_channel_intro ?? '担当からの返信の受け取り方を選べます（メールは常に利用されます）。'}
+                {p.inquiry_reply_channel_intro_v2 ??
+                  p.inquiry_reply_channel_intro ??
+                  '担当からの返信の受け取り方を選びます。メールアドレスはどちらの場合も記録されます。'}
               </p>
               <div className="space-y-3">
                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
@@ -378,18 +355,17 @@ export default function InquiryForm({
                     type="radio"
                     name="preferred_reply_channel"
                     className="mt-1 h-4 w-4 text-navy-primary"
-                    checked={preferredReplyChannel === 'email_only'}
-                    onChange={() => {
-                      setPreferredReplyChannel('email_only')
-                      setLineMessagingUserId(null)
-                    }}
+                    checked={preferredReplyChannel === 'email'}
+                    onChange={() => setPreferredReplyChannel('email')}
                   />
                   <span>
                     <span className="block text-sm font-bold text-navy-secondary">
-                      {p.inquiry_reply_email_only ?? 'メールのみ'}
+                      {p.inquiry_reply_by_email ?? p.inquiry_reply_email_only ?? 'メールで受け取る'}
                     </span>
                     <span className="mt-0.5 block text-[11px] text-slate-500">
-                      {p.inquiry_reply_email_only_desc ?? 'メールでのご連絡のみ希望します。'}
+                      {p.inquiry_reply_by_email_desc ??
+                        p.inquiry_reply_email_only_desc ??
+                        '返信はメールで受け取ります。'}
                     </span>
                   </span>
                 </label>
@@ -398,43 +374,25 @@ export default function InquiryForm({
                     type="radio"
                     name="preferred_reply_channel"
                     className="mt-1 h-4 w-4 text-navy-primary"
-                    checked={preferredReplyChannel === 'email_and_line'}
-                    onChange={() => setPreferredReplyChannel('email_and_line')}
+                    checked={preferredReplyChannel === 'line'}
+                    onChange={() => setPreferredReplyChannel('line')}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold text-navy-secondary">
-                      {p.inquiry_reply_email_and_line ?? 'メール ＋ LINE'}
+                      {p.inquiry_reply_by_line ?? 'LINEで受け取る'}
                     </span>
                     <span className="mt-0.5 block text-[11px] text-slate-500">
-                      {p.inquiry_reply_email_and_line_desc ??
-                        'メールに加え、公式LINEからも案内や通知を受け取ります。'}
+                      {p.inquiry_reply_by_line_desc ??
+                        '確定送信時にLINEログインが開き、公式LINEから返信・通知を受け取ります（友だち追加が必要です）。'}
                     </span>
                   </span>
                 </label>
               </div>
-              {preferredReplyChannel === 'email_and_line' ? (
-                <div className="mt-4 border-t border-slate-100 pt-4">
-                  <LineLiffConnectButton
-                    liffId={liffId}
-                    dict={{
-                      inquiry_liff_connect_btn: p.inquiry_liff_connect_btn ?? '',
-                      inquiry_liff_linked_ok: p.inquiry_liff_linked_ok ?? '',
-                      inquiry_liff_clear: p.inquiry_liff_clear ?? '',
-                      inquiry_liff_hint: p.inquiry_liff_hint ?? '',
-                      liff_not_configured: p.liff_not_configured ?? '',
-                      liff_no_user_id: p.liff_no_user_id ?? '',
-                    }}
-                    linkedUserId={lineMessagingUserId}
-                    onLinked={(uid) => setLineMessagingUserId(uid)}
-                    onClear={() => setLineMessagingUserId(null)}
-                  />
-                  {!liffId ? (
-                    <p className="mt-2 text-[10px] text-amber-800">
-                      {p.inquiry_liff_env_missing ??
-                        '※サイト側でLIFFが未設定のため、LINEユーザーIDは保存されません。メールのみで送信されます。'}
-                    </p>
-                  ) : null}
-                </div>
+              {preferredReplyChannel === 'line' ? (
+                <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
+                  {p.inquiry_line_submit_liff_note ??
+                    'オレンジの「確定」ボタンを押したときに LINE ログインが始まります。ログイン後はもう一度確定を押して送信を完了してください。'}
+                </p>
               ) : null}
             </fieldset>
 
