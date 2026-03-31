@@ -460,7 +460,7 @@
         "inquiry_reply_by_line_desc": "รับการตอบกลับ/แจ้งเตือนจาก LINE ทางการ เมื่อยืนยันส่งจะเริ่มล็อกอิน LINE (ต้องเป็นเพื่อนกับบอท)",
         "inquiry_line_submit_liff_note": "บน Chrome มือถือ อาจสลับไปแอป LINE กลับมาหน้าประกาศแล้วติ๊กยินยอม ส่งอีกครั้งแล้วยืนยัน",
         "inquiry_liff_env_required": "การเลือก LINE ต้องตั้งค่า LIFF ID (NEXT_PUBLIC_LINE_LIFF_ID) บนเว็บ",
-        "inquiry_liff_endpoint_hint": "ใน LINE Developers → LIFF ตั้ง Endpoint URL เป็น https://โดเมน/jp/line/inquiry-bridge ตรงทุกตัวอักษร",
+        "inquiry_liff_endpoint_hint": "ใน LINE Developers → LIFF ตั้ง Endpoint URL เป็น https://โดเมน/jp/line/inquiry-bridge ตรงทุกตัวอักษร（ภาษาญี่ปุ่นใช้ jp ไม่ใช่ ja）",
         "inquiry_liff_profile_scope_hint": "ดึงโปรไฟล์ LINE ไม่สำเร็จ ตรวจสอบว่าเปิด scope profile ใน LIFF",
         "inquiry_liff_callback_url_hint": "ใน LINE Login channel → ตั้งค่าพื้นฐาน ให้เพิ่ม Callback URL เป็น origin ของเว็บ (https://โดเมน และ www ถ้าใช้)",
         "inquiry_reply_email_only": "อีเมลเท่านั้น",

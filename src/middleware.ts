@@ -59,6 +59,18 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
 export default async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname
 
+    // ISO の ja はルートに無い（日本語は jp）。未処理だと下の「ロケール付与」で /jp/ja/... となり 404（LIFF 誤設定で多い）
+    if (pathname === '/ja' || pathname === '/ja/') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/jp'
+        return NextResponse.redirect(url)
+    }
+    if (pathname.startsWith('/ja/')) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/jp${pathname.slice(3)}`
+        return NextResponse.redirect(url)
+    }
+
     // Skip redirection for API and internal Next.js paths
     if (
         pathname.startsWith('/api') ||
