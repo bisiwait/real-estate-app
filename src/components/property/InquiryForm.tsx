@@ -132,6 +132,11 @@ export default function InquiryForm({
     }
   }, [isLoggedIn, propertyId])
 
+  useEffect(() => {
+    if (preferredReplyChannel !== 'line' || !liffId) return
+    void import('@line/liff').catch(() => {})
+  }, [preferredReplyChannel, liffId])
+
   const supabase = createClient()
   const p = dict.property ?? {}
 
@@ -191,6 +196,28 @@ export default function InquiryForm({
           setLoading(false)
           return
         }
+
+        // モバイル Chrome 等: await の後に location を変えると「ユーザー操作と無関係な遷移」とみなされ LINE が開かない。
+        // ブリッジ通過後にだけ inquiry_liff_ready_pid が立つ → そのとき初めて LIFF SDK で getProfile する。
+        let liffReady = false
+        try {
+          liffReady = sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId
+        } catch {
+          liffReady = false
+        }
+
+        if (!liffReady) {
+          try {
+            sessionStorage.setItem('inquiry_resume_line', '1')
+            sessionStorage.setItem('inquiry_resume_property_id', propertyId)
+          } catch {
+            /* ignore */
+          }
+          const state = encodeURIComponent(`${locale}:${propertyId}`)
+          window.location.assign(`https://liff.line.me/${liffId}?liff.state=${state}`)
+          return
+        }
+
         const liff = (await import('@line/liff')).default
         try {
           await liff.init({ liffId, withLoginOnExternalBrowser: true })
@@ -211,9 +238,12 @@ export default function InquiryForm({
           }
         }
         if (!liff.isLoggedIn()) {
-          // 外部ブラウザ（スマホ Chrome 等）では liff.login() が「正常に処理できませんでした」になりやすい。
-          // liff.line.me 経由で LINE アプリ内 WebView に入り、エンドポイントのブリッジページから物件へ戻す。
           if (!liff.isInClient()) {
+            try {
+              sessionStorage.removeItem('inquiry_liff_ready_pid')
+            } catch {
+              /* ignore */
+            }
             try {
               sessionStorage.setItem('inquiry_resume_line', '1')
               sessionStorage.setItem('inquiry_resume_property_id', propertyId)
@@ -221,8 +251,7 @@ export default function InquiryForm({
               /* ignore */
             }
             const state = encodeURIComponent(`${locale}:${propertyId}`)
-            window.location.href = `https://liff.line.me/${liffId}?liff.state=${state}`
-            setLoading(false)
+            window.location.assign(`https://liff.line.me/${liffId}?liff.state=${state}`)
             return
           }
           liff.login()
@@ -282,6 +311,13 @@ export default function InquiryForm({
       }
 
       localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
+      if (preferredReplyChannel === 'line') {
+        try {
+          sessionStorage.removeItem('inquiry_liff_ready_pid')
+        } catch {
+          /* ignore */
+        }
+      }
       setSuccess(true)
     } catch (err: unknown) {
       console.error('Inquiry submission error:', err)

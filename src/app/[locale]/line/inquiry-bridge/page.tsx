@@ -49,6 +49,12 @@ export default function LineInquiryBridgePage() {
           return
         }
 
+        try {
+          sessionStorage.setItem('inquiry_liff_ready_pid', propId)
+        } catch {
+          /* private mode */
+        }
+
         router.replace(`/${safeLocale}/properties/${propId}`)
       } catch (e) {
         console.error('[line-inquiry-bridge]', e)
