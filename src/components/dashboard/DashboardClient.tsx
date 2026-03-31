@@ -82,37 +82,37 @@ export default function DashboardClient({
             <div className="bg-white p-1.5 sm:p-2 rounded-2xl shadow-md border border-slate-100 grid grid-cols-3 gap-1">
                 <button
                     onClick={() => setTab('properties')}
-                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all text-center ${tab === 'properties'
+                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center leading-tight ${tab === 'properties'
                         ? 'bg-navy-primary text-white shadow-lg'
                         : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                         }`}
                 >
-                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Building2 className="w-4 h-4 shrink-0" />
                     <span>物件 ({stats.total})</span>
                 </button>
                 <button
                     onClick={() => setTab('inquiries')}
-                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all relative text-center ${tab === 'inquiries'
+                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all relative text-center leading-tight ${tab === 'inquiries'
                         ? 'bg-navy-primary text-white shadow-lg'
                         : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                         }`}
                 >
-                    <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Mail className="w-4 h-4 shrink-0" />
                     <span>メール ({inquiries?.length || 0})</span>
                     {stats.unreadInquiries > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[8px] sm:text-[10px] text-white ring-2 ring-white">
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[9px] sm:text-[10px] text-white ring-2 ring-white">
                             {stats.unreadInquiries}
                         </span>
                     )}
                 </button>
                 <button
                     onClick={() => setTab('leads')}
-                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-[10px] sm:text-sm font-bold transition-all text-center ${tab === 'leads'
+                    className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center leading-tight ${tab === 'leads'
                         ? 'bg-[#06C755] text-white shadow-lg'
                         : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                         }`}
                 >
-                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Users className="w-4 h-4 shrink-0" />
                     <span>LINE ({leadsCount})</span>
                 </button>
             </div>
