@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { formatInquirySubmitError, formatLiffError } from '@/lib/utils/inquiry-errors'
-import { buildLiffInquiryHandoffUrl } from '@/lib/line/liff-open-url'
 import { clsx } from 'clsx'
 
 export type InquiryContactPrefill = {
@@ -199,6 +198,7 @@ export default function InquiryForm({
         }
 
         // モバイル Chrome 等: await の後に location を変えると「ユーザー操作と無関係な遷移」とみなされ LINE が開かない。
+        // liff.line.me はサーバー 302 で組み立てる（/api/liff-handoff）— クライアント直書きだと表示が /jp:uuid パスに見える事例への対策。
         // ブリッジ通過後にだけ inquiry_liff_ready_pid が立つ → そのとき初めて LIFF SDK で getProfile する。
         let liffReady = false
         try {
@@ -214,7 +214,9 @@ export default function InquiryForm({
           } catch {
             /* ignore */
           }
-          window.location.assign(buildLiffInquiryHandoffUrl(liffId, locale, propertyId))
+          window.location.assign(
+            `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
+          )
           return
         }
 
@@ -250,7 +252,9 @@ export default function InquiryForm({
             } catch {
               /* ignore */
             }
-            window.location.assign(buildLiffInquiryHandoffUrl(liffId, locale, propertyId))
+            window.location.assign(
+              `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
+            )
             return
           }
           liff.login()
