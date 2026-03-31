@@ -6,8 +6,31 @@ import { useParams } from 'next/navigation'
 import { formatLiffError } from '@/lib/utils/inquiry-errors'
 
 const LOCALES = new Set(['jp', 'en', 'th'])
+const PROP_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const UUID_IN_STRING =
   /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+const LIFF_INIT_MS = 12_000
+
+/** liff.init が固まっても 404 に落ちないよう、フォームが保存したセッションがあれば即物件へ */
+function redirectFromSessionResume(fallbackLocaleFromPath: string): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    if (sessionStorage.getItem('inquiry_resume_line') !== '1') return false
+    const pid = sessionStorage.getItem('inquiry_resume_property_id')
+    if (!pid || !PROP_UUID.test(pid)) return false
+    const locRaw = sessionStorage.getItem('inquiry_resume_locale')
+    const safeLocale = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocaleFromPath
+    const idLower = pid.toLowerCase()
+    sessionStorage.setItem('inquiry_liff_ready_pid', idLower)
+    sessionStorage.removeItem('inquiry_resume_line')
+    sessionStorage.removeItem('inquiry_resume_property_id')
+    sessionStorage.removeItem('inquiry_resume_locale')
+    window.location.replace(`${window.location.origin}/${safeLocale}/properties/${idLower}`)
+    return true
+  } catch {
+    return false
+  }
+}
 
 /** liff.state の前後にゴミが付く場合でも UUID を拾う。ロケールは小文字化して照合 */
 function parseLiffState(
@@ -44,19 +67,16 @@ function readLiffStateFromPageUrl(): string | null {
   return null
 }
 
-function readResumePropertyHref(locale: string): string | null {
+function readResumePropertyHref(fallbackLocaleFromPath: string): string | null {
   try {
     const pid = sessionStorage.getItem('inquiry_resume_property_id')
-    if (
-      pid &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pid)
-    ) {
-      return `/${locale}/properties/${pid}`
-    }
+    if (!pid || !PROP_UUID.test(pid)) return null
+    const locRaw = sessionStorage.getItem('inquiry_resume_locale')
+    const loc = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocaleFromPath
+    return `/${loc}/properties/${pid}`
   } catch {
-    /* */
+    return null
   }
-  return null
 }
 
 /**
@@ -92,13 +112,35 @@ export default function LineInquiryBridgePage() {
 
     let cancelled = false
     ;(async () => {
+      if (typeof window !== 'undefined' && redirectFromSessionResume(safeFallback)) {
+        return
+      }
       try {
         const liff = (await import('@line/liff')).default
-        // PC・外部ブラウザでは false 先だと init が落ちやすい。フォーム側と同様 true を先に試す。
+        const runInit = async () => {
+          try {
+            await liff.init({ liffId, withLoginOnExternalBrowser: true })
+          } catch {
+            await liff.init({ liffId, withLoginOnExternalBrowser: false })
+          }
+        }
         try {
-          await liff.init({ liffId, withLoginOnExternalBrowser: true })
-        } catch {
-          await liff.init({ liffId, withLoginOnExternalBrowser: false })
+          await Promise.race([
+            runInit(),
+            new Promise<never>((_, rej) =>
+              setTimeout(() => rej(new Error('LIFF_INIT_TIMEOUT')), LIFF_INIT_MS)
+            ),
+          ])
+        } catch (initErr) {
+          if (
+            initErr instanceof Error &&
+            initErr.message === 'LIFF_INIT_TIMEOUT' &&
+            typeof window !== 'undefined' &&
+            redirectFromSessionResume(safeFallback)
+          ) {
+            return
+          }
+          throw initErr
         }
         if (cancelled) return
 
@@ -113,11 +155,11 @@ export default function LineInquiryBridgePage() {
           try {
             if (sessionStorage.getItem('inquiry_resume_line') === '1') {
               const pid = sessionStorage.getItem('inquiry_resume_property_id')
-              if (
-                pid &&
-                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pid)
-              ) {
-                state = `${safeFallback}:${pid}`
+              const locRaw = sessionStorage.getItem('inquiry_resume_locale')
+              const loc =
+                locRaw && LOCALES.has(locRaw) ? locRaw : safeFallback
+              if (pid && PROP_UUID.test(pid)) {
+                state = `${loc}:${pid}`
               }
             }
           } catch {
@@ -143,16 +185,21 @@ export default function LineInquiryBridgePage() {
 
         try {
           sessionStorage.setItem('inquiry_liff_ready_pid', propId)
+          sessionStorage.removeItem('inquiry_resume_line')
+          sessionStorage.removeItem('inquiry_resume_property_id')
+          sessionStorage.removeItem('inquiry_resume_locale')
         } catch {
           /* private mode */
         }
 
-        // LINE 内ブラウザでは App Router の client 遷移が壊れ 404 や真っ白になることがあるためフルロードする
         const path = `/${safeLocale}/properties/${propId}`
         window.location.replace(`${window.location.origin}${path}`)
       } catch (e) {
         console.error('[line-inquiry-bridge]', e)
         if (!cancelled) {
+          if (typeof window !== 'undefined' && redirectFromSessionResume(safeFallback)) {
+            return
+          }
           setUiKind('action')
           const detail = formatLiffError(e)
           setMsg(

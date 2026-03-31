@@ -121,6 +121,7 @@ export default function InquiryForm({
       if (flag === '1' && pid === propertyId) {
         sessionStorage.removeItem('inquiry_resume_line')
         sessionStorage.removeItem('inquiry_resume_property_id')
+        sessionStorage.removeItem('inquiry_resume_locale')
         setPreferredReplyChannel('line')
         setIsOpen(true)
         requestAnimationFrame(() => {
@@ -211,6 +212,7 @@ export default function InquiryForm({
           try {
             sessionStorage.setItem('inquiry_resume_line', '1')
             sessionStorage.setItem('inquiry_resume_property_id', propertyId)
+            sessionStorage.setItem('inquiry_resume_locale', locale)
           } catch {
             /* ignore */
           }
@@ -249,6 +251,7 @@ export default function InquiryForm({
             try {
               sessionStorage.setItem('inquiry_resume_line', '1')
               sessionStorage.setItem('inquiry_resume_property_id', propertyId)
+              sessionStorage.setItem('inquiry_resume_locale', locale)
             } catch {
               /* ignore */
             }
