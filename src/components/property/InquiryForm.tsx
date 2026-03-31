@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -34,6 +35,9 @@ export default function InquiryForm({
   contactPrefill,
   officialLineAddFriendUrl,
 }: InquiryFormProps) {
+  const routeParams = useParams()
+  const locale = (routeParams?.locale as string) || 'jp'
+
   const defaultMessage =
     dict.property.inquiry_default_message?.replace('{propertyName}', propertyName) ||
     `Regarding "${propertyName}", please give me more details.`
@@ -107,6 +111,26 @@ export default function InquiryForm({
       email: contactPrefill.email ?? prev.email,
     }))
   }, [isLoggedIn, contactPrefill])
+
+  /** LINE から liff.line.me 経由で戻ったあと「LINEで受け取る」を復元 */
+  useEffect(() => {
+    if (!isLoggedIn) return
+    try {
+      const flag = sessionStorage.getItem('inquiry_resume_line')
+      const pid = sessionStorage.getItem('inquiry_resume_property_id')
+      if (flag === '1' && pid === propertyId) {
+        sessionStorage.removeItem('inquiry_resume_line')
+        sessionStorage.removeItem('inquiry_resume_property_id')
+        setPreferredReplyChannel('line')
+        setIsOpen(true)
+        requestAnimationFrame(() => {
+          document.getElementById('inquiry-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      }
+    } catch {
+      /* private mode 等 */
+    }
+  }, [isLoggedIn, propertyId])
 
   const supabase = createClient()
   const p = dict.property ?? {}
@@ -187,11 +211,21 @@ export default function InquiryForm({
           }
         }
         if (!liff.isLoggedIn()) {
-          if (typeof window !== 'undefined') {
-            liff.login({ redirectUri: window.location.href.split('#')[0] })
-          } else {
-            liff.login()
+          // 外部ブラウザ（スマホ Chrome 等）では liff.login() が「正常に処理できませんでした」になりやすい。
+          // liff.line.me 経由で LINE アプリ内 WebView に入り、エンドポイントのブリッジページから物件へ戻す。
+          if (!liff.isInClient()) {
+            try {
+              sessionStorage.setItem('inquiry_resume_line', '1')
+              sessionStorage.setItem('inquiry_resume_property_id', propertyId)
+            } catch {
+              /* ignore */
+            }
+            const state = encodeURIComponent(`${locale}:${propertyId}`)
+            window.location.href = `https://liff.line.me/${liffId}?liff.state=${state}`
+            setLoading(false)
+            return
           }
+          liff.login()
           setLoading(false)
           return
         }
