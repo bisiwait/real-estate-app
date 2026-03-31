@@ -32,6 +32,9 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
 
     const pathname = request.nextUrl.pathname
 
+    // LINE Login の LIFF コールバックも ?code= を付ける。Supabase の PKCE 誤判定で auth/callback に飛ばさない。
+    if (pathname.includes('/line/inquiry-bridge')) return null
+
     const alreadyOnCallback = locales.some((locale) => {
         const base = `/${locale}/auth/callback`
         return pathname === base || pathname.startsWith(`${base}/`)
