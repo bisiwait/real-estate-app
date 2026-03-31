@@ -8,6 +8,112 @@ import { getErrorMessage } from '@/lib/utils/errors'
 import { formatInquirySubmitError, formatLiffError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 
+const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
+const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
+const PENDING_LINE_MAX_MS = 15 * 60 * 1000
+
+type PendingLineInquiry = {
+  v: 1
+  propertyId: string
+  locale: string
+  name: string
+  email: string
+  message: string
+  at: number
+}
+
+function readPendingLineInquiry(): PendingLineInquiry | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(PENDING_LINE_INQUIRY_KEY)
+    if (!raw) return null
+    const o = JSON.parse(raw) as PendingLineInquiry
+    if (o.v !== 1 || !o.propertyId || typeof o.at !== 'number') return null
+    if (Date.now() - o.at > PENDING_LINE_MAX_MS) {
+      sessionStorage.removeItem(PENDING_LINE_INQUIRY_KEY)
+      return null
+    }
+    return o
+  } catch {
+    return null
+  }
+}
+
+function clearPendingLineInquiry() {
+  try {
+    sessionStorage.removeItem(PENDING_LINE_INQUIRY_KEY)
+  } catch {
+    /* */
+  }
+}
+
+type ObtainLineUserIdResult =
+  | { ok: true; userId: string }
+  | { ok: false; reason: 'redirect' | 'login' }
+  | { ok: false; reason: 'error'; message: string }
+
+/**
+ * ブリッジ通過後（inquiry_liff_ready_pid 済み）に LIFF で userId を取得。外部ブラウザでは再 handoff で redirect。
+ */
+async function obtainLineUserIdForInquiry(
+  liffId: string,
+  propertyId: string,
+  locale: string
+): Promise<ObtainLineUserIdResult> {
+  const liff = (await import('@line/liff')).default
+  try {
+    await liff.init({ liffId, withLoginOnExternalBrowser: true })
+  } catch (firstInit: unknown) {
+    try {
+      await liff.init({ liffId, withLoginOnExternalBrowser: false })
+    } catch (secondInit: unknown) {
+      return {
+        ok: false,
+        reason: 'error',
+        message: formatLiffError(secondInit) || getErrorMessage(secondInit),
+      }
+    }
+  }
+
+  if (!liff.isLoggedIn()) {
+    if (!liff.isInClient()) {
+      try {
+        sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+        sessionStorage.removeItem('inquiry_liff_ready_pid')
+        sessionStorage.setItem('inquiry_resume_line', '1')
+        sessionStorage.setItem('inquiry_resume_property_id', propertyId)
+        sessionStorage.setItem('inquiry_resume_locale', locale)
+      } catch {
+        /* */
+      }
+      window.location.assign(
+        `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
+      )
+      return { ok: false, reason: 'redirect' }
+    }
+    liff.login()
+    return { ok: false, reason: 'login' }
+  }
+
+  try {
+    const profile = await liff.getProfile()
+    if (!profile?.userId) {
+      return {
+        ok: false,
+        reason: 'error',
+        message: 'LINE ユーザーIDを取得できませんでした',
+      }
+    }
+    return { ok: true, userId: profile.userId }
+  } catch (profileErr: unknown) {
+    return {
+      ok: false,
+      reason: 'error',
+      message: formatLiffError(profileErr) || getErrorMessage(profileErr),
+    }
+  }
+}
+
 export type InquiryContactPrefill = {
   full_name: string | null
   email: string | null
@@ -141,6 +247,147 @@ export default function InquiryForm({
   const supabase = createClient()
   const p = dict.property ?? {}
 
+  /** ブリッジから戻ったあと、保存済みの1回目の確定内容で自動送信（ユーザーに2回押させない） */
+  useEffect(() => {
+    if (!isLoggedIn || !liffId) return
+
+    const pending = readPendingLineInquiry()
+    if (!pending || pending.propertyId !== propertyId) return
+
+    let liffReady = false
+    try {
+      liffReady = sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId
+    } catch {
+      return
+    }
+    if (!liffReady) return
+
+    const lockKey = `${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`
+    try {
+      if (sessionStorage.getItem(lockKey) === '1') return
+      sessionStorage.setItem(lockKey, '1')
+    } catch {
+      return
+    }
+
+    const liffHint =
+      p.inquiry_liff_endpoint_hint ??
+      'LINE Developers の LIFF で「エンドポイント URL」を、いま表示しているページの URL（https・www の有無・パスまで）と一致させてください。'
+    const liffCallbackHint =
+      p.inquiry_liff_callback_url_hint ??
+      'LINEログインチャネル「コールバック URL」に、いまのページのオリジンを登録してください。'
+    const currentPageUrl =
+      typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : ''
+
+    setPreferredReplyChannel('line')
+    setIsOpen(true)
+    setFormData({
+      name: pending.name,
+      email: pending.email,
+      message: pending.message,
+    })
+    setLoading(true)
+    setError(null)
+
+    ;(async () => {
+      const sb = createClient()
+      const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
+      if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
+        try {
+          sessionStorage.removeItem(lockKey)
+        } catch {
+          /* */
+        }
+        clearPendingLineInquiry()
+        setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
+        setLoading(false)
+        return
+      }
+
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyId)
+
+      if (!isUuid) {
+        clearPendingLineInquiry()
+        try {
+          sessionStorage.removeItem(lockKey)
+          sessionStorage.removeItem('inquiry_liff_ready_pid')
+        } catch {
+          /* */
+        }
+        localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
+        setLoading(false)
+        setSuccess(true)
+        return
+      }
+
+      const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, pending.locale)
+      if (!lineResult.ok) {
+        if (lineResult.reason === 'redirect') {
+          return
+        }
+        if (lineResult.reason === 'login') {
+          try {
+            sessionStorage.removeItem(lockKey)
+          } catch {
+            /* */
+          }
+          setLoading(false)
+          return
+        }
+        clearPendingLineInquiry()
+        try {
+          sessionStorage.removeItem(lockKey)
+        } catch {
+          /* */
+        }
+        setError(
+          `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}`
+        )
+        setLoading(false)
+        return
+      }
+
+      const emailTrim = pending.email.trim()
+      const { error: submitError } = await sb.from('inquiries').insert([
+        {
+          property_id: propertyId,
+          inquirer_name: pending.name.trim(),
+          inquirer_email: emailTrim,
+          email: emailTrim,
+          inquirer_phone: null,
+          message: pending.message.trim(),
+          preferred_reply_channel: 'line',
+          line_user_id: lineResult.userId,
+        },
+      ])
+
+      if (submitError) {
+        clearPendingLineInquiry()
+        try {
+          sessionStorage.removeItem(lockKey)
+        } catch {
+          /* */
+        }
+        setError(formatInquirySubmitError(submitError))
+        setLoading(false)
+        return
+      }
+
+      localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
+      clearPendingLineInquiry()
+      try {
+        sessionStorage.removeItem(lockKey)
+        sessionStorage.removeItem('inquiry_liff_ready_pid')
+      } catch {
+        /* */
+      }
+      setSuccess(true)
+      setLoading(false)
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- dict 全体を依存に入れると毎レンダーで再実行される
+  }, [isLoggedIn, propertyId, locale, liffId])
+
   const innerVisible = !isLoggedIn || isOpen || isDesktop
 
   const fieldLabelClass =
@@ -198,9 +445,7 @@ export default function InquiryForm({
           return
         }
 
-        // モバイル Chrome 等: await の後に location を変えると「ユーザー操作と無関係な遷移」とみなされ LINE が開かない。
-        // /api/liff-handoff が 302 先を確定（既定は inquiry-bridge 直リンク。liff.line.me 経由は環境変数で切替）。
-        // ブリッジ通過後にだけ inquiry_liff_ready_pid が立つ → そのとき初めて LIFF SDK で getProfile する。
+        // 1回目の確定: 入力を保存して即 handoff（await 後の遷移は不可のため）。戻ったら effect が自動で DB 保存する。
         let liffReady = false
         try {
           liffReady = sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId
@@ -210,6 +455,16 @@ export default function InquiryForm({
 
         if (!liffReady) {
           try {
+            const payload: PendingLineInquiry = {
+              v: 1,
+              propertyId,
+              locale,
+              name: formData.name.trim(),
+              email: formData.email.trim(),
+              message: formData.message.trim(),
+              at: Date.now(),
+            }
+            sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(payload))
             sessionStorage.setItem('inquiry_resume_line', '1')
             sessionStorage.setItem('inquiry_resume_property_id', propertyId)
             sessionStorage.setItem('inquiry_resume_locale', locale)
@@ -222,65 +477,25 @@ export default function InquiryForm({
           return
         }
 
-        const liff = (await import('@line/liff')).default
-        try {
-          await liff.init({ liffId, withLoginOnExternalBrowser: true })
-        } catch (firstInit: unknown) {
-          console.warn('LIFF init (external browser) failed, retrying without flag', firstInit)
-          try {
-            await liff.init({ liffId, withLoginOnExternalBrowser: false })
-          } catch (secondInit: unknown) {
-            console.error('LIFF init failed', secondInit)
-            const raw = formatLiffError(secondInit) || getErrorMessage(secondInit)
-            setError(
-              `${raw}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}`
-            )
-            setSubmitPhase('idle')
-            clearConfirmTimer()
+        const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, locale)
+        if (!lineResult.ok) {
+          if (lineResult.reason === 'redirect') {
+            return
+          }
+          if (lineResult.reason === 'login') {
             setLoading(false)
             return
           }
-        }
-        if (!liff.isLoggedIn()) {
-          if (!liff.isInClient()) {
-            try {
-              sessionStorage.removeItem('inquiry_liff_ready_pid')
-            } catch {
-              /* ignore */
-            }
-            try {
-              sessionStorage.setItem('inquiry_resume_line', '1')
-              sessionStorage.setItem('inquiry_resume_property_id', propertyId)
-              sessionStorage.setItem('inquiry_resume_locale', locale)
-            } catch {
-              /* ignore */
-            }
-            window.location.assign(
-              `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
-            )
-            return
-          }
-          liff.login()
-          setLoading(false)
-          return
-        }
-        let profile: { userId?: string }
-        try {
-          profile = await liff.getProfile()
-        } catch (profileErr: unknown) {
-          console.error('LIFF getProfile failed', profileErr)
+          const profileScopeHint = p.inquiry_liff_profile_scope_hint
           setError(
-            `${formatLiffError(profileErr) || (p.inquiry_liff_profile_scope_hint ?? 'プロフィールの取得に失敗しました。')}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}`
+            `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}${profileScopeHint ? `\n\n${profileScopeHint}` : ''}`
           )
           setSubmitPhase('idle')
           clearConfirmTimer()
           setLoading(false)
           return
         }
-        if (!profile?.userId) {
-          throw new Error(p.liff_no_user_id ?? 'LINE ユーザーIDを取得できませんでした')
-        }
-        lineUid = profile.userId
+        lineUid = lineResult.userId
       }
 
       const isUuid =
@@ -318,6 +533,7 @@ export default function InquiryForm({
 
       localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
       if (preferredReplyChannel === 'line') {
+        clearPendingLineInquiry()
         try {
           sessionStorage.removeItem('inquiry_liff_ready_pid')
         } catch {
