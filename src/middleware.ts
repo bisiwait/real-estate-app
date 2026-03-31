@@ -71,6 +71,24 @@ export default async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // LINE 公式: liff.line.me/{liffId}/追加パス はエンドポイント URL に結合される。
+    // ?liff.state= が liff.line.me 上で /jp:UUID のように見えると、実リクエストが
+    // /{locale}/line/inquiry-bridge/jp:UUID となりルートが無く 404。クエリへ戻す。
+    const liffBridgeExtra = pathname.match(/^\/(jp|en|th)\/line\/inquiry-bridge\/(.+)$/)
+    if (liffBridgeExtra) {
+        const loc = liffBridgeExtra[1]
+        let payload = liffBridgeExtra[2]
+        try {
+            payload = decodeURIComponent(payload)
+        } catch {
+            /* そのまま */
+        }
+        const url = request.nextUrl.clone()
+        url.pathname = `/${loc}/line/inquiry-bridge`
+        url.searchParams.set('liff.state', payload)
+        return NextResponse.redirect(url)
+    }
+
     // /jp/Line/inquiry-bridge 等（line セグメントの大文字）。パスは区別され 404 になりやすい
     const lineBridgeTypo = pathname.match(/^\/(jp|en|th)\/([^/]+)\/(inquiry-bridge)\/?$/)
     if (
