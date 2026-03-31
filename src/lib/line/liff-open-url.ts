@@ -1,7 +1,8 @@
 /**
  * liff.line.me の正しい形式は
  *   https://liff.line.me/{LIFF_ID}?liff.state=...
- * であり、jp:uuid をパスに付ける（.../LIFF_ID/jp:uuid）は無効。
+ * で渡す（公式ドキュメントどおり）。
+ * LINE 側が liff.line.me 上でパス形式（.../LIFF_ID/jp:uuid）へリダイレクト表示することがあり、それ自体は必ずしもバグではない。
  * @see https://developers.line.biz/ja/docs/liff/opening-liff-app/
  */
 export function buildLiffLineMeOpenUrl(liffId: string, liffStatePlain: string): string {

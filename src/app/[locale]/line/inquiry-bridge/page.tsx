@@ -32,6 +32,18 @@ function parseLiffState(
   return { safeLocale, propId }
 }
 
+/** 自サイトのクエリに付いた liff.state（LINE の挙動差のフォールバック） */
+function readLiffStateFromPageUrl(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const s = new URLSearchParams(window.location.search).get('liff.state')
+    if (s && s.length > 0) return s
+  } catch {
+    /* */
+  }
+  return null
+}
+
 function readResumePropertyHref(locale: string): string | null {
   try {
     const pid = sessionStorage.getItem('inquiry_resume_property_id')
@@ -50,6 +62,9 @@ function readResumePropertyHref(locale: string): string | null {
 /**
  * LIFF のエンドポイント URL として本パスを LINE Developers に登録する（例: https://ドメイン/jp/line/inquiry-bridge）。
  * liff.line.me から開いたとき liff.state に「locale:propertyUuid」を渡し、物件ページへ戻す。
+ *
+ * LINE は liff.line.me 上で ?liff.state= を .../jp:uuid 形式のパスへリダイレクト表示することがある（プラットフォーム側）。
+ * その場合でも getState() か、自サイト URL のクエリ liff.state= で復元を試す。
  *
  * PC の Chrome でこの URL を直接開くと LIFF が成立せず失敗する。成功時は即座に物件詳細へ replace され、この画面は見えない。
  */
@@ -87,12 +102,33 @@ export default function LineInquiryBridgePage() {
         }
         if (cancelled) return
 
-        let state = liff.getState()
-        if (!state || typeof state !== 'string') {
+        const fromSdk = liff.getState()
+        let state: string | undefined =
+          typeof fromSdk === 'string' && fromSdk.length > 0 ? fromSdk : undefined
+        if (!state) {
+          const fromPage = readLiffStateFromPageUrl()
+          if (fromPage) state = fromPage
+        }
+        if (!state) {
+          try {
+            if (sessionStorage.getItem('inquiry_resume_line') === '1') {
+              const pid = sessionStorage.getItem('inquiry_resume_property_id')
+              if (
+                pid &&
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pid)
+              ) {
+                state = `${safeFallback}:${pid}`
+              }
+            }
+          } catch {
+            /* */
+          }
+        }
+        if (!state) {
           setUiKind('action')
           setMsg(
             'ここで止まっている場合、問い合わせはまだ完了していません（この画面は成功ではありません）。' +
-              ' 住所欄に /line/inquiry-bridge と直接開いていると動きません。' +
+              ' LINE は liff.line.me の URL をパス形式に書き換えて見せることがありますが、通常はこのあとエンドポイントへ渡ります。' +
               ' 物件ページで「LINEで受け取る」を選び、送信から LINE 経由で開き直してください。'
           )
           return
