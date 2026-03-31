@@ -67,6 +67,20 @@ function readLiffStateFromPageUrl(): string | null {
   return null
 }
 
+/**
+ * @line/liff 2.x の npm バンドルには getState が無い環境がある（呼ぶと getState is not a function）。
+ * ある場合のみ使い、無ければ URL / sessionStorage に任せる。
+ */
+function readLiffStateFromSdk(liff: { getState?: () => unknown }): string | undefined {
+  try {
+    if (typeof liff.getState !== 'function') return undefined
+    const v = liff.getState()
+    return typeof v === 'string' && v.length > 0 ? v : undefined
+  } catch {
+    return undefined
+  }
+}
+
 function readResumePropertyHref(fallbackLocaleFromPath: string): string | null {
   try {
     const pid = sessionStorage.getItem('inquiry_resume_property_id')
@@ -84,7 +98,7 @@ function readResumePropertyHref(fallbackLocaleFromPath: string): string | null {
  * liff.line.me から開いたとき liff.state に「locale:propertyUuid」を渡し、物件ページへ戻す。
  *
  * LINE は liff.line.me 上で ?liff.state= を .../jp:uuid 形式のパスへリダイレクト表示することがある（プラットフォーム側）。
- * その場合でも getState() か、自サイト URL のクエリ liff.state= で復元を試す。
+ * その場合でも SDK の getState（利用可能なら）か、自サイト URL のクエリ liff.state= で復元を試す。
  *
  * PC の Chrome でこの URL を直接開くと LIFF が成立せず失敗する。成功時は即座に物件詳細へ replace され、この画面は見えない。
  */
@@ -144,9 +158,8 @@ export default function LineInquiryBridgePage() {
         }
         if (cancelled) return
 
-        const fromSdk = liff.getState()
-        let state: string | undefined =
-          typeof fromSdk === 'string' && fromSdk.length > 0 ? fromSdk : undefined
+        const fromSdk = readLiffStateFromSdk(liff)
+        let state: string | undefined = fromSdk
         if (!state) {
           const fromPage = readLiffStateFromPageUrl()
           if (fromPage) state = fromPage
