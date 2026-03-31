@@ -52,6 +52,22 @@ const nextConfig: NextConfig = {
         destination: `${SITE_ORIGIN}/:path*`,
         permanent: true,
       },
+      // LIFF エンドポイントのよくある誤記（ハイフン抜け・スラッシュ末尾）
+      {
+        source: "/:locale/line/inquirybridge",
+        destination: "/:locale/line/inquiry-bridge",
+        permanent: true,
+      },
+      {
+        source: "/:locale/line/inquiry_bridge",
+        destination: "/:locale/line/inquiry-bridge",
+        permanent: true,
+      },
+      {
+        source: "/:locale/line/inquiry-bridge/",
+        destination: "/:locale/line/inquiry-bridge",
+        permanent: true,
+      },
     ];
   },
   images: {
