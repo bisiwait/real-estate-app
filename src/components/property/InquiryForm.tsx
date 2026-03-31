@@ -143,6 +143,10 @@ export default function InquiryForm({
 
     let lineUid: string | null = null
 
+    const liffHint =
+      p.inquiry_liff_endpoint_hint ??
+      'LINE Developers の LIFF で「エンドポイント URL」を、いま表示しているページの URL（https・www の有無・パスまで）と一致させてください。Vercel の本番ドメインと LIFF の登録 URL が違うとこのエラーになります。'
+
     try {
       if (preferredReplyChannel === 'line') {
         if (!liffId) {
@@ -156,13 +160,38 @@ export default function InquiryForm({
           return
         }
         const liff = (await import('@line/liff')).default
-        await liff.init({ liffId })
+        try {
+          // 外部ブラウザ（Chrome 等）からの liff.login() に必要。未指定だと「正常に処理できませんでした」になりやすい
+          await liff.init({ liffId, withLoginOnExternalBrowser: true })
+        } catch (liffInitErr: unknown) {
+          console.error('LIFF init failed', liffInitErr)
+          const raw = getErrorMessage(liffInitErr)
+          setError(`${raw}\n\n${liffHint}`)
+          setSubmitPhase('idle')
+          clearConfirmTimer()
+          setLoading(false)
+          return
+        }
         if (!liff.isLoggedIn()) {
           liff.login()
           setLoading(false)
           return
         }
-        const profile = await liff.getProfile()
+        let profile: { userId?: string }
+        try {
+          profile = await liff.getProfile()
+        } catch (profileErr: unknown) {
+          console.error('LIFF getProfile failed', profileErr)
+          setError(
+            (p.inquiry_liff_profile_scope_hint ??
+              'プロフィールの取得に失敗しました。LINE Developers の LIFF でスコープに profile を付与しているか確認してください。') +
+              `\n\n${liffHint}`
+          )
+          setSubmitPhase('idle')
+          clearConfirmTimer()
+          setLoading(false)
+          return
+        }
         if (!profile?.userId) {
           throw new Error(p.liff_no_user_id ?? 'LINE ユーザーIDを取得できませんでした')
         }
@@ -396,7 +425,9 @@ export default function InquiryForm({
               ) : null}
             </fieldset>
 
-            {error && <div className="px-1 text-xs font-normal text-red-500">{error}</div>}
+            {error && (
+              <div className="whitespace-pre-line px-1 text-xs font-normal text-red-500">{error}</div>
+            )}
 
             <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-4">
               <label htmlFor="inquiry-contact-consent" className="flex cursor-pointer items-start gap-3">

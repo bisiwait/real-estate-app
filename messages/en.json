@@ -461,6 +461,8 @@
         "inquiry_reply_by_line_desc": "Replies and notices via our official LINE. LINE login starts when you confirm send (friend add required).",
         "inquiry_line_submit_liff_note": "When you tap the orange confirm button, LINE login may start. After logging in, tap “Send inquiry” and confirm again to finish.",
         "inquiry_liff_env_required": "“By LINE” requires LIFF ID (NEXT_PUBLIC_LINE_LIFF_ID) to be set on this site.",
+        "inquiry_liff_endpoint_hint": "In LINE Developers → LIFF, set the Endpoint URL to match the page you are on (https, www or not, and path). It must match your production domain.",
+        "inquiry_liff_profile_scope_hint": "Could not load LINE profile. In the LIFF app settings, enable the profile scope.",
         "inquiry_reply_email_only": "Email only",
         "inquiry_reply_email_only_desc": "I only want to be contacted by email.",
         "inquiry_reply_email_and_line": "Email + LINE",

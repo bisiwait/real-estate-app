@@ -17,6 +17,8 @@ const ERROR_MAPPINGS: Record<string, string> = {
     '23503': '関連するデータが見つからないか、参照エラーが発生しました。',
     '42501': 'アクセス権限がありません。',
     'P0001': 'ビジネスルール違反が発生しました。',
+    '23514': 'データの形式がデータベースの制約と一致しません。マイグレーション未適用の可能性があります。',
+    '42703': 'データベースに必要な列がありません。最新のマイグレーションを Supabase に適用してください。',
 }
 
 /**
@@ -45,6 +47,12 @@ export function getErrorMessage(error: any): string {
 
     // Fallback or generic message
     if (message.includes('JWT')) return 'セッションが期限切れです。再度ログインしてください。'
+
+    if (message.includes('Could not find the') && message.includes('column'))
+        return 'データベースの列が見つかりません。Supabase に inquiries 用の最新マイグレーション（email / preferred_reply_channel など）を適用してください。'
+
+    if (message.includes('inquiries_preferred_reply_channel_check') || message.includes('preferred_reply_channel'))
+        return '返信方法の値がデータベースと一致しません。マイグレーションで preferred_reply_channel を email / line に更新したか確認してください。'
 
     console.warn('Unhandled error for localization:', error)
     return message || '予期せぬエラーが発生しました。'

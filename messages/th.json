@@ -460,6 +460,8 @@
         "inquiry_reply_by_line_desc": "รับการตอบกลับ/แจ้งเตือนจาก LINE ทางการ เมื่อยืนยันส่งจะเริ่มล็อกอิน LINE (ต้องเป็นเพื่อนกับบอท)",
         "inquiry_line_submit_liff_note": "เมื่อกดปุ่มยืนยันสีส้ม ระบบอาจเปิดล็อกอิน LINE หลังล็อกอินแล้ว กดส่งอีกครั้งแล้วยืนยันเพื่อจบการส่ง",
         "inquiry_liff_env_required": "การเลือก LINE ต้องตั้งค่า LIFF ID (NEXT_PUBLIC_LINE_LIFF_ID) บนเว็บ",
+        "inquiry_liff_endpoint_hint": "ใน LINE Developers → LIFF ให้ Endpoint URL ตรงกับหน้าที่เปิดอยู่ (https, www, path)",
+        "inquiry_liff_profile_scope_hint": "ดึงโปรไฟล์ LINE ไม่สำเร็จ ตรวจสอบว่าเปิด scope profile ใน LIFF",
         "inquiry_reply_email_only": "อีเมลเท่านั้น",
         "inquiry_reply_email_only_desc": "ต้องการให้ติดต่อทางอีเมลอย่างเดียว",
         "inquiry_reply_email_and_line": "อีเมล + LINE",
