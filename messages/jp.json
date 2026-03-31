@@ -489,6 +489,7 @@
         "inquiry_liff_env_required": "「LINEで受け取る」にはサイトに LIFF ID（環境変数 NEXT_PUBLIC_LINE_LIFF_ID）の設定が必要です。",
         "inquiry_liff_endpoint_hint": "LINE Developers の LIFF で「エンドポイント URL」を、いま開いているページの URL と一致させてください（https / www の有無・パスまで。例: 本番が https://example.com ならエンドポイントも同じオリジンから始める）。",
         "inquiry_liff_profile_scope_hint": "LINE プロフィールの取得に失敗しました。LIFF アプリのスコープで profile が有効か確認してください。",
+        "inquiry_liff_callback_url_hint": "LINEログインチャネル「チャネル基本設定」の「コールバック URL」に、このサイトのオリジン（例: https://chonburihome.com および必要なら https://www.chonburihome.com）を追加してください。外部ブラウザでログインする場合に必須です。",
         "inquiry_reply_email_only": "メールのみ",
         "inquiry_reply_email_only_desc": "メールでのご連絡のみ希望します。",
         "inquiry_reply_email_and_line": "メール ＋ LINE",

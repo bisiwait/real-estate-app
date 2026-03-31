@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { formatInquirySubmitError, formatLiffError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 
 export type InquiryContactPrefill = {
@@ -147,6 +148,13 @@ export default function InquiryForm({
       p.inquiry_liff_endpoint_hint ??
       'LINE Developers の LIFF で「エンドポイント URL」を、いま表示しているページの URL（https・www の有無・パスまで）と一致させてください。Vercel の本番ドメインと LIFF の登録 URL が違うとこのエラーになります。'
 
+    const liffCallbackHint =
+      p.inquiry_liff_callback_url_hint ??
+      'LINEログインチャネル「チャネル基本設定」の「コールバック URL」に、いまのページのオリジン（例: https://chonburihome.com ）を登録してください。未登録だとログイン後に失敗することがあります。'
+
+    const currentPageUrl =
+      typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : ''
+
     try {
       if (preferredReplyChannel === 'line') {
         if (!liffId) {
@@ -161,19 +169,29 @@ export default function InquiryForm({
         }
         const liff = (await import('@line/liff')).default
         try {
-          // 外部ブラウザ（Chrome 等）からの liff.login() に必要。未指定だと「正常に処理できませんでした」になりやすい
           await liff.init({ liffId, withLoginOnExternalBrowser: true })
-        } catch (liffInitErr: unknown) {
-          console.error('LIFF init failed', liffInitErr)
-          const raw = getErrorMessage(liffInitErr)
-          setError(`${raw}\n\n${liffHint}`)
-          setSubmitPhase('idle')
-          clearConfirmTimer()
-          setLoading(false)
-          return
+        } catch (firstInit: unknown) {
+          console.warn('LIFF init (external browser) failed, retrying without flag', firstInit)
+          try {
+            await liff.init({ liffId, withLoginOnExternalBrowser: false })
+          } catch (secondInit: unknown) {
+            console.error('LIFF init failed', secondInit)
+            const raw = formatLiffError(secondInit) || getErrorMessage(secondInit)
+            setError(
+              `${raw}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}`
+            )
+            setSubmitPhase('idle')
+            clearConfirmTimer()
+            setLoading(false)
+            return
+          }
         }
         if (!liff.isLoggedIn()) {
-          liff.login()
+          if (typeof window !== 'undefined') {
+            liff.login({ redirectUri: window.location.href.split('#')[0] })
+          } else {
+            liff.login()
+          }
           setLoading(false)
           return
         }
@@ -183,9 +201,7 @@ export default function InquiryForm({
         } catch (profileErr: unknown) {
           console.error('LIFF getProfile failed', profileErr)
           setError(
-            (p.inquiry_liff_profile_scope_hint ??
-              'プロフィールの取得に失敗しました。LINE Developers の LIFF でスコープに profile を付与しているか確認してください。') +
-              `\n\n${liffHint}`
+            `${formatLiffError(profileErr) || (p.inquiry_liff_profile_scope_hint ?? 'プロフィールの取得に失敗しました。')}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}`
           )
           setSubmitPhase('idle')
           clearConfirmTimer()
@@ -223,13 +239,19 @@ export default function InquiryForm({
         },
       ])
 
-      if (submitError) throw submitError
+      if (submitError) {
+        console.error('Inquiries insert failed', submitError)
+        setError(formatInquirySubmitError(submitError))
+        setSubmitPhase('idle')
+        clearConfirmTimer()
+        return
+      }
 
       localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
       setSuccess(true)
     } catch (err: unknown) {
       console.error('Inquiry submission error:', err)
-      setError(getErrorMessage(err))
+      setError(formatInquirySubmitError(err))
       setSubmitPhase('idle')
       clearConfirmTimer()
     } finally {
