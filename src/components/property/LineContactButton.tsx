@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
-import { MessageCircle, X, Copy, Loader2, ExternalLink } from 'lucide-react'
+import { MessageCircle, X, Copy, Loader2, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { buildLineInquiryEntryUrl, hasUsableLineContact } from '@/lib/line-contact-url'
 
@@ -374,7 +374,41 @@ export default function LineContactButton({
               >
                 {pr.line_official_modal_title ?? '公式LINEでお問い合わせ'}
               </h2>
-              <ol className="mt-5 space-y-4 text-sm leading-relaxed text-slate-600">
+              <div className="mt-4 flex gap-3 rounded-xl border border-emerald-200/90 bg-emerald-50/95 px-4 py-3 text-left">
+                <CheckCircle2
+                  className="h-5 w-5 shrink-0 text-emerald-600"
+                  aria-hidden
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-emerald-900">
+                    {pr.line_official_registered_title ?? 'お問い合わせを受け付けました'}
+                  </p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-emerald-900/90">
+                    {pr.line_official_registered_body ??
+                      'このサイトに記録済みです。あと2ステップで公式LINEから担当へつながります。'}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  {pr.line_official_property_label ?? 'お問い合わせの物件'}
+                </p>
+                <p className="mt-1.5 text-sm font-bold leading-snug text-[#1A2B56]">
+                  {property.title?.trim() ? property.title : '—'}
+                </p>
+                {property.refId ? (
+                  <p className="mt-2 text-[11px] text-slate-500">
+                    {(pr.line_official_ref_label ?? '参照').replace(
+                      '{ref}',
+                      String(property.refId)
+                    )}
+                  </p>
+                ) : null}
+              </div>
+              <p className="mt-3 text-center text-xs font-bold text-slate-600">
+                {pr.line_official_next_heading ?? '次の手順'}
+              </p>
+              <ol className="mt-3 space-y-4 text-sm leading-relaxed text-slate-600">
                 <li className="flex gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755]/15 text-xs font-black text-[#025c2c">
                     1
