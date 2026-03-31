@@ -10,12 +10,20 @@ export const revalidate = 60
 
 async function fetchProperty(id: string) {
     const supabase = createStaticClient()
-    const { data } = await supabase
+    const embedded = await supabase
         .from('properties')
         .select('*, area:areas(name, slug, region:regions(name)), project:projects(*, developers(name)), developers(name)')
         .eq('id', id)
-        .single()
-    return data
+        .maybeSingle()
+
+    if (embedded.data) return embedded.data
+
+    if (embedded.error && embedded.error.code !== 'PGRST116') {
+        console.error('[fetchProperty] embedded select failed, retrying minimal', embedded.error)
+    }
+
+    const minimal = await supabase.from('properties').select('*').eq('id', id).maybeSingle()
+    return minimal.data ?? null
 }
 
 export async function generateMetadata(

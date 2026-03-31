@@ -2,10 +2,35 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { formatLiffError } from '@/lib/utils/inquiry-errors'
 
 const LOCALES = new Set(['jp', 'en', 'th'])
+const UUID_IN_STRING =
+  /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+
+/** liff.state の前後にゴミが付く場合でも UUID を拾う。ロケールは小文字化して照合 */
+function parseLiffState(
+  raw: string,
+  fallbackLocale: string
+): { safeLocale: string; propId: string } | null {
+  let state = raw.trim()
+  try {
+    const decoded = decodeURIComponent(state)
+    if (decoded !== state) state = decoded
+  } catch {
+    /* そのまま */
+  }
+  const sep = state.indexOf(':')
+  const locRaw = sep >= 0 ? state.slice(0, sep).trim() : ''
+  const tail = sep >= 0 ? state.slice(sep + 1) : state
+  const um = tail.match(UUID_IN_STRING)
+  if (!um) return null
+  const propId = um[1].toLowerCase()
+  const normLoc = locRaw.toLowerCase()
+  const safeLocale = LOCALES.has(normLoc) ? normLoc : fallbackLocale
+  return { safeLocale, propId }
+}
 
 function readResumePropertyHref(locale: string): string | null {
   try {
@@ -30,7 +55,6 @@ function readResumePropertyHref(locale: string): string | null {
  */
 export default function LineInquiryBridgePage() {
   const params = useParams()
-  const router = useRouter()
   const fallbackLocale = (params?.locale as string) || 'jp'
   const safeFallback = LOCALES.has(fallbackLocale) ? fallbackLocale : 'jp'
 
@@ -73,24 +97,13 @@ export default function LineInquiryBridgePage() {
           )
           return
         }
-        state = state.trim()
-        try {
-          const decoded = decodeURIComponent(state)
-          if (decoded !== state) state = decoded
-        } catch {
-          /* そのまま */
-        }
-
-        const sep = state.indexOf(':')
-        const loc = sep >= 0 ? state.slice(0, sep) : fallbackLocale
-        const propId = sep >= 0 ? state.slice(sep + 1) : state
-        const safeLocale = LOCALES.has(loc) ? loc : fallbackLocale
-
-        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propId)) {
+        const parsed = parseLiffState(state, safeFallback)
+        if (!parsed) {
           setUiKind('action')
           setMsg('リンクが無効です。物件ページからやり直してください。')
           return
         }
+        const { safeLocale, propId } = parsed
 
         try {
           sessionStorage.setItem('inquiry_liff_ready_pid', propId)
@@ -98,7 +111,9 @@ export default function LineInquiryBridgePage() {
           /* private mode */
         }
 
-        router.replace(`/${safeLocale}/properties/${propId}`)
+        // LINE 内ブラウザでは App Router の client 遷移が壊れ 404 や真っ白になることがあるためフルロードする
+        const path = `/${safeLocale}/properties/${propId}`
+        window.location.replace(`${window.location.origin}${path}`)
       } catch (e) {
         console.error('[line-inquiry-bridge]', e)
         if (!cancelled) {
@@ -116,7 +131,7 @@ export default function LineInquiryBridgePage() {
     return () => {
       cancelled = true
     }
-  }, [fallbackLocale, router, safeFallback])
+  }, [safeFallback])
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center">

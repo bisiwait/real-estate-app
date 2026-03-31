@@ -72,6 +72,11 @@ const nextConfig: NextConfig = {
         destination: "/:locale/line/inquiry-bridge",
         permanent: true,
       },
+      {
+        source: "/:locale/line/inquiry-brige",
+        destination: "/:locale/line/inquiry-bridge",
+        permanent: true,
+      },
     ];
   },
   images: {

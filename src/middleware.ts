@@ -71,6 +71,18 @@ export default async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // /jp/Line/inquiry-bridge 等（line セグメントの大文字）。パスは区別され 404 になりやすい
+    const lineBridgeTypo = pathname.match(/^\/(jp|en|th)\/([^/]+)\/(inquiry-bridge)\/?$/)
+    if (
+        lineBridgeTypo &&
+        lineBridgeTypo[2] !== 'line' &&
+        lineBridgeTypo[2].toLowerCase() === 'line'
+    ) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/${lineBridgeTypo[1]}/line/${lineBridgeTypo[3]}`
+        return NextResponse.redirect(url)
+    }
+
     // /JP/ /EN/ /TH/ など大文字ロケールは Next の [locale] と一致せず 404。LINE コンソールのコピペで起きやすい
     if (pathname.length > 1 && pathname.startsWith('/')) {
         const slash2 = pathname.indexOf('/', 1)
