@@ -429,9 +429,11 @@ function TagItem({ tag, icon: Icon, translate }: any) {
 
 function InfoItem({ label, value }: { label: string, value: string }) {
     return (
-        <div className="flex items-center border-b border-slate-100/50 py-4 px-2">
-            <span className="text-slate-400 text-[13px] font-normal w-[160px] shrink-0">{label}</span>
-            <span className="text-[#1A2B56] font-normal text-[15px]">{value}</span>
+        <div className="flex items-center border-b border-slate-100/50 py-2.5 md:py-4 px-2 max-md:gap-2">
+            <span className="text-slate-400 text-[12px] md:text-[13px] font-normal w-[96px] md:w-[160px] shrink-0 leading-snug max-md:pr-0 break-words">
+                {label}
+            </span>
+            <span className="text-[#1A2B56] font-normal text-sm md:text-[15px] min-w-0 leading-snug">{value}</span>
         </div>
     )
 }
