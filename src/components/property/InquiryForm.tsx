@@ -199,7 +199,7 @@ export default function InquiryForm({
         }
 
         // モバイル Chrome 等: await の後に location を変えると「ユーザー操作と無関係な遷移」とみなされ LINE が開かない。
-        // liff.line.me はサーバー 302 で組み立てる（/api/liff-handoff）— クライアント直書きだと表示が /jp:uuid パスに見える事例への対策。
+        // /api/liff-handoff が 302 先を確定（既定は inquiry-bridge 直リンク。liff.line.me 経由は環境変数で切替）。
         // ブリッジ通過後にだけ inquiry_liff_ready_pid が立つ → そのとき初めて LIFF SDK で getProfile する。
         let liffReady = false
         try {

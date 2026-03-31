@@ -21,3 +21,20 @@ export function buildLiffInquiryHandoffUrl(
 ): string {
   return buildLiffLineMeOpenUrl(liffId, `${locale}:${propertyId}`)
 }
+
+/**
+ * liff.line.me を経由せず、LIFF エンドポイントへ直接遷移させる URL。
+ * LINE 側ゲートウェイで liff.line.me がリロードループする事象の回避用。LINE 内ブラウザで開けば liff.init は通常どおり動く。
+ */
+export function buildLiffInquiryBridgeDirectUrl(
+  siteOrigin: string,
+  locale: string,
+  propertyId: string
+): string {
+  const origin = siteOrigin.trim().replace(/\/$/, '')
+  const loc = locale.trim().toLowerCase()
+  const pid = propertyId.trim().toLowerCase()
+  const u = new URL(`${origin}/${loc}/line/inquiry-bridge`)
+  u.searchParams.set('liff.state', `${loc}:${pid}`)
+  return u.href
+}

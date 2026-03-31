@@ -1,14 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { buildLiffInquiryHandoffUrl } from '@/lib/line/liff-open-url'
+import {
+  buildLiffInquiryBridgeDirectUrl,
+  buildLiffInquiryHandoffUrl,
+} from '@/lib/line/liff-open-url'
+import { getPublicSiteUrl } from '@/lib/site-url'
 
 const PROPERTY_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LOCALES = new Set(['jp', 'en', 'th'])
 
+function isTruthyEnv(v: string | undefined): boolean {
+  const s = v?.trim().toLowerCase()
+  return s === '1' || s === 'true' || s === 'yes'
+}
+
+/** オープンリダイレクト防止: 許可したホストだけ x-forwarded-host を採用 */
+function resolveHandoffOrigin(request: NextRequest): string {
+  const requestHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim().toLowerCase()
+  const protoRaw = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase()
+  const proto = protoRaw === 'http' || protoRaw === 'https' ? protoRaw : 'https'
+
+  let canonicalHost: string
+  try {
+    canonicalHost = new URL(getPublicSiteUrl()).host.toLowerCase()
+  } catch {
+    canonicalHost = ''
+  }
+  const altCanonical =
+    canonicalHost && !canonicalHost.startsWith('www.')
+      ? `www.${canonicalHost}`
+      : ''
+
+  if (requestHost) {
+    const local =
+      requestHost.startsWith('localhost') ||
+      requestHost.startsWith('127.0.0.1')
+    const vercelPreview = requestHost.endsWith('.vercel.app')
+    const matchesCanonical =
+      !!canonicalHost &&
+      (requestHost === canonicalHost || requestHost === altCanonical)
+
+    if (local) {
+      return `http://${requestHost}`
+    }
+    if (vercelPreview || matchesCanonical) {
+      return `${proto}://${requestHost}`
+    }
+  }
+
+  return getPublicSiteUrl()
+}
+
 /**
  * 物件問い合わせ「LINEで受け取る」1回目の遷移先。
- * クライアントで liff.line.me URL を組むと環境・キャッシュ・ブラウザ差で誤った形に見えることがあるため、
- * サーバーが必ず ?liff.state= の形式で 302 する。
+ * 既定: 自サイトの inquiry-bridge へ直接 302（liff.line.me ゲートウェイのリロードループ回避）。
+ * NEXT_PUBLIC_LIFF_HANDOFF_VIA_LINE_ME=true のとき従来どおり liff.line.me へ 302。
  */
 export async function GET(request: NextRequest) {
   const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim()
@@ -24,7 +70,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid propertyId' }, { status: 400 })
   }
 
-  const target = buildLiffInquiryHandoffUrl(liffId, safeLocale, propertyId.toLowerCase())
+  const pid = propertyId.toLowerCase()
+  const viaLineMe = isTruthyEnv(process.env.NEXT_PUBLIC_LIFF_HANDOFF_VIA_LINE_ME)
+  const target = viaLineMe
+    ? buildLiffInquiryHandoffUrl(liffId, safeLocale, pid)
+    : buildLiffInquiryBridgeDirectUrl(resolveHandoffOrigin(request), safeLocale, pid)
+
   const res = NextResponse.redirect(target, 302)
   res.headers.set('Cache-Control', 'no-store, max-age=0')
   return res
