@@ -107,7 +107,9 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                     current_period_end: data.current_period_end || null,
                     auto_renew: data.auto_renew ?? true,
                     show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
-                    show_line_in_inquiry: data.show_line_in_inquiry !== false,
+                    show_line_in_inquiry:
+                        String(data.line_id || '').trim().length > 0 &&
+                        data.show_line_in_inquiry !== false,
                 })
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
@@ -225,6 +227,10 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                 finalAvatarUrl = await uploadAvatar(user.id)
             }
 
+            const lineIdTrimmed = formData.line_id.trim()
+            const showLineInInquiry =
+                lineIdTrimmed.length > 0 && formData.show_line_in_inquiry
+
             // 2. Update profile
             const { error } = await supabase
                 .from('profiles')
@@ -237,13 +243,17 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                     line_id: formData.line_id,
                     avatar_url: finalAvatarUrl,
                     show_phone_in_inquiry: formData.show_phone_in_inquiry,
-                    show_line_in_inquiry: formData.show_line_in_inquiry,
+                    show_line_in_inquiry: showLineInInquiry,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id)
 
             if (error) throw error
 
+            setFormData((prev) => ({
+                ...prev,
+                show_line_in_inquiry: showLineInInquiry,
+            }))
             setSuccess('プロフィールを更新しました。')
             window.scrollTo({ top: 0, behavior: 'smooth' })
         } catch (err: any) {
@@ -567,19 +577,47 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                     id="profile-line-id"
                                     type="text"
                                     value={formData.line_id}
-                                    onChange={e => setFormData({ ...formData, line_id: e.target.value })}
+                                    onChange={(e) => {
+                                        const next = e.target.value
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            line_id: next,
+                                            show_line_in_inquiry:
+                                                next.trim().length > 0
+                                                    ? prev.show_line_in_inquiry
+                                                    : false,
+                                        }))
+                                    }}
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all pl-10"
                                     placeholder="line_id_123"
                                 />
                                 <MessageSquare className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             </div>
-                            <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-3 py-2.5">
-                                <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
+                            <div
+                                className={`mt-3 flex items-center justify-between gap-4 rounded-xl border px-3 py-2.5 ${
+                                    formData.line_id.trim()
+                                        ? 'border-slate-100 bg-white'
+                                        : 'border-slate-100 bg-slate-50/80'
+                                }`}
+                            >
+                                <div className="min-w-0">
+                                    <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
+                                    {!formData.line_id.trim() ? (
+                                        <p className="text-[10px] text-slate-400 mt-0.5">
+                                            LINE ID を入力するとオンにできます
+                                        </p>
+                                    ) : null}
+                                </div>
                                 <Switch
-                                    checked={formData.show_line_in_inquiry}
-                                    onCheckedChange={(v) =>
-                                        setFormData({ ...formData, show_line_in_inquiry: v })
+                                    checked={
+                                        formData.line_id.trim().length > 0 &&
+                                        formData.show_line_in_inquiry
                                     }
+                                    onCheckedChange={(v) => {
+                                        if (!formData.line_id.trim()) return
+                                        setFormData({ ...formData, show_line_in_inquiry: v })
+                                    }}
+                                    disabled={!formData.line_id.trim()}
                                 />
                             </div>
                         </div>

@@ -245,10 +245,12 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                 );
                 withLine = sorted.map((p) => {
                     const prof = p.user_id ? profByUser.get(p.user_id) : undefined;
+                    const lineTrim = prof?.line_id != null ? String(prof.line_id).trim() : "";
                     return {
                         ...p,
                         agent_line_id: prof?.line_id ?? null,
-                        agent_show_line_in_inquiry: prof?.show_line_in_inquiry !== false,
+                        agent_show_line_in_inquiry:
+                            lineTrim.length > 0 && prof?.show_line_in_inquiry !== false,
                     };
                 });
             }

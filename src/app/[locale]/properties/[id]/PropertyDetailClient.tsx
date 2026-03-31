@@ -247,7 +247,9 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
 
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
     const showAgentPhoneInquiry = agent?.show_phone_in_inquiry !== false
-    const showAgentLineInquiry = agent?.show_line_in_inquiry !== false
+    const showAgentLineInquiry =
+        agent?.show_line_in_inquiry !== false &&
+        Boolean(String(agent?.line_id ?? '').trim())
     const stickyPhone = showAgentPhoneInquiry ? agent?.phone : undefined
     const translateTag = (tag: string) => (dict.property?.tags as any)?.[tag] || tag;
     const translateArea = (areaName: string) => (dict.property?.db_locations as any)?.[areaName] || areaName;
