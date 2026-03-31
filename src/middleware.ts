@@ -71,6 +71,21 @@ export default async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // /JP/ /EN/ /TH/ など大文字ロケールは Next の [locale] と一致せず 404。LINE コンソールのコピペで起きやすい
+    if (pathname.length > 1 && pathname.startsWith('/')) {
+        const slash2 = pathname.indexOf('/', 1)
+        const seg = slash2 === -1 ? pathname.slice(1) : pathname.slice(1, slash2)
+        const rest = slash2 === -1 ? '' : pathname.slice(slash2)
+        if (seg && !seg.includes('.')) {
+            const lower = seg.toLowerCase()
+            if (locales.includes(lower) && seg !== lower) {
+                const url = request.nextUrl.clone()
+                url.pathname = `/${lower}${rest}`
+                return NextResponse.redirect(url)
+            }
+        }
+    }
+
     // Skip redirection for API and internal Next.js paths
     if (
         pathname.startsWith('/api') ||

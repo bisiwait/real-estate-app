@@ -33,10 +33,17 @@ export default function LineInquiryBridgePage() {
         }
         if (cancelled) return
 
-        const state = liff.getState()
+        let state = liff.getState()
         if (!state || typeof state !== 'string') {
           setMsg('リンク情報がありません。物件ページから「LINEで受け取る」を選んで送信してください。')
           return
+        }
+        state = state.trim()
+        try {
+          const decoded = decodeURIComponent(state)
+          if (decoded !== state) state = decoded
+        } catch {
+          /* そのまま */
         }
 
         const sep = state.indexOf(':')
