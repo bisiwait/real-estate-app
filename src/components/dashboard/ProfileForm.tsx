@@ -8,6 +8,7 @@ import {
     User,
     Building2,
     Phone,
+    Mail,
     Globe,
     MessageSquare,
     Info,
@@ -445,21 +446,6 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">メールアドレス (確認用・変更不可)</label>
-                            <div className="relative">
-                                <input
-                                    readOnly
-                                    type="email"
-                                    value={formData.email}
-                                    className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed outline-none transition-all pl-10"
-                                    placeholder="yamada@example.com"
-                                />
-                                <Globe className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                            </div>
-                            <p className="text-[10px] text-slate-400 mt-1 ml-1">※ログイン用メールアドレスです。変更はできません。</p>
-                        </div>
-
-                        <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">会社名 / 所属</label>
                             <div className="relative">
                                 <input
@@ -471,6 +457,43 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                 />
                                 <Building2 className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">ウェブサイト / SNS</label>
+                            <div className="relative">
+                                <input
+                                    type="url"
+                                    value={formData.website}
+                                    onChange={e => setFormData({ ...formData, website: e.target.value })}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all pl-10"
+                                    placeholder="https://example.com"
+                                />
+                                <Globe className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 連絡先 */}
+                    <div className="space-y-6">
+                        <h3 className="text-sm font-black text-navy-secondary uppercase tracking-widest flex items-center">
+                            <Phone className="w-4 h-4 mr-2 text-navy-primary" />
+                            連絡先
+                        </h3>
+
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">メールアドレス (確認用・変更不可)</label>
+                            <div className="relative">
+                                <input
+                                    readOnly
+                                    type="email"
+                                    value={formData.email}
+                                    className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed outline-none transition-all pl-10"
+                                    placeholder="yamada@example.com"
+                                />
+                                <Mail className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1 ml-1">※ログイン用メールアドレスです。変更はできません。</p>
                         </div>
 
                         <div>
@@ -486,14 +509,6 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                 <Phone className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             </div>
                         </div>
-                    </div>
-
-                    {/* その他情報 */}
-                    <div className="space-y-6">
-                        <h3 className="text-sm font-black text-navy-secondary uppercase tracking-widest flex items-center">
-                            <Globe className="w-4 h-4 mr-2 text-navy-primary" />
-                            連絡先・ウェブ
-                        </h3>
 
                         <div className="min-w-0">
                             <div className="group relative mb-2 ml-1 min-w-0">
@@ -532,20 +547,6 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                     placeholder="line_id_123"
                                 />
                                 <MessageSquare className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">ウェブサイト / SNS</label>
-                            <div className="relative">
-                                <input
-                                    type="url"
-                                    value={formData.website}
-                                    onChange={e => setFormData({ ...formData, website: e.target.value })}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all pl-10"
-                                    placeholder="https://example.com"
-                                />
-                                <Globe className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             </div>
                         </div>
                     </div>
