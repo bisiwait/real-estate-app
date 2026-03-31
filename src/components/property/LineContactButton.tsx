@@ -108,6 +108,8 @@ export default function LineContactButton({
     add_friend_url: string
     expires_in_hours: number
   } | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmSending, setConfirmSending] = useState(false)
 
   const rawMsg = pr.inquiry_default_message ?? ''
   const detailUrl = buildPropertyDetailUrl(property, locale)
@@ -130,11 +132,13 @@ export default function LineContactButton({
     : ''
 
   useEffect(() => {
-    if (!modalOpen && !officialOpen) return
+    if (!modalOpen && !officialOpen && !confirmOpen) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (confirmSending) return
         setModalOpen(false)
         setOfficialOpen(false)
+        setConfirmOpen(false)
       }
     }
     document.addEventListener('keydown', onKey)
@@ -144,7 +148,7 @@ export default function LineContactButton({
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
     }
-  }, [modalOpen, officialOpen])
+  }, [modalOpen, officialOpen, confirmOpen, confirmSending])
 
   type LogInquiryResult =
     | { kind: 'official'; data: { nonce: string; add_friend_url: string; expires_in_hours: number } }
@@ -216,34 +220,48 @@ export default function LineContactButton({
     }
   }, [inquiryMessage, pr.line_copy_inquiry_fail, pr.line_copy_inquiry_success])
 
-  const handleLineContact = async () => {
+  const handleLineContact = () => {
     if (!isLoggedIn) {
       onRequireAuth?.()
       return
     }
     if (!viewerLineGateReady) return
     if (!entry) return
+    setConfirmOpen(true)
+  }
 
-    const logged = await logInquiry()
-    if (logged.kind === 'blocked') return
+  const submitLineInquiry = async () => {
+    if (confirmSending) return
+    setConfirmSending(true)
+    try {
+      const logged = await logInquiry()
+      setConfirmOpen(false)
+      if (logged.kind === 'blocked') return
 
-    if (logged.kind === 'official') {
-      setOfficialData(logged.data)
-      setOfficialOpen(true)
-      return
+      if (logged.kind === 'official') {
+        setOfficialData(logged.data)
+        setOfficialOpen(true)
+        return
+      }
+
+      toast.success(
+        pr.line_confirm_success_recorded ?? 'サイトに記録しました。LINEの手続きに進みます。'
+      )
+
+      if (!hasUsableLineContact(viewerLineContact)) {
+        onRequireViewerLine?.()
+        return
+      }
+
+      if (shouldShowLineQrModal()) {
+        setModalOpen(true)
+        return
+      }
+
+      window.location.href = lineOpenUrl
+    } finally {
+      setConfirmSending(false)
     }
-
-    if (!hasUsableLineContact(viewerLineContact)) {
-      onRequireViewerLine?.()
-      return
-    }
-
-    if (shouldShowLineQrModal()) {
-      setModalOpen(true)
-      return
-    }
-
-    window.location.href = lineOpenUrl
   }
 
   const copyOfficialNonce = useCallback(async () => {
@@ -471,6 +489,98 @@ export default function LineContactButton({
         )
       : null
 
+  const confirmModal =
+    confirmOpen && entry && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="line-confirm-modal-title"
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+              aria-label={pr.line_modal_close_aria ?? 'Close'}
+              disabled={confirmSending}
+              onClick={() => {
+                if (confirmSending) return
+                setConfirmOpen(false)
+              }}
+            />
+            <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl">
+              <button
+                type="button"
+                disabled={confirmSending}
+                onClick={() => setConfirmOpen(false)}
+                className="absolute right-3 top-3 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:opacity-40"
+                aria-label={pr.line_modal_close_aria ?? 'Close'}
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h2
+                id="line-confirm-modal-title"
+                className="pr-10 text-center text-lg font-semibold tracking-tight text-slate-900"
+              >
+                {pr.line_confirm_title ?? 'LINEで問い合わせ'}
+              </h2>
+              <p className="mt-4 text-center text-sm font-medium leading-relaxed text-slate-700">
+                {pr.line_confirm_intro ??
+                  'この内容で担当エージェントへ問い合わせます。「送信」でサイトに記録し、LINEの手続きに進みます。'}
+              </p>
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  {pr.line_confirm_property_label ?? '物件'}
+                </p>
+                <p className="mt-1 text-sm font-bold leading-snug text-[#1A2B56]">
+                  {property.title?.trim() ? property.title : '—'}
+                </p>
+                {property.refId ? (
+                  <p className="mt-1.5 text-[11px] text-slate-500">
+                    {(pr.line_official_ref_label ?? '物件番号: {ref}').replace(
+                      '{ref}',
+                      String(property.refId)
+                    )}
+                  </p>
+                ) : null}
+              </div>
+              <div className="mt-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  {pr.line_confirm_message_label ?? '送信するメッセージ'}
+                </p>
+                <pre className="mt-2 max-h-36 overflow-y-auto whitespace-pre-wrap break-words rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-xs leading-relaxed text-slate-700">
+                  {inquiryMessage.trim() || '—'}
+                </pre>
+              </div>
+              <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  disabled={confirmSending}
+                  onClick={() => setConfirmOpen(false)}
+                  className="w-full rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50 sm:w-auto sm:min-w-[7rem]"
+                >
+                  {pr.line_confirm_cancel ?? 'キャンセル'}
+                </button>
+                <button
+                  type="button"
+                  disabled={confirmSending}
+                  onClick={() => void submitLineInquiry()}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#059c46] disabled:opacity-60 sm:w-auto sm:min-w-[7rem] sm:px-6"
+                >
+                  {confirmSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  ) : null}
+                  {confirmSending
+                    ? (pr.line_confirm_sending ?? '送信中…')
+                    : (pr.line_confirm_send ?? '送信')}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null
+
   if (!showAgentLineInquiry) {
     if (renderNothingWhenHidden) return null
     return (
@@ -511,7 +621,7 @@ export default function LineContactButton({
         type="button"
         disabled={waitingProfile}
         title={waitingProfile ? (pr.line_viewer_gate_loading_hint ?? '') : undefined}
-        onClick={() => void handleLineContact()}
+        onClick={handleLineContact}
         className={`${baseClasses} ${className} ${waitingProfile ? disabledClasses : ''}`}
       >
         {waitingProfile ? (
@@ -536,6 +646,7 @@ export default function LineContactButton({
       </button>
       {modal}
       {officialModal}
+      {confirmModal}
     </>
   )
 }
