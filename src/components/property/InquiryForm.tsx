@@ -6,6 +6,7 @@ import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle
 import { getErrorMessage } from '@/lib/utils/errors'
 import { clsx } from 'clsx'
 import { normalizeStoredLineContact } from '@/lib/line-contact-url'
+import LineLiffConnectButton from '@/components/property/LineLiffConnectButton'
 
 export type InquiryContactPrefill = {
   full_name: string | null
@@ -45,6 +46,11 @@ export default function InquiryForm({
     lineId: '',
     message: defaultMessage,
   })
+  const [preferredReplyChannel, setPreferredReplyChannel] = useState<'email_only' | 'email_and_line'>(
+    'email_only'
+  )
+  const [lineMessagingUserId, setLineMessagingUserId] = useState<string | null>(null)
+  const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim() || undefined
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -133,6 +139,16 @@ export default function InquiryForm({
       return
     }
 
+    if (preferredReplyChannel === 'email_and_line' && liffId && !lineMessagingUserId) {
+      setError(
+        p.inquiry_liff_required ??
+          'メールとLINEでの返信を希望する場合は、先に「LINEで連携」を完了してください。'
+      )
+      setSubmitPhase('idle')
+      clearConfirmTimer()
+      return
+    }
+
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
       setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
@@ -168,6 +184,11 @@ export default function InquiryForm({
           inquirer_email: formData.email,
           inquirer_phone: formData.phone || null,
           message: messageBody,
+          preferred_reply_channel: preferredReplyChannel,
+          line_user_id:
+            preferredReplyChannel === 'email_and_line' && lineMessagingUserId
+              ? lineMessagingUserId
+              : null,
         },
       ])
 
@@ -343,6 +364,79 @@ export default function InquiryForm({
                 onInput={(e) => (e.target as HTMLTextAreaElement).setCustomValidity('')}
               />
             </div>
+
+            <fieldset className="rounded-2xl border border-slate-200 bg-white p-4">
+              <legend className={clsx(fieldLabelClass, 'mb-2 px-1')}>
+                {p.inquiry_reply_channel_heading ?? '返信方法'}
+              </legend>
+              <p className="mb-3 text-[11px] leading-relaxed text-slate-500">
+                {p.inquiry_reply_channel_intro ?? '担当からの返信の受け取り方を選べます（メールは常に利用されます）。'}
+              </p>
+              <div className="space-y-3">
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
+                  <input
+                    type="radio"
+                    name="preferred_reply_channel"
+                    className="mt-1 h-4 w-4 text-navy-primary"
+                    checked={preferredReplyChannel === 'email_only'}
+                    onChange={() => {
+                      setPreferredReplyChannel('email_only')
+                      setLineMessagingUserId(null)
+                    }}
+                  />
+                  <span>
+                    <span className="block text-sm font-bold text-navy-secondary">
+                      {p.inquiry_reply_email_only ?? 'メールのみ'}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] text-slate-500">
+                      {p.inquiry_reply_email_only_desc ?? 'メールでのご連絡のみ希望します。'}
+                    </span>
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
+                  <input
+                    type="radio"
+                    name="preferred_reply_channel"
+                    className="mt-1 h-4 w-4 text-navy-primary"
+                    checked={preferredReplyChannel === 'email_and_line'}
+                    onChange={() => setPreferredReplyChannel('email_and_line')}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold text-navy-secondary">
+                      {p.inquiry_reply_email_and_line ?? 'メール ＋ LINE'}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] text-slate-500">
+                      {p.inquiry_reply_email_and_line_desc ??
+                        'メールに加え、公式LINEからも案内や通知を受け取ります。'}
+                    </span>
+                  </span>
+                </label>
+              </div>
+              {preferredReplyChannel === 'email_and_line' ? (
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <LineLiffConnectButton
+                    liffId={liffId}
+                    dict={{
+                      inquiry_liff_connect_btn: p.inquiry_liff_connect_btn ?? '',
+                      inquiry_liff_linked_ok: p.inquiry_liff_linked_ok ?? '',
+                      inquiry_liff_clear: p.inquiry_liff_clear ?? '',
+                      inquiry_liff_hint: p.inquiry_liff_hint ?? '',
+                      liff_not_configured: p.liff_not_configured ?? '',
+                      liff_no_user_id: p.liff_no_user_id ?? '',
+                    }}
+                    linkedUserId={lineMessagingUserId}
+                    onLinked={(uid) => setLineMessagingUserId(uid)}
+                    onClear={() => setLineMessagingUserId(null)}
+                  />
+                  {!liffId ? (
+                    <p className="mt-2 text-[10px] text-amber-800">
+                      {p.inquiry_liff_env_missing ??
+                        '※サイト側でLIFFが未設定のため、LINEユーザーIDは保存されません。メールのみで送信されます。'}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </fieldset>
 
             {error && <div className="px-1 text-xs font-normal text-red-500">{error}</div>}
 
