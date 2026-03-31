@@ -11,6 +11,32 @@ const UUID_IN_STRING =
   /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
 const LIFF_INIT_MS = 12_000
 
+/** Strict Mode 二重 effect や古い init 完了で setState / 二重 init しない */
+let inquiryBridgeEffectGeneration = 0
+
+/** 同一ページ内で liff.init を並列に呼ばない（SDK がリロードや不安定化し得る） */
+let bridgeLiffInitPromise: Promise<void> | null = null
+
+async function initLiffOnceForBridge(
+  liff: { init: (config: { liffId: string; withLoginOnExternalBrowser: boolean }) => Promise<void> },
+  liffId: string
+): Promise<void> {
+  if (!bridgeLiffInitPromise) {
+    const p = (async () => {
+      try {
+        await liff.init({ liffId, withLoginOnExternalBrowser: false })
+      } catch {
+        await liff.init({ liffId, withLoginOnExternalBrowser: true })
+      }
+    })()
+    bridgeLiffInitPromise = p
+    void p.finally(() => {
+      if (bridgeLiffInitPromise === p) bridgeLiffInitPromise = null
+    })
+  }
+  await bridgeLiffInitPromise
+}
+
 /** liff.init が固まっても 404 に落ちないよう、フォームが保存したセッションがあれば即物件へ */
 function redirectFromSessionResume(fallbackLocaleFromPath: string): boolean {
   if (typeof window === 'undefined') return false
@@ -124,6 +150,7 @@ export default function LineInquiryBridgePage() {
       return
     }
 
+    const effectGen = ++inquiryBridgeEffectGeneration
     let cancelled = false
     ;(async () => {
       if (typeof window !== 'undefined' && redirectFromSessionResume(safeFallback)) {
@@ -131,16 +158,9 @@ export default function LineInquiryBridgePage() {
       }
       try {
         const liff = (await import('@line/liff')).default
-        const runInit = async () => {
-          try {
-            await liff.init({ liffId, withLoginOnExternalBrowser: true })
-          } catch {
-            await liff.init({ liffId, withLoginOnExternalBrowser: false })
-          }
-        }
         try {
           await Promise.race([
-            runInit(),
+            initLiffOnceForBridge(liff, liffId),
             new Promise<never>((_, rej) =>
               setTimeout(() => rej(new Error('LIFF_INIT_TIMEOUT')), LIFF_INIT_MS)
             ),
@@ -156,7 +176,7 @@ export default function LineInquiryBridgePage() {
           }
           throw initErr
         }
-        if (cancelled) return
+        if (cancelled || effectGen !== inquiryBridgeEffectGeneration) return
 
         const fromSdk = readLiffStateFromSdk(liff)
         let state: string | undefined = fromSdk
@@ -180,6 +200,7 @@ export default function LineInquiryBridgePage() {
           }
         }
         if (!state) {
+          if (effectGen !== inquiryBridgeEffectGeneration) return
           setUiKind('action')
           setMsg(
             'ここで止まっている場合、問い合わせはまだ完了していません（この画面は成功ではありません）。' +
@@ -190,6 +211,7 @@ export default function LineInquiryBridgePage() {
         }
         const parsed = parseLiffState(state, safeFallback)
         if (!parsed) {
+          if (effectGen !== inquiryBridgeEffectGeneration) return
           setUiKind('action')
           setMsg('リンクが無効です。物件ページからやり直してください。')
           return
@@ -209,7 +231,7 @@ export default function LineInquiryBridgePage() {
         window.location.replace(`${window.location.origin}${path}`)
       } catch (e) {
         console.error('[line-inquiry-bridge]', e)
-        if (!cancelled) {
+        if (!cancelled && effectGen === inquiryBridgeEffectGeneration) {
           if (typeof window !== 'undefined' && redirectFromSessionResume(safeFallback)) {
             return
           }
@@ -226,6 +248,7 @@ export default function LineInquiryBridgePage() {
 
     return () => {
       cancelled = true
+      inquiryBridgeEffectGeneration += 1
     }
   }, [safeFallback])
 
