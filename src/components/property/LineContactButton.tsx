@@ -39,6 +39,13 @@ interface LineContactButtonProps {
   }
   className?: string
   variant?: 'full' | 'icon'
+  /**
+   * false のときエージェントが非表示にした扱い。ボタンを出さない（比較表などでは「—」）。
+   * 未設定は true（従来どおり）。
+   */
+  showAgentLineInquiry?: boolean
+  /** showAgentLineInquiry が false のとき、プレースホルダーではなく何も描画しない */
+  renderNothingWhenHidden?: boolean
   /** false のとき LINE 遷移せずログイン誘導 */
   isLoggedIn?: boolean
   onRequireAuth?: () => void
@@ -83,6 +90,8 @@ export default function LineContactButton({
   dict,
   className = '',
   variant = 'full',
+  showAgentLineInquiry = true,
+  renderNothingWhenHidden = false,
   isLoggedIn = true,
   onRequireAuth,
   viewerLineContact = null,
@@ -102,7 +111,7 @@ export default function LineContactButton({
     return `${body}\n\n${detailUrl}`
   }, [rawMsg, property.title, detailUrl])
 
-  const agentLine = (property.agentLineContact ?? '').trim()
+  const agentLine = showAgentLineInquiry ? (property.agentLineContact ?? '').trim() : ''
   const entry = useMemo(
     () => buildLineInquiryEntryUrl(agentLine || null, inquiryMessage),
     [agentLine, inquiryMessage]
@@ -268,6 +277,13 @@ export default function LineContactButton({
           document.body
         )
       : null
+
+  if (!showAgentLineInquiry) {
+    if (renderNothingWhenHidden) return null
+    return (
+      <span className={`text-slate-400 text-sm font-medium ${className}`}>—</span>
+    )
+  }
 
   if (!entry) {
     return (

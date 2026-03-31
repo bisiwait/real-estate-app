@@ -120,7 +120,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 if (initialProperty?.user_id) {
                     const { data: aData } = await supabase
                         .from('profiles')
-                        .select('phone, full_name, line_id')
+                        .select('phone, full_name, line_id, show_phone_in_inquiry, show_line_in_inquiry')
                         .eq('id', initialProperty.user_id)
                         .maybeSingle()
                     setAgent(aData)
@@ -246,6 +246,9 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     }
 
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
+    const showAgentPhoneInquiry = agent?.show_phone_in_inquiry !== false
+    const showAgentLineInquiry = agent?.show_line_in_inquiry !== false
+    const stickyPhone = showAgentPhoneInquiry ? agent?.phone : undefined
     const translateTag = (tag: string) => (dict.property?.tags as any)?.[tag] || tag;
     const translateArea = (areaName: string) => (dict.property?.db_locations as any)?.[areaName] || areaName;
 
@@ -353,18 +356,20 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                     <div className="lg:col-span-4 space-y-6">
                         <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
-                            <LineContactButton
-                                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id, agentLineContact: agent?.line_id ?? null }}
-                                variant="full"
-                                dict={dict}
-                                isLoggedIn={!!user}
-                                onRequireAuth={() => setContactAuthOpen(true)}
-                                viewerLineContact={profile?.line_id ?? null}
-                                viewerLineGateReady={viewerLineGateReady}
-                                onRequireViewerLine={() => setLineViewerModalOpen(true)}
-                            />
+                            {showAgentLineInquiry ? (
+                                <LineContactButton
+                                    property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id, agentLineContact: agent?.line_id ?? null }}
+                                    variant="full"
+                                    dict={dict}
+                                    isLoggedIn={!!user}
+                                    onRequireAuth={() => setContactAuthOpen(true)}
+                                    viewerLineContact={profile?.line_id ?? null}
+                                    viewerLineGateReady={viewerLineGateReady}
+                                    onRequireViewerLine={() => setLineViewerModalOpen(true)}
+                                />
+                            ) : null}
 
-                            <div className="mt-8 border-t border-slate-100 pt-8">
+                            <div className={showAgentLineInquiry ? 'mt-8 border-t border-slate-100 pt-8' : ''}>
                                 <InquiryForm
                                     propertyId={id}
                                     propertyName={displayTitle}
@@ -386,7 +391,8 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
             </div>
             <StickyContactBar
                 property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id, agentLineContact: agent?.line_id ?? null }}
-                phoneNumber={agent?.phone}
+                phoneNumber={stickyPhone}
+                showLineInquiry={showAgentLineInquiry}
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}

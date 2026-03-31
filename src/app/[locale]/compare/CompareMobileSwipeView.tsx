@@ -479,6 +479,7 @@ function PropertySwipeColumn({
                         }}
                         variant="full"
                         className="w-full !py-3 !text-sm"
+                        showAgentLineInquiry={p.agent_show_line_in_inquiry !== false}
                         property={{
                             id: p.id,
                             title,

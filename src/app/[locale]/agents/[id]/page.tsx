@@ -110,8 +110,20 @@ export default function AgentProfilePage() {
                         <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 sticky top-28">
                             <h3 className="text-sm font-normal text-navy-secondary mb-6">このエージェントに連絡する</h3>
                             <div className="space-y-4">
-                                <ContactBtn href="#" label="LINE" icon={MessageCircle} color="emerald" />
-                                <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />
+                                {agent.show_line_in_inquiry !== false && agent.line_id ? (
+                                    <ContactBtn
+                                        href={(() => {
+                                            const s = String(agent.line_id).trim()
+                                            return s.startsWith('http') ? s : '#'
+                                        })()}
+                                        label="LINE"
+                                        icon={MessageCircle}
+                                        color="emerald"
+                                    />
+                                ) : null}
+                                {agent.show_phone_in_inquiry !== false && agent.phone ? (
+                                    <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />
+                                ) : null}
                                 <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />
                             </div>
                         </div>

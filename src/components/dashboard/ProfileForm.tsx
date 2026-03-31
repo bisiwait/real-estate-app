@@ -30,6 +30,7 @@ import Image from 'next/image'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
+import Switch from '@/components/ui/Switch'
 
 interface ProfileData {
     full_name: string
@@ -43,6 +44,10 @@ interface ProfileData {
     plan_type: string
     current_period_end: string | null
     auto_renew: boolean
+    /** 物件ページ等で電話ボタンを出すか */
+    show_phone_in_inquiry: boolean
+    /** 物件ページ等でLINEボタンを出すか */
+    show_line_in_inquiry: boolean
 }
 
 export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLineId?: boolean }) {
@@ -60,7 +65,9 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
         avatar_url: '',
         plan_type: 'free',
         current_period_end: null,
-        auto_renew: true
+        auto_renew: true,
+        show_phone_in_inquiry: true,
+        show_line_in_inquiry: true,
     })
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
@@ -98,7 +105,9 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                     avatar_url: data.avatar_url || '',
                     plan_type: data.plan_type || 'free',
                     current_period_end: data.current_period_end || null,
-                    auto_renew: data.auto_renew ?? true
+                    auto_renew: data.auto_renew ?? true,
+                    show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
+                    show_line_in_inquiry: data.show_line_in_inquiry !== false,
                 })
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
@@ -227,6 +236,8 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                     website: formData.website,
                     line_id: formData.line_id,
                     avatar_url: finalAvatarUrl,
+                    show_phone_in_inquiry: formData.show_phone_in_inquiry,
+                    show_line_in_inquiry: formData.show_line_in_inquiry,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id)
@@ -494,6 +505,11 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                 <Mail className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             </div>
                             <p className="text-[10px] text-slate-400 mt-1 ml-1">※ログイン用メールアドレスです。変更はできません。</p>
+                            <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2.5">
+                                <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
+                                <Switch checked onCheckedChange={() => {}} disabled />
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1.5 ml-1">メールフォームからのお問い合わせは常に受け付けます（ON固定）。</p>
                         </div>
 
                         <div>
@@ -507,6 +523,15 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                     placeholder="090-0000-0000"
                                 />
                                 <Phone className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            </div>
+                            <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-3 py-2.5">
+                                <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
+                                <Switch
+                                    checked={formData.show_phone_in_inquiry}
+                                    onCheckedChange={(v) =>
+                                        setFormData({ ...formData, show_phone_in_inquiry: v })
+                                    }
+                                />
                             </div>
                         </div>
 
@@ -547,6 +572,15 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                     placeholder="line_id_123"
                                 />
                                 <MessageSquare className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            </div>
+                            <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-3 py-2.5">
+                                <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
+                                <Switch
+                                    checked={formData.show_line_in_inquiry}
+                                    onCheckedChange={(v) =>
+                                        setFormData({ ...formData, show_line_in_inquiry: v })
+                                    }
+                                />
                             </div>
                         </div>
                     </div>

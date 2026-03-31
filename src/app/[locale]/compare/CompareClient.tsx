@@ -235,13 +235,22 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
             if (ownerIds.length > 0) {
                 const { data: profs } = await supabase
                     .from("profiles")
-                    .select("id, line_id")
+                    .select("id, line_id, show_line_in_inquiry")
                     .in("id", ownerIds);
-                const lineByUser = new Map((profs ?? []).map((row) => [row.id, row.line_id as string | null]));
-                withLine = sorted.map((p) => ({
-                    ...p,
-                    agent_line_id: p.user_id ? lineByUser.get(p.user_id) ?? null : null,
-                }));
+                const profByUser = new Map(
+                    (profs ?? []).map((row: { id: string; line_id: string | null; show_line_in_inquiry?: boolean | null }) => [
+                        row.id,
+                        row,
+                    ])
+                );
+                withLine = sorted.map((p) => {
+                    const prof = p.user_id ? profByUser.get(p.user_id) : undefined;
+                    return {
+                        ...p,
+                        agent_line_id: prof?.line_id ?? null,
+                        agent_show_line_in_inquiry: prof?.show_line_in_inquiry !== false,
+                    };
+                });
             }
 
             setProperties(withLine);
@@ -575,6 +584,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                                         }}
                                                         variant="full"
                                                         className="w-full !py-3 !text-sm"
+                                                        showAgentLineInquiry={p.agent_show_line_in_inquiry !== false}
                                                         property={{
                                                             id: p.id,
                                                             title: getTitle(p, locale),
