@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
-import { MessageCircle, X, Copy, Loader2 } from 'lucide-react'
+import { MessageCircle, X, Copy, Loader2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { buildLineInquiryEntryUrl, hasUsableLineContact } from '@/lib/line-contact-url'
 
@@ -102,6 +102,12 @@ export default function LineContactButton({
   const locale = (params?.locale as string) || 'jp'
   const pr = dict.property ?? {}
   const [modalOpen, setModalOpen] = useState(false)
+  const [officialOpen, setOfficialOpen] = useState(false)
+  const [officialData, setOfficialData] = useState<{
+    nonce: string
+    add_friend_url: string
+    expires_in_hours: number
+  } | null>(null)
 
   const rawMsg = pr.inquiry_default_message ?? ''
   const detailUrl = buildPropertyDetailUrl(property, locale)
@@ -124,9 +130,12 @@ export default function LineContactButton({
     : ''
 
   useEffect(() => {
-    if (!modalOpen) return
+    if (!modalOpen && !officialOpen) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setModalOpen(false)
+      if (e.key === 'Escape') {
+        setModalOpen(false)
+        setOfficialOpen(false)
+      }
     }
     document.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
@@ -135,9 +144,14 @@ export default function LineContactButton({
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
     }
-  }, [modalOpen])
+  }, [modalOpen, officialOpen])
 
-  const logInquiry = useCallback(async () => {
+  type LogInquiryResult =
+    | { kind: 'official'; data: { nonce: string; add_friend_url: string; expires_in_hours: number } }
+    | { kind: 'ok' }
+    | { kind: 'blocked' }
+
+  const logInquiry = useCallback(async (): Promise<LogInquiryResult> => {
     try {
       const res = await fetch('/api/inquiry-logs/line', {
         method: 'POST',
@@ -145,22 +159,50 @@ export default function LineContactButton({
         credentials: 'same-origin',
         body: JSON.stringify({ property_id: property.id }),
       })
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as {
-          error?: string
-          code?: string
-        }
-        console.error('inquiry_logs API failed', res.status, j)
-        if (res.status === 400 && j.code === 'LINE_CONTACT_REQUIRED') {
-          toast.error(
-            pr.line_viewer_required_toast ??
-              'プロフィールにLINE連絡先を登録してください。'
-          )
-          onRequireViewerLine?.()
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string
+        code?: string
+        official_routing?: {
+          nonce?: string
+          add_friend_url?: string
+          expires_in_hours?: number
         }
       }
+      if (res.status === 400 && j.code === 'LINE_CONTACT_REQUIRED') {
+        toast.error(
+          pr.line_viewer_required_toast ??
+            'プロフィールにLINE連絡先を登録してください。'
+        )
+        onRequireViewerLine?.()
+        return { kind: 'blocked' }
+      }
+      if (!res.ok) {
+        console.error('inquiry_logs API failed', res.status, j)
+        toast.error(
+          typeof j.error === 'string' ? j.error : 'ログの記録に失敗しました。'
+        )
+        return { kind: 'blocked' }
+      }
+      const or = j.official_routing
+      if (
+        or &&
+        typeof or.nonce === 'string' &&
+        typeof or.add_friend_url === 'string'
+      ) {
+        return {
+          kind: 'official',
+          data: {
+            nonce: or.nonce,
+            add_friend_url: or.add_friend_url,
+            expires_in_hours: typeof or.expires_in_hours === 'number' ? or.expires_in_hours : 72,
+          },
+        }
+      }
+      return { kind: 'ok' }
     } catch (e) {
       console.error('Failed to log line inquiry', e)
+      toast.error('通信に失敗しました。')
+      return { kind: 'blocked' }
     }
   }, [property.id, pr.line_viewer_required_toast, onRequireViewerLine])
 
@@ -180,13 +222,21 @@ export default function LineContactButton({
       return
     }
     if (!viewerLineGateReady) return
+    if (!entry) return
+
+    const logged = await logInquiry()
+    if (logged.kind === 'blocked') return
+
+    if (logged.kind === 'official') {
+      setOfficialData(logged.data)
+      setOfficialOpen(true)
+      return
+    }
+
     if (!hasUsableLineContact(viewerLineContact)) {
       onRequireViewerLine?.()
       return
     }
-    if (!entry) return
-
-    await logInquiry()
 
     if (shouldShowLineQrModal()) {
       setModalOpen(true)
@@ -195,6 +245,16 @@ export default function LineContactButton({
 
     window.location.href = lineOpenUrl
   }
+
+  const copyOfficialNonce = useCallback(async () => {
+    if (!officialData?.nonce) return
+    try {
+      await navigator.clipboard.writeText(officialData.nonce)
+      toast.success(pr.line_official_copy_nonce_ok ?? pr.line_copy_inquiry_success ?? 'コピーしました')
+    } catch {
+      toast.error(pr.line_copy_inquiry_fail ?? 'コピーに失敗しました')
+    }
+  }, [officialData, pr.line_copy_inquiry_fail, pr.line_copy_inquiry_success, pr.line_official_copy_nonce_ok])
 
   const baseClasses =
     variant === 'icon'
@@ -278,6 +338,105 @@ export default function LineContactButton({
         )
       : null
 
+  const officialModal =
+    officialOpen && officialData && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="line-official-modal-title"
+          >
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+              aria-label={pr.line_modal_close_aria ?? 'Close'}
+              onClick={() => {
+                setOfficialOpen(false)
+                setOfficialData(null)
+              }}
+            />
+            <div className="relative z-10 w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xl md:max-w-md">
+              <button
+                type="button"
+                onClick={() => {
+                  setOfficialOpen(false)
+                  setOfficialData(null)
+                }}
+                className="absolute right-3 top-3 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                aria-label={pr.line_modal_close_aria ?? 'Close'}
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h2
+                id="line-official-modal-title"
+                className="pr-10 text-center text-lg font-semibold tracking-tight text-slate-900"
+              >
+                {pr.line_official_modal_title ?? '公式LINEでお問い合わせ'}
+              </h2>
+              <ol className="mt-5 space-y-4 text-sm leading-relaxed text-slate-600">
+                <li className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755]/15 text-xs font-black text-[#025c2c">
+                    1
+                  </span>
+                  <div>
+                    <p className="font-bold text-slate-800">
+                      {pr.line_official_step_add_friend ?? '公式LINEを友だち追加'}
+                    </p>
+                    <a
+                      href={officialData.add_friend_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-[#06C755]/40 bg-[#06C755]/5 px-4 py-2.5 text-sm font-bold text-[#025c2c] transition hover:bg-[#06C755]/10"
+                    >
+                      <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+                      {pr.line_official_open_line ?? 'LINEを開く'}
+                    </a>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755]/15 text-xs font-black text-[#025c2c">
+                    2
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-800">
+                      {pr.line_official_step_send_code ?? 'トークに次のコードを送信'}
+                    </p>
+                    <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        {pr.line_official_nonce_label ?? 'お問い合わせコード'}
+                      </p>
+                      <p className="mt-1 font-mono text-xl font-black tracking-widest text-slate-900">
+                        {officialData.nonce}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void copyOfficialNonce()}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <Copy className="h-4 w-4 shrink-0" aria-hidden />
+                      {pr.line_official_copy_nonce ?? 'コードをコピー'}
+                    </button>
+                  </div>
+                </li>
+              </ol>
+              <p className="mt-4 text-center text-xs text-slate-400">
+                {(pr.line_official_expires_note ?? 'このコードの有効期限: {hours}時間').replace(
+                  '{hours}',
+                  String(officialData.expires_in_hours)
+                )}
+              </p>
+              <p className="mt-2 text-center text-[11px] leading-relaxed text-slate-500">
+                {pr.line_official_footer_note ??
+                  '担当エージェントへ内容が連携されます。メッセージは公式LINEのトークで行われます。'}
+              </p>
+            </div>
+          </div>,
+          document.body
+        )
+      : null
+
   if (!showAgentLineInquiry) {
     if (renderNothingWhenHidden) return null
     return (
@@ -317,15 +476,7 @@ export default function LineContactButton({
       <button
         type="button"
         disabled={waitingProfile}
-        title={
-          waitingProfile
-            ? (pr.line_viewer_gate_loading_hint ?? '')
-            : isLoggedIn &&
-                viewerLineGateReady &&
-                !hasUsableLineContact(viewerLineContact)
-              ? (pr.line_viewer_required_title ?? '')
-              : undefined
-        }
+        title={waitingProfile ? (pr.line_viewer_gate_loading_hint ?? '') : undefined}
         onClick={() => void handleLineContact()}
         className={`${baseClasses} ${className} ${waitingProfile ? disabledClasses : ''}`}
       >
@@ -350,6 +501,7 @@ export default function LineContactButton({
         </span>
       </button>
       {modal}
+      {officialModal}
     </>
   )
 }

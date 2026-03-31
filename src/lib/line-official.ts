@@ -1,6 +1,11 @@
 /**
  * サイト共通の公式 LINE（友だち追加）URL。
  * 物件問い合わせ後のサンクス等で使用。Vercel では NEXT_PUBLIC_* を設定。
+ *
+ * 公式LINEルーティング（Messaging API）を有効にする場合:
+ * - `LINE_OFFICIAL_CHANNEL_SECRET` と `LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN` を設定
+ * - Webhook URL: `/api/webhooks/line-official`
+ * - ここで返す友だち追加URLは、上記トークンと同一の LINE Official Account と一致させること
  */
 const DEFAULT_OFFICIAL_LINE_ID = '@164exdsf'
 

@@ -509,7 +509,16 @@
         "line_viewer_required_bullet": "After saving, return here and tap LINE inquiry again.",
         "line_viewer_required_cta": "Add LINE contact in profile",
         "line_viewer_required_toast": "Please add your LINE contact in your profile first.",
-        "line_viewer_gate_loading_hint": "Checking your profile…"
+        "line_viewer_gate_loading_hint": "Checking your profile…",
+        "line_official_modal_title": "Contact via official LINE",
+        "line_official_step_add_friend": "Add our official LINE account",
+        "line_official_step_send_code": "Send this code in the chat",
+        "line_official_nonce_label": "Inquiry code",
+        "line_official_open_line": "Open LINE",
+        "line_official_copy_nonce": "Copy code",
+        "line_official_copy_nonce_ok": "Code copied",
+        "line_official_expires_note": "This code expires in {hours} hours",
+        "line_official_footer_note": "Your request is linked to the listing agent. Messages go through the official LINE chat."
     },
     "compare": {
         "title": "Compare properties",

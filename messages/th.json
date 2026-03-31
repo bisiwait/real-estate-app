@@ -508,7 +508,16 @@
         "line_viewer_required_bullet": "บันทึกแล้ว กลับมาที่หน้านี้แล้วแตะ LINE อีกครั้ง",
         "line_viewer_required_cta": "ไปลงทะเบียน LINE ในโปรไฟล์",
         "line_viewer_required_toast": "กรุณาเพิ่ม LINE ในโปรไฟล์ก่อน",
-        "line_viewer_gate_loading_hint": "กำลังตรวจสอบโปรไฟล์…"
+        "line_viewer_gate_loading_hint": "กำลังตรวจสอบโปรไฟล์…",
+        "line_official_modal_title": "ติดต่อผ่าน LINE ทางการ",
+        "line_official_step_add_friend": "เพิ่มเพื่อน LINE ทางการ",
+        "line_official_step_send_code": "ส่งรหัสนี้ในแชท",
+        "line_official_nonce_label": "รหัสสอบถาม",
+        "line_official_open_line": "เปิด LINE",
+        "line_official_copy_nonce": "คัดลอกรหัส",
+        "line_official_copy_nonce_ok": "คัดลอกรหัสแล้ว",
+        "line_official_expires_note": "รหัสนี้หมดอายุใน {hours} ชั่วโมง",
+        "line_official_footer_note": "ระบบเชื่อมกับเอเจนต์ของประกาศ การสนทนาผ่าน LINE ทางการ"
     },
     "compare": {
         "title": "เปรียบเทียบอสังหาริมทรัพย์",

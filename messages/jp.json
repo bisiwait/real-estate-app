@@ -535,7 +535,16 @@
         "line_viewer_required_bullet": "登録後、このページに戻って再度お試しください。",
         "line_viewer_required_cta": "プロフィールでLINE連絡先を登録",
         "line_viewer_required_toast": "先にプロフィールにLINE連絡先を登録してください。",
-        "line_viewer_gate_loading_hint": "プロフィールを確認しています…"
+        "line_viewer_gate_loading_hint": "プロフィールを確認しています…",
+        "line_official_modal_title": "公式LINEでお問い合わせ",
+        "line_official_step_add_friend": "公式LINEを友だち追加",
+        "line_official_step_send_code": "トークに次のコードを送信してください",
+        "line_official_nonce_label": "お問い合わせコード",
+        "line_official_open_line": "LINEを開く",
+        "line_official_copy_nonce": "コードをコピー",
+        "line_official_copy_nonce_ok": "コードをコピーしました",
+        "line_official_expires_note": "このコードの有効期限: {hours}時間",
+        "line_official_footer_note": "担当エージェントへ内容が連携されます。やり取りは公式LINEのトークで行われます。"
     },
     "compare": {
         "title": "物件比較",

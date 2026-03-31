@@ -1,11 +1,30 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { hasUsableLineContact } from '@/lib/line-contact-url'
+import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+const INTENT_TTL_HOURS = 72
+
+function isOfficialLineRoutingEnabled(): boolean {
+  return Boolean(
+    process.env.LINE_OFFICIAL_CHANNEL_SECRET?.trim() &&
+      process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+  )
+}
+
+function generateIntentNonce(): string {
+  return randomBytes(5).toString('hex').toUpperCase()
+}
+
+function isUniqueViolation(err: { code?: string; message?: string }): boolean {
+  return err.code === '23505' || (err.message ?? '').toLowerCase().includes('duplicate')
+}
 
 export async function POST(req: Request) {
   try {
@@ -36,6 +55,7 @@ export async function POST(req: Request) {
     }
 
     const admin = await createAdminClient()
+    const officialOn = isOfficialLineRoutingEnabled()
 
     const { data: prop, error: propErr } = await admin
       .from('properties')
@@ -59,7 +79,8 @@ export async function POST(req: Request) {
     if (!viewerProf) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
     }
-    if (!hasUsableLineContact(viewerProf.line_id)) {
+
+    if (!officialOn && !hasUsableLineContact(viewerProf.line_id)) {
       return NextResponse.json(
         {
           error: 'LINE contact required',
@@ -69,20 +90,72 @@ export async function POST(req: Request) {
       )
     }
 
-    const { error: insErr } = await admin.from('inquiry_logs').insert({
-      property_id,
-      user_id: user.id,
-      agent_id: prop.user_id,
-      inquiry_type: 'line',
-      status: 'pending',
-    })
+    const { data: inserted, error: insErr } = await admin
+      .from('inquiry_logs')
+      .insert({
+        property_id,
+        user_id: user.id,
+        agent_id: prop.user_id,
+        inquiry_type: 'line',
+        status: 'pending',
+        metadata: officialOn
+          ? { line_contact_mode: 'official_routing_pending' }
+          : { line_contact_mode: 'direct_agent' },
+      })
+      .select('id')
+      .single()
 
-    if (insErr) {
+    if (insErr || !inserted?.id) {
       console.error('inquiry-logs/line: insert', insErr)
       return NextResponse.json({ error: 'Insert failed' }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true })
+    if (!officialOn) {
+      return NextResponse.json({ ok: true })
+    }
+
+    const expiresAt = new Date(
+      Date.now() + INTENT_TTL_HOURS * 3600 * 1000
+    ).toISOString()
+
+    let nonce = generateIntentNonce()
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const { error: intErr } = await admin.from('line_official_inquiry_intents').insert({
+        nonce,
+        inquiry_log_id: inserted.id,
+        property_id,
+        viewer_user_id: user.id,
+        agent_id: prop.user_id,
+        expires_at: expiresAt,
+        status: 'pending',
+        metadata: {},
+      })
+
+      if (!intErr) {
+        return NextResponse.json({
+          ok: true,
+          official_routing: {
+            nonce,
+            add_friend_url: getOfficialLineAddFriendUrl(),
+            expires_in_hours: INTENT_TTL_HOURS,
+          },
+        })
+      }
+
+      if (isUniqueViolation(intErr)) {
+        nonce = generateIntentNonce()
+        continue
+      }
+
+      console.error('inquiry-logs/line: intent insert', intErr)
+      break
+    }
+
+    await admin.from('inquiry_logs').delete().eq('id', inserted.id)
+    return NextResponse.json(
+      { error: '公式LINE用の問い合わせ番号を発行できませんでした。しばらくしてから再度お試しください。' },
+      { status: 500 }
+    )
   } catch (e) {
     console.error('inquiry-logs/line', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
