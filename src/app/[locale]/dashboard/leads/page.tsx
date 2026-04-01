@@ -24,12 +24,6 @@ export default async function AgentLeadsPage({
         console.error('Error fetching leads:', error)
     }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('line_id')
-        .eq('id', user.id)
-        .single()
-
     return (
         <div className="min-h-screen space-y-8 bg-slate-50 p-4 md:p-8">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
@@ -61,11 +55,7 @@ export default async function AgentLeadsPage({
                 </div>
             ) : null}
             <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
-                <LeadsView
-                    initialLeads={leads}
-                    locale={locale}
-                    agentLineId={profile?.line_id ?? null}
-                />
+                <LeadsView initialLeads={leads} locale={locale} />
             </div>
         </div>
     )

@@ -10,7 +10,6 @@ import {
     Phone,
     Mail,
     Globe,
-    MessageSquare,
     Info,
     Camera,
     X,
@@ -21,7 +20,6 @@ import {
     RefreshCw,
     Crown,
     Check,
-    CircleHelp,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -30,7 +28,6 @@ import Image from 'next/image'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
-import Switch from '@/components/ui/Switch'
 
 interface ProfileData {
     full_name: string
@@ -38,19 +35,14 @@ interface ProfileData {
     phone: string
     bio: string
     website: string
-    line_id: string
     email: string
     avatar_url: string
     plan_type: string
     current_period_end: string | null
     auto_renew: boolean
-    /** 物件ページ等で電話ボタンを出すか */
-    show_phone_in_inquiry: boolean
-    /** 物件ページ等でLINEボタンを出すか */
-    show_line_in_inquiry: boolean
 }
 
-export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLineId?: boolean }) {
+export default function ProfileForm() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [updatingSubscription, setUpdatingSubscription] = useState(false)
@@ -60,21 +52,17 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
         phone: '',
         bio: '',
         website: '',
-        line_id: '',
         email: '',
         avatar_url: '',
         plan_type: 'free',
         current_period_end: null,
         auto_renew: true,
-        show_phone_in_inquiry: true,
-        show_line_in_inquiry: true,
     })
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const lineIdInputRef = useRef<HTMLInputElement>(null)
     const router = useRouter()
     const params = useParams()
     const locale = params.locale as string
@@ -100,16 +88,11 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                     phone: data.phone || '',
                     bio: data.bio || '',
                     website: data.website || '',
-                    line_id: data.line_id || '',
                     email: user.email || '',
                     avatar_url: data.avatar_url || '',
                     plan_type: data.plan_type || 'free',
                     current_period_end: data.current_period_end || null,
                     auto_renew: data.auto_renew ?? true,
-                    show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
-                    show_line_in_inquiry:
-                        String(data.line_id || '').trim().length > 0 &&
-                        data.show_line_in_inquiry !== false,
                 })
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
@@ -120,17 +103,6 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
 
         fetchProfile()
     }, [])
-
-    useEffect(() => {
-        if (!autoFocusLineId || loading) return
-        const t = window.setTimeout(() => {
-            const el = lineIdInputRef.current
-            if (!el) return
-            el.focus()
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }, 50)
-        return () => window.clearTimeout(t)
-    }, [autoFocusLineId, loading])
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -227,11 +199,7 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                 finalAvatarUrl = await uploadAvatar(user.id)
             }
 
-            const lineIdTrimmed = formData.line_id.trim()
-            const showLineInInquiry =
-                lineIdTrimmed.length > 0 && formData.show_line_in_inquiry
-
-            // 2. Update profile
+            // 2. Update profile（LINE 連絡先・問い合わせ表示 ON/OFF はダッシュボードでは扱わない）
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -240,20 +208,12 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                     phone: formData.phone,
                     bio: formData.bio,
                     website: formData.website,
-                    line_id: formData.line_id,
                     avatar_url: finalAvatarUrl,
-                    show_phone_in_inquiry: formData.show_phone_in_inquiry,
-                    show_line_in_inquiry: showLineInInquiry,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id)
 
             if (error) throw error
-
-            setFormData((prev) => ({
-                ...prev,
-                show_line_in_inquiry: showLineInInquiry,
-            }))
             setSuccess('プロフィールを更新しました。')
             window.scrollTo({ top: 0, behavior: 'smooth' })
         } catch (err: any) {
@@ -515,11 +475,6 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                 <Mail className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             </div>
                             <p className="text-[10px] text-slate-400 mt-1 ml-1">※ログイン用メールアドレスです。変更はできません。</p>
-                            <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-2.5">
-                                <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
-                                <Switch checked onCheckedChange={() => {}} disabled />
-                            </div>
-                            <p className="text-[10px] text-slate-400 mt-1.5 ml-1">メールフォームからのお問い合わせは常に受け付けます（ON固定）。</p>
                         </div>
 
                         <div>
@@ -533,92 +488,6 @@ export default function ProfileForm({ autoFocusLineId = false }: { autoFocusLine
                                     placeholder="090-0000-0000"
                                 />
                                 <Phone className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                            </div>
-                            <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-3 py-2.5">
-                                <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
-                                <Switch
-                                    checked={formData.show_phone_in_inquiry}
-                                    onCheckedChange={(v) =>
-                                        setFormData({ ...formData, show_phone_in_inquiry: v })
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        <div className="min-w-0">
-                            <div className="group relative mb-2 ml-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                    <label
-                                        htmlFor="profile-line-id"
-                                        className="text-[10px] font-black uppercase tracking-widest text-slate-400"
-                                    >
-                                        LINE ID
-                                    </label>
-                                    <button
-                                        type="button"
-                                        className="shrink-0 rounded-full p-0.5 text-slate-400 transition-colors hover:text-navy-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-primary/35"
-                                        aria-label="LINE ID の登録について"
-                                        aria-describedby="profile-line-id-tooltip"
-                                    >
-                                        <CircleHelp className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-                                    </button>
-                                </div>
-                                <div
-                                    id="profile-line-id-tooltip"
-                                    role="tooltip"
-                                    className="pointer-events-none invisible absolute left-0 right-0 top-full z-[60] mt-2 box-border w-full max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-[11px] font-bold leading-relaxed text-slate-700 shadow-xl opacity-0 transition-[opacity,visibility] duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 sm:right-auto sm:mt-1.5 sm:w-64 sm:max-w-sm"
-                                >
-                                    掲載した物件のお客様からの問い合わせをLINEで受けるにはLINE IDの登録をしてください。
-                                </div>
-                            </div>
-                            <div className="relative">
-                                <input
-                                    ref={lineIdInputRef}
-                                    id="profile-line-id"
-                                    type="text"
-                                    value={formData.line_id}
-                                    onChange={(e) => {
-                                        const next = e.target.value
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            line_id: next,
-                                            show_line_in_inquiry:
-                                                next.trim().length > 0
-                                                    ? prev.show_line_in_inquiry
-                                                    : false,
-                                        }))
-                                    }}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all pl-10"
-                                    placeholder="line_id_123"
-                                />
-                                <MessageSquare className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                            </div>
-                            <div
-                                className={`mt-3 flex items-center justify-between gap-4 rounded-xl border px-3 py-2.5 ${
-                                    formData.line_id.trim()
-                                        ? 'border-slate-100 bg-white'
-                                        : 'border-slate-100 bg-slate-50/80'
-                                }`}
-                            >
-                                <div className="min-w-0">
-                                    <span className="text-xs font-bold text-slate-600">問い合わせに表示</span>
-                                    {!formData.line_id.trim() ? (
-                                        <p className="text-[10px] text-slate-400 mt-0.5">
-                                            LINE ID を入力するとオンにできます
-                                        </p>
-                                    ) : null}
-                                </div>
-                                <Switch
-                                    checked={
-                                        formData.line_id.trim().length > 0 &&
-                                        formData.show_line_in_inquiry
-                                    }
-                                    onCheckedChange={(v) => {
-                                        if (!formData.line_id.trim()) return
-                                        setFormData({ ...formData, show_line_in_inquiry: v })
-                                    }}
-                                    disabled={!formData.line_id.trim()}
-                                />
                             </div>
                         </div>
                     </div>

@@ -3,22 +3,13 @@ import { redirect } from 'next/navigation'
 import { Settings, UserCircle } from 'lucide-react'
 import ProfileForm from '@/components/dashboard/ProfileForm'
 
-export default async function SettingsPage({
-    searchParams,
-}: {
-    searchParams: Promise<Record<string, string | string[] | undefined>>
-}) {
+export default async function SettingsPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
         redirect('/login')
     }
-
-    const sp = await searchParams
-    const focusRaw = sp.focus
-    const focus = Array.isArray(focusRaw) ? focusRaw[0] : focusRaw
-    const autoFocusLineId = focus === 'line_id'
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
@@ -53,7 +44,7 @@ export default async function SettingsPage({
                                 </div>
                             </div>
 
-                            <ProfileForm autoFocusLineId={autoFocusLineId} />
+                            <ProfileForm />
                         </div>
                     </div>
 
@@ -69,7 +60,7 @@ export default async function SettingsPage({
                                 は、物件一覧・比較画面など、サイト内の<strong className="font-black">表形式で表示される画面</strong>
                                 にも掲載される場合があります。公開して問題ない番号をご登録ください。
                             </span>
-                            電話番号やLINE IDを正確に入力することで、お客様とのコンタクトがスムーズになります。
+                            LINE でのやり取りは公式アカウント（Chonburi Home）経由です。個人の LINE ID の登録は不要です。
                         </p>
                     </div>
                 </div>

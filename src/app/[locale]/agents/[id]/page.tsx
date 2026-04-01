@@ -121,7 +121,7 @@ export default function AgentProfilePage() {
                                         color="emerald"
                                     />
                                 ) : null}
-                                {agent.show_phone_in_inquiry !== false && agent.phone ? (
+                                {agent.phone ? (
                                     <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />
                                 ) : null}
                                 <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />
