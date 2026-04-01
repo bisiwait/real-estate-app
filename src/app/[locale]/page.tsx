@@ -97,7 +97,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             title={dict.home.sale_title}
             subtitle={dict.home.sale_subtitle}
             action={
-              <Link href={`/${locale}/properties?type=buy`} className="text-navy-primary font-bold hover:text-navy-secondary flex items-center group text-sm">
+              <Link href={`/${locale}/properties?type=sell`} className="text-navy-primary font-bold hover:text-navy-secondary flex items-center group text-sm">
                 {dict.home.sale_all}
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </Link>

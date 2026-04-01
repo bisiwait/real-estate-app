@@ -33,6 +33,15 @@ type FilterDraft = {
     pets: boolean
 }
 
+/** トップヒーロー等は type=buy、一覧タブは sell で統一（大文字小文字も正規化） */
+function normalizeListingTypeFromUrl(raw: string | null): string {
+    const t = (raw || '').trim().toLowerCase()
+    if (!t || t === 'all') return 'all'
+    if (t === 'buy') return 'sell'
+    if (t === 'rent' || t === 'sell' || t === 'presale') return t
+    return (raw || '').trim()
+}
+
 function draftFromSearchParams(sp: URLSearchParams): FilterDraft {
     const tags = sp.get('tags')?.split(',').filter(Boolean) || []
     return {
@@ -41,7 +50,7 @@ function draftFromSearchParams(sp: URLSearchParams): FilterDraft {
         property_type: sp.get('property_type') || '',
         price: sp.get('price') || '',
         tags,
-        type: sp.get('type') || 'all',
+        type: normalizeListingTypeFromUrl(sp.get('type')),
         bathtub: sp.get('bathtub') === 'true',
         pets: sp.get('pets') === 'true',
     }

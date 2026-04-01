@@ -136,7 +136,7 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                         </div>
                         <div className="flex-[0.8] flex items-end">
                             <Link
-                                href={`/${locale}/properties?type=${activeTab}&region=${activeArea === 'pattaya' ? 'Pattaya' : 'Sriracha'}${activePropertyType ? `&property_type=${activePropertyType}` : ''}`}
+                                href={`/${locale}/properties?type=${activeTab === 'buy' ? 'sell' : activeTab}&region=${activeArea === 'pattaya' ? 'Pattaya' : 'Sriracha'}${activePropertyType ? `&property_type=${activePropertyType}` : ''}`}
                                 className="w-full h-[44px] bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 active:translate-y-0"
                             >
                                 <Search className="w-5 h-5 mr-2" />
