@@ -16,6 +16,9 @@ const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
 const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
 
+/** false のとき返信方法 UI を出さず、問い合わせは常にメール希望として保存する */
+const SHOW_INQUIRY_REPLY_CHANNEL = false
+
 /** 画面上で失敗箇所を特定しやすくする（setError に加えて alert） */
 function inquiryDebugAlert(stage: string, message: string) {
   if (typeof window === 'undefined') return
@@ -311,6 +314,10 @@ export default function InquiryForm({
   }, [isLoggedIn, contactPrefill])
 
   useEffect(() => {
+    if (!SHOW_INQUIRY_REPLY_CHANNEL) {
+      setPreferredReplyChannel('email')
+      return
+    }
     if (!isSmartphone) {
       try {
         const pending = readPendingLineInquiry()
@@ -325,6 +332,7 @@ export default function InquiryForm({
 
   /** LINE から liff.line.me 経由で戻ったあと「LINEで受け取る」を復元（スマートフォンのみ） */
   useEffect(() => {
+    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
     if (!isLoggedIn) return
     if (!isSmartphone) {
       try {
@@ -358,6 +366,7 @@ export default function InquiryForm({
   }, [isLoggedIn, propertyId, isSmartphone])
 
   useEffect(() => {
+    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
     if (preferredReplyChannel !== 'line' || !liffId) return
     void import('@line/liff').catch(() => {})
   }, [preferredReplyChannel, liffId])
@@ -367,6 +376,7 @@ export default function InquiryForm({
 
   /** ブリッジから戻ったあと、保存済みの1回目の確定内容で自動送信（ユーザーに2回押させない） */
   useEffect(() => {
+    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
     if (!isSmartphone || !isLoggedIn || !liffId) return
 
     const pending = readPendingLineInquiry()
@@ -582,8 +592,9 @@ export default function InquiryForm({
     setLoading(true)
     setError(null)
 
-    const effectiveChannel: 'email' | 'line' = isSmartphone ? preferredReplyChannel : 'email'
-    if (!isSmartphone && preferredReplyChannel === 'line') {
+    const effectiveChannel: 'email' | 'line' =
+      SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone ? preferredReplyChannel : 'email'
+    if (SHOW_INQUIRY_REPLY_CHANNEL && !isSmartphone && preferredReplyChannel === 'line') {
       setError(
         p.inquiry_line_blocked_desktop ??
           'PC・タブレットでは「LINEで受け取る」はご利用いただけません。メールでの返信のみとなります。'
@@ -827,7 +838,8 @@ export default function InquiryForm({
         </div>
         <h3 className="mb-3 text-lg font-normal text-navy-secondary">{dict.property.inquiry_success_title}</h3>
         <p className="text-sm leading-relaxed text-slate-600">{dict.property.inquiry_success_desc}</p>
-        {preferredReplyChannel === 'email' && officialLineAddFriendUrl ? (
+        {(SHOW_INQUIRY_REPLY_CHANNEL ? preferredReplyChannel === 'email' : true) &&
+        officialLineAddFriendUrl ? (
           <div className="mt-8 rounded-2xl border border-[#06C755]/30 bg-white/90 p-5 shadow-sm">
             <p className="text-sm font-bold text-slate-700">{lineHint}</p>
             <a
@@ -949,94 +961,96 @@ export default function InquiryForm({
               />
             </div>
 
-            <fieldset className="rounded-2xl border border-slate-200 bg-white p-4">
-              <legend className={clsx(fieldLabelClass, 'mb-2 px-1')}>
-                {p.inquiry_reply_channel_heading ?? '返信方法'}
-              </legend>
-              {isSmartphone ? (
-                <>
-                  <p className="mb-3 text-[11px] leading-relaxed text-slate-500">
-                    {p.inquiry_reply_channel_intro_v2 ??
-                      p.inquiry_reply_channel_intro ??
-                      '担当からの返信の受け取り方を選びます。メールアドレスはどちらの場合も記録されます。'}
-                  </p>
-                  <div className="space-y-3">
-                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
-                      <input
-                        type="radio"
-                        name="preferred_reply_channel"
-                        className="mt-1 h-4 w-4 text-navy-primary"
-                        checked={preferredReplyChannel === 'email'}
-                        onChange={() => setPreferredReplyChannel('email')}
-                      />
-                      <span>
-                        <span className="block text-sm font-bold text-navy-secondary">
-                          {p.inquiry_reply_by_email ?? p.inquiry_reply_email_only ?? 'メールで受け取る'}
-                        </span>
-                        <span className="mt-0.5 block text-[11px] text-slate-500">
-                          {p.inquiry_reply_by_email_desc ??
-                            p.inquiry_reply_email_only_desc ??
-                            '返信はメールで受け取ります。'}
-                        </span>
-                      </span>
-                    </label>
-                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
-                      <input
-                        type="radio"
-                        name="preferred_reply_channel"
-                        className="mt-1 h-4 w-4 text-navy-primary"
-                        checked={preferredReplyChannel === 'line'}
-                        onChange={() => setPreferredReplyChannel('line')}
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-bold text-navy-secondary">
-                          {p.inquiry_reply_by_line ?? 'LINEで受け取る'}
-                        </span>
-                        <span className="mt-0.5 block text-[11px] text-slate-500">
-                          {p.inquiry_reply_by_line_desc ??
-                            '確定送信時にLINEログインが開き、公式LINEから返信・通知を受け取ります（友だち追加が必要です）。'}
-                        </span>
-                      </span>
-                    </label>
-                  </div>
-                  {preferredReplyChannel === 'line' ? (
-                    <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
-                      {p.inquiry_line_submit_liff_note ??
-                        'オレンジの「確定」ボタンを押したときに LINE ログインが始まります。ログイン後はもう一度確定を押して送信を完了してください。'}
+            {SHOW_INQUIRY_REPLY_CHANNEL ? (
+              <fieldset className="rounded-2xl border border-slate-200 bg-white p-4">
+                <legend className={clsx(fieldLabelClass, 'mb-2 px-1')}>
+                  {p.inquiry_reply_channel_heading ?? '返信方法'}
+                </legend>
+                {isSmartphone ? (
+                  <>
+                    <p className="mb-3 text-[11px] leading-relaxed text-slate-500">
+                      {p.inquiry_reply_channel_intro_v2 ??
+                        p.inquiry_reply_channel_intro ??
+                        '担当からの返信の受け取り方を選びます。メールアドレスはどちらの場合も記録されます。'}
                     </p>
-                  ) : null}
-                </>
-              ) : (
-                <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-                  <p className="text-[11px] leading-relaxed text-slate-500">
-                    {p.inquiry_reply_channel_intro_desktop ??
-                      p.inquiry_reply_channel_intro_v2 ??
-                      'メールアドレス宛に担当からご返信いたします。'}
-                  </p>
-                  <p className="mt-2 text-sm font-bold text-navy-secondary">
-                    {p.inquiry_reply_desktop_notice ?? '返信はメールにて差し上げます。'}
-                  </p>
-                  {officialLineAddFriendUrl ? (
-                    <div className="mt-4 border-t border-slate-200/80 pt-4">
-                      <p className="text-[10px] leading-relaxed text-slate-500">
-                        {p.inquiry_pc_line_qr_hint ??
-                          'LINEでのやり取りをご希望の方は、スマートフォンで下のQRコードを読み取り、公式アカウントからお問い合わせください。'}
-                      </p>
-                      <div className="mt-3 flex justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element -- 外部QR APIの動的URLのため */}
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=1&data=${encodeURIComponent(officialLineAddFriendUrl)}`}
-                          alt=""
-                          width={120}
-                          height={120}
-                          className="rounded-lg border border-slate-200 bg-white p-1"
+                    <div className="space-y-3">
+                      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
+                        <input
+                          type="radio"
+                          name="preferred_reply_channel"
+                          className="mt-1 h-4 w-4 text-navy-primary"
+                          checked={preferredReplyChannel === 'email'}
+                          onChange={() => setPreferredReplyChannel('email')}
                         />
-                      </div>
+                        <span>
+                          <span className="block text-sm font-bold text-navy-secondary">
+                            {p.inquiry_reply_by_email ?? p.inquiry_reply_email_only ?? 'メールで受け取る'}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] text-slate-500">
+                            {p.inquiry_reply_by_email_desc ??
+                              p.inquiry_reply_email_only_desc ??
+                              '返信はメールで受け取ります。'}
+                          </span>
+                        </span>
+                      </label>
+                      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
+                        <input
+                          type="radio"
+                          name="preferred_reply_channel"
+                          className="mt-1 h-4 w-4 text-navy-primary"
+                          checked={preferredReplyChannel === 'line'}
+                          onChange={() => setPreferredReplyChannel('line')}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-bold text-navy-secondary">
+                            {p.inquiry_reply_by_line ?? 'LINEで受け取る'}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] text-slate-500">
+                            {p.inquiry_reply_by_line_desc ??
+                              '確定送信時にLINEログインが開き、公式LINEから返信・通知を受け取ります（友だち追加が必要です）。'}
+                          </span>
+                        </span>
+                      </label>
                     </div>
-                  ) : null}
-                </div>
-              )}
-            </fieldset>
+                    {preferredReplyChannel === 'line' ? (
+                      <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
+                        {p.inquiry_line_submit_liff_note ??
+                          'オレンジの「確定」ボタンを押したときに LINE ログインが始まります。ログイン後はもう一度確定を押して送信を完了してください。'}
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+                    <p className="text-[11px] leading-relaxed text-slate-500">
+                      {p.inquiry_reply_channel_intro_desktop ??
+                        p.inquiry_reply_channel_intro_v2 ??
+                        'メールアドレス宛に担当からご返信いたします。'}
+                    </p>
+                    <p className="mt-2 text-sm font-bold text-navy-secondary">
+                      {p.inquiry_reply_desktop_notice ?? '返信はメールにて差し上げます。'}
+                    </p>
+                    {officialLineAddFriendUrl ? (
+                      <div className="mt-4 border-t border-slate-200/80 pt-4">
+                        <p className="text-[10px] leading-relaxed text-slate-500">
+                          {p.inquiry_pc_line_qr_hint ??
+                            'LINEでのやり取りをご希望の方は、スマートフォンで下のQRコードを読み取り、公式アカウントからお問い合わせください。'}
+                        </p>
+                        <div className="mt-3 flex justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element -- 外部QR APIの動的URLのため */}
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=1&data=${encodeURIComponent(officialLineAddFriendUrl)}`}
+                            alt=""
+                            width={120}
+                            height={120}
+                            className="rounded-lg border border-slate-200 bg-white p-1"
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </fieldset>
+            ) : null}
 
             {error && (
               <div className="whitespace-pre-line px-1 text-xs font-normal text-red-500">{error}</div>
