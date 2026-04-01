@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient as createBaseClient, type User } from '@supabase/supabase-js'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { sendInquirerConfirmationEmail } from '@/lib/inquiry-inquirer-confirmation-email'
 
@@ -9,6 +10,26 @@ function normEmail(s: string | null | undefined): string {
   return (s ?? '').trim().toLowerCase()
 }
 
+async function getAuthenticatedUser(req: NextRequest): Promise<User | null> {
+  const m = req.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)
+  if (m?.[1]) {
+    const sb = createBaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const {
+      data: { user },
+      error,
+    } = await sb.auth.getUser(m[1])
+    if (!error && user?.id) return user
+  }
+  const supabaseAuth = await createClient()
+  const {
+    data: { user },
+  } = await supabaseAuth.auth.getUser()
+  return user?.id ? user : null
+}
+
 /**
  * 問い合わせフォーム送信直後に呼ぶ。ログインユーザーのメールと inquirer_email が一致するときだけ
  * 送信者宛に受付控えメールを送る。
@@ -17,12 +38,9 @@ function normEmail(s: string | null | undefined): string {
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabaseAuth = await createClient()
-    const {
-      data: { user },
-    } = await supabaseAuth.getUser()
+    const user = await getAuthenticatedUser(req)
 
-    if (!user?.email) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'ログインが必要です。' }, { status: 401 })
     }
 
@@ -47,7 +65,13 @@ export async function POST(req: NextRequest) {
     const inquirerName = typeof body.inquirer_name === 'string' ? body.inquirer_name.trim() : ''
     const message = typeof body.message === 'string' ? body.message.trim() : ''
 
-    if (!inquirerEmail || normEmail(inquirerEmail) !== normEmail(user.email)) {
+    const admin = await createAdminClient()
+    const { data: prof } = await admin.from('profiles').select('email').eq('id', user.id).maybeSingle()
+    const allowedEmails = new Set<string>()
+    if (user.email) allowedEmails.add(normEmail(user.email))
+    if (prof?.email && typeof prof.email === 'string') allowedEmails.add(normEmail(prof.email))
+
+    if (!inquirerEmail || !allowedEmails.has(normEmail(inquirerEmail))) {
       return NextResponse.json(
         { error: 'お問い合わせのメールアドレスがログイン中のアカウントと一致しません。' },
         { status: 403 }
@@ -58,7 +82,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'お名前とお問い合わせ内容が必要です。' }, { status: 400 })
     }
 
-    const admin = await createAdminClient()
     const { data: property, error: pErr } = await admin
       .from('properties')
       .select('title')

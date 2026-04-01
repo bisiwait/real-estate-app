@@ -20,17 +20,27 @@ const PENDING_LINE_MAX_MS = 15 * 60 * 1000
 const SHOW_INQUIRY_REPLY_CHANNEL = false
 
 /** DB 保存後、送信者宛の受付控えメール（Webhook に依存しない。inquiries は RLS で送信者が SELECT できないため内容で送る） */
-async function requestInquiryConfirmationEmail(payload: {
-  property_id: string
-  inquirer_email: string
-  inquirer_name: string
-  message: string
-}) {
+async function requestInquiryConfirmationEmail(
+  supabase: ReturnType<typeof createClient>,
+  payload: {
+    property_id: string
+    inquirer_email: string
+    inquirer_name: string
+    message: string
+  }
+) {
   try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`
+    }
     const res = await fetch('/api/inquiries/confirm-email', {
       method: 'POST',
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(payload),
     })
     if (!res.ok) {
@@ -564,7 +574,7 @@ export default function InquiryForm({
       } catch {
         /* */
       }
-      void requestInquiryConfirmationEmail({
+      void requestInquiryConfirmationEmail(sb, {
         property_id: propertyId,
         inquirer_email: emailTrim,
         inquirer_name: nameTrim,
@@ -848,7 +858,7 @@ export default function InquiryForm({
           /* ignore */
         }
       }
-      void requestInquiryConfirmationEmail({
+      void requestInquiryConfirmationEmail(supabase, {
         property_id: propertyId,
         inquirer_email: emailTrim,
         inquirer_name: nameTrim,
