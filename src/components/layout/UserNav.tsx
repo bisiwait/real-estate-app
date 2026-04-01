@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { User, LogOut, LayoutDashboard, Coins, LogIn, UserPlus, ShieldCheck, Search, Settings, Heart, BarChart3, ChevronDown } from 'lucide-react'
+import { User, LogOut, LayoutDashboard, Coins, LogIn, UserPlus, ShieldCheck, Search, Settings, BarChart3, ChevronDown } from 'lucide-react'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAuth } from '@/contexts/AuthContext'
@@ -83,32 +83,14 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
 
                 <div className="flex flex-col space-y-0.5 w-full">
                     {userData.role === 'general' && (
-                        <>
-                            <Link
-                                href={`/${currentLocale}/mypage`}
-                                onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
-                            >
-                                <User className="w-5 h-5 text-slate-400" />
-                                <span>{dict.labels.mypage}</span>
-                            </Link>
-                            <Link
-                                href={`/${currentLocale}/mypage?tab=favorites`}
-                                onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
-                            >
-                                <Heart className="w-5 h-5 text-slate-400" />
-                                <span>{dict.labels.favorites}</span>
-                            </Link>
-                            <Link
-                                href={`/${currentLocale}/mypage?tab=settings`}
-                                onClick={onCloseMobileMenu}
-                                className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
-                            >
-                                <Settings className="w-5 h-5 text-slate-400" />
-                                <span>{dict.labels.settings}</span>
-                            </Link>
-                        </>
+                        <Link
+                            href={`/${currentLocale}/mypage`}
+                            onClick={onCloseMobileMenu}
+                            className="flex items-center space-x-4 px-4 py-3 hover:bg-slate-50 rounded-2xl text-base font-black text-navy-primary transition-all active:scale-[0.98]"
+                        >
+                            <User className="w-5 h-5 text-slate-400" />
+                            <span>{dict.labels.mypage}</span>
+                        </Link>
                     )}
 
                     {userData.role === 'agent' && (
@@ -189,50 +171,20 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
                     </div>
                     <div className="px-1 py-1">
                         {userData.role === 'general' && (
-                            <>
-                                <Menu.Item>
-                                    {({ active }) => (
-                                        <Link
-                                            href={`/${currentLocale}/mypage`}
-                                            className={cn(
-                                                "flex items-center space-x-3 px-4 py-3 text-sm font-bold rounded-xl transition-colors",
-                                                active ? "bg-navy-primary/5 text-navy-primary" : "text-slate-600"
-                                            )}
-                                        >
-                                            <User className="w-4 h-4" />
-                                            <span>{dict.labels.mypage}</span>
-                                        </Link>
-                                    )}
-                                </Menu.Item>
-                                <Menu.Item>
-                                    {({ active }) => (
-                                        <Link
-                                            href={`/${currentLocale}/mypage?tab=favorites`}
-                                            className={cn(
-                                                "flex items-center space-x-3 px-4 py-3 text-sm font-bold rounded-xl transition-colors",
-                                                active ? "bg-navy-primary/5 text-navy-primary" : "text-slate-600"
-                                            )}
-                                        >
-                                            <Heart className="w-4 h-4" />
-                                            <span>{dict.labels.favorites}</span>
-                                        </Link>
-                                    )}
-                                </Menu.Item>
-                                <Menu.Item>
-                                    {({ active }) => (
-                                        <Link
-                                            href={`/${currentLocale}/mypage?tab=settings`}
-                                            className={cn(
-                                                "flex items-center space-x-3 px-4 py-3 text-sm font-bold rounded-xl transition-colors",
-                                                active ? "bg-navy-primary/5 text-navy-primary" : "text-slate-600"
-                                            )}
-                                        >
-                                            <Settings className="w-4 h-4" />
-                                            <span>{dict.labels.settings}</span>
-                                        </Link>
-                                    )}
-                                </Menu.Item>
-                            </>
+                            <Menu.Item>
+                                {({ active }) => (
+                                    <Link
+                                        href={`/${currentLocale}/mypage`}
+                                        className={cn(
+                                            "flex items-center space-x-3 px-4 py-3 text-sm font-bold rounded-xl transition-colors",
+                                            active ? "bg-navy-primary/5 text-navy-primary" : "text-slate-600"
+                                        )}
+                                    >
+                                        <User className="w-4 h-4" />
+                                        <span>{dict.labels.mypage}</span>
+                                    </Link>
+                                )}
+                            </Menu.Item>
                         )}
 
                         {userData.role === 'agent' && (
