@@ -10,6 +10,9 @@ const PROP_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 const UUID_IN_STRING =
   /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
 const LIFF_INIT_MS = 12_000
+/** InquiryForm と同じキー（LINE ログインコールバックは liff.state が無いのでここから復元する） */
+const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
+const PENDING_MAX_MS = 15 * 60 * 1000
 
 /** Strict Mode 二重 effect や古い init 完了で setState / 二重 init しない */
 let inquiryBridgeEffectGeneration = 0
@@ -37,21 +40,86 @@ async function initLiffOnceForBridge(
   await bridgeLiffInitPromise
 }
 
+function hasOAuthCodeInUrl(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return !!new URLSearchParams(window.location.search).get('code')
+  } catch {
+    return false
+  }
+}
+
+/** InquiryForm が保存した pending（期限付き） */
+function readPendingLineInquiryForBridge():
+  | { propertyId: string; locale: string }
+  | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(PENDING_LINE_INQUIRY_KEY)
+    if (!raw) return null
+    const o = JSON.parse(raw) as {
+      v?: number
+      propertyId?: string
+      locale?: string
+      at?: number
+    }
+    if (o.v !== 1 || !o.propertyId || typeof o.at !== 'number') return null
+    if (Date.now() - o.at > PENDING_MAX_MS) {
+      sessionStorage.removeItem(PENDING_LINE_INQUIRY_KEY)
+      return null
+    }
+    if (!PROP_UUID.test(o.propertyId)) return null
+    const locRaw = o.locale
+    const loc = locRaw && LOCALES.has(locRaw) ? locRaw : null
+    if (!loc) return null
+    return { propertyId: o.propertyId.toLowerCase(), locale: loc }
+  } catch {
+    return null
+  }
+}
+
+function buildSyntheticStateFromStorage(fallbackLocale: string): string | null {
+  try {
+    if (sessionStorage.getItem('inquiry_resume_line') === '1') {
+      const pid = sessionStorage.getItem('inquiry_resume_property_id')
+      const locRaw = sessionStorage.getItem('inquiry_resume_locale')
+      const loc = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocale
+      if (pid && PROP_UUID.test(pid)) return `${loc}:${pid.toLowerCase()}`
+    }
+    const pend = readPendingLineInquiryForBridge()
+    if (pend) return `${pend.locale}:${pend.propertyId}`
+    const pidOnly = sessionStorage.getItem('inquiry_resume_property_id')
+    const locOnly = sessionStorage.getItem('inquiry_resume_locale')
+    if (
+      pidOnly &&
+      PROP_UUID.test(pidOnly) &&
+      locOnly &&
+      LOCALES.has(locOnly)
+    ) {
+      return `${locOnly}:${pidOnly.toLowerCase()}`
+    }
+  } catch {
+    /* */
+  }
+  return null
+}
+
 /** liff.init が固まっても 404 に落ちないよう、フォームが保存したセッションがあれば即物件へ */
 function redirectFromSessionResume(fallbackLocaleFromPath: string): boolean {
   if (typeof window === 'undefined') return false
   try {
-    if (sessionStorage.getItem('inquiry_resume_line') !== '1') return false
-    const pid = sessionStorage.getItem('inquiry_resume_property_id')
-    if (!pid || !PROP_UUID.test(pid)) return false
-    const locRaw = sessionStorage.getItem('inquiry_resume_locale')
-    const safeLocale = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocaleFromPath
-    const idLower = pid.toLowerCase()
-    sessionStorage.setItem('inquiry_liff_ready_pid', idLower)
+    const synthetic = buildSyntheticStateFromStorage(fallbackLocaleFromPath)
+    if (!synthetic) return false
+    const parsed = parseLiffState(synthetic, fallbackLocaleFromPath)
+    if (!parsed) return false
+    const { safeLocale, propId } = parsed
+    sessionStorage.setItem('inquiry_liff_ready_pid', propId)
     sessionStorage.removeItem('inquiry_resume_line')
     sessionStorage.removeItem('inquiry_resume_property_id')
     sessionStorage.removeItem('inquiry_resume_locale')
-    window.location.replace(`${window.location.origin}/${safeLocale}/properties/${idLower}`)
+    window.location.replace(
+      `${window.location.origin}/${safeLocale}/properties/${propId}`
+    )
     return true
   } catch {
     return false
@@ -110,13 +178,17 @@ function readLiffStateFromSdk(liff: { getState?: () => unknown }): string | unde
 function readResumePropertyHref(fallbackLocaleFromPath: string): string | null {
   try {
     const pid = sessionStorage.getItem('inquiry_resume_property_id')
-    if (!pid || !PROP_UUID.test(pid)) return null
-    const locRaw = sessionStorage.getItem('inquiry_resume_locale')
-    const loc = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocaleFromPath
-    return `/${loc}/properties/${pid}`
+    if (pid && PROP_UUID.test(pid)) {
+      const locRaw = sessionStorage.getItem('inquiry_resume_locale')
+      const loc = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocaleFromPath
+      return `/${loc}/properties/${pid}`
+    }
+    const pend = readPendingLineInquiryForBridge()
+    if (pend) return `/${pend.locale}/properties/${pend.propertyId}`
   } catch {
     return null
   }
+  return null
 }
 
 /**
@@ -153,7 +225,12 @@ export default function LineInquiryBridgePage() {
     const effectGen = ++inquiryBridgeEffectGeneration
     let cancelled = false
     ;(async () => {
-      if (typeof window !== 'undefined' && redirectFromSessionResume(safeFallback)) {
+      // OAuth の ?code= があるときはこのページで liff.init がトークン交換する必要があるため、先に飛ばさない
+      if (
+        typeof window !== 'undefined' &&
+        !hasOAuthCodeInUrl() &&
+        redirectFromSessionResume(safeFallback)
+      ) {
         return
       }
       try {
@@ -185,27 +262,16 @@ export default function LineInquiryBridgePage() {
           if (fromPage) state = fromPage
         }
         if (!state) {
-          try {
-            if (sessionStorage.getItem('inquiry_resume_line') === '1') {
-              const pid = sessionStorage.getItem('inquiry_resume_property_id')
-              const locRaw = sessionStorage.getItem('inquiry_resume_locale')
-              const loc =
-                locRaw && LOCALES.has(locRaw) ? locRaw : safeFallback
-              if (pid && PROP_UUID.test(pid)) {
-                state = `${loc}:${pid}`
-              }
-            }
-          } catch {
-            /* */
-          }
+          const synthetic = buildSyntheticStateFromStorage(safeFallback)
+          if (synthetic) state = synthetic
         }
         if (!state) {
           if (effectGen !== inquiryBridgeEffectGeneration) return
           setUiKind('action')
           setMsg(
-            'ここで止まっている場合、問い合わせはまだ完了していません（この画面は成功ではありません）。' +
-              ' LINE は liff.line.me の URL をパス形式に書き換えて見せることがありますが、通常はこのあとエンドポイントへ渡ります。' +
-              ' 物件ページで「LINEで受け取る」を選び、送信から LINE 経由で開き直してください。'
+            '問い合わせの続きが見つかりませんでした（この画面は完了ではありません）。' +
+              ' LINE ログインのコールバックでは URL に liff.state が付かないため、同じブラウザで先に物件ページから「LINEで受け取る」→確定まで進んでください。' +
+              ' 別アプリで開いている・プライベートモード・別端末の場合は保存情報が使えません。'
           )
           return
         }
