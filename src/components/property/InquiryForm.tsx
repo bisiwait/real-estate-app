@@ -88,11 +88,12 @@ function clearPendingLineInquiry() {
 
 type ObtainLineUserIdResult =
   | { ok: true; userId: string }
-  | { ok: false; reason: 'redirect' | 'login' }
+  | { ok: false; reason: 'login' }
   | { ok: false; reason: 'error'; message: string }
 
 /**
- * ブリッジ通過後（inquiry_liff_ready_pid 済み）に LIFF で userId を取得。外部ブラウザでは再 handoff で redirect。
+ * ブリッジ通過後（inquiry_liff_ready_pid 済み）に LIFF で userId を取得。
+ * 未ログイン時は liff.login()（外部ブラウザ・LINE 内とも）。
  */
 async function obtainLineUserIdForInquiry(
   liffId: string,
@@ -115,20 +116,15 @@ async function obtainLineUserIdForInquiry(
   }
 
   if (!liff.isLoggedIn()) {
-    if (!liff.isInClient()) {
-      try {
-        sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
-        sessionStorage.removeItem('inquiry_liff_ready_pid')
-        sessionStorage.setItem('inquiry_resume_line', '1')
-        sessionStorage.setItem('inquiry_resume_property_id', propertyId)
-        sessionStorage.setItem('inquiry_resume_locale', locale)
-      } catch {
-        /* */
-      }
-      window.location.assign(
-        `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
-      )
-      return { ok: false, reason: 'redirect' }
+    /**
+     * 外部ブラウザでも liff.login() で OAuth 復帰できる。ここで handoff へ再度 assign すると
+     * ブリッジ→物件→未ログイン→handoff のループになり、DB 保存まで到達しない。
+     * 初回の「LINEで受け取る」は handleSubmit が handoff へ飛ばす（liff_ready 前のみ）。
+     */
+    try {
+      sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+    } catch {
+      /* */
     }
     liff.login()
     return { ok: false, reason: 'login' }
@@ -268,15 +264,25 @@ export default function InquiryForm({
 
   useEffect(() => {
     if (!isSmartphone) {
+      try {
+        const pending = readPendingLineInquiry()
+        if (pending?.propertyId === propertyId) return
+        if (sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId) return
+      } catch {
+        /* */
+      }
       setPreferredReplyChannel('email')
     }
-  }, [isSmartphone])
+  }, [isSmartphone, propertyId])
 
   /** LINE から liff.line.me 経由で戻ったあと「LINEで受け取る」を復元（スマートフォンのみ） */
   useEffect(() => {
     if (!isLoggedIn) return
     if (!isSmartphone) {
       try {
+        const pending = readPendingLineInquiry()
+        if (pending?.propertyId === propertyId) return
+        if (sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId) return
         sessionStorage.removeItem('inquiry_resume_line')
         sessionStorage.removeItem('inquiry_resume_property_id')
         sessionStorage.removeItem('inquiry_resume_locale')
@@ -390,9 +396,6 @@ export default function InquiryForm({
 
       const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, pending.locale)
       if (!lineResult.ok) {
-        if (lineResult.reason === 'redirect') {
-          return
-        }
         if (lineResult.reason === 'login') {
           try {
             sessionStorage.removeItem(lockKey)
@@ -596,9 +599,6 @@ export default function InquiryForm({
 
         const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, locale)
         if (!lineResult.ok) {
-          if (lineResult.reason === 'redirect') {
-            return
-          }
           if (lineResult.reason === 'login') {
             setLoading(false)
             return
