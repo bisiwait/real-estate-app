@@ -32,8 +32,10 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
 
     const pathname = request.nextUrl.pathname
 
-    // LINE Login の LIFF コールバックも ?code= を付ける。Supabase の PKCE 誤判定で auth/callback に飛ばさない。
-    if (pathname.includes('/line/inquiry-bridge')) return null
+    // LINE Login / LIFF も ?code= を付ける。Supabase PKCE へ寄せると exchange 失敗→/login になり問い合わせが完了しない。
+    if (pathname.includes('/line/')) return null
+    // liff.login() のリダイレクト先が物件 URL のとき、ここで auth/callback に飛ばさない。
+    if (pathname.includes('/properties/')) return null
 
     const alreadyOnCallback = locales.some((locale) => {
         const base = `/${locale}/auth/callback`
@@ -56,6 +58,11 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
 
     const url = request.nextUrl.clone()
     url.pathname = `/${targetLocale}/auth/callback`
+    // LINE の code を誤って渡したときの復帰先（auth/callback が next へ戻せるようにする）
+    if (!url.searchParams.has('next')) {
+        const returnPath = pathname === '/' ? `/${targetLocale}` : pathname
+        url.searchParams.set('next', returnPath)
+    }
     return NextResponse.redirect(url)
 }
 

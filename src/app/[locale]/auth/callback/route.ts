@@ -47,6 +47,10 @@ export async function GET(request: NextRequest) {
             await syncAgentProfileFromAuthUser(data.user)
             return redirectOk
         }
+        // LINE Login 等、Supabase 以外の OAuth code が混入した場合はログイン画面へ飛ばさず next へ戻す（サイトのセッションを維持）
+        const recovery = NextResponse.redirect(`${url.origin}${next}`)
+        clearAuthReturnCookie(recovery)
+        return recovery
     }
 
     const fail = NextResponse.redirect(`${url.origin}/${locale}/login?error=auth_callback`)
