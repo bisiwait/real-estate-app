@@ -48,7 +48,7 @@ function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; badge
   const mode = normalizeInquiryReplyChannel(inquiry.preferred_reply_channel)
   return {
     mode,
-    badge: mode === 'line' ? '【LINE】' : '【メール】',
+    badge: mode === 'line' ? '【LINE】' : '【問い合わせ】',
   }
 }
 
