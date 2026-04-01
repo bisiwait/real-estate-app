@@ -9,6 +9,32 @@ export const dynamic = 'force-dynamic'
 
 const NONCE_REGEX = /\b([A-Fa-f0-9]{10})\b/
 
+/**
+ * 物件問い合わせ（LIFF）や公式LINEコード紐づけ済みユーザー。
+ * ここに該当するユーザーへの自由文（「きました」等）にコード案内を返すと会話にならないため返信しない。
+ */
+async function isKnownLineMessagingUser(
+  admin: Awaited<ReturnType<typeof createAdminClient>>,
+  lineUserId: string
+): Promise<boolean> {
+  const { data: inq } = await admin
+    .from('inquiries')
+    .select('id')
+    .eq('line_user_id', lineUserId)
+    .limit(1)
+    .maybeSingle()
+  if (inq) return true
+
+  const { data: intent } = await admin
+    .from('line_official_inquiry_intents')
+    .select('id')
+    .eq('line_user_id', lineUserId)
+    .eq('status', 'bound')
+    .limit(1)
+    .maybeSingle()
+  return Boolean(intent)
+}
+
 function officialEnabled() {
   return Boolean(
     process.env.LINE_OFFICIAL_CHANNEL_SECRET?.trim() &&
@@ -62,6 +88,9 @@ export async function POST(req: Request) {
       const m = text.match(NONCE_REGEX)
       const nonce = m?.[1]?.toUpperCase()
       if (!nonce) {
+        if (await isKnownLineMessagingUser(admin, e.source.userId)) {
+          continue
+        }
         const hint =
           process.env.LINE_OFFICIAL_WEBHOOK_UNKNOWN_MESSAGE?.trim() ||
           'お問い合わせコードが見つかりませんでした。物件ページの「LINEで問い合わせ」から表示される10桁のコードを送信してください。'
