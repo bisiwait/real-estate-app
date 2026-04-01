@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import LineContactButton from "@/components/property/LineContactButton";
 import { clsx } from "clsx";
 import {
     facilityMatches,
@@ -111,13 +110,9 @@ type CompareMobileSwipeViewProps = {
     dict: any;
     c: any;
     facilityRows: FacilityRow[];
-    origin: string;
     user: any;
     removeId: (id: string) => void;
     onRequireAuth: () => void;
-    viewerLineContact?: string | null;
-    viewerLineGateReady?: boolean;
-    onRequireViewerLine?: () => void;
 };
 
 /** スマホ専用: 左ラベル固定 + 物件カラム横スナップ（md 未満のみ表示） */
@@ -127,13 +122,9 @@ export default function CompareMobileSwipeView({
     dict,
     c,
     facilityRows,
-    origin,
     user,
     removeId,
     onRequireAuth,
-    viewerLineContact = null,
-    viewerLineGateReady = true,
-    onRequireViewerLine,
 }: CompareMobileSwipeViewProps) {
     const LABEL_W = "w-[5.75rem] min-w-[5.75rem] max-w-[5.75rem]";
     const ck = c as Record<string, string>;
@@ -238,13 +229,9 @@ export default function CompareMobileSwipeView({
                             dict={dict}
                             c={c}
                             facilityRows={facilityRows}
-                            origin={origin}
                             user={user}
                             removeId={removeId}
                             onRequireAuth={onRequireAuth}
-                            viewerLineContact={viewerLineContact}
-                            viewerLineGateReady={viewerLineGateReady}
-                            onRequireViewerLine={onRequireViewerLine}
                         />
                     ))}
                 </div>
@@ -293,36 +280,20 @@ function PropertySwipeColumn({
     dict,
     c,
     facilityRows,
-    origin,
     user,
     removeId,
     onRequireAuth,
-    viewerLineContact = null,
-    viewerLineGateReady = true,
-    onRequireViewerLine,
 }: {
     property: any;
     locale: string;
     dict: any;
     c: any;
     facilityRows: FacilityRow[];
-    origin: string;
     user: any;
     removeId: (id: string) => void;
     onRequireAuth: () => void;
-    viewerLineContact?: string | null;
-    viewerLineGateReady?: boolean;
-    onRequireViewerLine?: () => void;
 }) {
     const title = getTitle(p, locale);
-    const priceStr =
-        p.is_for_rent && p.rent_price != null
-            ? `${c.rent_label} ${Number(p.rent_price).toLocaleString()} THB/月`
-            : p.is_for_sale && p.sale_price != null
-              ? `${c.sale_label} ${Number(p.sale_price).toLocaleString()} THB`
-              : "—";
-    const url =
-        origin && p.id ? `${origin}/${locale}/properties/${p.id}` : `/${locale}/properties/${p.id}`;
 
     return (
         <div
@@ -469,32 +440,18 @@ function PropertySwipeColumn({
                     );
                 })}
                 <ValueRow index={8 + facilityRows.length} facilityCount={facilityRows.length}>
-                    <LineContactButton
-                        dict={{
-                            ...dict,
-                            property: {
-                                ...(dict.property || {}),
-                                line_inquiry_btn: c.line_inquiry,
-                            },
+                    <Link
+                        href={`/${locale}/properties/${p.id}#inquiry-form-section`}
+                        onClick={(e) => {
+                            if (!user) {
+                                e.preventDefault();
+                                onRequireAuth();
+                            }
                         }}
-                        variant="full"
-                        className="w-full !py-3 !text-sm"
-                        showAgentLineInquiry={p.agent_show_line_in_inquiry !== false}
-                        property={{
-                            id: p.id,
-                            title,
-                            price: priceStr,
-                            url,
-                            refId: p.reference_id || p.id?.slice(0, 8),
-                            agentId: p.user_id,
-                            agentLineContact: p.agent_line_id ?? null,
-                        }}
-                        isLoggedIn={!!user}
-                        onRequireAuth={onRequireAuth}
-                        viewerLineContact={viewerLineContact}
-                        viewerLineGateReady={viewerLineGateReady}
-                        onRequireViewerLine={onRequireViewerLine}
-                    />
+                        className="inline-flex w-full min-h-11 items-center justify-center rounded-xl bg-navy-primary px-3 py-2.5 text-center text-xs font-black text-white shadow-md transition hover:bg-navy-secondary"
+                    >
+                        {c.inquiry_form_cta ?? c.line_inquiry}
+                    </Link>
                 </ValueRow>
             </ul>
         </div>

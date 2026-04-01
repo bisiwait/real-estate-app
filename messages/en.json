@@ -455,6 +455,10 @@
         "inquiry_reply_channel_heading": "How should we reach you?",
         "inquiry_reply_channel_intro": "Choose how you want follow-ups. Email is always used for the agent’s reply.",
         "inquiry_reply_channel_intro_v2": "Choose how you want replies. Enter your email in both cases for our records.",
+        "inquiry_reply_channel_intro_desktop": "We will reply to the email address you enter below.",
+        "inquiry_reply_desktop_notice": "Replies will be sent by email.",
+        "inquiry_line_blocked_desktop": "“By LINE” is not available on desktop or tablet. Please use email for replies.",
+        "inquiry_pc_line_qr_hint": "To use LINE, scan the QR code below on your smartphone to add our official account, then send your inquiry from the property page form.",
         "inquiry_reply_by_email": "By email",
         "inquiry_reply_by_email_desc": "The agent will reply by email.",
         "inquiry_reply_by_line": "By LINE",
@@ -605,7 +609,8 @@
         "swipe_hint": "*Swipe right to compare.",
         "scroll_prev": "Previous property",
         "scroll_next": "Next property",
-        "line_inquiry": "Contact via LINE"
+        "line_inquiry": "Contact via LINE",
+        "inquiry_form_cta": "Open property inquiry form"
     },
     "agent_plan": {
         "meta_title": "Listing guide & pricing | For agents",

@@ -15,9 +15,7 @@ const InquiryForm = dynamic(() => import('@/components/property/InquiryForm'), {
 import PropertyDescription from '@/components/property/PropertyDescription'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
-import LineContactButton from '@/components/property/LineContactButton'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
-import ViewerLineRequiredModal from '@/components/property/ViewerLineRequiredModal'
 import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
 import { isPremium } from '@/lib/utils/plan'
@@ -75,8 +73,6 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     const locale = (params?.locale as string) || 'jp'
     const { user } = useAuth()
     const [contactAuthOpen, setContactAuthOpen] = useState(false)
-    const [lineViewerModalOpen, setLineViewerModalOpen] = useState(false)
-    const [viewerLineGateReady, setViewerLineGateReady] = useState(false)
 
     // useSearchParams は親の Suspense と相性でエラーバウンダリに落ちることがあるため、pathname のみで戻り先を組み立てる
     const returnPath = pathname || `/${locale}/properties/${id}`
@@ -111,7 +107,6 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
     useEffect(() => {
         window.scrollTo(0, 0);
         const fetchClientData = async () => {
-            setViewerLineGateReady(false)
             try {
                 const supabase = createClient()
                 const d = await getDictionary(locale)
@@ -150,7 +145,6 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 }
                 setProfile(null)
             } finally {
-                setViewerLineGateReady(true)
                 setLoading(false)
             }
         }
@@ -247,9 +241,6 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
 
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
     const showAgentPhoneInquiry = agent?.show_phone_in_inquiry !== false
-    const showAgentLineInquiry =
-        agent?.show_line_in_inquiry !== false &&
-        Boolean(String(agent?.line_id ?? '').trim())
     const stickyPhone = showAgentPhoneInquiry ? agent?.phone : undefined
     const translateTag = (tag: string) => (dict.property?.tags as any)?.[tag] || tag;
     const translateArea = (areaName: string) => (dict.property?.db_locations as any)?.[areaName] || areaName;
@@ -267,12 +258,6 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 locale={locale}
                 dictProperty={dict.property || {}}
                 returnPath={returnPath}
-            />
-            <ViewerLineRequiredModal
-                open={lineViewerModalOpen}
-                onClose={() => setLineViewerModalOpen(false)}
-                locale={locale}
-                dictProperty={dict.property || {}}
             />
             <BreadcrumbUpdater label={displayTitle} />
             <div className="container mx-auto max-w-7xl px-4 pt-6 relative z-10">
@@ -358,30 +343,15 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                     <div className="lg:col-span-4 space-y-6">
                         <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
-                            {showAgentLineInquiry ? (
-                                <LineContactButton
-                                    property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id, agentLineContact: agent?.line_id ?? null }}
-                                    variant="full"
-                                    dict={dict}
-                                    isLoggedIn={!!user}
-                                    onRequireAuth={() => setContactAuthOpen(true)}
-                                    viewerLineContact={profile?.line_id ?? null}
-                                    viewerLineGateReady={viewerLineGateReady}
-                                    onRequireViewerLine={() => setLineViewerModalOpen(true)}
-                                />
-                            ) : null}
-
-                            <div className={showAgentLineInquiry ? 'mt-8 border-t border-slate-100 pt-8' : ''}>
-                                <InquiryForm
-                                    propertyId={id}
-                                    propertyName={displayTitle}
-                                    dict={dict}
-                                    isLoggedIn={!!user}
-                                    onRequireAuth={() => setContactAuthOpen(true)}
-                                    contactPrefill={contactPrefill}
-                                    officialLineAddFriendUrl={getOfficialLineAddFriendUrl()}
-                                />
-                            </div>
+                            <InquiryForm
+                                propertyId={id}
+                                propertyName={displayTitle}
+                                dict={dict}
+                                isLoggedIn={!!user}
+                                onRequireAuth={() => setContactAuthOpen(true)}
+                                contactPrefill={contactPrefill}
+                                officialLineAddFriendUrl={getOfficialLineAddFriendUrl()}
+                            />
                         </div>
                     </div>
                 </div>
@@ -392,15 +362,10 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                 </div>
             </div>
             <StickyContactBar
-                property={{ id: property.id, title: displayTitle, price: `${priceValue?.toLocaleString()} THB`, url: '', refId: property.reference_id || property.id.slice(0, 8), agentId: property.user_id, agentLineContact: agent?.line_id ?? null }}
                 phoneNumber={stickyPhone}
-                showLineInquiry={showAgentLineInquiry}
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}
-                viewerLineContact={profile?.line_id ?? null}
-                viewerLineGateReady={viewerLineGateReady}
-                onRequireViewerLine={() => setLineViewerModalOpen(true)}
             />
         </div>
     )

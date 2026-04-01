@@ -454,6 +454,10 @@
         "inquiry_reply_channel_heading": "ช่องทางติดต่อกลับ",
         "inquiry_reply_channel_intro": "เลือกวิธีรับข่าวสาร อีเมลยังใช้สำหรับการติดต่อจากตัวแทนเสมอ",
         "inquiry_reply_channel_intro_v2": "เลือกช่องทางรับการตอบกลับ กรอกอีเมลในทุกกรณีเพื่อเก็บข้อมูล",
+        "inquiry_reply_channel_intro_desktop": "เราจะติดต่อกลับทางอีเมลที่คุณกรอกด้านล่าง",
+        "inquiry_reply_desktop_notice": "การตอบกลับจะส่งทางอีเมลเท่านั้น",
+        "inquiry_line_blocked_desktop": "บน PC/แท็บเล็ต ไม่สามารถเลือกรับทาง LINE ได้ กรุณาใช้อีเมลในการรับการติดต่อกลับ",
+        "inquiry_pc_line_qr_hint": "หากต้องการคุยทาง LINE ให้สแกน QR ด้านล่างบนสมาร์ทโฟนเพื่อเพิ่มเพื่อนบัญชีทางการ แล้วส่งคำถามจากแบบฟอร์มในหน้าประกาศ",
         "inquiry_reply_by_email": "รับทางอีเมล",
         "inquiry_reply_by_email_desc": "ตัวแทนตอบกลับทางอีเมล",
         "inquiry_reply_by_line": "รับทาง LINE",
@@ -604,7 +608,8 @@
         "swipe_hint": "※ปัดไปทางขวาเพื่อเปรียบเทียบ",
         "scroll_prev": "ประกาศก่อนหน้า",
         "scroll_next": "ประกาศถัดไป",
-        "line_inquiry": "สอบถามทาง LINE"
+        "line_inquiry": "สอบถามทาง LINE",
+        "inquiry_form_cta": "ไปที่แบบฟอร์มในหน้าประกาศ"
     },
     "agent_plan": {
         "meta_title": "คู่มือลงประกาศและแพ็กเกจ | สำหรับเอเจนต์",

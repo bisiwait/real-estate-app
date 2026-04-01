@@ -481,6 +481,10 @@
         "inquiry_reply_channel_heading": "返信方法",
         "inquiry_reply_channel_intro": "担当からの返信の受け取り方を選べます（メールでの連絡は常に行われます）。",
         "inquiry_reply_channel_intro_v2": "担当からの返信の受け取り方を選びます。メールアドレスは記録のためどちらの場合も入力してください。",
+        "inquiry_reply_channel_intro_desktop": "ご登録のメールアドレス宛に、担当から返信いたします。",
+        "inquiry_reply_desktop_notice": "返信はメールにて差し上げます。",
+        "inquiry_line_blocked_desktop": "PC・タブレットでは「LINEで受け取る」はご利用いただけません。メールでの返信のみとなります。",
+        "inquiry_pc_line_qr_hint": "LINEでのやり取りをご希望の方は、スマートフォンで下のQRコードを読み取り、公式アカウントを友だち追加のうえ、物件ページの問い合わせフォームからお手続きください。",
         "inquiry_reply_by_email": "メールで受け取る",
         "inquiry_reply_by_email_desc": "返信はメールで受け取ります。",
         "inquiry_reply_by_line": "LINEで受け取る",
@@ -631,7 +635,8 @@
         "swipe_hint": "※右にスワイプして比較してください",
         "scroll_prev": "前の物件へ",
         "scroll_next": "次の物件へ",
-        "line_inquiry": "LINEで問い合わせる"
+        "line_inquiry": "LINEで問い合わせる",
+        "inquiry_form_cta": "物件ページのフォームへ"
     },
     "agent_plan": {
         "meta_title": "掲載案内・料金プラン | エージェント向け",

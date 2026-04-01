@@ -6,9 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, X } from "lucide-react";
-import LineContactButton from "@/components/property/LineContactButton";
 import ContactAuthRequiredModal from "@/components/property/ContactAuthRequiredModal";
-import ViewerLineRequiredModal from "@/components/property/ViewerLineRequiredModal";
 import { useAuth } from "@/contexts/AuthContext";
 import {
     COMPARE_FACILITY_ROWS,
@@ -90,9 +88,6 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
     const [loading, setLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
     const [contactAuthOpen, setContactAuthOpen] = useState(false);
-    const [lineViewerModalOpen, setLineViewerModalOpen] = useState(false);
-    const [viewerLineGateReady, setViewerLineGateReady] = useState(false);
-    const [compareViewerLine, setCompareViewerLine] = useState<string | null>(null);
 
     const returnPath = `${pathname || `/${locale}/compare`}${searchParams?.toString() ? `?${searchParams}` : ""}`;
 
@@ -171,30 +166,6 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
 
     useEffect(() => {
         if (!authChecked) return;
-        if (!user?.id) {
-            setCompareViewerLine(null);
-            setViewerLineGateReady(true);
-            return;
-        }
-        let cancelled = false;
-        (async () => {
-            setViewerLineGateReady(false);
-            const { data } = await supabase
-                .from("profiles")
-                .select("line_id")
-                .eq("id", user.id)
-                .maybeSingle();
-            if (cancelled) return;
-            setCompareViewerLine(data?.line_id ?? null);
-            setViewerLineGateReady(true);
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [authChecked, user?.id, supabase]);
-
-    useEffect(() => {
-        if (!authChecked) return;
         let cancelled = false;
 
         (async () => {
@@ -230,32 +201,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
             const orderMap = new Map(ids.map((id, i) => [id, i]));
             const sorted = [...data].sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
 
-            const ownerIds = [...new Set(sorted.map((p) => p.user_id).filter(Boolean))] as string[];
-            let withLine = sorted;
-            if (ownerIds.length > 0) {
-                const { data: profs } = await supabase
-                    .from("profiles")
-                    .select("id, line_id, show_line_in_inquiry")
-                    .in("id", ownerIds);
-                const profByUser = new Map(
-                    (profs ?? []).map((row: { id: string; line_id: string | null; show_line_in_inquiry?: boolean | null }) => [
-                        row.id,
-                        row,
-                    ])
-                );
-                withLine = sorted.map((p) => {
-                    const prof = p.user_id ? profByUser.get(p.user_id) : undefined;
-                    const lineTrim = prof?.line_id != null ? String(prof.line_id).trim() : "";
-                    return {
-                        ...p,
-                        agent_line_id: prof?.line_id ?? null,
-                        agent_show_line_in_inquiry:
-                            lineTrim.length > 0 && prof?.show_line_in_inquiry !== false,
-                    };
-                });
-            }
-
-            setProperties(withLine);
+            setProperties(sorted);
             setLoading(false);
         })();
 
@@ -271,8 +217,6 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
         syncStorage(next);
         replaceUrlIds(next);
     };
-
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
 
     const rows = useMemo(
         () =>
@@ -322,12 +266,6 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                 dictProperty={dict.property || {}}
                 returnPath={returnPath}
             />
-            <ViewerLineRequiredModal
-                open={lineViewerModalOpen}
-                onClose={() => setLineViewerModalOpen(false)}
-                locale={locale}
-                dictProperty={dict.property || {}}
-            />
             <div className="bg-navy-secondary text-white pt-8 pb-10">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <h1 className="text-2xl font-black !text-white md:text-3xl">{c.title}</h1>
@@ -356,13 +294,9 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                 dict={dict}
                                 c={c}
                                 facilityRows={rows}
-                                origin={origin}
                                 user={user}
                                 removeId={removeId}
                                 onRequireAuth={() => setContactAuthOpen(true)}
-                                viewerLineContact={compareViewerLine}
-                                viewerLineGateReady={viewerLineGateReady}
-                                onRequireViewerLine={() => setLineViewerModalOpen(true)}
                             />
                         </div>
                         <div className="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
@@ -564,44 +498,14 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                     ))}
                                     <CompareRow label={c.row_line}>
                                         {properties.map((p) => {
-                                            const priceStr =
-                                                p.is_for_rent && p.rent_price != null
-                                                    ? `${c.rent_label} ${Number(p.rent_price).toLocaleString()} THB/月`
-                                                    : p.is_for_sale && p.sale_price != null
-                                                      ? `${c.sale_label} ${Number(p.sale_price).toLocaleString()} THB`
-                                                      : "—";
-                                            const url =
-                                                origin && p.id
-                                                    ? `${origin}/${locale}/properties/${p.id}`
-                                                    : `/${locale}/properties/${p.id}`;
                                             return (
                                                 <td key={p.id} className="border-l border-t border-slate-200 p-4 align-top bg-slate-50/80">
-                                                    <LineContactButton
-                                                        dict={{
-                                                            ...dict,
-                                                            property: {
-                                                                ...(dict.property || {}),
-                                                                line_inquiry_btn: c.line_inquiry,
-                                                            },
-                                                        }}
-                                                        variant="full"
-                                                        className="w-full !py-3 !text-sm"
-                                                        showAgentLineInquiry={p.agent_show_line_in_inquiry !== false}
-                                                        property={{
-                                                            id: p.id,
-                                                            title: getTitle(p, locale),
-                                                            price: priceStr,
-                                                            url,
-                                                            refId: p.reference_id || p.id?.slice(0, 8),
-                                                            agentId: p.user_id,
-                                                            agentLineContact: p.agent_line_id ?? null,
-                                                        }}
-                                                        isLoggedIn={!!user}
-                                                        onRequireAuth={() => setContactAuthOpen(true)}
-                                                        viewerLineContact={compareViewerLine}
-                                                        viewerLineGateReady={viewerLineGateReady}
-                                                        onRequireViewerLine={() => setLineViewerModalOpen(true)}
-                                                    />
+                                                    <Link
+                                                        href={`/${locale}/properties/${p.id}#inquiry-form-section`}
+                                                        className="inline-flex w-full min-h-11 items-center justify-center rounded-xl bg-navy-primary px-4 py-3 text-center text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
+                                                    >
+                                                        {c.inquiry_form_cta ?? c.line_inquiry}
+                                                    </Link>
                                                 </td>
                                             );
                                         })}
