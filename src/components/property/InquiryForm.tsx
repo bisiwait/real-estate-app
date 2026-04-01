@@ -8,6 +8,7 @@ import { getErrorMessage } from '@/lib/utils/errors'
 import { formatInquirySubmitError, formatLiffError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 import { useDeviceType } from '@/hooks/useDeviceType'
+import { postLineInquiryReturnPath } from '@/lib/inquiry-line-return-cookie'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -161,6 +162,7 @@ async function obtainLineUserIdForInquiry(
      * ブリッジ→物件→未ログイン→handoff のループになり、DB 保存まで到達しない。
      * 初回の「LINEで受け取る」は handleSubmit が handoff へ飛ばす（liff_ready 前のみ）。
      */
+    await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
     try {
       sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
       sessionStorage.setItem(LINE_OAUTH_RESUME_PID_KEY, propertyId)
@@ -701,6 +703,7 @@ export default function InquiryForm({
             } catch {
               /* ignore */
             }
+            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
             window.location.assign(
               `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
             )

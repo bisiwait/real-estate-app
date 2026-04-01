@@ -35,6 +35,12 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
     // LINE Login のリダイレクトにだけ付くことがある（友だち追加オプション有効時）。Supabase の code と混同しない。
     if (request.nextUrl.searchParams.has('friendship_status_changed')) return null
 
+    // ロケールトップ（/jp 等）への ?code= は LINE コールバックであり得る。auth/callback に寄せると交換失敗→トップへ戻り問い合わせが死ぬ。
+    const isLocaleHomeOnly = locales.some(
+        (locale) => pathname === `/${locale}` || pathname === `/${locale}/`
+    )
+    if (isLocaleHomeOnly) return null
+
     // LINE Login / LIFF も ?code= を付ける。Supabase PKCE へ寄せると exchange 失敗→/login になり問い合わせが完了しない。
     if (pathname.includes('/line/')) return null
     // liff.login() のリダイレクト先が物件 URL のとき、ここで auth/callback に飛ばさない。
