@@ -7,6 +7,20 @@ import { lineOfficialPushText } from '@/lib/line-official-push'
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'dummy_key_for_build')
 
+const EMAIL_LIKE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function safeSubjectSnippet(s: string, maxLen: number): string {
+  return s.replace(/[\r\n\u0000]+/g, ' ').trim().slice(0, maxLen)
+}
+
 type InquiryRecord = {
   id?: string
   property_id?: string
@@ -149,6 +163,74 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    const inquirerTo = (record.inquirer_email || record.email || '').trim()
+    let inquirerConfirmationSent = false
+    let inquirerConfirmationResendId: string | null = null
+    let inquirerConfirmationError: string | null = null
+    let inquirerConfirmationSkipped: string | null = null
+
+    if (!inquirerTo) {
+      inquirerConfirmationSkipped = 'no_email'
+    } else if (!EMAIL_LIKE.test(inquirerTo)) {
+      inquirerConfirmationSkipped = 'invalid_email'
+    } else if (!process.env.RESEND_API_KEY?.trim()) {
+      inquirerConfirmationSkipped = 'resend_not_configured'
+    } else {
+      const titleSafe = escapeHtml(property.title)
+      const nameSafe = escapeHtml((record.inquirer_name || '').trim() || '—')
+      const messageRaw = (record.message || '').trim()
+      const messageSafe = escapeHtml(messageRaw).replace(/\r\n|\n|\r/g, '<br/>')
+      const subjTitle = safeSubjectSnippet(property.title, 60)
+
+      const { data: inquirerMail, error: inquirerErr } = await resend.emails.send({
+        from: getResendFromAddress(),
+        to: [inquirerTo],
+        subject: `【お問い合わせ受付】「${subjTitle}」について`,
+        html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #1e293b; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">お問い合わせを受け付けました</h2>
+          <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+            ${nameSafe} 様<br/><br/>
+            この度はお問い合わせいただきありがとうございます。以下の内容で受け付けました。担当よりご連絡いたします。
+          </p>
+          <h3 style="color: #1e293b; font-size: 16px; margin-top: 28px;">送信内容</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; width: 120px; color: #64748b; vertical-align: top;">物件</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-weight: bold;">${titleSafe}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">お名前</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${nameSafe}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">メール</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${escapeHtml(inquirerTo)}</td>
+            </tr>
+          </table>
+          <div style="margin-top: 16px; padding: 15px; background-color: #f8fafc; border-radius: 8px; color: #1e293b; font-size: 14px; line-height: 1.6;">
+            <p style="margin: 0 0 8px; font-size: 12px; color: #64748b; font-weight: bold;">お問い合わせ内容</p>
+            <div style="word-break: break-word;">${messageSafe || '—'}</div>
+          </div>
+          <p style="font-size: 12px; color: #94a3b8; margin-top: 28px; line-height: 1.6;">
+            ※このメールは送信内容の控えです。本メールに直接ご返信いただいてもお答えできない場合があります。あらかじめご了承ください。
+          </p>
+          <p style="font-size: 11px; color: #cbd5e1; margin-top: 16px; text-align: center; font-weight: 600;">
+            Chonburi Home
+          </p>
+        </div>
+      `,
+      })
+
+      if (inquirerErr) {
+        inquirerConfirmationError = inquirerErr.message || String(inquirerErr)
+        console.error('[inquiry-webhook] inquirer confirmation email failed', inquirerErr)
+      } else {
+        inquirerConfirmationSent = true
+        inquirerConfirmationResendId = inquirerMail?.id ?? null
+      }
+    }
+
     const lineToken = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
     let linePushOk = false
     let linePushError: string | null = null
@@ -167,6 +249,10 @@ export async function POST(req: NextRequest) {
     const notificationsMeta = {
       email_sent: true,
       resend_email_id: data?.id ?? null,
+      inquirer_confirmation_email_sent: inquirerConfirmationSent,
+      inquirer_confirmation_resend_id: inquirerConfirmationResendId,
+      inquirer_confirmation_email_error: inquirerConfirmationError,
+      inquirer_confirmation_skipped: inquirerConfirmationSkipped,
       line_push_attempted: replyMethod === 'line' && Boolean(lineUid && lineToken),
       line_push_ok: linePushOk,
       line_push_error: linePushError,
