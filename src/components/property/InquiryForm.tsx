@@ -949,7 +949,7 @@ export default function InquiryForm({
             <div>
               <label className={fieldLabelClass}>{dict.labels.inquiry_content_label}</label>
               <textarea
-                rows={4}
+                rows={6}
                 required
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
