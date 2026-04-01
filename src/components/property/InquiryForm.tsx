@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, MessageCircle, ExternalLink } from 'lucide-react'
+import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { formatInquirySubmitError, formatLiffError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
@@ -829,8 +829,6 @@ export default function InquiryForm({
   }
 
   if (success) {
-    const lineHint = p.inquiry_success_line_hint ?? ''
-    const lineBtn = p.inquiry_success_line_btn ?? 'LINE'
     return (
       <div className="animate-in fade-in zoom-in duration-500 rounded-3xl border border-emerald-100 bg-emerald-50 p-8 text-center sm:p-10">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
@@ -838,22 +836,6 @@ export default function InquiryForm({
         </div>
         <h3 className="mb-3 text-lg font-normal text-navy-secondary">{dict.property.inquiry_success_title}</h3>
         <p className="text-sm leading-relaxed text-slate-600">{dict.property.inquiry_success_desc}</p>
-        {(SHOW_INQUIRY_REPLY_CHANNEL ? preferredReplyChannel === 'email' : true) &&
-        officialLineAddFriendUrl ? (
-          <div className="mt-8 rounded-2xl border border-[#06C755]/30 bg-white/90 p-5 shadow-sm">
-            <p className="text-sm font-bold text-slate-700">{lineHint}</p>
-            <a
-              href={officialLineAddFriendUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#06C755] px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#06C755]/25 transition hover:bg-[#05b34c] sm:w-auto sm:min-w-[280px]"
-            >
-              <MessageCircle className="h-5 w-5 shrink-0" />
-              {lineBtn}
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-90" />
-            </a>
-          </div>
-        ) : null}
       </div>
     )
   }
