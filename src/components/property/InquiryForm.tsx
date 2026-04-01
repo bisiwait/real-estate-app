@@ -24,6 +24,7 @@ async function requestInquiryConfirmationEmail(
   supabase: ReturnType<typeof createClient>,
   payload: {
     property_id: string
+    locale: string
     inquirer_email: string
     inquirer_name: string
     message: string
@@ -576,6 +577,7 @@ export default function InquiryForm({
       }
       void requestInquiryConfirmationEmail(sb, {
         property_id: propertyId,
+        locale,
         inquirer_email: emailTrim,
         inquirer_name: nameTrim,
         message: messageTrim,
@@ -860,6 +862,7 @@ export default function InquiryForm({
       }
       void requestInquiryConfirmationEmail(supabase, {
         property_id: propertyId,
+        locale,
         inquirer_email: emailTrim,
         inquirer_name: nameTrim,
         message: messageTrim,

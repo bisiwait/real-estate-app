@@ -17,6 +17,14 @@ function safeSubjectSnippet(s: string, maxLen: number): string {
 
 export type InquirerConfirmationInput = {
   propertyTitle: string
+  /** 物件タイプ（DB の表示用テキスト） */
+  propertyType?: string | null
+  /** 広さ（例: "45 ㎡"、未設定は "—" を渡す） */
+  areaSqmDisplay?: string | null
+  /** 家賃または販売価格の1行表示（例: "月額 15,000 THB"） */
+  rentOrPriceDisplay?: string | null
+  /** 物件詳細の絶対URL */
+  propertyUrl?: string | null
   inquirerEmail: string
   inquirerName: string
   message: string
@@ -45,9 +53,24 @@ export async function sendInquirerConfirmationEmail(
 
   const titleSafe = escapeHtml((input.propertyTitle || '').trim() || '—')
   const nameSafe = escapeHtml((input.inquirerName || '').trim() || '—')
+  const typeSafe = escapeHtml((input.propertyType || '').trim() || '—')
+  const sqmSafe = escapeHtml((input.areaSqmDisplay || '').trim() || '—')
+  const priceSafe = escapeHtml((input.rentOrPriceDisplay || '').trim() || '—')
+  const urlRaw = (input.propertyUrl || '').trim()
+  const urlSafe = escapeHtml(urlRaw)
   const messageRaw = (input.message || '').trim()
   const messageSafe = escapeHtml(messageRaw).replace(/\r\n|\n|\r/g, '<br/>')
   const subjTitle = safeSubjectSnippet(input.propertyTitle || '', 60)
+  const urlRow =
+    urlRaw.length > 0
+      ? `<tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">URL</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; word-break: break-all;"><a href="${urlSafe}" style="color: #2563eb;">${urlSafe}</a></td>
+            </tr>`
+      : `<tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">URL</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">—</td>
+            </tr>`
 
   const resend = new Resend(apiKey)
   const { data, error } = await resend.emails.send({
@@ -67,6 +90,19 @@ export async function sendInquirerConfirmationEmail(
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; width: 120px; color: #64748b; vertical-align: top;">物件</td>
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; font-weight: bold;">${titleSafe}</td>
             </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">物件タイプ</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${typeSafe}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">広さ</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${sqmSafe}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">家賃・価格</td>
+              <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${priceSafe}</td>
+            </tr>
+            ${urlRow}
             <tr>
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9; color: #64748b; vertical-align: top;">お名前</td>
               <td style="padding: 10px; border-bottom: 1px solid #f1f5f9;">${nameSafe}</td>
