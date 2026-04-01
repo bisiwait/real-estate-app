@@ -13,6 +13,44 @@ const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
 
+/** 画面上で失敗箇所を特定しやすくする（setError に加えて alert） */
+function inquiryDebugAlert(stage: string, message: string) {
+  if (typeof window === 'undefined') return
+  try {
+    window.alert(`[お問い合わせ / ${stage}]\n\n${message}`)
+  } catch {
+    /* */
+  }
+}
+
+/** LIFF getProfile().userId を DB 用に正規化（空は null） */
+function normalizeLineMessagingUserId(raw: string | null | undefined): string | null {
+  const t = typeof raw === 'string' ? raw.trim() : ''
+  return t.length > 0 ? t : null
+}
+
+/**
+ * inquiries INSERT は RLS で authenticated のみ許可。LIFF 復帰直後にセッションが無いと保存できない。
+ */
+async function ensureSupabaseSessionForInquiry(
+  sb: ReturnType<typeof createClient>
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const {
+    data: { session },
+  } = await sb.auth.getSession()
+  if (session?.user?.id) return { ok: true }
+  await sb.auth.refreshSession()
+  const {
+    data: { session: s2 },
+  } = await sb.auth.getSession()
+  if (s2?.user?.id) return { ok: true }
+  return {
+    ok: false,
+    message:
+      'ログインセッションが有効ではありません（Supabase）。お手数ですが一度ログアウトして再ログインのうえ、もう一度送信してください。\n\n※LINE 連携のあとセッションが切れていると、データベースへの保存が拒否（RLS）されます。',
+  }
+}
+
 type PendingLineInquiry = {
   v: 1
   propertyId: string
@@ -105,7 +143,15 @@ async function obtainLineUserIdForInquiry(
         message: 'LINE ユーザーIDを取得できませんでした',
       }
     }
-    return { ok: true, userId: profile.userId }
+    const uid = normalizeLineMessagingUserId(profile.userId)
+    if (!uid) {
+      return {
+        ok: false,
+        reason: 'error',
+        message: 'LINE ユーザーID（userId）が空でした。LIFF の profile スコープを確認してください。',
+      }
+    }
+    return { ok: true, userId: uid }
   } catch (profileErr: unknown) {
     return {
       ok: false,
@@ -308,6 +354,7 @@ export default function InquiryForm({
     setError(null)
 
     ;(async () => {
+      try {
       const sb = createClient()
       const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
       if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
@@ -317,7 +364,9 @@ export default function InquiryForm({
           /* */
         }
         clearPendingLineInquiry()
-        setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
+        const rateMsg = '送信の間隔が短すぎます。しばらく待ってから再度お試しください。'
+        inquiryDebugAlert('送信間隔（自動送信）', rateMsg)
+        setError(rateMsg)
         setLoading(false)
         return
       }
@@ -359,9 +408,27 @@ export default function InquiryForm({
         } catch {
           /* */
         }
-        setError(
-          `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}`
-        )
+        const errText = `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}`
+        console.error('[InquiryForm] LINE auto-submit obtainLineUserIdForInquiry', lineResult)
+        inquiryDebugAlert('LINE（自動送信）', errText)
+        setError(errText)
+        setLoading(false)
+        return
+      }
+
+      const lineUserIdForDb = lineResult.userId
+
+      const sessionCheck = await ensureSupabaseSessionForInquiry(sb)
+      if (!sessionCheck.ok) {
+        clearPendingLineInquiry()
+        try {
+          sessionStorage.removeItem(lockKey)
+        } catch {
+          /* */
+        }
+        console.error('[InquiryForm] auto-submit no session', sessionCheck.message)
+        inquiryDebugAlert('認証（RLS・自動送信）', sessionCheck.message)
+        setError(sessionCheck.message)
         setLoading(false)
         return
       }
@@ -376,7 +443,7 @@ export default function InquiryForm({
           inquirer_phone: null,
           message: pending.message.trim(),
           preferred_reply_channel: 'line',
-          line_user_id: lineResult.userId,
+          line_user_id: lineUserIdForDb,
         },
       ])
 
@@ -387,7 +454,10 @@ export default function InquiryForm({
         } catch {
           /* */
         }
-        setError(formatInquirySubmitError(submitError))
+        const formatted = formatInquirySubmitError(submitError)
+        console.error('[InquiryForm] auto-submit insert failed', submitError)
+        inquiryDebugAlert('DB保存（inquiries・自動送信）', formatted)
+        setError(formatted)
         setLoading(false)
         return
       }
@@ -402,6 +472,19 @@ export default function InquiryForm({
       }
       setSuccess(true)
       setLoading(false)
+      } catch (unexpected: unknown) {
+        const formatted = formatInquirySubmitError(unexpected)
+        console.error('[InquiryForm] auto-submit unexpected', unexpected)
+        inquiryDebugAlert('自動送信・例外', formatted)
+        clearPendingLineInquiry()
+        try {
+          sessionStorage.removeItem(lockKey)
+        } catch {
+          /* */
+        }
+        setError(formatted)
+        setLoading(false)
+      }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- dict 全体を依存に入れると毎レンダーで再実行される
   }, [isSmartphone, isLoggedIn, propertyId, locale, liffId])
@@ -428,7 +511,9 @@ export default function InquiryForm({
 
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
-      setError('送信の間隔が短すぎます。しばらく待ってから再度お試しください。')
+      const rateMsg = '送信の間隔が短すぎます。しばらく待ってから再度お試しください。'
+      inquiryDebugAlert('送信間隔', rateMsg)
+      setError(rateMsg)
       setSubmitPhase('idle')
       clearConfirmTimer()
       return
@@ -466,10 +551,11 @@ export default function InquiryForm({
     try {
       if (effectiveChannel === 'line') {
         if (!liffId) {
-          setError(
+          const msg =
             p.inquiry_liff_env_required ??
-              '「LINEで受け取る」を利用するにはサイトに LIFF ID（NEXT_PUBLIC_LINE_LIFF_ID）の設定が必要です。'
-          )
+            '「LINEで受け取る」を利用するにはサイトに LIFF ID（NEXT_PUBLIC_LINE_LIFF_ID）の設定が必要です。'
+          inquiryDebugAlert('設定', msg)
+          setError(msg)
           setSubmitPhase('idle')
           clearConfirmTimer()
           setLoading(false)
@@ -518,15 +604,32 @@ export default function InquiryForm({
             return
           }
           const profileScopeHint = p.inquiry_liff_profile_scope_hint
-          setError(
-            `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}${profileScopeHint ? `\n\n${profileScopeHint}` : ''}`
-          )
+          const errText = `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}${profileScopeHint ? `\n\n${profileScopeHint}` : ''}`
+          console.error('[InquiryForm] obtainLineUserIdForInquiry', lineResult)
+          inquiryDebugAlert('LINE（手動送信）', errText)
+          setError(errText)
           setSubmitPhase('idle')
           clearConfirmTimer()
           setLoading(false)
           return
         }
         lineUid = lineResult.userId
+      }
+
+      if (effectiveChannel === 'line') {
+        const normalized = normalizeLineMessagingUserId(lineUid)
+        if (!normalized) {
+          const msg =
+            'LINE ユーザーID（liff.getProfile().userId）を取得できませんでした。保存を中断しました。'
+          console.error('[InquiryForm]', msg)
+          inquiryDebugAlert('LINE userId', msg)
+          setError(msg)
+          setSubmitPhase('idle')
+          clearConfirmTimer()
+          setLoading(false)
+          return
+        }
+        lineUid = normalized
       }
 
       const isUuid =
@@ -537,6 +640,17 @@ export default function InquiryForm({
         await new Promise((resolve) => setTimeout(resolve, 1000))
         localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
         setSuccess(true)
+        return
+      }
+
+      const sessionCheck = await ensureSupabaseSessionForInquiry(supabase)
+      if (!sessionCheck.ok) {
+        console.error('[InquiryForm] no Supabase session before insert', sessionCheck.message)
+        inquiryDebugAlert('認証（RLS）', sessionCheck.message)
+        setError(sessionCheck.message)
+        setSubmitPhase('idle')
+        clearConfirmTimer()
+        setLoading(false)
         return
       }
 
@@ -555,8 +669,10 @@ export default function InquiryForm({
       ])
 
       if (submitError) {
+        const formatted = formatInquirySubmitError(submitError)
         console.error('Inquiries insert failed', submitError)
-        setError(formatInquirySubmitError(submitError))
+        inquiryDebugAlert('DB保存（inquiries）', formatted)
+        setError(formatted)
         setSubmitPhase('idle')
         clearConfirmTimer()
         return
@@ -573,8 +689,10 @@ export default function InquiryForm({
       }
       setSuccess(true)
     } catch (err: unknown) {
+      const formatted = formatInquirySubmitError(err)
       console.error('Inquiry submission error:', err)
-      setError(formatInquirySubmitError(err))
+      inquiryDebugAlert('予期しないエラー', formatted)
+      setError(formatted)
       setSubmitPhase('idle')
       clearConfirmTimer()
     } finally {

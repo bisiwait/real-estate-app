@@ -1,0 +1,28 @@
+-- inquiries の INSERT と LINE 問い合わせ（LIFF）について
+--
+-- 現行ポリシー（20260324200000_inquiries_authenticated_insert.sql）:
+--   「Authenticated users can submit inquiries」
+--   → role authenticated のみ INSERT 可、WITH CHECK (auth.uid() IS NOT NULL)
+--
+-- そのため、ブラウザの Supabase セッションが無い（anon）状態では INSERT は RLS で拒否されます。
+-- LIFF の外部ブラウザ遷移のあと Cookie が繋がらないと、同様に失敗します。
+-- アプリ側では送信直前に auth.getSession() / refreshSession を確認してください（InquiryForm 実装済み）。
+--
+-- ---------------------------------------------------------------------------
+-- 【任意・非推奨】匿名（anon）からの INSERT を許可する場合の例
+-- スパム・不正投稿のリスクが高いため、本番では原則使わないでください。
+-- どうしても必要な場合のみ Supabase SQL エディタで手動適用し、WITH CHECK を厳しくしてください。
+--
+-- BEGIN;
+-- DROP POLICY IF EXISTS "Optional anon LINE inquiries" ON public.inquiries;
+-- CREATE POLICY "Optional anon LINE inquiries" ON public.inquiries
+--   FOR INSERT TO anon
+--   WITH CHECK (
+--     preferred_reply_channel = 'line'
+--     AND line_user_id IS NOT NULL
+--     AND length(trim(line_user_id)) >= 8
+--   );
+-- COMMIT;
+-- ---------------------------------------------------------------------------
+
+SELECT 1;
