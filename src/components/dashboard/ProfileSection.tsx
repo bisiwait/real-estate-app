@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { User, Mail, Phone, MessageSquare, Pencil } from "lucide-react";
+import { User, Mail, Phone, Pencil } from "lucide-react";
 
 interface ProfileSectionProps {
     user: any;
@@ -33,11 +33,6 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
                         {user?.email}
                     </p>
                     <div className="flex flex-col sm:flex-row flex-wrap justify-center md:justify-start gap-3">
-                        {profile?.line_id && (
-                            <span className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black rounded-full border border-green-100">
-                                {dict.labels.line_linked}
-                            </span>
-                        )}
                         <Link
                             href={`/${locale}/profile/edit`}
                             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-navy-primary text-white text-sm font-black shadow-md shadow-navy-primary/25 transition-colors hover:bg-navy-secondary"
@@ -52,7 +47,6 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-slate-50">
                 <InfoCard icon={Mail} label={dict.labels.email_label} value={user?.email} />
                 <InfoCard icon={Phone} label={dict.labels.phone_label} value={profile?.phone || dict.labels.not_registered} />
-                <InfoCard icon={MessageSquare} label={dict.labels.line_contact_label ?? dict.labels.line_id_label} value={profile?.line_id || dict.labels.not_registered} />
             </div>
         </motion.div>
     );

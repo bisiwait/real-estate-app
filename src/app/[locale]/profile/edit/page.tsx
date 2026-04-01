@@ -18,7 +18,7 @@ export default async function ProfileEditPage({ params }: { params: Promise<{ lo
 
     const { data: profile, error } = await supabase
         .from("profiles")
-        .select("full_name, line_id, phone, user_role, is_admin")
+        .select("full_name, phone, user_role, is_admin")
         .eq("id", user.id)
         .single();
 
@@ -43,7 +43,6 @@ export default async function ProfileEditPage({ params }: { params: Promise<{ lo
             userEmail={user.email ?? ""}
             initial={{
                 full_name: profile.full_name ?? "",
-                line_id: profile.line_id ?? "",
                 phone: profile.phone ?? "",
             }}
         />
