@@ -19,6 +19,29 @@ const PENDING_LINE_MAX_MS = 15 * 60 * 1000
 /** false のとき返信方法 UI を出さず、問い合わせは常にメール希望として保存する */
 const SHOW_INQUIRY_REPLY_CHANNEL = false
 
+/** DB 保存後、送信者宛の受付控えメール（Webhook に依存しない。inquiries は RLS で送信者が SELECT できないため内容で送る） */
+async function requestInquiryConfirmationEmail(payload: {
+  property_id: string
+  inquirer_email: string
+  inquirer_name: string
+  message: string
+}) {
+  try {
+    const res = await fetch('/api/inquiries/confirm-email', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string }
+      console.warn('[InquiryForm] confirm-email failed', res.status, j.error || res.statusText)
+    }
+  } catch (e) {
+    console.warn('[InquiryForm] confirm-email', e)
+  }
+}
+
 /** 画面上で失敗箇所を特定しやすくする（setError に加えて alert） */
 function inquiryDebugAlert(stage: string, message: string) {
   if (typeof window === 'undefined') return
@@ -501,14 +524,16 @@ export default function InquiryForm({
       }
 
       const emailTrim = pending.email.trim()
+      const nameTrim = pending.name.trim()
+      const messageTrim = pending.message.trim()
       const { error: submitError } = await sb.from('inquiries').insert([
         {
           property_id: propertyId,
-          inquirer_name: pending.name.trim(),
+          inquirer_name: nameTrim,
           inquirer_email: emailTrim,
           email: emailTrim,
           inquirer_phone: null,
-          message: pending.message.trim(),
+          message: messageTrim,
           preferred_reply_channel: 'line',
           line_user_id: lineUserIdForDb,
         },
@@ -539,6 +564,12 @@ export default function InquiryForm({
       } catch {
         /* */
       }
+      void requestInquiryConfirmationEmail({
+        property_id: propertyId,
+        inquirer_email: emailTrim,
+        inquirer_name: nameTrim,
+        message: messageTrim,
+      })
       setSuccess(true)
       setLoading(false)
       } catch (unexpected: unknown) {
@@ -782,14 +813,16 @@ export default function InquiryForm({
       }
 
       const emailTrim = formData.email.trim()
+      const nameTrim = formData.name.trim()
+      const messageTrim = formData.message.trim()
       const { error: submitError } = await supabase.from('inquiries').insert([
         {
           property_id: propertyId,
-          inquirer_name: formData.name.trim(),
+          inquirer_name: nameTrim,
           inquirer_email: emailTrim,
           email: emailTrim,
           inquirer_phone: null,
-          message: formData.message.trim(),
+          message: messageTrim,
           preferred_reply_channel: effectiveChannel,
           line_user_id: effectiveChannel === 'line' ? lineUid : null,
         },
@@ -815,6 +848,12 @@ export default function InquiryForm({
           /* ignore */
         }
       }
+      void requestInquiryConfirmationEmail({
+        property_id: propertyId,
+        inquirer_email: emailTrim,
+        inquirer_name: nameTrim,
+        message: messageTrim,
+      })
       setSuccess(true)
     } catch (err: unknown) {
       const formatted = formatInquirySubmitError(err)
