@@ -1,116 +1,246 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import {
-    getResendFromAddress,
-    RESEND_DOMAIN_HINT_JA,
-    RESEND_FROM_FORMAT_HINT_JA,
-    resendErrorInvalidFrom,
-    resendErrorNeedsVerifiedDomain,
+  getResendFromAddress,
+  RESEND_DOMAIN_HINT_JA,
+  RESEND_FROM_FORMAT_HINT_JA,
+  resendErrorInvalidFrom,
+  resendErrorNeedsVerifiedDomain,
 } from '@/lib/resend-from'
+import { lineOfficialPushText } from '@/lib/line-official-push'
+import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+type InquiryNotifyRow = {
+  id: string
+  owner_id: string
+  property_id: string
+  inquirer_email: string | null
+  inquirer_name: string | null
+  preferred_reply_channel: string | null
+  line_user_id: string | null
+}
+
+async function insertAgentDeliveryLog(params: {
+  inquiryId: string
+  propertyId: string
+  agentId: string
+  senderUserId: string
+  message: string
+  sentVia: 'email' | 'line'
+  inquiryReplyId: string | null
+  forcedEmail: boolean
+  resendId: string | null
+  linePushStatus: number | null
+}) {
+  try {
+    const admin = await createAdminClient()
+    const metadata: Record<string, unknown> = {
+      sent_via: params.sentVia,
+      message_content: params.message,
+      sender_user_id: params.senderUserId,
+      delivery_route: 'agent_dashboard_notify_reply',
+    }
+    if (params.inquiryReplyId) metadata.inquiry_reply_id = params.inquiryReplyId
+    if (params.forcedEmail) metadata.forced_email = true
+    if (params.resendId) metadata.resend_id = params.resendId
+    if (params.linePushStatus != null) metadata.line_push_http_status = params.linePushStatus
+
+    const { error } = await admin.from('inquiry_logs').insert({
+      inquiry_id: params.inquiryId,
+      property_id: params.propertyId,
+      agent_id: params.agentId,
+      user_id: null,
+      inquiry_type: 'agent_reply',
+      status: 'replied',
+      metadata,
+    })
+    if (error) {
+      console.error('[notify-reply] inquiry_logs insert', error)
+    }
+  } catch (e) {
+    console.error('[notify-reply] inquiry_logs insert exception', e)
+  }
 }
 
 /**
- * エージェントがダッシュボードから返信したあと、問い合わせ人へメール通知する。
- * （DB トリガー → Edge Function 経路は Authorization 不備で失敗しやすいため、ここで送信する）
+ * エージェントがダッシュボードから返信したあと、問い合わせ人へ届ける。
+ * preferred_reply_channel が line かつ line_user_id がある場合は LINE Push、それ以外はメール（Resend）。
+ * LINE 希望だが line_user_id がない場合は force_email でメールにフォールバック可能。
  */
 export async function POST(req: NextRequest) {
-    try {
-        const supabase = await createClient()
-        const {
-            data: { user },
-        } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-        if (!user) {
-            return NextResponse.json({ error: 'ログインが必要です。' }, { status: 401 })
-        }
+    if (!user) {
+      return NextResponse.json({ error: 'ログインが必要です。' }, { status: 401 })
+    }
 
-        const body = (await req.json()) as { inquiry_id?: string; message?: string }
-        const inquiryId = typeof body.inquiry_id === 'string' ? body.inquiry_id.trim() : ''
-        const message = typeof body.message === 'string' ? body.message.trim() : ''
+    const body = (await req.json()) as {
+      inquiry_id?: string
+      message?: string
+      inquiry_reply_id?: string
+      force_email?: boolean
+    }
+    const inquiryId = typeof body.inquiry_id === 'string' ? body.inquiry_id.trim() : ''
+    const message = typeof body.message === 'string' ? body.message.trim() : ''
+    const forceEmail = body.force_email === true
+    const inquiryReplyId =
+      typeof body.inquiry_reply_id === 'string' && UUID_RE.test(body.inquiry_reply_id.trim())
+        ? body.inquiry_reply_id.trim()
+        : null
 
-        if (!inquiryId || !message) {
-            return NextResponse.json({ error: 'inquiry_id と message が必要です。' }, { status: 400 })
-        }
+    if (!inquiryId || !message) {
+      return NextResponse.json({ error: 'inquiry_id と message が必要です。' }, { status: 400 })
+    }
+    if (message.length > 4500) {
+      return NextResponse.json({ error: '本文が長すぎます（4500文字以内）。' }, { status: 400 })
+    }
 
-        const { data: inquiry, error: inqError } = await supabase
-            .from('inquiries')
-            .select('id, owner_id, inquirer_email, inquirer_name, property:properties(title)')
-            .eq('id', inquiryId)
-            .single()
+    const { data: inquiry, error: inqError } = await supabase
+      .from('inquiries')
+      .select(
+        'id, owner_id, property_id, inquirer_email, inquirer_name, preferred_reply_channel, line_user_id, property:properties(title)'
+      )
+      .eq('id', inquiryId)
+      .single()
 
-        if (inqError || !inquiry) {
-            console.warn('[notify-reply] inquiry select:', inqError?.message)
-            return NextResponse.json({ error: 'お問い合わせが見つかりません。' }, { status: 404 })
-        }
+    if (inqError || !inquiry) {
+      console.warn('[notify-reply] inquiry select:', inqError?.message)
+      return NextResponse.json({ error: 'お問い合わせが見つかりません。' }, { status: 404 })
+    }
 
-        const isOwner = inquiry.owner_id === user.id
-        let isAdminUser = false
-        if (!isOwner) {
-            const { data: prof } = await supabase
-                .from('profiles')
-                .select('is_admin, user_role')
-                .eq('id', user.id)
-                .maybeSingle()
-            isAdminUser = prof?.is_admin === true || prof?.user_role === 'admin'
-        }
+    const row = inquiry as InquiryNotifyRow & { property?: { title?: string } | null }
+    const isOwner = row.owner_id === user.id
+    let isAdminUser = false
+    if (!isOwner) {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('is_admin, user_role')
+        .eq('id', user.id)
+        .maybeSingle()
+      isAdminUser = prof?.is_admin === true || prof?.user_role === 'admin'
+    }
 
-        if (!isOwner && !isAdminUser) {
-            console.warn('[notify-reply] forbidden', { userId: user.id, ownerId: inquiry.owner_id })
-            return NextResponse.json({ error: 'このお問い合わせに返信する権限がありません。' }, { status: 403 })
-        }
+    if (!isOwner && !isAdminUser) {
+      console.warn('[notify-reply] forbidden', { userId: user.id, ownerId: row.owner_id })
+      return NextResponse.json({ error: 'このお問い合わせに返信する権限がありません。' }, { status: 403 })
+    }
 
-        const to = inquiry.inquirer_email?.trim()
-        if (!to) {
-            return NextResponse.json({ error: '問い合わせ人のメールアドレスがありません。' }, { status: 422 })
-        }
+    const preferred = normalizeInquiryReplyChannel(row.preferred_reply_channel)
+    const lineUid = row.line_user_id?.trim() || ''
+    const useLine = preferred === 'line' && !forceEmail && Boolean(lineUid)
 
-        const apiKey = process.env.RESEND_API_KEY
-        if (!apiKey) {
-            console.error('[notify-reply] RESEND_API_KEY is not set')
-            return NextResponse.json(
-                { error: 'メール送信が設定されていません（RESEND_API_KEY）。', sent: false },
-                { status: 503 }
-            )
-        }
+    if (preferred === 'line' && !forceEmail && !lineUid) {
+      return NextResponse.json(
+        {
+          error:
+            'お客様は LINE 返信を希望されていますが、LINE ユーザーIDが記録されていません。メールでの返信をご利用ください。',
+          code: 'LINE_USER_ID_MISSING',
+          can_use_email_fallback: true,
+        },
+        { status: 422 }
+      )
+    }
 
-        const { data: agentProfile } = await supabase
-            .from('profiles')
-            .select('email, full_name')
-            .eq('id', user.id)
-            .maybeSingle()
+    const propertyTitle = row.property?.title ?? '物件'
+    const inquirerName = row.inquirer_name?.trim() || 'お客様'
 
-        const agentEmail =
-            agentProfile?.email?.trim() || user.email?.trim() || ''
-        const agentDisplayName = agentProfile?.full_name?.trim() || '担当エージェント'
+    const { data: agentProfile } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', user.id)
+      .maybeSingle()
 
-        const propertyTitle =
-            (inquiry as { property?: { title?: string } | null }).property?.title ?? '物件'
-        const inquirerName = inquiry.inquirer_name?.trim() || 'お客様'
-        const safeMessage = escapeHtml(message)
-        const safeTitle = escapeHtml(propertyTitle)
-        const safeAgentName = escapeHtml(agentDisplayName)
-        const safeAgentEmail = escapeHtml(agentEmail)
+    const agentEmail = agentProfile?.email?.trim() || user.email?.trim() || ''
+    const agentDisplayName = agentProfile?.full_name?.trim() || '担当エージェント'
 
-        const from = getResendFromAddress()
+    if (useLine) {
+      const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+      if (!token) {
+        return NextResponse.json(
+          { error: 'LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN が未設定のため LINE で送信できません。' },
+          { status: 503 }
+        )
+      }
+      const pushResult = await lineOfficialPushText(lineUid, message, token)
+      if (!pushResult.ok) {
+        const userMsg = linePushFailureUserMessage(pushResult.status, pushResult.body || '')
+        console.error('[notify-reply] LINE push', pushResult.status, pushResult.body)
+        return NextResponse.json(
+          {
+            error: userMsg,
+            line_status: pushResult.status,
+            sent: false,
+            sent_via: 'line',
+          },
+          { status: 502 }
+        )
+      }
 
-        const resend = new Resend(apiKey)
-        const { data: sent, error: sendErr } = await resend.emails.send({
-            from,
-            to: [to],
-            // From は検証済みドメイン必須のためプラットフォーム宛。メールソフトの「返信」は担当者へ届く。
-            ...(agentEmail ? { replyTo: agentEmail } : {}),
-            subject: `【返信】「${propertyTitle}」についてのお問い合わせ`,
-            html: `
+      await insertAgentDeliveryLog({
+        inquiryId,
+        propertyId: row.property_id,
+        agentId: row.owner_id,
+        senderUserId: user.id,
+        message,
+        sentVia: 'line',
+        inquiryReplyId,
+        forcedEmail: false,
+        resendId: null,
+        linePushStatus: pushResult.status,
+      })
+
+      return NextResponse.json({
+        success: true,
+        sent: true,
+        sent_via: 'line',
+      })
+    }
+
+    const to = row.inquirer_email?.trim()
+    if (!to) {
+      return NextResponse.json({ error: '問い合わせ人のメールアドレスがありません。' }, { status: 422 })
+    }
+
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      console.error('[notify-reply] RESEND_API_KEY is not set')
+      return NextResponse.json(
+        { error: 'メール送信が設定されていません（RESEND_API_KEY）。', sent: false },
+        { status: 503 }
+      )
+    }
+
+    const safeMessage = escapeHtml(message)
+    const safeTitle = escapeHtml(propertyTitle)
+    const safeAgentName = escapeHtml(agentDisplayName)
+    const safeAgentEmail = escapeHtml(agentEmail)
+    const safeInquirer = escapeHtml(inquirerName)
+
+    const from = getResendFromAddress()
+    const resend = new Resend(apiKey)
+    const { data: sent, error: sendErr } = await resend.emails.send({
+      from,
+      to: [to],
+      ...(agentEmail ? { replyTo: agentEmail } : {}),
+      subject: `【返信】「${propertyTitle}」についてのお問い合わせ`,
+      html: `
         <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
-          <h2>${escapeHtml(inquirerName)} 様</h2>
+          <h2>${safeInquirer} 様</h2>
           <p>お問い合わせいただいた物件「<strong>${safeTitle}</strong>」について、担当より返信です。</p>
           <p style="font-size: 14px; color: #475569; margin: 16px 0;">
             <strong>担当:</strong> ${safeAgentName}
@@ -127,21 +257,40 @@ export async function POST(req: NextRequest) {
           <p style="font-size: 12px; color: #999;">Chonburi Home</p>
         </div>
       `,
-        })
+    })
 
-        if (sendErr) {
-            const msg = sendErr.message || String(sendErr)
-            console.error('[notify-reply] Resend error:', sendErr, 'from=', from)
-            let hint: string | undefined
-            if (resendErrorNeedsVerifiedDomain(msg)) hint = RESEND_DOMAIN_HINT_JA
-            else if (resendErrorInvalidFrom(msg)) hint = RESEND_FROM_FORMAT_HINT_JA
-            return NextResponse.json({ error: msg, hint, sent: false }, { status: 502 })
-        }
-
-        return NextResponse.json({ success: true, sent: true, id: sent?.id })
-    } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'Unknown error'
-        console.error('[notify-reply]', e)
-        return NextResponse.json({ error: msg }, { status: 500 })
+    if (sendErr) {
+      const msg = sendErr.message || String(sendErr)
+      console.error('[notify-reply] Resend error:', sendErr, 'from=', from)
+      let hint: string | undefined
+      if (resendErrorNeedsVerifiedDomain(msg)) hint = RESEND_DOMAIN_HINT_JA
+      else if (resendErrorInvalidFrom(msg)) hint = RESEND_FROM_FORMAT_HINT_JA
+      return NextResponse.json({ error: msg, hint, sent: false, sent_via: 'email' }, { status: 502 })
     }
+
+    await insertAgentDeliveryLog({
+      inquiryId,
+      propertyId: row.property_id,
+      agentId: row.owner_id,
+      senderUserId: user.id,
+      message,
+      sentVia: 'email',
+      inquiryReplyId,
+      forcedEmail: preferred === 'line' && forceEmail,
+      resendId: sent?.id ?? null,
+      linePushStatus: null,
+    })
+
+    return NextResponse.json({
+      success: true,
+      sent: true,
+      sent_via: 'email',
+      id: sent?.id,
+      used_email_fallback: preferred === 'line' && forceEmail,
+    })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Unknown error'
+    console.error('[notify-reply]', e)
+    return NextResponse.json({ error: msg }, { status: 500 })
+  }
 }

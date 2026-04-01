@@ -70,10 +70,12 @@ const ADMIN_REPLY_TEMPLATES: { label: string; text: string }[] = [
   },
 ]
 
-function preferredChannelUi(row: AdminMailInquiryRow): { mode: 'email' | 'line'; label: string } {
+function preferredChannelUi(row: AdminMailInquiryRow): { mode: 'email' | 'line'; label: string; badge: string } {
   const ch = (row.preferred_reply_channel || 'email').toLowerCase()
-  if (ch === 'line' || ch === 'email_and_line') return { mode: 'line', label: 'LINEで受け取る希望' }
-  return { mode: 'email', label: 'メールで受け取る希望' }
+  if (ch === 'line' || ch === 'email_and_line') {
+    return { mode: 'line', label: 'LINEで受け取る希望', badge: '【LINE】' }
+  }
+  return { mode: 'email', label: 'メールで受け取る希望', badge: '【メール】' }
 }
 
 interface Props {
@@ -288,12 +290,12 @@ export default function AdminInquiriesPanel({
                         {preferredChannelUi(row).mode === 'line' ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-[#06C755]/15 px-2.5 py-1 text-[10px] font-black text-[#047c3d]">
                             <MessageCircle className="h-3 w-3" />
-                            LINE
+                            返信希望：{preferredChannelUi(row).badge}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-black text-sky-800">
                             <Mail className="h-3 w-3" />
-                            メール
+                            返信希望：{preferredChannelUi(row).badge}
                           </span>
                         )}
                       </td>
@@ -423,18 +425,24 @@ export default function AdminInquiriesPanel({
                   </div>
                   <div>
                     <dt className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      ユーザーが選んだ返信手段
+                      返信希望（DB: preferred_reply_channel）
                     </dt>
                     <dd>
                       {preferredChannelUi(mailDetail).mode === 'line' ? (
                         <span className="inline-flex items-center gap-2 rounded-xl border border-[#06C755]/30 bg-[#06C755]/10 px-3 py-2 text-sm font-black text-[#047c3d]">
                           <MessageCircle className="h-4 w-4" />
-                          {preferredChannelUi(mailDetail).label}
+                          返信希望：{preferredChannelUi(mailDetail).badge}
+                          <span className="text-[11px] font-bold opacity-80">
+                            （{preferredChannelUi(mailDetail).label}）
+                          </span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-black text-sky-900">
                           <Mail className="h-4 w-4" />
-                          {preferredChannelUi(mailDetail).label}
+                          返信希望：{preferredChannelUi(mailDetail).badge}
+                          <span className="text-[11px] font-bold opacity-80">
+                            （{preferredChannelUi(mailDetail).label}）
+                          </span>
                         </span>
                       )}
                     </dd>

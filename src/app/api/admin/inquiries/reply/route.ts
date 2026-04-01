@@ -10,6 +10,7 @@ import {
   resendErrorNeedsVerifiedDomain,
 } from '@/lib/resend-from'
 import { lineOfficialPushText } from '@/lib/line-official-push'
+import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -19,36 +20,6 @@ function escapeHtml(text: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-}
-
-function normalizePreferredChannel(ch: string | null | undefined): 'email' | 'line' {
-  if (ch === 'line' || ch === 'email_and_line') return 'line'
-  return 'email'
-}
-
-function lineFailureUserMessage(status: number, bodySnippet: string): string {
-  const lower = bodySnippet.toLowerCase()
-  const blockedHint =
-    '送信失敗：ユーザーがブロックしている可能性があります。メールでの連絡に切り替えてください。'
-  if (status === 401) {
-    return '送信失敗：LINE チャネルのアクセストークンを確認してください（401）。'
-  }
-  if (status === 403) {
-    return blockedHint
-  }
-  if (status === 404) {
-    return blockedHint
-  }
-  if (status === 400) {
-    if (lower.includes('invalid') || lower.includes('not found') || lower.includes('blocked')) {
-      return blockedHint
-    }
-    return `${blockedHint}（LINE API: ${status}）`
-  }
-  if (status >= 400 && status < 500) {
-    return `${blockedHint}（HTTP ${status}）`
-  }
-  return `LINE 送信に失敗しました（HTTP ${status}）。メールでの連絡をご検討ください。`
 }
 
 type InquiryRow = {
@@ -117,7 +88,7 @@ export async function POST(req: NextRequest) {
     }
 
     const row = inquiry as InquiryRow
-    const preferred = normalizePreferredChannel(row.preferred_reply_channel)
+    const preferred = normalizeInquiryReplyChannel(row.preferred_reply_channel)
 
     if (channelRaw === 'email' && preferred !== 'email') {
       return NextResponse.json(
@@ -234,7 +205,7 @@ export async function POST(req: NextRequest) {
       const toUser = row.line_user_id!.trim()
       const pushResult = await lineOfficialPushText(toUser, message, token)
       if (!pushResult.ok) {
-        const userMsg = lineFailureUserMessage(pushResult.status, pushResult.body || '')
+        const userMsg = linePushFailureUserMessage(pushResult.status, pushResult.body || '')
         console.error('[admin/inquiries/reply] LINE push', pushResult.status, pushResult.body)
         return NextResponse.json(
           {
