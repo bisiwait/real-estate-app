@@ -28,6 +28,8 @@ interface Inquiry {
   created_at: string
   preferred_reply_channel?: string | null
   line_user_id?: string | null
+  /** ダッシュボードからの LINE Push 成功が inquiry_logs にある（初回以降はチャット導線） */
+  line_push_already_sent?: boolean
   property?: {
     title: string
   }
@@ -121,52 +123,83 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
       const messageToNotify = replyText.trim()
       const preferred = normalizeInquiryReplyChannel(inquiry.preferred_reply_channel)
       const lineUid = inquiry.line_user_id?.trim()
+      const linePushUsed = inquiry.line_push_already_sent === true
       const autoForceEmail = preferred === 'line' && !lineUid
       const forceEmail = autoForceEmail || forceEmailAfterLineFail
 
+      const shouldCallNotify =
+        preferred === 'email' ||
+        forceEmail ||
+        (preferred === 'line' && Boolean(lineUid) && !linePushUsed)
+
       try {
-        const notifyRes = await fetch('/api/inquiries/notify-reply', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            inquiry_id: inquiry.id,
-            message: messageToNotify,
-            inquiry_reply_id: newReply?.id ?? undefined,
-            force_email: forceEmail || undefined,
-          }),
-        })
-        const errJson = (await notifyRes.json().catch(() => ({}))) as {
-          error?: string
-          hint?: string
-          code?: string
-          can_use_email_fallback?: boolean
-          sent_via?: string
-        }
+        if (shouldCallNotify) {
+          const notifyRes = await fetch('/api/inquiries/notify-reply', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              inquiry_id: inquiry.id,
+              message: messageToNotify,
+              inquiry_reply_id: newReply?.id ?? undefined,
+              force_email: forceEmail || undefined,
+            }),
+          })
+          const payload = (await notifyRes.json().catch(() => ({}))) as {
+            error?: string
+            hint?: string
+            code?: string
+            can_use_email_fallback?: boolean
+            sent_via?: string
+            success?: boolean
+            sent?: boolean
+          }
 
-        if (!notifyRes.ok) {
-          const detail = errJson.error || notifyRes.statusText
-          console.warn('[InquiryList] notify-reply:', notifyRes.status, detail)
+          if (!notifyRes.ok) {
+            const detail = payload.error || notifyRes.statusText
+            console.warn('[InquiryList] notify-reply:', notifyRes.status, detail)
 
-          if (notifyRes.status === 502 && errJson.sent_via === 'line') {
-            setForceEmailAfterLineFail(true)
-            alert(
-              `${detail}\n\nメールでの返信に切り替える場合は、「メールで返信を送信」ボタンを押してください。`
-            )
-          } else if (notifyRes.status === 401) {
-            alert(
-              '返信は保存されましたが、通知用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。'
-            )
-          } else if (notifyRes.status === 502 || notifyRes.status === 503) {
-            const hint = errJson.hint ? `\n\n${errJson.hint}` : ''
-            alert(`送信に失敗しました: ${detail}${hint}`)
-          } else if (notifyRes.status === 422 && errJson.code === 'LINE_USER_ID_MISSING') {
-            alert(`${detail}`)
-          } else if (notifyRes.status !== 422) {
-            alert(`送信に失敗しました: ${detail}`)
+            if (notifyRes.status === 502 && payload.sent_via === 'line') {
+              setForceEmailAfterLineFail(true)
+              alert(
+                `${detail}\n\nメールでの返信に切り替える場合は、「代わりにメールで返信する」を押してください。`
+              )
+            } else if (notifyRes.status === 401) {
+              alert(
+                '返信は保存されましたが、通知用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。'
+              )
+            } else if (notifyRes.status === 409 && payload.code === 'LINE_PUSH_ALREADY_SENT') {
+              setInquiries((prev) =>
+                prev.map((i) =>
+                  i.id === inquiry.id ? { ...i, line_push_already_sent: true } : i
+                )
+              )
+              setForceEmailAfterLineFail(false)
+              alert(
+                `${detail}\n\n必要であれば「代わりにメールで返信する」からメール通知を送れます。`
+              )
+            } else if (notifyRes.status === 502 || notifyRes.status === 503) {
+              const hint = payload.hint ? `\n\n${payload.hint}` : ''
+              alert(`送信に失敗しました: ${detail}${hint}`)
+            } else if (notifyRes.status === 422 && payload.code === 'LINE_USER_ID_MISSING') {
+              alert(`${detail}`)
+            } else if (notifyRes.status !== 422) {
+              alert(`送信に失敗しました: ${detail}`)
+            }
+          } else {
+            setForceEmailAfterLineFail(false)
+            if (payload.sent_via === 'line') {
+              setInquiries((prev) =>
+                prev.map((i) =>
+                  i.id === inquiry.id ? { ...i, line_push_already_sent: true } : i
+                )
+              )
+            }
           }
         } else {
-          setForceEmailAfterLineFail(false)
+          alert(
+            '返信を履歴に保存しました。続きのやり取りは LINE Official Account Manager のチャットから、上記の LINE ユーザーIDの友だち宛にご返信ください。'
+          )
         }
       } catch (notifyErr) {
         console.warn('[InquiryList] notify-reply fetch failed:', notifyErr)
@@ -206,14 +239,20 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
         const pref = replyPreferenceLabel(inquiry)
         const lineUid = inquiry.line_user_id?.trim()
         const lineMissing = pref.mode === 'line' && !lineUid
+        const linePushUsed = inquiry.line_push_already_sent === true
+        /** ダッシュボードから公式 LINE へ Push する経路（初回のみ） */
+        const useLineNotify =
+          pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail && !linePushUsed
         const expanded = expandedId === inquiry.id
-        const placeholderText =
-          pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail
-            ? 'LINEで送信するメッセージを入力…'
+        const placeholderText = useLineNotify
+          ? 'LINEで送信するメッセージを入力…'
+          : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
+            ? '社内メモ・履歴用（Pushは送信されません。続きは LINE 管理画面のチャットから）…'
             : '返信メール本文を入力…'
-        const labelText =
-          pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail
-            ? 'LINE で送信する内容'
+        const labelText = useLineNotify
+          ? 'LINE で送信する内容'
+          : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
+            ? '返信メモ（履歴に保存）'
             : '返信メールの本文'
 
         return (
@@ -322,11 +361,41 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                   </div>
                 ) : null}
 
+                {pref.mode === 'line' && lineUid && linePushUsed && !forceEmailAfterLineFail ? (
+                  <div className="mb-6 rounded-2xl border border-[#06C755]/30 bg-[#06C755]/10 px-4 py-3 text-sm font-bold text-[#035c2e] space-y-2">
+                    <p>
+                      このお問い合わせへの <strong>LINE Push（ダッシュボードからの一斉送信）は初回のみ</strong>
+                      です。2通目以降は{' '}
+                      <a
+                        href="https://manager.line.biz/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline decoration-[#06C755] hover:text-[#024022]"
+                      >
+                        LINE Official Account Manager
+                      </a>
+                      の <strong>チャット</strong> から、同じ友だち宛に返信してください。
+                    </p>
+                    <p className="text-xs font-semibold text-[#047c3d]/90">
+                      下のフォームでは返信を<strong>履歴に保存</strong>できます（Push・メールは送りません）。メール通知が必要な場合は「代わりにメールで返信する」を選んでください。
+                    </p>
+                  </div>
+                ) : null}
+
                 {forceEmailAfterLineFail ? (
                   <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-900">
                     <p>
-                      次の送信は <strong>メール</strong> で送ります（LINE
-                      送信エラー後の切り替え）。内容を確認して送信してください。
+                      {linePushUsed ? (
+                        <>
+                          <strong>メール</strong> で通知します（LINE Push
+                          は初回のみのため、以降は管理画面チャットまたはメールをご利用ください）。内容を確認して送信してください。
+                        </>
+                      ) : (
+                        <>
+                          次の送信は <strong>メール</strong> で送ります（LINE
+                          送信エラー後の切り替え）。内容を確認して送信してください。
+                        </>
+                      )}
                     </p>
                   </div>
                 ) : null}
@@ -424,14 +493,16 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                         disabled={isSubmittingReply || !replyText.trim()}
                         className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                         title={
-                          pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail
+                          useLineNotify
                             ? 'LINE で送信'
-                            : 'メールで送信'
+                            : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
+                              ? '履歴に保存（Pushは送りません）'
+                              : 'メールで送信'
                         }
                       >
                         {isSubmittingReply ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail ? (
+                        ) : useLineNotify ? (
                           <MessageCircle className="w-5 h-5" />
                         ) : (
                           <Send className="w-5 h-5" />
@@ -439,11 +510,13 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                       </button>
                     </div>
                     <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
-                      {pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail
-                        ? '※送信すると公式 LINE からお客様の LINE に Push 通知されます。内容は返信履歴にも保存されます。'
-                        : '※送信するとお客様のメール宛に届きます。内容は返信履歴にも保存されます。'}
+                      {useLineNotify
+                        ? '※送信すると公式 LINE からお客様の LINE に Push 通知されます（お問い合わせあたり1回まで）。内容は返信履歴にも保存されます。'
+                        : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
+                          ? '※Push は送信されません。履歴への保存のみです。お客様へ届ける内容は LINE 管理画面のチャットから送信してください。'
+                          : '※送信するとお客様のメール宛に届きます。内容は返信履歴にも保存されます。'}
                     </p>
-                    {pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail ? (
+                    {pref.mode === 'line' && !lineMissing && (useLineNotify || linePushUsed) ? (
                       <button
                         type="button"
                         onClick={() => setForceEmailAfterLineFail(true)}
@@ -452,7 +525,7 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                         代わりにメールで返信する
                       </button>
                     ) : null}
-                    {forceEmailAfterLineFail && pref.mode === 'line' && lineUid ? (
+                    {forceEmailAfterLineFail && pref.mode === 'line' && lineUid && !linePushUsed ? (
                       <button
                         type="button"
                         onClick={() => setForceEmailAfterLineFail(false)}

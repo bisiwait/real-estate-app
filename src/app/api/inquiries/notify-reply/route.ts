@@ -31,6 +31,21 @@ type InquiryNotifyRow = {
   line_user_id: string | null
 }
 
+/** 成功したエージェント返信の LINE Push が既に記録されているか（失敗時はログが残らないため再送可） */
+async function hasSuccessfulAgentLinePush(admin: Awaited<ReturnType<typeof createAdminClient>>, inquiryId: string) {
+  const { data, error } = await admin
+    .from('inquiry_logs')
+    .select('metadata')
+    .eq('inquiry_id', inquiryId)
+    .eq('inquiry_type', 'agent_reply')
+    .limit(30)
+  if (error || !data?.length) return false
+  return data.some((row) => {
+    const m = row.metadata as Record<string, unknown> | null
+    return m?.sent_via === 'line'
+  })
+}
+
 async function insertAgentDeliveryLog(params: {
   inquiryId: string
   propertyId: string
@@ -154,6 +169,22 @@ export async function POST(req: NextRequest) {
         },
         { status: 422 }
       )
+    }
+
+    const adminForLineCheck = await createAdminClient()
+    if (preferred === 'line' && !forceEmail && lineUid) {
+      const alreadyPushed = await hasSuccessfulAgentLinePush(adminForLineCheck, inquiryId)
+      if (alreadyPushed) {
+        return NextResponse.json(
+          {
+            error:
+              'このお問い合わせには既に公式 LINE から Push を送信済みです。続きのやり取りは LINE Official Account Manager（チャット）から、同じ友だち宛に返信してください。',
+            code: 'LINE_PUSH_ALREADY_SENT',
+            can_use_email_fallback: true,
+          },
+          { status: 409 }
+        )
+      }
     }
 
     const propertyTitle = row.property?.title ?? '物件'

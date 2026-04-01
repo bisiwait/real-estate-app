@@ -80,6 +80,28 @@ export default async function DashboardPage({
                 replies: allReplies?.filter(r => r.inquiry_id === inq.id) || []
             }))
         }
+
+        const { data: agentLineLogs, error: agentLineLogsError } = await supabase
+            .from('inquiry_logs')
+            .select('inquiry_id, metadata')
+            .in('inquiry_id', inquiryIds)
+            .eq('inquiry_type', 'agent_reply')
+            .eq('agent_id', user.id)
+
+        if (agentLineLogsError) {
+            console.error('Error fetching inquiry_logs (agent LINE push):', agentLineLogsError)
+        }
+        const linePushSentIds = new Set<string>()
+        for (const log of agentLineLogs || []) {
+            const m = log.metadata as { sent_via?: string } | null
+            if (log.inquiry_id && m?.sent_via === 'line') {
+                linePushSentIds.add(log.inquiry_id)
+            }
+        }
+        inquiries = inquiries.map((inq) => ({
+            ...inq,
+            line_push_already_sent: linePushSentIds.has(inq.id),
+        }))
     }
 
 
