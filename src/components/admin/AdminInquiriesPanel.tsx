@@ -1,7 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Mail, MessageCircle, ExternalLink, Home, X, Calendar, Hash, Reply } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+  Mail,
+  MessageCircle,
+  ExternalLink,
+  Home,
+  X,
+  Calendar,
+  Hash,
+  Reply,
+  Send,
+  Loader2,
+  Sparkles,
+} from 'lucide-react'
 import type {
   AdminMailInquiryRow,
   AdminLineLeadRow,
@@ -41,6 +54,28 @@ const LINE_STATUS_JA: Record<string, string> = {
   closed: '終了',
 }
 
+/** 管理画面の返信フォーム用テンプレート（ワンクリック挿入） */
+const ADMIN_REPLY_TEMPLATES: { label: string; text: string }[] = [
+  {
+    label: '初回返信',
+    text: 'お問い合わせありがとうございます。\n担当でございます。いただいた内容を確認のうえ、改めてご連絡いたします。\n引き続きよろしくお願いいたします。',
+  },
+  {
+    label: '内見調整',
+    text: 'ご検討ありがとうございます。\n内見をご希望の場合は、ご都合のよい日時（第3希望まで）をお知らせください。調整のうえご案内いたします。',
+  },
+  {
+    label: '資料・追加情報',
+    text: '追加でご案内できる資料がございます。ご希望があればお知らせください。\nほかご不明点があれば、このメッセージにご返信ください。',
+  },
+]
+
+function preferredChannelUi(row: AdminMailInquiryRow): { mode: 'email' | 'line'; label: string } {
+  const ch = (row.preferred_reply_channel || 'email').toLowerCase()
+  if (ch === 'line' || ch === 'email_and_line') return { mode: 'line', label: 'LINEで受け取る希望' }
+  return { mode: 'email', label: 'メールで受け取る希望' }
+}
+
 interface Props {
   locale: string
   mailInquiries: AdminMailInquiryRow[]
@@ -52,17 +87,28 @@ export default function AdminInquiriesPanel({
   mailInquiries,
   lineLeads,
 }: Props) {
+  const router = useRouter()
   const [sub, setSub] = useState<SubTab>('mail')
   const [mailDetail, setMailDetail] = useState<AdminMailInquiryRow | null>(null)
   const [mailReplies, setMailReplies] = useState<MailReplyRow[] | null>(null)
   const [mailRepliesLoading, setMailRepliesLoading] = useState(false)
   const [mailRepliesError, setMailRepliesError] = useState<string | null>(null)
+  const [repliesNonce, setRepliesNonce] = useState(0)
+  const [replySubject, setReplySubject] = useState('')
+  const [replyBody, setReplyBody] = useState('')
+  const [replySending, setReplySending] = useState(false)
+  const [replyError, setReplyError] = useState<string | null>(null)
+  const [replyOk, setReplyOk] = useState<string | null>(null)
 
   const closeMailDetail = useCallback(() => {
     setMailDetail(null)
     setMailReplies(null)
     setMailRepliesError(null)
     setMailRepliesLoading(false)
+    setReplySubject('')
+    setReplyBody('')
+    setReplyError(null)
+    setReplyOk(null)
   }, [])
 
   useEffect(() => {
@@ -81,6 +127,10 @@ export default function AdminInquiriesPanel({
       setMailRepliesLoading(false)
       return
     }
+    setReplySubject('')
+    setReplyBody('')
+    setReplyError(null)
+    setReplyOk(null)
     let cancelled = false
     setMailRepliesLoading(true)
     setMailRepliesError(null)
@@ -110,7 +160,44 @@ export default function AdminInquiriesPanel({
     return () => {
       cancelled = true
     }
-  }, [mailDetail?.id])
+  }, [mailDetail?.id, repliesNonce])
+
+  const sendAdminReply = async () => {
+    if (!mailDetail || !replyBody.trim()) return
+    const ch = preferredChannelUi(mailDetail)
+    setReplySending(true)
+    setReplyError(null)
+    setReplyOk(null)
+    try {
+      const res = await fetch('/api/admin/inquiries/reply', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inquiry_id: mailDetail.id,
+          channel: ch.mode,
+          subject: ch.mode === 'email' ? replySubject.trim() : undefined,
+          message: replyBody.trim(),
+        }),
+      })
+      const data = (await res.json().catch(() => ({}))) as { error?: string; hint?: string }
+      if (!res.ok) {
+        const msg = data.error || res.statusText
+        const hint = data.hint ? `\n${data.hint}` : ''
+        throw new Error(`${msg}${hint}`)
+      }
+      setReplyOk('送信しました。')
+      setReplyBody('')
+      setReplySubject('')
+      setMailDetail((prev) => (prev ? { ...prev, is_read: true } : null))
+      setRepliesNonce((n) => n + 1)
+      router.refresh()
+    } catch (e) {
+      setReplyError(e instanceof Error ? e.message : '送信に失敗しました')
+    } finally {
+      setReplySending(false)
+    }
+  }
 
   const propertyHref = (id: string) => `/${locale}/properties/${id}`
 
@@ -127,7 +214,7 @@ export default function AdminInquiriesPanel({
           }`}
         >
           <Mail className="h-4 w-4" />
-          メール問い合わせ
+          フォーム問い合わせ
           <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{mailInquiries.length}</span>
         </button>
         <button
@@ -148,22 +235,23 @@ export default function AdminInquiriesPanel({
       {sub === 'mail' && (
         <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
           <div className="border-b border-slate-100 px-6 py-4">
-            <h3 className="text-lg font-black text-navy-secondary">メール問い合わせ（inquiries）</h3>
+            <h3 className="text-lg font-black text-navy-secondary">フォーム問い合わせ（inquiries）</h3>
             <p className="mt-1 text-xs font-bold text-slate-500">
-              物件ページのフォームから送信された内容です。
+              物件ページの問い合わせフォームから送信された内容です（返信手段の希望は詳細で確認できます）。
             </p>
           </div>
           <div className="overflow-x-auto">
             {mailInquiries.length === 0 ? (
               <p className="p-12 text-center text-sm font-bold text-slate-400">データがありません</p>
             ) : (
-              <table className="w-full min-w-[880px] text-left text-sm">
+              <table className="w-full min-w-[960px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black uppercase tracking-widest text-slate-400">
                     <th className="px-4 py-3">日時</th>
                     <th className="px-4 py-3">物件</th>
                     <th className="px-4 py-3">掲載エージェント</th>
                     <th className="px-4 py-3">問い合わせ者</th>
+                    <th className="px-4 py-3">返信希望</th>
                     <th className="px-4 py-3">内容</th>
                     <th className="px-4 py-3">未読</th>
                     <th className="px-4 py-3 w-24">操作</th>
@@ -195,6 +283,19 @@ export default function AdminInquiriesPanel({
                             <p className="text-xs text-slate-500">{row.inquirer_phone}</p>
                           ) : null}
                         </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        {preferredChannelUi(row).mode === 'line' ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#06C755]/15 px-2.5 py-1 text-[10px] font-black text-[#047c3d]">
+                            <MessageCircle className="h-3 w-3" />
+                            LINE
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-black text-sky-800">
+                            <Mail className="h-3 w-3" />
+                            メール
+                          </span>
+                        )}
                       </td>
                       <td className="max-w-xs px-4 py-3">
                         <p className="line-clamp-4 whitespace-pre-wrap text-xs text-slate-600">{row.message}</p>
@@ -246,7 +347,7 @@ export default function AdminInquiriesPanel({
                 <div className="flex min-w-0 items-center gap-2">
                   <Mail className="h-5 w-5 shrink-0 text-navy-primary" />
                   <h2 id="admin-mail-inquiry-detail-title" className="truncate text-base font-black text-navy-secondary">
-                    メール問い合わせ詳細
+                    問い合わせ詳細
                   </h2>
                 </div>
                 <button
@@ -320,6 +421,34 @@ export default function AdminInquiriesPanel({
                       )}
                     </dd>
                   </div>
+                  <div>
+                    <dt className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      ユーザーが選んだ返信手段
+                    </dt>
+                    <dd>
+                      {preferredChannelUi(mailDetail).mode === 'line' ? (
+                        <span className="inline-flex items-center gap-2 rounded-xl border border-[#06C755]/30 bg-[#06C755]/10 px-3 py-2 text-sm font-black text-[#047c3d]">
+                          <MessageCircle className="h-4 w-4" />
+                          {preferredChannelUi(mailDetail).label}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-black text-sky-900">
+                          <Mail className="h-4 w-4" />
+                          {preferredChannelUi(mailDetail).label}
+                        </span>
+                      )}
+                    </dd>
+                  </div>
+                  {preferredChannelUi(mailDetail).mode === 'line' ? (
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                      <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        LINE ユーザーID（Push 宛先）
+                      </dt>
+                      <dd className="mt-1 break-all font-mono text-xs text-slate-700">
+                        {mailDetail.line_user_id?.trim() ? mailDetail.line_user_id : '未登録（送信不可）'}
+                      </dd>
+                    </div>
+                  ) : null}
                 </dl>
 
                 <div>
@@ -331,10 +460,113 @@ export default function AdminInquiriesPanel({
                   </div>
                 </div>
 
+                <div className="rounded-2xl border border-navy-primary/15 bg-gradient-to-br from-navy-primary/[0.04] to-white p-5 shadow-sm">
+                  <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-navy-primary">
+                    <Send className="h-3.5 w-3.5" />
+                    {preferredChannelUi(mailDetail).mode === 'email' ? 'メールで返信' : 'LINEで返信'}
+                  </h3>
+                  <p className="mt-2 text-xs font-bold leading-relaxed text-slate-600">
+                    {preferredChannelUi(mailDetail).mode === 'email'
+                      ? '件名・本文を入力し、問い合わせ者のメール宛に送信します（Resend）。'
+                      : '本文は公式 LINE の Push で、登録済みの LINE ユーザーID 宛に送信されます。'}
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      <Sparkles className="h-3 w-3" />
+                      定型文
+                    </span>
+                    {ADMIN_REPLY_TEMPLATES.map((t) => (
+                      <button
+                        key={t.label}
+                        type="button"
+                        onClick={() => setReplyBody((prev) => (prev ? `${prev.trim()}\n\n${t.text}` : t.text))}
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {preferredChannelUi(mailDetail).mode === 'email' ? (
+                    <div className="mt-4">
+                      <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        件名（空欄時はデフォルト件名を使用）
+                      </label>
+                      <input
+                        type="text"
+                        value={replySubject}
+                        onChange={(e) => setReplySubject(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none ring-navy-primary/20 focus:ring-2"
+                        placeholder="例：物件についてのご回答"
+                        maxLength={200}
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4">
+                    <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      本文
+                    </label>
+                    <textarea
+                      value={replyBody}
+                      onChange={(e) => setReplyBody(e.target.value)}
+                      rows={8}
+                      maxLength={4500}
+                      className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-navy-primary/20 focus:ring-2"
+                      placeholder="返信内容を入力…"
+                    />
+                    <p className="mt-1 text-right text-[10px] font-bold text-slate-400">
+                      {replyBody.length} / 4500
+                    </p>
+                  </div>
+
+                  {replyError ? (
+                    <p className="mt-3 whitespace-pre-line rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
+                      {replyError}
+                    </p>
+                  ) : null}
+                  {replyOk ? (
+                    <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">
+                      {replyOk}
+                    </p>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    disabled={
+                      replySending ||
+                      !replyBody.trim() ||
+                      (preferredChannelUi(mailDetail).mode === 'line' && !mailDetail.line_user_id?.trim())
+                    }
+                    onClick={() => void sendAdminReply()}
+                    className="mt-4 flex w-full min-h-12 items-center justify-center gap-2 rounded-xl bg-navy-primary py-3 text-sm font-black text-white shadow-lg transition hover:bg-navy-secondary disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    {replySending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : preferredChannelUi(mailDetail).mode === 'email' ? (
+                      <>
+                        <Mail className="h-4 w-4" />
+                        メールで返信を送信
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="h-4 w-4 text-[#06C755]" />
+                        LINEで返信を送信
+                      </>
+                    )}
+                  </button>
+                  {preferredChannelUi(mailDetail).mode === 'line' && !mailDetail.line_user_id?.trim() ? (
+                    <p className="mt-2 text-xs font-bold text-amber-800">
+                      LINE ユーザーID が未取得のため Push できません。問い合わせ者のメール（上記）でご連絡ください。
+                    </p>
+                  ) : null}
+                </div>
+
                 <div>
                   <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                     <Reply className="h-3.5 w-3.5" />
-                    返信履歴（エージェント）
+                    返信履歴（エージェント・管理）
                   </h3>
                   {mailRepliesLoading ? (
                     <p className="mt-3 text-sm font-bold text-slate-400">読み込み中…</p>
@@ -378,7 +610,7 @@ export default function AdminInquiriesPanel({
           <div className="border-b border-slate-100 px-6 py-4">
             <h3 className="text-lg font-black text-navy-secondary">LINE問い合わせ（inquiry_logs）</h3>
             <p className="mt-1 text-xs font-bold text-slate-500">
-              サイト上の「LINE問い合わせ」ボタンから記録されたログです。
+              旧「LINE問い合わせ」ボタン等から記録された inquiry_logs です（現在はフォーム経由の LINE 希望は左タブに統合されています）。
             </p>
           </div>
           <div className="overflow-x-auto">

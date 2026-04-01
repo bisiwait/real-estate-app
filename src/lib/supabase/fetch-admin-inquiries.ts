@@ -13,6 +13,8 @@ export type AdminMailInquiryRow = {
   owner_id: string
   property_title: string | null
   owner_name: string | null
+  preferred_reply_channel: string | null
+  line_user_id: string | null
 }
 
 /** LINE ボタン等の inquiry_logs（line のみ、管理者一覧用） */
@@ -37,7 +39,9 @@ export async function fetchAdminMailInquiries(
 ): Promise<AdminMailInquiryRow[]> {
   const { data: rows, error } = await supabase
     .from('inquiries')
-    .select('*')
+    .select(
+      'id, created_at, inquirer_name, inquirer_email, inquirer_phone, message, is_read, property_id, owner_id, preferred_reply_channel, line_user_id'
+    )
     .order('created_at', { ascending: false })
     .limit(400)
 
@@ -64,17 +68,19 @@ export async function fetchAdminMailInquiries(
   const profMap = new Map((profs ?? []).map((p) => [p.id, p.full_name as string | null]))
 
   return rows.map((r) => ({
-    id: r.id,
-    created_at: r.created_at,
-    inquirer_name: r.inquirer_name,
-    inquirer_email: r.inquirer_email,
-    inquirer_phone: r.inquirer_phone,
-    message: r.message,
-    is_read: r.is_read,
-    property_id: r.property_id,
-    owner_id: r.owner_id,
-    property_title: r.property_id ? propMap.get(r.property_id) ?? null : null,
-    owner_name: r.owner_id ? profMap.get(r.owner_id) ?? null : null,
+    id: r.id as string,
+    created_at: r.created_at as string,
+    inquirer_name: r.inquirer_name as string,
+    inquirer_email: r.inquirer_email as string,
+    inquirer_phone: (r.inquirer_phone as string | null) ?? null,
+    message: r.message as string,
+    is_read: Boolean(r.is_read),
+    property_id: r.property_id as string,
+    owner_id: r.owner_id as string,
+    property_title: r.property_id ? propMap.get(r.property_id as string) ?? null : null,
+    owner_name: r.owner_id ? profMap.get(r.owner_id as string) ?? null : null,
+    preferred_reply_channel: (r.preferred_reply_channel as string | null) ?? 'email',
+    line_user_id: (r.line_user_id as string | null) ?? null,
   }))
 }
 
