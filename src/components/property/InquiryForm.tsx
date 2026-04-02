@@ -416,6 +416,8 @@ export default function InquiryForm({
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** LINE 自動送信の二重実行防止（await 中に別 effect が走る対策） */
   const lineAutoSubmitInFlightRef = useRef(false)
+  /** LINE エリア下の「公式LINE登録」から確定した場合、同意チェックなしで送信を許可 */
+  const lineAreaSubmitWithoutConsentRef = useRef(false)
   /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
   const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
 
@@ -430,6 +432,7 @@ export default function InquiryForm({
 
   useEffect(() => {
     if (!contactSendConsent) {
+      lineAreaSubmitWithoutConsentRef.current = false
       setSubmitPhase('idle')
       clearConfirmTimer()
     }
@@ -852,12 +855,13 @@ export default function InquiryForm({
       onRequireAuth?.()
       return
     }
-    if (!contactSendConsent) {
-      return
-    }
     if (submitPhase !== 'armed') {
       return
     }
+    if (!contactSendConsent && !lineAreaSubmitWithoutConsentRef.current) {
+      return
+    }
+    lineAreaSubmitWithoutConsentRef.current = false
 
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
@@ -1295,13 +1299,14 @@ export default function InquiryForm({
                         {submitPhase === 'idle' ? (
                           <button
                             type="button"
-                            disabled={loading || !contactSendConsent}
+                            disabled={loading}
                             onClick={() => {
-                              if (contactSendConsent) armSubmitConfirm()
+                              lineAreaSubmitWithoutConsentRef.current = !contactSendConsent
+                              armSubmitConfirm()
                             }}
                             className={clsx(
                               'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
-                              contactSendConsent && !loading
+                              !loading
                                 ? 'bg-navy-primary text-white hover:bg-navy-secondary hover:shadow-xl'
                                 : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55 shadow-none'
                             )}
@@ -1310,7 +1315,7 @@ export default function InquiryForm({
                               <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
                               <>
-                                <span>{p.inquiry_send_btn_primary ?? dict.property.submit_inquiry_btn}</span>
+                                <span>公式LINE登録</span>
                                 <Send className="h-4 w-4 shrink-0" />
                               </>
                             )}
@@ -1318,10 +1323,10 @@ export default function InquiryForm({
                         ) : (
                           <button
                             type="submit"
-                            disabled={loading || !contactSendConsent}
+                            disabled={loading}
                             className={clsx(
                               'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
-                              !loading && contactSendConsent
+                              !loading
                                 ? 'bg-orange-600 text-white shadow-orange-600/30 hover:bg-orange-700 hover:shadow-xl'
                                 : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55'
                             )}
@@ -1398,6 +1403,7 @@ export default function InquiryForm({
                 type="button"
                 disabled={loading || !contactSendConsent}
                 onClick={() => {
+                  lineAreaSubmitWithoutConsentRef.current = false
                   if (contactSendConsent) armSubmitConfirm()
                 }}
                 className={clsx(
