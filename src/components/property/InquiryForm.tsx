@@ -47,24 +47,6 @@ function armAutoSubmitLock(lockKey: string): void {
   flowStorageSet(lockKey, String(Date.now()))
 }
 
-/** 同一タブで OAuth 復帰しやすくする（別タブを開きやすい withLoginOnExternalBrowser: true は使わない） */
-function liffLoginInPlace(liff: {
-  login: (config?: { redirectUri?: string }) => void
-}): void {
-  if (typeof window !== 'undefined') {
-    const href = window.location.href.split('#')[0]
-    if (href) {
-      try {
-        liff.login({ redirectUri: href })
-        return
-      } catch {
-        /* Endpoint URL と redirectUri の整合で失敗する場合 */
-      }
-    }
-  }
-  liff.login()
-}
-
 /** LINE 内で liff.login() 直後: ブリッジを通っていなくても自動送信 effect を走らせる */
 const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
@@ -290,7 +272,7 @@ async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
 
 /**
  * ブリッジ通過後（inquiry_liff_ready_pid 済み）に LIFF で userId を取得。
- * 未ログイン時は liff.login()（同一タブ復帰を優先）。
+ * 未ログイン時は liff.login()。redirectUri は渡さない（Endpoint URL と不一致で access.line.me が 400 になるため）。
  */
 async function obtainLineUserIdForInquiry(
   liffId: string,
@@ -325,7 +307,7 @@ async function obtainLineUserIdForInquiry(
     } catch {
       /* */
     }
-    liffLoginInPlace(liff)
+    liff.login()
     return { ok: false, reason: 'login' }
   }
 
@@ -362,7 +344,7 @@ async function obtainLineUserIdForInquiry(
         } catch {
           /* */
         }
-        liffLoginInPlace(liff)
+        liff.login()
         return { ok: false, reason: 'login' }
       }
     }
