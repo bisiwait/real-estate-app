@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import {
   Mail,
   MessageCircle,
@@ -11,9 +10,6 @@ import {
   Calendar,
   Hash,
   Reply,
-  Send,
-  Loader2,
-  Sparkles,
 } from 'lucide-react'
 import type {
   AdminMailInquiryRow,
@@ -54,22 +50,6 @@ const LINE_STATUS_JA: Record<string, string> = {
   closed: '終了',
 }
 
-/** 管理画面の返信フォーム用テンプレート（ワンクリック挿入） */
-const ADMIN_REPLY_TEMPLATES: { label: string; text: string }[] = [
-  {
-    label: '初回返信',
-    text: 'お問い合わせありがとうございます。\n担当でございます。いただいた内容を確認のうえ、改めてご連絡いたします。\n引き続きよろしくお願いいたします。',
-  },
-  {
-    label: '内見調整',
-    text: 'ご検討ありがとうございます。\n内見をご希望の場合は、ご都合のよい日時（第3希望まで）をお知らせください。調整のうえご案内いたします。',
-  },
-  {
-    label: '資料・追加情報',
-    text: '追加でご案内できる資料がございます。ご希望があればお知らせください。\nほかご不明点があれば、このメッセージにご返信ください。',
-  },
-]
-
 function preferredChannelUi(row: AdminMailInquiryRow): { mode: 'email' | 'line'; label: string; badge: string } {
   const ch = (row.preferred_reply_channel || 'email').toLowerCase()
   if (ch === 'line' || ch === 'email_and_line') {
@@ -89,28 +69,17 @@ export default function AdminInquiriesPanel({
   mailInquiries,
   lineLeads,
 }: Props) {
-  const router = useRouter()
   const [sub, setSub] = useState<SubTab>('mail')
   const [mailDetail, setMailDetail] = useState<AdminMailInquiryRow | null>(null)
   const [mailReplies, setMailReplies] = useState<MailReplyRow[] | null>(null)
   const [mailRepliesLoading, setMailRepliesLoading] = useState(false)
   const [mailRepliesError, setMailRepliesError] = useState<string | null>(null)
-  const [repliesNonce, setRepliesNonce] = useState(0)
-  const [replySubject, setReplySubject] = useState('')
-  const [replyBody, setReplyBody] = useState('')
-  const [replySending, setReplySending] = useState(false)
-  const [replyError, setReplyError] = useState<string | null>(null)
-  const [replyOk, setReplyOk] = useState<string | null>(null)
 
   const closeMailDetail = useCallback(() => {
     setMailDetail(null)
     setMailReplies(null)
     setMailRepliesError(null)
     setMailRepliesLoading(false)
-    setReplySubject('')
-    setReplyBody('')
-    setReplyError(null)
-    setReplyOk(null)
   }, [])
 
   useEffect(() => {
@@ -129,10 +98,6 @@ export default function AdminInquiriesPanel({
       setMailRepliesLoading(false)
       return
     }
-    setReplySubject('')
-    setReplyBody('')
-    setReplyError(null)
-    setReplyOk(null)
     let cancelled = false
     setMailRepliesLoading(true)
     setMailRepliesError(null)
@@ -162,44 +127,7 @@ export default function AdminInquiriesPanel({
     return () => {
       cancelled = true
     }
-  }, [mailDetail?.id, repliesNonce])
-
-  const sendAdminReply = async () => {
-    if (!mailDetail || !replyBody.trim()) return
-    const ch = preferredChannelUi(mailDetail)
-    setReplySending(true)
-    setReplyError(null)
-    setReplyOk(null)
-    try {
-      const res = await fetch('/api/admin/inquiries/reply', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          inquiry_id: mailDetail.id,
-          channel: ch.mode,
-          subject: ch.mode === 'email' ? replySubject.trim() : undefined,
-          message: replyBody.trim(),
-        }),
-      })
-      const data = (await res.json().catch(() => ({}))) as { error?: string; hint?: string }
-      if (!res.ok) {
-        const msg = data.error || res.statusText
-        const hint = data.hint ? `\n${data.hint}` : ''
-        throw new Error(`${msg}${hint}`)
-      }
-      setReplyOk('送信しました。')
-      setReplyBody('')
-      setReplySubject('')
-      setMailDetail((prev) => (prev ? { ...prev, is_read: true } : null))
-      setRepliesNonce((n) => n + 1)
-      router.refresh()
-    } catch (e) {
-      setReplyError(e instanceof Error ? e.message : '送信に失敗しました')
-    } finally {
-      setReplySending(false)
-    }
-  }
+  }, [mailDetail?.id])
 
   const propertyHref = (id: string) => `/${locale}/properties/${id}`
 
@@ -468,107 +396,10 @@ export default function AdminInquiriesPanel({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-navy-primary/15 bg-gradient-to-br from-navy-primary/[0.04] to-white p-5 shadow-sm">
-                  <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-navy-primary">
-                    <Send className="h-3.5 w-3.5" />
-                    {preferredChannelUi(mailDetail).mode === 'email' ? 'メールで返信' : 'LINEで返信'}
-                  </h3>
-                  <p className="mt-2 text-xs font-bold leading-relaxed text-slate-600">
-                    {preferredChannelUi(mailDetail).mode === 'email'
-                      ? '件名・本文を入力し、問い合わせ者のメール宛に送信します（Resend）。'
-                      : '本文は公式 LINE の Push で、登録済みの LINE ユーザーID 宛に送信されます。'}
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                  <p className="text-xs font-bold leading-relaxed text-slate-600">
+                    ユーザーへの返信は掲載エージェントのダッシュボードから行います。ここでは内容の確認と返信履歴の閲覧のみです。
                   </p>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                      <Sparkles className="h-3 w-3" />
-                      定型文
-                    </span>
-                    {ADMIN_REPLY_TEMPLATES.map((t) => (
-                      <button
-                        key={t.label}
-                        type="button"
-                        onClick={() => setReplyBody((prev) => (prev ? `${prev.trim()}\n\n${t.text}` : t.text))}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {preferredChannelUi(mailDetail).mode === 'email' ? (
-                    <div className="mt-4">
-                      <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        件名（空欄時はデフォルト件名を使用）
-                      </label>
-                      <input
-                        type="text"
-                        value={replySubject}
-                        onChange={(e) => setReplySubject(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none ring-navy-primary/20 focus:ring-2"
-                        placeholder="例：物件についてのご回答"
-                        maxLength={200}
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className="mt-4">
-                    <label className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      本文
-                    </label>
-                    <textarea
-                      value={replyBody}
-                      onChange={(e) => setReplyBody(e.target.value)}
-                      rows={8}
-                      maxLength={4500}
-                      className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-navy-primary/20 focus:ring-2"
-                      placeholder="返信内容を入力…"
-                    />
-                    <p className="mt-1 text-right text-[10px] font-bold text-slate-400">
-                      {replyBody.length} / 4500
-                    </p>
-                  </div>
-
-                  {replyError ? (
-                    <p className="mt-3 whitespace-pre-line rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
-                      {replyError}
-                    </p>
-                  ) : null}
-                  {replyOk ? (
-                    <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">
-                      {replyOk}
-                    </p>
-                  ) : null}
-
-                  <button
-                    type="button"
-                    disabled={
-                      replySending ||
-                      !replyBody.trim() ||
-                      (preferredChannelUi(mailDetail).mode === 'line' && !mailDetail.line_user_id?.trim())
-                    }
-                    onClick={() => void sendAdminReply()}
-                    className="mt-4 flex w-full min-h-12 items-center justify-center gap-2 rounded-xl bg-navy-primary py-3 text-sm font-black text-white shadow-lg transition hover:bg-navy-secondary disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    {replySending ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : preferredChannelUi(mailDetail).mode === 'email' ? (
-                      <>
-                        <Mail className="h-4 w-4" />
-                        メールで返信を送信
-                      </>
-                    ) : (
-                      <>
-                        <MessageCircle className="h-4 w-4 text-[#06C755]" />
-                        LINEで返信を送信
-                      </>
-                    )}
-                  </button>
-                  {preferredChannelUi(mailDetail).mode === 'line' && !mailDetail.line_user_id?.trim() ? (
-                    <p className="mt-2 text-xs font-bold text-amber-800">
-                      LINE ユーザーID が未取得のため Push できません。問い合わせ者のメール（上記）でご連絡ください。
-                    </p>
-                  ) : null}
                 </div>
 
                 <div>
