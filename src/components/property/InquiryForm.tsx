@@ -1214,23 +1214,27 @@ export default function InquiryForm({
                     </div>
                     {preferredReplyChannel === 'line' ? (
                       <div className="mt-3 space-y-2">
+                        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] font-medium leading-relaxed text-amber-950">
+                          {p.inquiry_line_linking_required ??
+                            '重要: 友だち追加だけでは問い合わせは完了しません。オレンジの「確定」から表示される LINE ログイン（サイトとの連携）を最後まで行い、物件ページに戻るまでお進みください。'}
+                        </p>
                         <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
                           {p.inquiry_line_submit_liff_note ??
-                            'オレンジの「確定」ボタンを押したときに LINE ログインが始まります。ログイン後はもう一度確定を押して送信を完了してください。'}
+                            'オレンジの「確定」を押すと LINE の画面に切り替わります。戻ってきたら自動で送信が完了します。'}
                         </p>
                         {officialLineAddFriendUrl ? (
                           <p className="rounded-lg border border-slate-100 bg-white px-3 py-2 text-[10px] leading-relaxed text-slate-600">
                             <a
                               href={officialLineAddFriendUrl}
-                              target="_blank"
                               rel="noopener noreferrer"
                               className="font-bold text-navy-primary underline decoration-navy-primary/30"
                             >
-                              {p.inquiry_line_add_friend_first_link ?? '先に公式LINEの友だち追加だけ行う'}
+                              {p.inquiry_line_optional_official_link ??
+                                '公式アカウントを開く（任意・このタブで開きます）'}
                             </a>
                             <span className="mt-1 block text-slate-500">
-                              {p.inquiry_line_add_friend_first_hint ??
-                                'LINEで友だち追加したら、このブラウザのタブに戻り、同意にチェックを入れてから「問い合わせを送信する」で送信してください。自動送信されない場合はもう一度「確定」からお試しください。'}
+                              {p.inquiry_line_optional_official_hint ??
+                                '事前の友だち追加は省略できます。連携は必ず上の「問い合わせを送信する」→オレンジの確定から行ってください。'}
                             </span>
                           </p>
                         ) : null}
