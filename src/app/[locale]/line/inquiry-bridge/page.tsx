@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { formatLiffError } from '@/lib/utils/inquiry-errors'
@@ -11,7 +11,7 @@ const UUID_IN_STRING =
   /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
 const LIFF_INIT_MS = 12_000
 /** init が固まったまま loading だけ見せ続けない（バックグラウンドタブでは setTimeout が遅延し得る） */
-const BRIDGE_FAILSAFE_MS = 20_000
+const BRIDGE_FAILSAFE_MS = 12_000
 const BRIDGE_RELOAD_FLAG = 'inquiry_bridge_autoreload_v1'
 /** InquiryForm と同じキー（LINE ログインコールバックは liff.state が無いのでここから復元する） */
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
@@ -176,6 +176,41 @@ function parseLiffState(
   return { safeLocale, propId }
 }
 
+/** クエリの liff.state のみ（OAuth の state と混同しない） */
+function readLiffStateQueryParamRaw(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const s = new URLSearchParams(window.location.search).get('liff.state')
+    return s && s.trim().length > 0 ? s.trim() : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * OAuth code が無いときはトークン交換不要。Chrome 等で liff.init が固まるのを避け、URL の liff.state だけで物件へ飛ばす。
+ */
+function redirectFromUrlQueryLiffState(fallbackLocale: string): boolean {
+  if (typeof window === 'undefined') return false
+  if (hasOAuthCodeInUrl()) return false
+  const raw = readLiffStateQueryParamRaw()
+  if (!raw) return false
+  const parsed = parseLiffState(raw, fallbackLocale)
+  if (!parsed) return false
+  const { safeLocale, propId } = parsed
+  try {
+    sessionStorage.setItem('inquiry_liff_ready_pid', propId)
+    sessionStorage.removeItem('inquiry_resume_line')
+    sessionStorage.removeItem('inquiry_resume_property_id')
+    sessionStorage.removeItem('inquiry_resume_locale')
+    sessionStorage.removeItem(BRIDGE_RELOAD_FLAG)
+  } catch {
+    /* */
+  }
+  window.location.replace(`${window.location.origin}/${safeLocale}/properties/${propId}`)
+  return true
+}
+
 /**
  * 自サイトのクエリの liff.state、および LINE Login コールバックの state（環境によってはこちらに渡る）。
  */
@@ -254,6 +289,12 @@ export default function LineInquiryBridgePage() {
     setResumeHref(readResumePropertyHref(safeFallback))
   }, [safeFallback])
 
+  /** 描画前に URL だけで戻れるなら LIFF を起動しない（Chrome で init 待ちで固まる対策） */
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return
+    redirectFromUrlQueryLiffState(safeFallback)
+  }, [safeFallback])
+
   useEffect(() => {
     const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim()
     if (!liffId) {
@@ -303,14 +344,15 @@ export default function LineInquiryBridgePage() {
     }
 
     ;(async () => {
-      // OAuth の ?code= があるときはこのページで liff.init がトークン交換する必要があるため、先に飛ばさない
-      if (
-        typeof window !== 'undefined' &&
-        !hasOAuthCodeInUrl() &&
-        redirectFromSessionResume(safeFallback)
-      ) {
-        markFlowDone()
-        return
+      if (typeof window !== 'undefined' && !hasOAuthCodeInUrl()) {
+        if (redirectFromUrlQueryLiffState(safeFallback)) {
+          markFlowDone()
+          return
+        }
+        if (redirectFromSessionResume(safeFallback)) {
+          markFlowDone()
+          return
+        }
       }
       try {
         const liff = (await import('@line/liff')).default
@@ -419,11 +461,20 @@ export default function LineInquiryBridgePage() {
     }
   }, [safeFallback])
 
+  const escapeHref = resumeHref ?? `/${safeFallback}/properties`
+
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center">
       <p className="max-w-md text-sm font-medium leading-relaxed text-navy-secondary whitespace-pre-line">
         {msg}
       </p>
+      {uiKind === 'loading' ? (
+        <p className="max-w-md text-xs text-slate-500">
+          <Link href={escapeHref} className="font-bold text-navy-primary underline underline-offset-2">
+            しばらく進まないときはこちら（物件ページへ戻る）
+          </Link>
+        </p>
+      ) : null}
       {uiKind === 'action' && (
         <div className="flex max-w-md flex-col gap-3 text-sm">
           {resumeHref ? (
