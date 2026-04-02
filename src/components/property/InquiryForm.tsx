@@ -1207,7 +1207,7 @@ export default function InquiryForm({
                           </span>
                           <span className="mt-0.5 block text-[11px] text-slate-500">
                             {p.inquiry_reply_by_line_desc ??
-                              '確定送信時にLINEログインが開き、公式LINEから返信・通知を受け取ります（友だち追加が必要です）。'}
+                              '公式LINEのトークで返信を受け取るには友だち追加が必要です。入力内容を担当へ届けるには送信後の LINE ログイン（連携）も必要です。'}
                           </span>
                         </span>
                       </label>
@@ -1216,7 +1216,7 @@ export default function InquiryForm({
                       <div className="mt-3 space-y-2">
                         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] font-medium leading-relaxed text-amber-950">
                           {p.inquiry_line_linking_required ??
-                            '重要: 友だち追加だけでは問い合わせは完了しません。オレンジの「確定」から表示される LINE ログイン（サイトとの連携）を最後まで行い、物件ページに戻るまでお進みください。'}
+                            '重要: 友だち追加は公式LINEからメッセージを受け取るために必要です。フォームの内容をサイトに保存するには、オレンジの「確定」から LINE 連携を完了し物件ページに戻ることも必要です。'}
                         </p>
                         <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
                           {p.inquiry_line_submit_liff_note ??
@@ -1230,11 +1230,11 @@ export default function InquiryForm({
                               className="font-bold text-navy-primary underline decoration-navy-primary/30"
                             >
                               {p.inquiry_line_optional_official_link ??
-                                '公式アカウントを開く（任意・このタブで開きます）'}
+                                '公式LINEで友だち追加（推奨・このタブで開きます）'}
                             </a>
                             <span className="mt-1 block text-slate-500">
                               {p.inquiry_line_optional_official_hint ??
-                                '事前の友だち追加は省略できます。連携は必ず上の「問い合わせを送信する」→オレンジの確定から行ってください。'}
+                                '先に追加しておくと連携後のやり取りがスムーズです。問い合わせ本文をサイトに届けるには送信→オレンジの確定まで完了してください。'}
                             </span>
                           </p>
                         ) : null}
