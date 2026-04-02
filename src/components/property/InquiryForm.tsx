@@ -21,6 +21,32 @@ import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
+/** リロードや LIFF 遷移で非同期が中断すると '1' ロックが残り自動送信が永久停止するため、時刻ベースで失効させる */
+const AUTO_SUBMIT_LOCK_TTL_MS = 120_000
+
+function isAutoSubmitLockHeld(lockKey: string): boolean {
+  try {
+    const v = flowStorageGet(lockKey)
+    if (!v) return false
+    const ts = parseInt(v, 10)
+    if (!Number.isFinite(ts)) {
+      flowStorageRemove(lockKey)
+      return false
+    }
+    if (Date.now() - ts > AUTO_SUBMIT_LOCK_TTL_MS) {
+      flowStorageRemove(lockKey)
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+function armAutoSubmitLock(lockKey: string): void {
+  flowStorageSet(lockKey, String(Date.now()))
+}
+
 /** LINE 内で liff.login() 直後: ブリッジを通っていなくても自動送信 effect を走らせる */
 const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
@@ -161,6 +187,7 @@ type LiffFriendshipCapable = {
  * 外部ブラウザでは友だち追加は LIFF の botPrompt（コンソールで aggressive 推奨）に依存。
  */
 async function getLineUserIdAfterFriendshipIfNeeded(liff: LiffFriendshipCapable): Promise<string> {
+  let calledRequestFriendship = false
   try {
     if (typeof liff.isApiAvailable === 'function' && liff.isApiAvailable('getFriendship') && liff.getFriendship) {
       const { friendFlag } = await liff.getFriendship()
@@ -172,6 +199,7 @@ async function getLineUserIdAfterFriendshipIfNeeded(liff: LiffFriendshipCapable)
       ) {
         try {
           await liff.requestFriendship()
+          calledRequestFriendship = true
         } catch {
           /* キャンセル等 */
         }
@@ -180,12 +208,23 @@ async function getLineUserIdAfterFriendshipIfNeeded(liff: LiffFriendshipCapable)
   } catch {
     /* getFriendship 非対応環境 */
   }
-  const profile = await liff.getProfile()
-  const uid = normalizeLineMessagingUserId(profile?.userId)
-  if (!uid) {
-    throw new Error('LINE_USER_ID_EMPTY')
+  if (calledRequestFriendship) {
+    await new Promise((r) => setTimeout(r, 600))
   }
-  return uid
+  const maxAttempts = calledRequestFriendship ? 5 : 1
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const profile = await liff.getProfile()
+      const uid = normalizeLineMessagingUserId(profile?.userId)
+      if (uid) return uid
+    } catch (e) {
+      if (attempt === maxAttempts - 1) throw e
+    }
+    if (attempt < maxAttempts - 1) {
+      await new Promise((r) => setTimeout(r, 450))
+    }
+  }
+  throw new Error('LINE_USER_ID_EMPTY')
 }
 
 /**
@@ -597,8 +636,8 @@ export default function InquiryForm({
 
     const lockKey = `${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`
     try {
-      if (flowStorageGet(lockKey) === '1') return
-      flowStorageSet(lockKey, '1')
+      if (isAutoSubmitLockHeld(lockKey)) return
+      armAutoSubmitLock(lockKey)
     } catch {
       return
     }
