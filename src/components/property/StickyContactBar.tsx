@@ -65,7 +65,9 @@ export default function StickyContactBar({
                         className="flex flex-1 flex-col items-center justify-center bg-navy-primary text-white h-14 min-w-0 rounded-xl active:scale-95 transition-all shadow-lg shadow-navy-primary/20"
                     >
                         <Mail className="w-5 h-5 mb-0.5" />
-                        <span className="text-[10px] font-black uppercase text-center">{dict.common.mail_btn || 'Mail'}</span>
+                        <span className="text-[10px] font-black uppercase text-center">
+                            {dict.common?.mail_btn ?? 'Inquiry'}
+                        </span>
                     </button>
                 </div>
 
