@@ -10,8 +10,8 @@ export const dynamic = 'force-dynamic'
 const NONCE_REGEX = /\b([A-Fa-f0-9]{10})\b/
 
 /**
- * 物件問い合わせ（LIFF）や公式LINEコード紐づけ済みユーザー。
- * ここに該当するユーザーへの自由文（「きました」等）にコード案内を返すと会話にならないため返信しない。
+ * 物件問い合わせ（LIFF）等で既知の LINE ユーザー。
+ * 該当するユーザーへの自由文には自動返信しない。
  */
 async function isKnownLineMessagingUser(
   admin: Awaited<ReturnType<typeof createAdminClient>>,
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     if (e.type === 'follow' && e.replyToken) {
       const welcome =
         process.env.LINE_OFFICIAL_WEBHOOK_FOLLOW_MESSAGE?.trim() ||
-        '友だち追加ありがとうございます。\n物件ページからお問い合わせの方は、画面に表示された10桁のコード（英数字）をこのトークに送信してください。'
+        '友だち追加ありがとうございます。\n物件のお問い合わせは、当サイトの物件ページにあるお問い合わせフォームからお願いいたします。'
       await lineOfficialReplyMessage(e.replyToken, [{ type: 'text', text: welcome }], token)
       continue
     }
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
         }
         const hint =
           process.env.LINE_OFFICIAL_WEBHOOK_UNKNOWN_MESSAGE?.trim() ||
-          'お問い合わせコードが見つかりませんでした。物件ページの「LINEで問い合わせ」から表示される10桁のコードを送信してください。'
+          'お問い合わせはウェブサイトの物件ページから、お問い合わせフォームをご利用ください。'
         await lineOfficialReplyMessage(e.replyToken, [{ type: 'text', text: hint }], token)
         continue
       }
