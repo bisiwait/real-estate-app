@@ -16,7 +16,6 @@ import PropertyDescription from '@/components/property/PropertyDescription'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
-import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
 import { isPremium } from '@/lib/utils/plan'
 import {
@@ -60,9 +59,13 @@ const getFeatureIcon = (featureName: string) => {
 
 interface PropertyDetailClientProps {
     initialProperty: any
+    officialLineAddFriendUrl: string
 }
 
-export default function PropertyDetailClient({ initialProperty }: PropertyDetailClientProps) {
+export default function PropertyDetailClient({
+    initialProperty,
+    officialLineAddFriendUrl,
+}: PropertyDetailClientProps) {
     const params = useParams()
     const pathname = usePathname()
     const rawParamId = params?.id
@@ -350,7 +353,7 @@ export default function PropertyDetailClient({ initialProperty }: PropertyDetail
                                 isLoggedIn={!!user}
                                 onRequireAuth={() => setContactAuthOpen(true)}
                                 contactPrefill={contactPrefill}
-                                officialLineAddFriendUrl={getOfficialLineAddFriendUrl()}
+                                officialLineAddFriendUrl={officialLineAddFriendUrl}
                             />
                         </div>
                     </div>

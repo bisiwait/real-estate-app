@@ -1,6 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { hasUsableLineContact } from '@/lib/line-contact-url'
-import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
+import { resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 
@@ -132,11 +132,12 @@ export async function POST(req: Request) {
       })
 
       if (!intErr) {
+        const add_friend_url = await resolveOfficialLineAddFriendUrl()
         return NextResponse.json({
           ok: true,
           official_routing: {
             nonce,
-            add_friend_url: getOfficialLineAddFriendUrl(),
+            add_friend_url,
             expires_in_hours: INTENT_TTL_HOURS,
           },
         })

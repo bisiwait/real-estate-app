@@ -1,26 +1,92 @@
+import { unstable_cache } from 'next/cache'
+
 /**
  * サイト共通の公式 LINE（友だち追加）URL。
  * 物件問い合わせ後のサンクス等で使用。Vercel では NEXT_PUBLIC_* を設定。
  *
  * 優先: `NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL`（本番の Chonburi Home 公式アカウントの line.me URL をそのまま指定）。
- * 未設定時は `NEXT_PUBLIC_LINE_OFFICIAL_ID`、さらに未設定なら下記デフォルト（Basic ID は LINE コンソールの値に合わせて変更可）。
+ * 次: `NEXT_PUBLIC_LINE_OFFICIAL_ID`。
+ * サーバー側のみ: `LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN` があれば Messaging API の bot/info から Basic ID を取得して URL を組み立てる
+ * （`resolveOfficialLineAddFriendUrl` / 物件詳細ページ・inquiry-logs API）。
+ * クライアント単体ではトークンを使えないため、未設定時は下記デフォルト Basic ID を使う。
  *
  * 注意: 開発用アカウント（bisidev 等）やプレビュー用 URL を本番の env に入れないこと。
  * Messaging API トークンと必ず同一の公式アカウントに揃える。
  */
 const DEFAULT_OFFICIAL_LINE_ID = '@chonburihome'
 
-export function getOfficialLineAddFriendUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?.trim()
-  if (fromEnv) return fromEnv
+/** Basic ID（@xxx）または既存の line.me URL から友だち追加 URL を返す */
+export function basicIdOrUrlToAddFriendUrl(idOrUrl: string): string {
+  const raw = idOrUrl.trim()
+  if (/^https?:\/\//i.test(raw)) return raw
 
-  const id = (process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID || DEFAULT_OFFICIAL_LINE_ID).trim()
-  if (/^https?:\/\//i.test(id)) return id
-
-  const pathId = id.startsWith('@') ? id : `@${id.replace(/^@+/g, '')}`
+  const pathId = raw.startsWith('@') ? raw : `@${raw.replace(/^@+/g, '')}`
   const segment =
     pathId.startsWith('@') && pathId.length > 1
       ? `@${encodeURIComponent(pathId.slice(1))}`
       : encodeURIComponent(pathId)
   return `https://line.me/R/ti/p/${segment}`
+}
+
+/** ビルド時・クライアントで参照。env の公開変数とコードデフォルトのみ（トークンは使わない）。 */
+export function getOfficialLineAddFriendUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?.trim()
+  if (fromEnv) return fromEnv
+
+  const id = (process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID || DEFAULT_OFFICIAL_LINE_ID).trim()
+  return basicIdOrUrlToAddFriendUrl(id)
+}
+
+async function fetchAddFriendUrlFromMessagingApi(
+  accessToken: string
+): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.line.me/v2/bot/info', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (!res.ok) {
+      console.warn(
+        '[line-official] bot/info failed',
+        res.status,
+        await res.text().catch(() => '')
+      )
+      return null
+    }
+    const data = (await res.json()) as { basicId?: string }
+    const bid = data.basicId?.trim()
+    if (!bid) return null
+    return basicIdOrUrlToAddFriendUrl(bid)
+  } catch (e) {
+    console.warn('[line-official] bot/info error', e)
+    return null
+  }
+}
+
+const getCachedAddFriendUrlFromBotToken = unstable_cache(
+  async () => {
+    const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+    if (!token) return null
+    return fetchAddFriendUrlFromMessagingApi(token)
+  },
+  ['line-official-add-friend-from-bot-info'],
+  { revalidate: 3600 }
+)
+
+/**
+ * サーバー専用。公開 env → Messaging API（basicId）→ コードデフォルトの順で解決する。
+ */
+export async function resolveOfficialLineAddFriendUrl(): Promise<string> {
+  const fromEnv = process.env.NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?.trim()
+  if (fromEnv) return fromEnv
+
+  const lineOfficialId = process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID?.trim()
+  if (lineOfficialId) return basicIdOrUrlToAddFriendUrl(lineOfficialId)
+
+  const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+  if (token) {
+    const fromApi = await getCachedAddFriendUrlFromBotToken()
+    if (fromApi) return fromApi
+  }
+
+  return basicIdOrUrlToAddFriendUrl(DEFAULT_OFFICIAL_LINE_ID)
 }

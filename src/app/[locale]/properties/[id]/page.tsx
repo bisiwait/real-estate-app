@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { createStaticClient } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
+import { resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
 
 export const revalidate = 60
 
@@ -119,6 +120,8 @@ export default async function Page({
         notFound()
     }
 
+    const officialLineAddFriendUrl = await resolveOfficialLineAddFriendUrl()
+
     return (
         <Suspense
             fallback={
@@ -127,7 +130,10 @@ export default async function Page({
                 </div>
             }
         >
-            <PropertyDetailClient initialProperty={property} />
+            <PropertyDetailClient
+                initialProperty={property}
+                officialLineAddFriendUrl={officialLineAddFriendUrl}
+            />
         </Suspense>
     )
 }
