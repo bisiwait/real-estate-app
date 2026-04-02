@@ -462,17 +462,7 @@ export default function InquiryForm({
     officialLineFriendOkRef.current = officialLineFriendOk
   }, [officialLineFriendOk])
 
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY) === '1') {
-        setOfficialLineFriendOk(true)
-      }
-    } catch {
-      /* */
-    }
-  }, [])
-
-  /** スマホ×LINE: 友だち状態でメイン送信と「公式LINE登録」表示を切り替え */
+  /** スマホ×LINE: 友だち状態は getFriendship のみ（localStorage のみ復元すると未登録なのにボタンが消える） */
   useEffect(() => {
     if (!SHOW_INQUIRY_REPLY_CHANNEL || !isSmartphone) return
     if (preferredReplyChannel !== 'line' || !liffId) return
@@ -483,7 +473,10 @@ export default function InquiryForm({
         const liff = (await import('@line/liff')).default
         await liff.init({ liffId, withLoginOnExternalBrowser: false })
         if (cancelled) return
-        if (!liff.isLoggedIn()) return
+        if (!liff.isLoggedIn()) {
+          setOfficialLineFriendOk(false)
+          return
+        }
 
         if (
           typeof liff.isApiAvailable === 'function' &&
@@ -505,6 +498,14 @@ export default function InquiryForm({
             } catch {
               /* */
             }
+            setOfficialLineFriendOk(false)
+          }
+        } else {
+          try {
+            setOfficialLineFriendOk(
+              localStorage.getItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY) === '1'
+            )
+          } catch {
             setOfficialLineFriendOk(false)
           }
         }
@@ -877,12 +878,6 @@ export default function InquiryForm({
       } catch {
         /* */
       }
-      try {
-        localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-      } catch {
-        /* */
-      }
-      setOfficialLineFriendOk(true)
       void requestInquiryConfirmationEmail(sb, {
         property_id: propertyId,
         locale,
@@ -1205,12 +1200,6 @@ export default function InquiryForm({
         } catch {
           /* ignore */
         }
-        try {
-          localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-        } catch {
-          /* */
-        }
-        setOfficialLineFriendOk(true)
       }
       void requestInquiryConfirmationEmail(supabase, {
         property_id: propertyId,
