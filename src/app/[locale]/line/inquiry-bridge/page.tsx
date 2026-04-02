@@ -28,18 +28,14 @@ function clearBridgeLiffInitSlot(): void {
   bridgeLiffInitPromise = null
 }
 
-/** 別タブで外部ブラウザを開かせないよう、常に同一コンテキスト優先（失敗時のみ従来の外部ログインにフォールバック） */
+/** withLoginOnExternalBrowser: true は別タブ／外部ブラウザ起動を招きやすいため使わない */
 async function initLiffOnceForBridge(
   liff: { init: (config: { liffId: string; withLoginOnExternalBrowser: boolean }) => Promise<void> },
   liffId: string
 ): Promise<void> {
   if (!bridgeLiffInitPromise) {
     const p = (async () => {
-      try {
-        await liff.init({ liffId, withLoginOnExternalBrowser: false })
-      } catch {
-        await liff.init({ liffId, withLoginOnExternalBrowser: true })
-      }
+      await liff.init({ liffId, withLoginOnExternalBrowser: false })
     })()
     bridgeLiffInitPromise = p
     void p.finally(() => {

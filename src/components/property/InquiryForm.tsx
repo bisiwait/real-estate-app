@@ -47,6 +47,24 @@ function armAutoSubmitLock(lockKey: string): void {
   flowStorageSet(lockKey, String(Date.now()))
 }
 
+/** 同一タブで OAuth 復帰しやすくする（別タブを開きやすい withLoginOnExternalBrowser: true は使わない） */
+function liffLoginInPlace(liff: {
+  login: (config?: { redirectUri?: string }) => void
+}): void {
+  if (typeof window !== 'undefined') {
+    const href = window.location.href.split('#')[0]
+    if (href) {
+      try {
+        liff.login({ redirectUri: href })
+        return
+      } catch {
+        /* Endpoint URL と redirectUri の整合で失敗する場合 */
+      }
+    }
+  }
+  liff.login()
+}
+
 /** LINE 内で liff.login() 直後: ブリッジを通っていなくても自動送信 effect を走らせる */
 const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
@@ -234,12 +252,8 @@ async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
   const liff = (await import('@line/liff')).default
   try {
     await liff.init({ liffId, withLoginOnExternalBrowser: false })
-  } catch {
-    try {
-      await liff.init({ liffId, withLoginOnExternalBrowser: true })
-    } catch (e: unknown) {
-      return { kind: 'error', message: formatLiffError(e) || getErrorMessage(e) }
-    }
+  } catch (e: unknown) {
+    return { kind: 'error', message: formatLiffError(e) || getErrorMessage(e) }
   }
   if (liff.isLoggedIn()) {
     try {
@@ -276,7 +290,7 @@ async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
 
 /**
  * ブリッジ通過後（inquiry_liff_ready_pid 済み）に LIFF で userId を取得。
- * 未ログイン時は liff.login()（外部ブラウザ・LINE 内とも）。
+ * 未ログイン時は liff.login()（同一タブ復帰を優先）。
  */
 async function obtainLineUserIdForInquiry(
   liffId: string,
@@ -288,14 +302,10 @@ async function obtainLineUserIdForInquiry(
   try {
     await liff.init({ liffId, withLoginOnExternalBrowser: false })
   } catch (firstInit: unknown) {
-    try {
-      await liff.init({ liffId, withLoginOnExternalBrowser: true })
-    } catch (secondInit: unknown) {
-      return {
-        ok: false,
-        reason: 'error',
-        message: formatLiffError(secondInit) || getErrorMessage(secondInit),
-      }
+    return {
+      ok: false,
+      reason: 'error',
+      message: formatLiffError(firstInit) || getErrorMessage(firstInit),
     }
   }
 
@@ -315,7 +325,7 @@ async function obtainLineUserIdForInquiry(
     } catch {
       /* */
     }
-    liff.login()
+    liffLoginInPlace(liff)
     return { ok: false, reason: 'login' }
   }
 
@@ -352,7 +362,7 @@ async function obtainLineUserIdForInquiry(
         } catch {
           /* */
         }
-        liff.login()
+        liffLoginInPlace(liff)
         return { ok: false, reason: 'login' }
       }
     }
