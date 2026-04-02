@@ -16,8 +16,8 @@ const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
 const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
 
-/** false のとき返信方法 UI を出さず、問い合わせは常にメール希望として保存する */
-const SHOW_INQUIRY_REPLY_CHANNEL = false
+/** false のとき返信方法 UI を出さず、問い合わせは常にメール希望として保存する（スマホの LINE 問い合わせも無効になる） */
+const SHOW_INQUIRY_REPLY_CHANNEL = true
 
 /** DB 保存後、送信者宛の受付控えメール（Webhook に依存しない。inquiries は RLS で送信者が SELECT できないため内容で送る） */
 async function requestInquiryConfirmationEmail(
