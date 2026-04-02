@@ -62,10 +62,10 @@ export default function StickyContactBar({
                     <button
                         type="button"
                         onClick={scrollToInquiry}
-                        className="flex flex-1 flex-col items-center justify-center bg-navy-primary text-white h-14 min-w-0 rounded-xl active:scale-95 transition-all shadow-lg shadow-navy-primary/20"
+                        className="flex min-h-14 flex-1 flex-row items-center justify-center gap-2 bg-navy-primary px-3 text-white min-w-0 rounded-xl active:scale-95 transition-all shadow-lg shadow-navy-primary/20"
                     >
-                        <Mail className="w-5 h-5 mb-0.5" />
-                        <span className="text-[10px] font-black uppercase text-center">
+                        <Mail className="h-5 w-5 shrink-0" aria-hidden />
+                        <span className="text-sm font-black tracking-tight">
                             {dict.common?.mail_btn ?? 'Inquiry'}
                         </span>
                     </button>
