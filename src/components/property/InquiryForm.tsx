@@ -148,6 +148,46 @@ async function clearInvalidLiffSession(liff: { logout?: () => Promise<void> }): 
   }
 }
 
+type LiffFriendshipCapable = {
+  isInClient: () => boolean
+  isApiAvailable?: (apiName: string) => boolean
+  getFriendship?: () => Promise<{ friendFlag: boolean }>
+  requestFriendship?: () => Promise<void>
+  getProfile: () => Promise<{ userId?: string | null }>
+}
+
+/**
+ * LINE アプリ内 WebView では未友だち時に requestFriendship を先に出し、続けて getProfile する。
+ * 外部ブラウザでは友だち追加は LIFF の botPrompt（コンソールで aggressive 推奨）に依存。
+ */
+async function getLineUserIdAfterFriendshipIfNeeded(liff: LiffFriendshipCapable): Promise<string> {
+  try {
+    if (typeof liff.isApiAvailable === 'function' && liff.isApiAvailable('getFriendship') && liff.getFriendship) {
+      const { friendFlag } = await liff.getFriendship()
+      if (
+        !friendFlag &&
+        liff.isInClient() &&
+        liff.isApiAvailable('requestFriendship') &&
+        typeof liff.requestFriendship === 'function'
+      ) {
+        try {
+          await liff.requestFriendship()
+        } catch {
+          /* キャンセル等 */
+        }
+      }
+    }
+  } catch {
+    /* getFriendship 非対応環境 */
+  }
+  const profile = await liff.getProfile()
+  const uid = normalizeLineMessagingUserId(profile?.userId)
+  if (!uid) {
+    throw new Error('LINE_USER_ID_EMPTY')
+  }
+  return uid
+}
+
 /**
  * handoff 前に呼ぶ。既に LINE にログイン済みなら userId のみ返し、毎回のブリッジ＆「ログインしました」相当を避ける。
  */
@@ -164,13 +204,16 @@ async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
   }
   if (liff.isLoggedIn()) {
     try {
-      const profile = await liff.getProfile()
-      const uid = normalizeLineMessagingUserId(profile?.userId)
-      if (!uid) {
-        return { kind: 'error', message: 'LINE ユーザーIDを取得できませんでした' }
-      }
+      const uid = await getLineUserIdAfterFriendshipIfNeeded(liff)
       return { kind: 'ok', userId: uid }
     } catch (e: unknown) {
+      if (e instanceof Error && e.message === 'LINE_USER_ID_EMPTY') {
+        return {
+          kind: 'error',
+          message:
+            'LINE ユーザーIDを取得できませんでした。LIFF の profile スコープを確認してください。',
+        }
+      }
       if (isLiffAccessTokenRevokedError(e)) {
         await clearInvalidLiffSession(liff)
         if (liff.isLoggedIn()) {
@@ -238,22 +281,7 @@ async function obtainLineUserIdForInquiry(
   }
 
   try {
-    const profile = await liff.getProfile()
-    if (!profile?.userId) {
-      return {
-        ok: false,
-        reason: 'error',
-        message: 'LINE ユーザーIDを取得できませんでした',
-      }
-    }
-    const uid = normalizeLineMessagingUserId(profile.userId)
-    if (!uid) {
-      return {
-        ok: false,
-        reason: 'error',
-        message: 'LINE ユーザーID（userId）が空でした。LIFF の profile スコープを確認してください。',
-      }
-    }
+    const uid = await getLineUserIdAfterFriendshipIfNeeded(liff)
     try {
       flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
     } catch {
@@ -261,6 +289,17 @@ async function obtainLineUserIdForInquiry(
     }
     return { ok: true, userId: uid }
   } catch (profileErr: unknown) {
+    if (
+      profileErr instanceof Error &&
+      profileErr.message === 'LINE_USER_ID_EMPTY'
+    ) {
+      return {
+        ok: false,
+        reason: 'error',
+        message:
+          'LINE ユーザーIDを取得できませんでした。LIFF の profile スコープを確認してください。',
+      }
+    }
     if (isLiffAccessTokenRevokedError(profileErr)) {
       await clearInvalidLiffSession(liff)
       if (!liff.isLoggedIn()) {
@@ -327,6 +366,9 @@ export default function InquiryForm({
   })
   const [preferredReplyChannel, setPreferredReplyChannel] = useState<'email' | 'line'>('email')
   const { isSmartphone } = useDeviceType()
+  /** スマホ×LINE: 二重確認なしで 1 タップから連携・友だち追加（可能な環境）・送信まで */
+  const lineSingleSubmitFlow =
+    SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone && preferredReplyChannel === 'line'
   const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim() || undefined
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -356,6 +398,14 @@ export default function InquiryForm({
       clearConfirmTimer()
     }
   }, [contactSendConsent, clearConfirmTimer])
+
+  /** メール用の「確定待ち」のまま LINE 一発送信に切り替えたときリセット */
+  useEffect(() => {
+    if (lineSingleSubmitFlow) {
+      setSubmitPhase('idle')
+      clearConfirmTimer()
+    }
+  }, [lineSingleSubmitFlow, clearConfirmTimer])
 
   const armSubmitConfirm = useCallback(() => {
     clearConfirmTimer()
@@ -777,7 +827,9 @@ export default function InquiryForm({
     if (!contactSendConsent) {
       return
     }
-    if (submitPhase !== 'armed') {
+    const lineSingleNow =
+      SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone && preferredReplyChannel === 'line'
+    if (!lineSingleNow && submitPhase !== 'armed') {
       return
     }
 
@@ -1220,24 +1272,8 @@ export default function InquiryForm({
                         </p>
                         <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
                           {p.inquiry_line_submit_liff_note ??
-                            'オレンジの「確定」を押すと LINE の画面に切り替わります。戻ってきたら自動で送信が完了します。'}
+                            '下のボタン 1 回で LINE の画面に進みます。友だち追加・ログイン後、物件ページに戻ると自動で送信が完了します。'}
                         </p>
-                        {officialLineAddFriendUrl ? (
-                          <p className="rounded-lg border border-slate-100 bg-white px-3 py-2 text-[10px] leading-relaxed text-slate-600">
-                            <a
-                              href={officialLineAddFriendUrl}
-                              rel="noopener noreferrer"
-                              className="font-bold text-navy-primary underline decoration-navy-primary/30"
-                            >
-                              {p.inquiry_line_optional_official_link ??
-                                '公式LINEで友だち追加（推奨・このタブで開きます）'}
-                            </a>
-                            <span className="mt-1 block text-slate-500">
-                              {p.inquiry_line_optional_official_hint ??
-                                '先に追加しておくと連携後のやり取りがスムーズです。問い合わせ本文をサイトに届けるには送信→オレンジの確定まで完了してください。'}
-                            </span>
-                          </p>
-                        ) : null}
                       </div>
                     ) : null}
                   </>
@@ -1293,7 +1329,30 @@ export default function InquiryForm({
               </label>
             </div>
 
-            {submitPhase === 'idle' ? (
+            {lineSingleSubmitFlow ? (
+              <button
+                type="submit"
+                disabled={loading || !contactSendConsent}
+                className={clsx(
+                  'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
+                  !loading && contactSendConsent
+                    ? 'bg-[#06C755] text-white shadow-[#06C755]/35 hover:bg-[#05b34c] hover:shadow-xl'
+                    : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55'
+                )}
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-center leading-tight">
+                      {p.inquiry_send_line_one_shot ??
+                        'LINEで送信する（友だち追加・連携・問い合わせ完了）'}
+                    </span>
+                    <Send className="h-4 w-4 shrink-0" />
+                  </>
+                )}
+              </button>
+            ) : submitPhase === 'idle' ? (
               <button
                 type="button"
                 disabled={loading || !contactSendConsent}
