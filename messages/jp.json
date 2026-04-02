@@ -491,6 +491,7 @@
         "inquiry_reply_by_line_desc": "公式LINEのトークで返信・通知を受け取るには友だち追加が必要です。あわせて、入力した問い合わせを担当へ届けるには、送信後に表示される LINE ログイン（サイトとの連携）も必要です。",
         "inquiry_line_linking_required": "友だち追加（公式LINEの登録）と、サイトへのLINE連携（問い合わせを保存）は別ボタンです。先に緑枠の友だち追加から進めても、後からでも構いません。",
         "inquiry_line_submit_liff_note": "手順: ① 必要なら上の「友だち追加」② 下の「問い合わせを送信する」→「LINE連携して送信（確定）」。LINE アプリ内で未友だちのときは連携の流れの中でも案内されます。外部ブラウザでは LIFF の botPrompt を aggressive または normal に（.env.example 参照）。",
+        "inquiry_line_submit_liff_note_friend_ok": "公式LINEの友だち追加はお済みです。下の「問い合わせを送信する」→「LINE連携して送信（確定）」から進んでください。",
         "inquiry_line_btn_add_friend": "① 公式LINEを友だち追加（このタブで開く）",
         "inquiry_line_add_friend_url_missing": "公式LINEの友だち追加URLが未設定です。管理者に NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL または NEXT_PUBLIC_LINE_OFFICIAL_ID の設定をご確認ください。",
         "inquiry_line_link_step_2": "② 連携して問い合わせを保存するには、下の送信ボタンから進んでください。",
