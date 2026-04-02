@@ -47,9 +47,6 @@ function armAutoSubmitLock(lockKey: string): void {
   flowStorageSet(lockKey, String(Date.now()))
 }
 
-/** 公式LINEの友だち追加済み（LIFF getFriendship で確認後に保存。以降は友だち追加ボタンを出さない） */
-const LINE_OFFICIAL_FRIEND_STORAGE_KEY = 'inquiry_line_official_friend_ok_v1'
-
 /** LINE 内で liff.login() 直後: ブリッジを通っていなくても自動送信 effect を走らせる */
 const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
@@ -236,10 +233,10 @@ async function getLineUserIdAfterFriendshipIfNeeded(liff: LiffFriendshipCapable)
 async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
   const liff = (await import('@line/liff')).default
   try {
-    await liff.init({ liffId, withLoginOnExternalBrowser: true })
+    await liff.init({ liffId, withLoginOnExternalBrowser: false })
   } catch {
     try {
-      await liff.init({ liffId, withLoginOnExternalBrowser: false })
+      await liff.init({ liffId, withLoginOnExternalBrowser: true })
     } catch (e: unknown) {
       return { kind: 'error', message: formatLiffError(e) || getErrorMessage(e) }
     }
@@ -289,10 +286,10 @@ async function obtainLineUserIdForInquiry(
 ): Promise<ObtainLineUserIdResult> {
   const liff = (await import('@line/liff')).default
   try {
-    await liff.init({ liffId, withLoginOnExternalBrowser: true })
+    await liff.init({ liffId, withLoginOnExternalBrowser: false })
   } catch (firstInit: unknown) {
     try {
-      await liff.init({ liffId, withLoginOnExternalBrowser: false })
+      await liff.init({ liffId, withLoginOnExternalBrowser: true })
     } catch (secondInit: unknown) {
       return {
         ok: false,
@@ -421,8 +418,6 @@ export default function InquiryForm({
   const lineAutoSubmitInFlightRef = useRef(false)
   /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
   const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
-  /** 公式LINE友だち済みなら友だち追加ボタンを隠す（localStorage + LIFF 再確認） */
-  const [hideOfficialLineAddFriendButton, setHideOfficialLineAddFriendButton] = useState(false)
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -439,72 +434,6 @@ export default function InquiryForm({
       clearConfirmTimer()
     }
   }, [contactSendConsent, clearConfirmTimer])
-
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY) === '1') {
-        setHideOfficialLineAddFriendButton(true)
-      }
-    } catch {
-      /* */
-    }
-  }, [])
-
-  /** スマホ×LINE: LIFF で友だち状態を確認し、友だちなら保存して追加ボタンを隠す */
-  useEffect(() => {
-    if (!SHOW_INQUIRY_REPLY_CHANNEL || !isSmartphone) return
-    if (preferredReplyChannel !== 'line' || !liffId) return
-
-    let cancelled = false
-    const probeOfficialLineFriendship = async () => {
-      try {
-        const liff = (await import('@line/liff')).default
-        try {
-          await liff.init({ liffId, withLoginOnExternalBrowser: true })
-        } catch {
-          await liff.init({ liffId, withLoginOnExternalBrowser: false })
-        }
-        if (cancelled) return
-        if (!liff.isLoggedIn()) return
-
-        if (
-          typeof liff.isApiAvailable === 'function' &&
-          liff.isApiAvailable('getFriendship') &&
-          liff.getFriendship
-        ) {
-          const { friendFlag } = await liff.getFriendship()
-          if (cancelled) return
-          if (friendFlag) {
-            try {
-              localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-            } catch {
-              /* */
-            }
-            setHideOfficialLineAddFriendButton(true)
-          } else {
-            try {
-              localStorage.removeItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY)
-            } catch {
-              /* */
-            }
-            setHideOfficialLineAddFriendButton(false)
-          }
-        }
-      } catch {
-        /* */
-      }
-    }
-
-    void probeOfficialLineFriendship()
-    const onVis = () => {
-      if (document.visibilityState === 'visible') void probeOfficialLineFriendship()
-    }
-    document.addEventListener('visibilitychange', onVis)
-    return () => {
-      cancelled = true
-      document.removeEventListener('visibilitychange', onVis)
-    }
-  }, [isSmartphone, preferredReplyChannel, liffId, lineAutoResumeNonce])
 
   const armSubmitConfirm = useCallback(() => {
     clearConfirmTimer()
@@ -868,12 +797,6 @@ export default function InquiryForm({
       } catch {
         /* */
       }
-      try {
-        localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-      } catch {
-        /* */
-      }
-      setHideOfficialLineAddFriendButton(true)
       void requestInquiryConfirmationEmail(sb, {
         property_id: propertyId,
         locale,
@@ -1180,12 +1103,6 @@ export default function InquiryForm({
         } catch {
           /* ignore */
         }
-        try {
-          localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-        } catch {
-          /* */
-        }
-        setHideOfficialLineAddFriendButton(true)
       }
       void requestInquiryConfirmationEmail(supabase, {
         property_id: propertyId,
@@ -1373,43 +1290,6 @@ export default function InquiryForm({
                         </span>
                       </label>
                     </div>
-                    {preferredReplyChannel === 'line' ? (
-                      <div className="mt-3 space-y-3">
-                        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] font-medium leading-relaxed text-amber-950">
-                          {p.inquiry_line_linking_required ??
-                            '友だち追加（公式LINE）と、サイトへのLINE連携（問い合わせ保存）は別の操作です。'}
-                        </p>
-                        <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
-                          {hideOfficialLineAddFriendButton
-                            ? (p.inquiry_line_submit_liff_note_friend_ok ??
-                              p.inquiry_line_submit_liff_note ??
-                              '友だち追加は済んでいます。下の「問い合わせを送信する」→「LINE連携して送信（確定）」から進んでください。')
-                            : (p.inquiry_line_submit_liff_note ??
-                              '① 先に友だち追加（緑）② フォーム下で「問い合わせを送信する」→「LINE連携して送信（確定）」の順で進めてください。')}
-                        </p>
-                        {officialLineAddFriendUrl && !hideOfficialLineAddFriendButton ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              window.location.assign(officialLineAddFriendUrl)
-                            }}
-                            className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white py-3.5 text-sm font-black text-[#06C755] shadow-sm transition hover:bg-[#06C755]/10"
-                          >
-                            {p.inquiry_line_btn_add_friend ??
-                              '① 公式LINEを友だち追加（このタブで開く）'}
-                          </button>
-                        ) : !officialLineAddFriendUrl ? (
-                          <p className="rounded-lg border border-amber-100 bg-amber-50/80 px-3 py-2 text-[10px] leading-relaxed text-amber-950">
-                            {p.inquiry_line_add_friend_url_missing ??
-                              '公式LINEの友だち追加URLが未設定です。環境変数 NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL 等をご確認ください。'}
-                          </p>
-                        ) : null}
-                        <p className="text-center text-[10px] font-medium text-slate-500">
-                          {p.inquiry_line_link_step_2 ??
-                            '② 連携して問い合わせを保存するには、下の送信ボタンから進んでください。'}
-                        </p>
-                      </div>
-                    ) : null}
                   </>
                 ) : (
                   <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">

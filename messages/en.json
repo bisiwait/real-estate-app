@@ -462,7 +462,7 @@
         "inquiry_reply_by_email": "By email",
         "inquiry_reply_by_email_desc": "The agent will reply by email.",
         "inquiry_reply_by_line": "By LINE",
-        "inquiry_reply_by_line_desc": "You need to add our official account to receive replies and notices in LINE chat. You also need to complete the LINE login after sending (site linking) so your message is saved for the agent.",
+        "inquiry_reply_by_line_desc": "Replies in LINE chat. You’ll complete LINE linking when you send.",
         "inquiry_line_linking_required": "Adding our official account (friend) and linking LINE to save your inquiry are separate steps. Use the green-outline button for friend add first if you like, or do it later.",
         "inquiry_line_submit_liff_note": "Steps: ① optional: Add friend above ② tap “Send inquiry” below, then “Send with LINE linking (confirm)”. In LINE’s in-app browser you may be prompted to add a friend during linking. In external browsers, set LIFF botPrompt to aggressive or normal (see .env.example).",
         "inquiry_line_submit_liff_note_friend_ok": "You’ve already added our official account. Continue with “Send inquiry” below, then “Send with LINE linking (confirm)”.",

@@ -28,31 +28,17 @@ function clearBridgeLiffInitSlot(): void {
   bridgeLiffInitPromise = null
 }
 
-/** LINE アプリ内 WebView かどうか（外部 Chrome では withLoginOnExternalBrowser を先に使う） */
-function looksLikeLineInAppBrowser(): boolean {
-  if (typeof navigator === 'undefined') return false
-  return /Line\//i.test(navigator.userAgent) || /LIFE\/LINE/i.test(navigator.userAgent)
-}
-
+/** 別タブで外部ブラウザを開かせないよう、常に同一コンテキスト優先（失敗時のみ従来の外部ログインにフォールバック） */
 async function initLiffOnceForBridge(
   liff: { init: (config: { liffId: string; withLoginOnExternalBrowser: boolean }) => Promise<void> },
   liffId: string
 ): Promise<void> {
   if (!bridgeLiffInitPromise) {
     const p = (async () => {
-      const inLine = looksLikeLineInAppBrowser()
-      if (inLine) {
-        try {
-          await liff.init({ liffId, withLoginOnExternalBrowser: false })
-        } catch {
-          await liff.init({ liffId, withLoginOnExternalBrowser: true })
-        }
-      } else {
-        try {
-          await liff.init({ liffId, withLoginOnExternalBrowser: true })
-        } catch {
-          await liff.init({ liffId, withLoginOnExternalBrowser: false })
-        }
+      try {
+        await liff.init({ liffId, withLoginOnExternalBrowser: false })
+      } catch {
+        await liff.init({ liffId, withLoginOnExternalBrowser: true })
       }
     })()
     bridgeLiffInitPromise = p
