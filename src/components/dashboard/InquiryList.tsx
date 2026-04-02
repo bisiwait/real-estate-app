@@ -15,6 +15,7 @@ import {
   Loader2,
   MessageCircle,
   Sparkles,
+  Eraser,
 } from 'lucide-react'
 import { normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
 import { INQUIRY_REPLY_TEMPLATES } from '@/lib/inquiry-reply-templates'
@@ -481,23 +482,33 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
                       {labelText}
                     </label>
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                        <Sparkles className="h-3 w-3" />
-                        定型文
-                      </span>
-                      {INQUIRY_REPLY_TEMPLATES.map((t) => (
-                        <button
-                          key={t.label}
-                          type="button"
-                          onClick={() =>
-                            setReplyText((prev) => (prev ? `${prev.trim()}\n\n${t.text}` : t.text))
-                          }
-                          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
-                        >
-                          {t.label}
-                        </button>
-                      ))}
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                          <Sparkles className="h-3 w-3" />
+                          定型文
+                        </span>
+                        {INQUIRY_REPLY_TEMPLATES.map((t) => (
+                          <button
+                            key={t.label}
+                            type="button"
+                            onClick={() => setReplyText(t.text)}
+                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setReplyText('')}
+                        disabled={!replyText}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                        title="本文を空にします"
+                      >
+                        <Eraser className="h-3 w-3" />
+                        本文をクリア
+                      </button>
                     </div>
                     <div className="relative">
                       <textarea
