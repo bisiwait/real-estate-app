@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const res = NextResponse.json({ ok: true })
   res.cookies.set(LINE_INQUIRY_RETURN_PATH_COOKIE, encodeURIComponent(path), {
     path: '/',
-    maxAge: 900,
+    maxAge: 1800,
     sameSite: 'lax',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { LINE_INQUIRY_RETURN_PATH_COOKIE } from '@/lib/inquiry-line-return-cookie'
+
 const locales = ['jp', 'en', 'th']
+const PROPERTY_UUID_IN_PATH =
+    /^\/(jp|en|th)\/properties\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
 const defaultLocale = 'jp'
 
 function getLocale(request: NextRequest): string {
@@ -75,6 +79,39 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
     return NextResponse.redirect(url)
 }
 
+/**
+ * liff.login() 後のコールバックで URL から liff.state が消え、?code= だけになることがある。
+ * 問い合わせフローで事前に保存した httpOnly Cookie（物件ページパス）から locale:uuid を復元する。
+ */
+function injectLiffStateOnLineInquiryBridgeOAuth(request: NextRequest): NextResponse | null {
+    const pathname = request.nextUrl.pathname.replace(/\/$/, '') || '/'
+    if (!/^\/(jp|en|th)\/line\/inquiry-bridge$/i.test(pathname)) return null
+
+    const code = request.nextUrl.searchParams.get('code')
+    if (!code) return null
+
+    const existing = request.nextUrl.searchParams.get('liff.state')?.trim()
+    if (existing) return null
+
+    const raw = request.cookies.get(LINE_INQUIRY_RETURN_PATH_COOKIE)?.value
+    if (!raw) return null
+
+    let pathDecoded: string
+    try {
+        pathDecoded = decodeURIComponent(raw)
+    } catch {
+        return null
+    }
+    const m = pathDecoded.match(PROPERTY_UUID_IN_PATH)
+    if (!m) return null
+
+    const loc = m[1].toLowerCase()
+    const uuid = m[2].toLowerCase()
+    const url = request.nextUrl.clone()
+    url.searchParams.set('liff.state', `${loc}:${uuid}`)
+    return NextResponse.redirect(url)
+}
+
 export default async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname
 
@@ -119,6 +156,9 @@ export default async function middleware(request: NextRequest) {
         url.pathname = `/${lineBridgeTypo[1]}/line/${lineBridgeTypo[3]}`
         return NextResponse.redirect(url)
     }
+
+    const liffOAuthBridge = injectLiffStateOnLineInquiryBridgeOAuth(request)
+    if (liffOAuthBridge) return liffOAuthBridge
 
     // /JP/ /EN/ /TH/ など大文字ロケールは Next の [locale] と一致せず 404。LINE コンソールのコピペで起きやすい
     if (pathname.length > 1 && pathname.startsWith('/')) {

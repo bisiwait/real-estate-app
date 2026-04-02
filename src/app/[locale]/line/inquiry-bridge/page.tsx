@@ -149,12 +149,25 @@ function parseLiffState(
   return { safeLocale, propId }
 }
 
-/** 自サイトのクエリに付いた liff.state（LINE の挙動差のフォールバック） */
-function readLiffStateFromPageUrl(): string | null {
+/**
+ * 自サイトのクエリの liff.state、および LINE Login コールバックの state（環境によってはこちらに渡る）。
+ */
+function readLiffStateFromPageUrl(fallbackLocale: string): string | null {
   if (typeof window === 'undefined') return null
   try {
-    const s = new URLSearchParams(window.location.search).get('liff.state')
-    if (s && s.length > 0) return s
+    const q = new URLSearchParams(window.location.search)
+    const liff = q.get('liff.state')
+    if (liff && liff.length > 0) return liff
+    const oauthState = q.get('state')?.trim()
+    if (oauthState) {
+      if (parseLiffState(oauthState, fallbackLocale)) return oauthState
+      try {
+        const dec = decodeURIComponent(oauthState)
+        if (dec !== oauthState && parseLiffState(dec, fallbackLocale)) return dec
+      } catch {
+        /* */
+      }
+    }
   } catch {
     /* */
   }
@@ -258,7 +271,7 @@ export default function LineInquiryBridgePage() {
         const fromSdk = readLiffStateFromSdk(liff)
         let state: string | undefined = fromSdk
         if (!state) {
-          const fromPage = readLiffStateFromPageUrl()
+          const fromPage = readLiffStateFromPageUrl(safeFallback)
           if (fromPage) state = fromPage
         }
         if (!state) {
