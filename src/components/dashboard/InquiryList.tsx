@@ -47,11 +47,11 @@ interface InquiryListProps {
   initialInquiries: any[]
 }
 
-function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; badge: string } {
+function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; channelLabel: string } {
   const mode = normalizeInquiryReplyChannel(inquiry.preferred_reply_channel)
   return {
     mode,
-    badge: mode === 'line' ? '【LINE】' : '【問い合わせ】',
+    channelLabel: mode === 'line' ? 'LINE問い合わせ' : 'メール問い合わせ',
   }
 }
 
@@ -296,7 +296,7 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                           : 'bg-sky-100 text-sky-800'
                       }`}
                     >
-                      返信希望：{pref.badge}
+                      {pref.channelLabel}
                     </span>
                     {inquiry.replies && inquiry.replies.length > 0 ? (
                       <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold">
@@ -345,7 +345,6 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
             {expanded && (
               <div className="mt-8 pt-8 border-t border-slate-100 animate-in slide-in-from-top-4 duration-300">
                 <div className="mb-6 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-black text-slate-500">返信希望：</span>
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
                       pref.mode === 'line'
@@ -354,7 +353,7 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                     }`}
                   >
                     {pref.mode === 'line' ? <MessageCircle className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
-                    {pref.badge.replace(/【|】/g, '')}
+                    {pref.channelLabel}
                   </span>
                 </div>
 
