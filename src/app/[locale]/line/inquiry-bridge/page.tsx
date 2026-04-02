@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { formatLiffError } from '@/lib/utils/inquiry-errors'
+import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
 
 const LOCALES = new Set(['jp', 'en', 'th'])
 const PROP_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -77,7 +78,7 @@ function readPendingLineInquiryForBridge():
   | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = sessionStorage.getItem(PENDING_LINE_INQUIRY_KEY)
+    const raw = flowStorageGet(PENDING_LINE_INQUIRY_KEY)
     if (!raw) return null
     const o = JSON.parse(raw) as {
       v?: number
@@ -87,7 +88,7 @@ function readPendingLineInquiryForBridge():
     }
     if (o.v !== 1 || !o.propertyId || typeof o.at !== 'number') return null
     if (Date.now() - o.at > PENDING_MAX_MS) {
-      sessionStorage.removeItem(PENDING_LINE_INQUIRY_KEY)
+      flowStorageRemove(PENDING_LINE_INQUIRY_KEY)
       return null
     }
     if (!PROP_UUID.test(o.propertyId)) return null
@@ -102,16 +103,16 @@ function readPendingLineInquiryForBridge():
 
 function buildSyntheticStateFromStorage(fallbackLocale: string): string | null {
   try {
-    if (sessionStorage.getItem('inquiry_resume_line') === '1') {
-      const pid = sessionStorage.getItem('inquiry_resume_property_id')
-      const locRaw = sessionStorage.getItem('inquiry_resume_locale')
+    if (flowStorageGet('inquiry_resume_line') === '1') {
+      const pid = flowStorageGet('inquiry_resume_property_id')
+      const locRaw = flowStorageGet('inquiry_resume_locale')
       const loc = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocale
       if (pid && PROP_UUID.test(pid)) return `${loc}:${pid.toLowerCase()}`
     }
     const pend = readPendingLineInquiryForBridge()
     if (pend) return `${pend.locale}:${pend.propertyId}`
-    const pidOnly = sessionStorage.getItem('inquiry_resume_property_id')
-    const locOnly = sessionStorage.getItem('inquiry_resume_locale')
+    const pidOnly = flowStorageGet('inquiry_resume_property_id')
+    const locOnly = flowStorageGet('inquiry_resume_locale')
     if (
       pidOnly &&
       PROP_UUID.test(pidOnly) &&
@@ -135,10 +136,10 @@ function redirectFromSessionResume(fallbackLocaleFromPath: string): boolean {
     const parsed = parseLiffState(synthetic, fallbackLocaleFromPath)
     if (!parsed) return false
     const { safeLocale, propId } = parsed
-    sessionStorage.setItem('inquiry_liff_ready_pid', propId)
-    sessionStorage.removeItem('inquiry_resume_line')
-    sessionStorage.removeItem('inquiry_resume_property_id')
-    sessionStorage.removeItem('inquiry_resume_locale')
+    flowStorageSet('inquiry_liff_ready_pid', propId)
+    flowStorageRemove('inquiry_resume_line')
+    flowStorageRemove('inquiry_resume_property_id')
+    flowStorageRemove('inquiry_resume_locale')
     try {
       sessionStorage.removeItem(BRIDGE_RELOAD_FLAG)
     } catch {
@@ -199,10 +200,10 @@ function redirectFromUrlQueryLiffState(fallbackLocale: string): boolean {
   if (!parsed) return false
   const { safeLocale, propId } = parsed
   try {
-    sessionStorage.setItem('inquiry_liff_ready_pid', propId)
-    sessionStorage.removeItem('inquiry_resume_line')
-    sessionStorage.removeItem('inquiry_resume_property_id')
-    sessionStorage.removeItem('inquiry_resume_locale')
+    flowStorageSet('inquiry_liff_ready_pid', propId)
+    flowStorageRemove('inquiry_resume_line')
+    flowStorageRemove('inquiry_resume_property_id')
+    flowStorageRemove('inquiry_resume_locale')
     sessionStorage.removeItem(BRIDGE_RELOAD_FLAG)
   } catch {
     /* */
@@ -238,7 +239,7 @@ function readLiffStateFromPageUrl(fallbackLocale: string): string | null {
 
 /**
  * @line/liff 2.x の npm バンドルには getState が無い環境がある（呼ぶと getState is not a function）。
- * ある場合のみ使い、無ければ URL / sessionStorage に任せる。
+ * ある場合のみ使い、無ければ URL / 共有ストレージ（session + local）に任せる。
  */
 function readLiffStateFromSdk(liff: { getState?: () => unknown }): string | undefined {
   try {
@@ -252,9 +253,9 @@ function readLiffStateFromSdk(liff: { getState?: () => unknown }): string | unde
 
 function readResumePropertyHref(fallbackLocaleFromPath: string): string | null {
   try {
-    const pid = sessionStorage.getItem('inquiry_resume_property_id')
+    const pid = flowStorageGet('inquiry_resume_property_id')
     if (pid && PROP_UUID.test(pid)) {
-      const locRaw = sessionStorage.getItem('inquiry_resume_locale')
+      const locRaw = flowStorageGet('inquiry_resume_locale')
       const loc = locRaw && LOCALES.has(locRaw) ? locRaw : fallbackLocaleFromPath
       return `/${loc}/properties/${pid}`
     }
@@ -419,10 +420,10 @@ export default function LineInquiryBridgePage() {
         const { safeLocale, propId } = parsed
 
         try {
-          sessionStorage.setItem('inquiry_liff_ready_pid', propId)
-          sessionStorage.removeItem('inquiry_resume_line')
-          sessionStorage.removeItem('inquiry_resume_property_id')
-          sessionStorage.removeItem('inquiry_resume_locale')
+          flowStorageSet('inquiry_liff_ready_pid', propId)
+          flowStorageRemove('inquiry_resume_line')
+          flowStorageRemove('inquiry_resume_property_id')
+          flowStorageRemove('inquiry_resume_locale')
           sessionStorage.removeItem(BRIDGE_RELOAD_FLAG)
         } catch {
           /* private mode */

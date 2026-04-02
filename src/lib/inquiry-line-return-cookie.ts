@@ -26,6 +26,7 @@ export async function postLineInquiryReturnPath(
     await fetch(`${window.location.origin}/api/inquiry/line-return`, {
       method: 'POST',
       credentials: 'same-origin',
+      keepalive: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
@@ -41,6 +42,7 @@ export async function clearLineInquiryPendingCookie(): Promise<void> {
     await fetch(`${window.location.origin}/api/inquiry/line-return`, {
       method: 'POST',
       credentials: 'same-origin',
+      keepalive: true,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ clear_line_inquiry_pending: true }),
     })

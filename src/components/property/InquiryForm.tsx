@@ -17,6 +17,7 @@ import {
   clearLineInquiryPendingCookie,
 } from '@/lib/inquiry-line-return-cookie'
 import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cookie'
+import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -104,13 +105,18 @@ type PendingLineInquiry = LineInquiryPendingPayload
 function readPendingLineInquiry(): PendingLineInquiry | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = sessionStorage.getItem(PENDING_LINE_INQUIRY_KEY)
+    const raw = flowStorageGet(PENDING_LINE_INQUIRY_KEY)
     if (!raw) return null
     const o = JSON.parse(raw) as PendingLineInquiry
     if (o.v !== 1 || !o.propertyId || typeof o.at !== 'number') return null
     if (Date.now() - o.at > PENDING_LINE_MAX_MS) {
-      sessionStorage.removeItem(PENDING_LINE_INQUIRY_KEY)
+      flowStorageRemove(PENDING_LINE_INQUIRY_KEY)
       return null
+    }
+    try {
+      sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, raw)
+    } catch {
+      /* */
     }
     return o
   } catch {
@@ -119,11 +125,7 @@ function readPendingLineInquiry(): PendingLineInquiry | null {
 }
 
 function clearPendingLineInquiry() {
-  try {
-    sessionStorage.removeItem(PENDING_LINE_INQUIRY_KEY)
-  } catch {
-    /* */
-  }
+  flowStorageRemove(PENDING_LINE_INQUIRY_KEY)
   void clearLineInquiryPendingCookie()
 }
 
@@ -226,8 +228,8 @@ async function obtainLineUserIdForInquiry(
       pendingForCookie ?? undefined
     )
     try {
-      sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
-      sessionStorage.setItem(LINE_OAUTH_RESUME_PID_KEY, propertyId)
+      flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+      flowStorageSet(LINE_OAUTH_RESUME_PID_KEY, propertyId)
     } catch {
       /* */
     }
@@ -253,7 +255,7 @@ async function obtainLineUserIdForInquiry(
       }
     }
     try {
-      sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+      flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
     } catch {
       /* */
     }
@@ -267,8 +269,8 @@ async function obtainLineUserIdForInquiry(
           pendingForCookie ?? undefined
         )
         try {
-          sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
-          sessionStorage.setItem(LINE_OAUTH_RESUME_PID_KEY, propertyId)
+          flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+          flowStorageSet(LINE_OAUTH_RESUME_PID_KEY, propertyId)
         } catch {
           /* */
         }
@@ -401,8 +403,9 @@ export default function InquiryForm({
     if (!isSmartphone) {
       try {
         const pending = readPendingLineInquiry()
-        if (pending?.propertyId === propertyId) return
-        if (sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId) return
+        if (pending?.propertyId.toLowerCase() === propertyId.toLowerCase()) return
+        if (flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase())
+          return
       } catch {
         /* */
       }
@@ -410,7 +413,7 @@ export default function InquiryForm({
     }
   }, [isSmartphone, propertyId])
 
-  /** sessionStorage が WebView 切替で空でも、httpOnly バックアップから下書きを戻す */
+  /** sessionStorage 単体では別タブで消えるため、httpOnly からも下書きを戻す */
   useEffect(() => {
     if (!SHOW_INQUIRY_REPLY_CHANNEL) return
     if (!isLoggedIn) return
@@ -427,7 +430,7 @@ export default function InquiryForm({
         const p = data.pending
         if (!p || p.propertyId.toLowerCase() !== propertyId.toLowerCase()) return
         try {
-          sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(p))
+          flowStorageSet(PENDING_LINE_INQUIRY_KEY, JSON.stringify(p))
         } catch {
           return
         }
@@ -448,23 +451,24 @@ export default function InquiryForm({
     if (!isSmartphone) {
       try {
         const pending = readPendingLineInquiry()
-        if (pending?.propertyId === propertyId) return
-        if (sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId) return
-        sessionStorage.removeItem('inquiry_resume_line')
-        sessionStorage.removeItem('inquiry_resume_property_id')
-        sessionStorage.removeItem('inquiry_resume_locale')
+        if (pending?.propertyId.toLowerCase() === propertyId.toLowerCase()) return
+        if (flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase())
+          return
+        flowStorageRemove('inquiry_resume_line')
+        flowStorageRemove('inquiry_resume_property_id')
+        flowStorageRemove('inquiry_resume_locale')
       } catch {
         /* */
       }
       return
     }
     try {
-      const flag = sessionStorage.getItem('inquiry_resume_line')
-      const pid = sessionStorage.getItem('inquiry_resume_property_id')
-      if (flag === '1' && pid === propertyId) {
-        sessionStorage.removeItem('inquiry_resume_line')
-        sessionStorage.removeItem('inquiry_resume_property_id')
-        sessionStorage.removeItem('inquiry_resume_locale')
+      const flag = flowStorageGet('inquiry_resume_line')
+      const pid = flowStorageGet('inquiry_resume_property_id')
+      if (flag === '1' && pid?.toLowerCase() === propertyId.toLowerCase()) {
+        flowStorageRemove('inquiry_resume_line')
+        flowStorageRemove('inquiry_resume_property_id')
+        flowStorageRemove('inquiry_resume_locale')
         setPreferredReplyChannel('line')
         setIsOpen(true)
         requestAnimationFrame(() => {
@@ -482,17 +486,22 @@ export default function InquiryForm({
     let wasHidden = document.visibilityState === 'hidden'
     const bump = () => {
       const pending = readPendingLineInquiry()
-      if (!pending || pending.propertyId !== propertyId) return
+      if (
+        !pending ||
+        pending.propertyId.toLowerCase() !== propertyId.toLowerCase()
+      )
+        return
       let ready = false
       try {
-        ready = sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId
+        ready =
+          flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase()
       } catch {
         return
       }
       if (!ready) return
       if (lineAutoSubmitInFlightRef.current) return
       try {
-        sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+        flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
       } catch {
         /* */
       }
@@ -522,13 +531,15 @@ export default function InquiryForm({
     if (!isLoggedIn || !liffId) return
 
     const pending = readPendingLineInquiry()
-    if (!pending || pending.propertyId !== propertyId) return
+    if (!pending || pending.propertyId.toLowerCase() !== propertyId.toLowerCase()) return
 
     let liffReady = false
     let oauthResume = false
     try {
-      liffReady = sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId
-      oauthResume = sessionStorage.getItem(LINE_OAUTH_RESUME_PID_KEY) === propertyId
+      liffReady =
+        flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase()
+      oauthResume =
+        flowStorageGet(LINE_OAUTH_RESUME_PID_KEY)?.toLowerCase() === propertyId.toLowerCase()
     } catch {
       return
     }
@@ -536,15 +547,15 @@ export default function InquiryForm({
 
     const lockKey = `${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`
     try {
-      if (sessionStorage.getItem(lockKey) === '1') return
-      sessionStorage.setItem(lockKey, '1')
+      if (flowStorageGet(lockKey) === '1') return
+      flowStorageSet(lockKey, '1')
     } catch {
       return
     }
 
     if (lineAutoSubmitInFlightRef.current) {
       try {
-        sessionStorage.removeItem(lockKey)
+        flowStorageRemove(lockKey)
       } catch {
         /* */
       }
@@ -578,8 +589,8 @@ export default function InquiryForm({
       const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
       if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
         try {
-          sessionStorage.removeItem(lockKey)
-          sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+          flowStorageRemove(lockKey)
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
         } catch {
           /* */
         }
@@ -597,9 +608,9 @@ export default function InquiryForm({
       if (!isUuid) {
         clearPendingLineInquiry()
         try {
-          sessionStorage.removeItem(lockKey)
-          sessionStorage.removeItem('inquiry_liff_ready_pid')
-          sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+          flowStorageRemove(lockKey)
+          flowStorageRemove('inquiry_liff_ready_pid')
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
         } catch {
           /* */
         }
@@ -627,7 +638,7 @@ export default function InquiryForm({
       if (!lineResult.ok) {
         if (lineResult.reason === 'login') {
           try {
-            sessionStorage.removeItem(lockKey)
+            flowStorageRemove(lockKey)
           } catch {
             /* */
           }
@@ -636,8 +647,8 @@ export default function InquiryForm({
         }
         clearPendingLineInquiry()
         try {
-          sessionStorage.removeItem(lockKey)
-          sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+          flowStorageRemove(lockKey)
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
         } catch {
           /* */
         }
@@ -655,8 +666,8 @@ export default function InquiryForm({
       if (!sessionCheck.ok) {
         clearPendingLineInquiry()
         try {
-          sessionStorage.removeItem(lockKey)
-          sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+          flowStorageRemove(lockKey)
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
         } catch {
           /* */
         }
@@ -686,8 +697,8 @@ export default function InquiryForm({
       if (submitError) {
         clearPendingLineInquiry()
         try {
-          sessionStorage.removeItem(lockKey)
-          sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+          flowStorageRemove(lockKey)
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
         } catch {
           /* */
         }
@@ -702,9 +713,9 @@ export default function InquiryForm({
       localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
       clearPendingLineInquiry()
       try {
-        sessionStorage.removeItem(lockKey)
-        sessionStorage.removeItem('inquiry_liff_ready_pid')
-        sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+        flowStorageRemove(lockKey)
+          flowStorageRemove('inquiry_liff_ready_pid')
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
       } catch {
         /* */
       }
@@ -723,8 +734,8 @@ export default function InquiryForm({
         inquiryDebugAlert('自動送信・例外', formatted)
         clearPendingLineInquiry()
         try {
-          sessionStorage.removeItem(lockKey)
-          sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+          flowStorageRemove(lockKey)
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
         } catch {
           /* */
         }
@@ -733,7 +744,7 @@ export default function InquiryForm({
       } finally {
         lineAutoSubmitInFlightRef.current = false
         try {
-          sessionStorage.removeItem(lockKey)
+          flowStorageRemove(lockKey)
         } catch {
           /* */
         }
@@ -742,7 +753,7 @@ export default function InquiryForm({
     return () => {
       lineAutoSubmitInFlightRef.current = false
       try {
-        sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+        flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
       } catch {
         /* */
       }
@@ -827,7 +838,8 @@ export default function InquiryForm({
         // 未ブリッジ時: 既に LINE ログイン済みなら handoff せず送信へ。外部ブラウザのみ handoff。LINE 内未ログインは pending + liff.login() 後に effect が保存。
         let liffReady = false
         try {
-          liffReady = sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId
+          liffReady =
+            flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase()
         } catch {
           liffReady = false
         }
@@ -837,7 +849,7 @@ export default function InquiryForm({
           if (probe.kind === 'ok') {
             lineUid = probe.userId
             try {
-              sessionStorage.setItem('inquiry_liff_ready_pid', propertyId)
+              flowStorageSet('inquiry_liff_ready_pid', propertyId)
             } catch {
               /* */
             }
@@ -852,10 +864,10 @@ export default function InquiryForm({
               at: Date.now(),
             }
             try {
-              sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(linePayload))
-              sessionStorage.setItem('inquiry_resume_line', '1')
-              sessionStorage.setItem('inquiry_resume_property_id', propertyId)
-              sessionStorage.setItem('inquiry_resume_locale', locale)
+              flowStorageSet(PENDING_LINE_INQUIRY_KEY, JSON.stringify(linePayload))
+              flowStorageSet('inquiry_resume_line', '1')
+              flowStorageSet('inquiry_resume_property_id', propertyId)
+              flowStorageSet('inquiry_resume_locale', locale)
             } catch {
               /* */
             }
@@ -890,7 +902,7 @@ export default function InquiryForm({
             return
           } else {
             try {
-              sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+              flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
             } catch {
               /* */
             }
@@ -904,10 +916,10 @@ export default function InquiryForm({
               at: Date.now(),
             }
             try {
-              sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(handoffPayload))
-              sessionStorage.setItem('inquiry_resume_line', '1')
-              sessionStorage.setItem('inquiry_resume_property_id', propertyId)
-              sessionStorage.setItem('inquiry_resume_locale', locale)
+              flowStorageSet(PENDING_LINE_INQUIRY_KEY, JSON.stringify(handoffPayload))
+              flowStorageSet('inquiry_resume_line', '1')
+              flowStorageSet('inquiry_resume_property_id', propertyId)
+              flowStorageSet('inquiry_resume_locale', locale)
             } catch {
               /* ignore */
             }
@@ -1008,8 +1020,8 @@ export default function InquiryForm({
       if (effectiveChannel === 'line') {
         clearPendingLineInquiry()
         try {
-          sessionStorage.removeItem('inquiry_liff_ready_pid')
-          sessionStorage.removeItem(LINE_OAUTH_RESUME_PID_KEY)
+          flowStorageRemove('inquiry_liff_ready_pid')
+          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
         } catch {
           /* ignore */
         }

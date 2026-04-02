@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
+import { flowStorageGet } from '@/lib/inquiry-line-flow-storage'
 
 /** InquiryForm の sessionStorage キーと一致させる */
 const RESUME_PID_KEY = 'inquiry_resume_property_id'
@@ -13,9 +14,9 @@ const LOCALE_HOME = /^\/(jp|en|th)\/?$/
 function readResumePropertyId(): string | null {
   if (typeof window === 'undefined') return null
   try {
-    const r = sessionStorage.getItem(RESUME_PID_KEY)
+    const r = flowStorageGet(RESUME_PID_KEY)
     if (r && PROP_UUID.test(r)) return r.toLowerCase()
-    const raw = sessionStorage.getItem(PENDING_LINE_INQUIRY_KEY)
+    const raw = flowStorageGet(PENDING_LINE_INQUIRY_KEY)
     if (!raw) return null
     const o = JSON.parse(raw) as { propertyId?: string }
     if (o.propertyId && PROP_UUID.test(o.propertyId)) return String(o.propertyId).toLowerCase()
