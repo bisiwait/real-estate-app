@@ -5,7 +5,11 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
-import { formatInquirySubmitError, formatLiffError } from '@/lib/utils/inquiry-errors'
+import {
+  formatInquirySubmitError,
+  formatLiffError,
+  isLiffAccessTokenRevokedError,
+} from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { postLineInquiryReturnPath } from '@/lib/inquiry-line-return-cookie'
@@ -137,6 +141,14 @@ type LiffLineProbe =
   | { kind: 'need_login' }
   | { kind: 'error'; message: string }
 
+async function clearInvalidLiffSession(liff: { logout?: () => Promise<void> }): Promise<void> {
+  try {
+    if (typeof liff.logout === 'function') await liff.logout()
+  } catch {
+    /* */
+  }
+}
+
 /**
  * handoff 前に呼ぶ。既に LINE にログイン済みなら userId のみ返し、毎回のブリッジ＆「ログインしました」相当を避ける。
  */
@@ -160,6 +172,18 @@ async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
       }
       return { kind: 'ok', userId: uid }
     } catch (e: unknown) {
+      if (isLiffAccessTokenRevokedError(e)) {
+        await clearInvalidLiffSession(liff)
+        if (liff.isLoggedIn()) {
+          return {
+            kind: 'error',
+            message:
+              'LINE のログイン状態が古くなっています。ブラウザのデータを消せない場合は、しばらく時間をおいてから再度お試しください。',
+          }
+        }
+        if (liff.isInClient()) return { kind: 'need_login' }
+        return { kind: 'need_handoff' }
+      }
       return { kind: 'error', message: formatLiffError(e) || getErrorMessage(e) }
     }
   }
@@ -234,6 +258,20 @@ async function obtainLineUserIdForInquiry(
     }
     return { ok: true, userId: uid }
   } catch (profileErr: unknown) {
+    if (isLiffAccessTokenRevokedError(profileErr)) {
+      await clearInvalidLiffSession(liff)
+      if (!liff.isLoggedIn()) {
+        await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
+        try {
+          sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+          sessionStorage.setItem(LINE_OAUTH_RESUME_PID_KEY, propertyId)
+        } catch {
+          /* */
+        }
+        liff.login()
+        return { ok: false, reason: 'login' }
+      }
+    }
     return {
       ok: false,
       reason: 'error',

@@ -24,3 +24,13 @@ export function formatLiffError(err: unknown): string {
   const m = (err as { message?: string }).message
   return m || String(err)
 }
+
+/** 期限切れ・連携解除などでローカルに残ったトークンが無効なとき（getProfile が英語メッセージで失敗しがち） */
+export function isLiffAccessTokenRevokedError(err: unknown): boolean {
+  const msg = formatLiffError(err).toLowerCase()
+  return (
+    msg.includes('access token revoked') ||
+    msg.includes('token has expired') ||
+    msg.includes('invalid access token')
+  )
+}
