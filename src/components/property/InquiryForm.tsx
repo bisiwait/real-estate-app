@@ -429,7 +429,6 @@ export default function InquiryForm({
   const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
   /** 公式LINE友だち済み（getFriendship / 保存済み / LINE送信成功） */
   const [officialLineFriendOk, setOfficialLineFriendOk] = useState(false)
-  const officialLineFriendOkRef = useRef(false)
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -457,10 +456,6 @@ export default function InquiryForm({
       confirmTimerRef.current = null
     }, 3000)
   }, [clearConfirmTimer])
-
-  useEffect(() => {
-    officialLineFriendOkRef.current = officialLineFriendOk
-  }, [officialLineFriendOk])
 
   /** スマホ×LINE: getFriendship は友だち追加直後に遅れるためリトライ。LINE 送信成功時も友だち済み扱いで UI を同期 */
   useEffect(() => {
@@ -960,21 +955,8 @@ export default function InquiryForm({
     const effectiveChannel: 'email' | 'line' =
       SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone ? preferredReplyChannel : 'email'
 
-    const fromLineRegisterArea = lineRegisterFlowRef.current
     lineRegisterFlowRef.current = false
     lineAreaSubmitWithoutConsentRef.current = false
-
-    if (
-      SHOW_INQUIRY_REPLY_CHANNEL &&
-      isSmartphone &&
-      effectiveChannel === 'line' &&
-      !officialLineFriendOkRef.current &&
-      !fromLineRegisterArea
-    ) {
-      setSubmitPhase('idle')
-      clearConfirmTimer()
-      return
-    }
 
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
@@ -1243,12 +1225,6 @@ export default function InquiryForm({
       setLoading(false)
     }
   }
-
-  const lineBlocksMainInquirySend =
-    SHOW_INQUIRY_REPLY_CHANNEL &&
-    isSmartphone &&
-    preferredReplyChannel === 'line' &&
-    !officialLineFriendOk
 
   if (success) {
     return (
@@ -1524,15 +1500,15 @@ export default function InquiryForm({
             {submitPhase === 'idle' ? (
               <button
                 type="button"
-                disabled={loading || !contactSendConsent || lineBlocksMainInquirySend}
+                disabled={loading || !contactSendConsent}
                 onClick={() => {
                   lineRegisterFlowRef.current = false
                   lineAreaSubmitWithoutConsentRef.current = false
-                  if (contactSendConsent && !lineBlocksMainInquirySend) armSubmitConfirm()
+                  if (contactSendConsent) armSubmitConfirm()
                 }}
                 className={clsx(
                   'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
-                  contactSendConsent && !loading && !lineBlocksMainInquirySend
+                  contactSendConsent && !loading
                     ? 'bg-navy-primary text-white hover:bg-navy-secondary hover:shadow-xl'
                     : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55 shadow-none'
                 )}
@@ -1549,10 +1525,10 @@ export default function InquiryForm({
             ) : (
               <button
                 type="submit"
-                disabled={loading || !contactSendConsent || lineBlocksMainInquirySend}
+                disabled={loading || !contactSendConsent}
                 className={clsx(
                   'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
-                  !loading && contactSendConsent && !lineBlocksMainInquirySend
+                  !loading && contactSendConsent
                     ? 'bg-orange-600 text-white shadow-orange-600/30 hover:bg-orange-700 hover:shadow-xl'
                     : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55'
                 )}
