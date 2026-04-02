@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock } from 'lucide-react'
+import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, X } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import {
   formatInquirySubmitError,
@@ -412,6 +413,7 @@ export default function InquiryForm({
   const lineAutoSubmitInFlightRef = useRef(false)
   /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
   const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
+  const [portalReady, setPortalReady] = useState(false)
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -421,6 +423,19 @@ export default function InquiryForm({
   }, [])
 
   useEffect(() => () => clearConfirmTimer(), [clearConfirmTimer])
+
+  useLayoutEffect(() => {
+    setPortalReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!success) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSuccess(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [success])
 
   useEffect(() => {
     if (!contactSendConsent) {
@@ -596,6 +611,7 @@ export default function InquiryForm({
 
   const supabase = createClient()
   const p = dict.property ?? {}
+  const inquirySuccessCloseLabel = p.contact_auth_close ?? '閉じる'
 
   /** ブリッジから戻ったあと、保存済みの1回目の確定内容で自動送信（ユーザーに2回押させない） */
   useEffect(() => {
@@ -1129,14 +1145,30 @@ export default function InquiryForm({
   }
 
   if (success) {
-    return (
+    if (!portalReady || typeof document === 'undefined') {
+      return null
+    }
+    return createPortal(
       <div
-        className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-[1px]"
+        className="fixed inset-0 z-[100010] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
         role="alertdialog"
+        aria-modal="true"
         aria-live="polite"
         aria-labelledby="inquiry-success-title"
+        onClick={() => setSuccess(false)}
       >
-        <div className="animate-in fade-in zoom-in duration-500 w-full max-w-md rounded-3xl border border-emerald-100 bg-emerald-50 p-8 text-center shadow-2xl sm:p-10">
+        <div
+          className="animate-in fade-in zoom-in duration-500 relative w-full max-w-md rounded-3xl border border-emerald-100 bg-emerald-50 p-8 pt-12 text-center shadow-2xl sm:p-10 sm:pt-14"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => setSuccess(false)}
+            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-white/80 hover:text-navy-secondary"
+            aria-label={inquirySuccessCloseLabel}
+          >
+            <X className="h-5 w-5" strokeWidth={2} />
+          </button>
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm">
             <CheckCircle className="h-10 w-10 text-emerald-500" />
           </div>
@@ -1144,8 +1176,16 @@ export default function InquiryForm({
             {dict.property.inquiry_success_title}
           </h3>
           <p className="text-sm leading-relaxed text-slate-600">{dict.property.inquiry_success_desc}</p>
+          <button
+            type="button"
+            onClick={() => setSuccess(false)}
+            className="mt-8 w-full rounded-xl bg-navy-primary py-3.5 text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
+          >
+            {inquirySuccessCloseLabel}
+          </button>
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
