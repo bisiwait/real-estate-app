@@ -462,10 +462,13 @@ export default function InquiryForm({
     officialLineFriendOkRef.current = officialLineFriendOk
   }, [officialLineFriendOk])
 
-  /** スマホ×LINE: 友だち状態は getFriendship のみ（localStorage のみ復元すると未登録なのにボタンが消える） */
+  /** スマホ×LINE: getFriendship は友だち追加直後に遅れるためリトライ。LINE 送信成功時も友だち済み扱いで UI を同期 */
   useEffect(() => {
     if (!SHOW_INQUIRY_REPLY_CHANNEL || !isSmartphone) return
     if (preferredReplyChannel !== 'line' || !liffId) return
+
+    const FRIEND_RETRIES = 12
+    const FRIEND_RETRY_MS = 550
 
     let cancelled = false
     const probe = async () => {
@@ -483,23 +486,28 @@ export default function InquiryForm({
           liff.isApiAvailable('getFriendship') &&
           liff.getFriendship
         ) {
-          const { friendFlag } = await liff.getFriendship()
-          if (cancelled) return
-          if (friendFlag) {
-            try {
-              localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-            } catch {
-              /* */
+          for (let attempt = 0; attempt < FRIEND_RETRIES; attempt++) {
+            if (cancelled) return
+            const { friendFlag } = await liff.getFriendship()
+            if (friendFlag) {
+              try {
+                localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
+              } catch {
+                /* */
+              }
+              setOfficialLineFriendOk(true)
+              return
             }
-            setOfficialLineFriendOk(true)
-          } else {
-            try {
-              localStorage.removeItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY)
-            } catch {
-              /* */
+            if (attempt < FRIEND_RETRIES - 1) {
+              await new Promise((r) => setTimeout(r, FRIEND_RETRY_MS))
             }
-            setOfficialLineFriendOk(false)
           }
+          try {
+            localStorage.removeItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY)
+          } catch {
+            /* */
+          }
+          setOfficialLineFriendOk(false)
         } else {
           try {
             setOfficialLineFriendOk(
@@ -518,10 +526,13 @@ export default function InquiryForm({
     const onVis = () => {
       if (document.visibilityState === 'visible') void probe()
     }
+    const onPageShow = () => void probe()
     document.addEventListener('visibilitychange', onVis)
+    window.addEventListener('pageshow', onPageShow)
     return () => {
       cancelled = true
       document.removeEventListener('visibilitychange', onVis)
+      window.removeEventListener('pageshow', onPageShow)
     }
   }, [isSmartphone, preferredReplyChannel, liffId, lineAutoResumeNonce])
 
@@ -878,6 +889,12 @@ export default function InquiryForm({
       } catch {
         /* */
       }
+      try {
+        localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
+      } catch {
+        /* */
+      }
+      setOfficialLineFriendOk(true)
       void requestInquiryConfirmationEmail(sb, {
         property_id: propertyId,
         locale,
@@ -1200,6 +1217,12 @@ export default function InquiryForm({
         } catch {
           /* ignore */
         }
+        try {
+          localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
+        } catch {
+          /* */
+        }
+        setOfficialLineFriendOk(true)
       }
       void requestInquiryConfirmationEmail(supabase, {
         property_id: propertyId,
