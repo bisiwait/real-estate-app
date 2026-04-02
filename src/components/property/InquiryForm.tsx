@@ -12,7 +12,11 @@ import {
 } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 import { useDeviceType } from '@/hooks/useDeviceType'
-import { postLineInquiryReturnPath } from '@/lib/inquiry-line-return-cookie'
+import {
+  postLineInquiryReturnPath,
+  clearLineInquiryPendingCookie,
+} from '@/lib/inquiry-line-return-cookie'
+import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cookie'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -95,15 +99,7 @@ async function ensureSupabaseSessionForInquiry(
   }
 }
 
-type PendingLineInquiry = {
-  v: 1
-  propertyId: string
-  locale: string
-  name: string
-  email: string
-  message: string
-  at: number
-}
+type PendingLineInquiry = LineInquiryPendingPayload
 
 function readPendingLineInquiry(): PendingLineInquiry | null {
   if (typeof window === 'undefined') return null
@@ -128,6 +124,7 @@ function clearPendingLineInquiry() {
   } catch {
     /* */
   }
+  void clearLineInquiryPendingCookie()
 }
 
 type ObtainLineUserIdResult =
@@ -200,7 +197,8 @@ async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
 async function obtainLineUserIdForInquiry(
   liffId: string,
   propertyId: string,
-  locale: string
+  locale: string,
+  pendingForCookie: PendingLineInquiry | null
 ): Promise<ObtainLineUserIdResult> {
   const liff = (await import('@line/liff')).default
   try {
@@ -223,7 +221,10 @@ async function obtainLineUserIdForInquiry(
      * ブリッジ→物件→未ログイン→handoff のループになり、DB 保存まで到達しない。
      * 初回の「LINEで受け取る」は handleSubmit が handoff へ飛ばす（liff_ready 前のみ）。
      */
-    await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
+    await postLineInquiryReturnPath(
+      `/${locale}/properties/${propertyId}`,
+      pendingForCookie ?? undefined
+    )
     try {
       sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
       sessionStorage.setItem(LINE_OAUTH_RESUME_PID_KEY, propertyId)
@@ -261,7 +262,10 @@ async function obtainLineUserIdForInquiry(
     if (isLiffAccessTokenRevokedError(profileErr)) {
       await clearInvalidLiffSession(liff)
       if (!liff.isLoggedIn()) {
-        await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
+        await postLineInquiryReturnPath(
+          `/${locale}/properties/${propertyId}`,
+          pendingForCookie ?? undefined
+        )
         try {
           sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
           sessionStorage.setItem(LINE_OAUTH_RESUME_PID_KEY, propertyId)
@@ -405,6 +409,37 @@ export default function InquiryForm({
       setPreferredReplyChannel('email')
     }
   }, [isSmartphone, propertyId])
+
+  /** sessionStorage が WebView 切替で空でも、httpOnly バックアップから下書きを戻す */
+  useEffect(() => {
+    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
+    if (!isLoggedIn) return
+    if (readPendingLineInquiry()) return
+
+    let cancelled = false
+    void (async () => {
+      try {
+        const res = await fetch(`${window.location.origin}/api/inquiry/line-pending-restore`, {
+          credentials: 'same-origin',
+        })
+        if (!res.ok || cancelled) return
+        const data = (await res.json()) as { pending?: PendingLineInquiry | null }
+        const p = data.pending
+        if (!p || p.propertyId.toLowerCase() !== propertyId.toLowerCase()) return
+        try {
+          sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(p))
+        } catch {
+          return
+        }
+        setLineAutoResumeNonce((n) => n + 1)
+      } catch {
+        /* */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [isLoggedIn, propertyId])
 
   /** LINE から liff.line.me 経由で戻ったあと「LINEで受け取る」を復元（スマートフォンのみ） */
   useEffect(() => {
@@ -574,10 +609,20 @@ export default function InquiryForm({
         return
       }
 
-      let lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, pending.locale)
+      let lineResult = await obtainLineUserIdForInquiry(
+        liffId,
+        propertyId,
+        pending.locale,
+        pending
+      )
       if (!lineResult.ok && lineResult.reason === 'error') {
         await new Promise((r) => setTimeout(r, 1200))
-        lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, pending.locale)
+        lineResult = await obtainLineUserIdForInquiry(
+          liffId,
+          propertyId,
+          pending.locale,
+          pending
+        )
       }
       if (!lineResult.ok) {
         if (lineResult.reason === 'login') {
@@ -797,25 +842,30 @@ export default function InquiryForm({
               /* */
             }
           } else if (probe.kind === 'need_login') {
+            const linePayload: PendingLineInquiry = {
+              v: 1,
+              propertyId,
+              locale,
+              name: formData.name.trim(),
+              email: formData.email.trim(),
+              message: formData.message.trim(),
+              at: Date.now(),
+            }
             try {
-              const payload: PendingLineInquiry = {
-                v: 1,
-                propertyId,
-                locale,
-                name: formData.name.trim(),
-                email: formData.email.trim(),
-                message: formData.message.trim(),
-                at: Date.now(),
-              }
-              sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(payload))
+              sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(linePayload))
               sessionStorage.setItem('inquiry_resume_line', '1')
               sessionStorage.setItem('inquiry_resume_property_id', propertyId)
               sessionStorage.setItem('inquiry_resume_locale', locale)
             } catch {
               /* */
             }
-            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
-            const res = await obtainLineUserIdForInquiry(liffId, propertyId, locale)
+            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`, linePayload)
+            const res = await obtainLineUserIdForInquiry(
+              liffId,
+              propertyId,
+              locale,
+              linePayload
+            )
             if (!res.ok) {
               if (res.reason === 'login') {
                 setLoading(false)
@@ -844,24 +894,24 @@ export default function InquiryForm({
             } catch {
               /* */
             }
+            const handoffPayload: PendingLineInquiry = {
+              v: 1,
+              propertyId,
+              locale,
+              name: formData.name.trim(),
+              email: formData.email.trim(),
+              message: formData.message.trim(),
+              at: Date.now(),
+            }
             try {
-              const payload: PendingLineInquiry = {
-                v: 1,
-                propertyId,
-                locale,
-                name: formData.name.trim(),
-                email: formData.email.trim(),
-                message: formData.message.trim(),
-                at: Date.now(),
-              }
-              sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(payload))
+              sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, JSON.stringify(handoffPayload))
               sessionStorage.setItem('inquiry_resume_line', '1')
               sessionStorage.setItem('inquiry_resume_property_id', propertyId)
               sessionStorage.setItem('inquiry_resume_locale', locale)
             } catch {
               /* ignore */
             }
-            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
+            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`, handoffPayload)
             window.location.assign(
               `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
             )
@@ -870,7 +920,7 @@ export default function InquiryForm({
         }
 
         if (lineUid === null) {
-          const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, locale)
+          const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, locale, null)
           if (!lineResult.ok) {
             if (lineResult.reason === 'login') {
               setLoading(false)
