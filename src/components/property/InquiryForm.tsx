@@ -1290,6 +1290,56 @@ export default function InquiryForm({
                         </span>
                       </label>
                     </div>
+                    {preferredReplyChannel === 'line' ? (
+                      <>
+                        {submitPhase === 'idle' ? (
+                          <button
+                            type="button"
+                            disabled={loading || !contactSendConsent}
+                            onClick={() => {
+                              if (contactSendConsent) armSubmitConfirm()
+                            }}
+                            className={clsx(
+                              'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
+                              contactSendConsent && !loading
+                                ? 'bg-navy-primary text-white hover:bg-navy-secondary hover:shadow-xl'
+                                : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55 shadow-none'
+                            )}
+                          >
+                            {loading ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <>
+                                <span>{p.inquiry_send_btn_primary ?? dict.property.submit_inquiry_btn}</span>
+                                <Send className="h-4 w-4 shrink-0" />
+                              </>
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                            type="submit"
+                            disabled={loading || !contactSendConsent}
+                            className={clsx(
+                              'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
+                              !loading && contactSendConsent
+                                ? 'bg-orange-600 text-white shadow-orange-600/30 hover:bg-orange-700 hover:shadow-xl'
+                                : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55'
+                            )}
+                          >
+                            {loading ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <>
+                                <span className="text-center leading-tight">
+                                  {p.inquiry_send_btn_confirm_line ?? p.inquiry_send_btn_confirm}
+                                </span>
+                                <Send className="h-4 w-4 shrink-0" />
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </>
+                    ) : null}
                   </>
                 ) : (
                   <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
