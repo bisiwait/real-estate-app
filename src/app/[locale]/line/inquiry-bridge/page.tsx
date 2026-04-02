@@ -10,6 +10,9 @@ const PROP_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 const UUID_IN_STRING =
   /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
 const LIFF_INIT_MS = 12_000
+/** init が固まったまま loading だけ見せ続けない（バックグラウンドタブでは setTimeout が遅延し得る） */
+const BRIDGE_FAILSAFE_MS = 20_000
+const BRIDGE_RELOAD_FLAG = 'inquiry_bridge_autoreload_v1'
 /** InquiryForm と同じキー（LINE ログインコールバックは liff.state が無いのでここから復元する） */
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const PENDING_MAX_MS = 15 * 60 * 1000
@@ -20,16 +23,35 @@ let inquiryBridgeEffectGeneration = 0
 /** 同一ページ内で liff.init を並列に呼ばない（SDK がリロードや不安定化し得る） */
 let bridgeLiffInitPromise: Promise<void> | null = null
 
+function clearBridgeLiffInitSlot(): void {
+  bridgeLiffInitPromise = null
+}
+
+/** LINE アプリ内 WebView かどうか（外部 Chrome では withLoginOnExternalBrowser を先に使う） */
+function looksLikeLineInAppBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Line\//i.test(navigator.userAgent) || /LIFE\/LINE/i.test(navigator.userAgent)
+}
+
 async function initLiffOnceForBridge(
   liff: { init: (config: { liffId: string; withLoginOnExternalBrowser: boolean }) => Promise<void> },
   liffId: string
 ): Promise<void> {
   if (!bridgeLiffInitPromise) {
     const p = (async () => {
-      try {
-        await liff.init({ liffId, withLoginOnExternalBrowser: false })
-      } catch {
-        await liff.init({ liffId, withLoginOnExternalBrowser: true })
+      const inLine = looksLikeLineInAppBrowser()
+      if (inLine) {
+        try {
+          await liff.init({ liffId, withLoginOnExternalBrowser: false })
+        } catch {
+          await liff.init({ liffId, withLoginOnExternalBrowser: true })
+        }
+      } else {
+        try {
+          await liff.init({ liffId, withLoginOnExternalBrowser: true })
+        } catch {
+          await liff.init({ liffId, withLoginOnExternalBrowser: false })
+        }
       }
     })()
     bridgeLiffInitPromise = p
@@ -117,6 +139,11 @@ function redirectFromSessionResume(fallbackLocaleFromPath: string): boolean {
     sessionStorage.removeItem('inquiry_resume_line')
     sessionStorage.removeItem('inquiry_resume_property_id')
     sessionStorage.removeItem('inquiry_resume_locale')
+    try {
+      sessionStorage.removeItem(BRIDGE_RELOAD_FLAG)
+    } catch {
+      /* */
+    }
     window.location.replace(
       `${window.location.origin}/${safeLocale}/properties/${propId}`
     )
@@ -236,7 +263,46 @@ export default function LineInquiryBridgePage() {
     }
 
     const effectGen = ++inquiryBridgeEffectGeneration
+    const myGen = effectGen
     let cancelled = false
+    let flowCompleted = false
+    let failsafeId: ReturnType<typeof setInterval> | null = null
+    const markFlowDone = () => {
+      flowCompleted = true
+      if (failsafeId != null) {
+        clearInterval(failsafeId)
+        failsafeId = null
+      }
+    }
+    const startWall = typeof window !== 'undefined' ? Date.now() : 0
+
+    if (typeof window !== 'undefined') {
+      failsafeId = window.setInterval(() => {
+        if (cancelled || flowCompleted || inquiryBridgeEffectGeneration !== myGen) return
+        if (Date.now() - startWall < BRIDGE_FAILSAFE_MS) return
+        markFlowDone()
+        clearBridgeLiffInitSlot()
+        if (redirectFromSessionResume(safeFallback)) {
+          return
+        }
+        try {
+          if (hasOAuthCodeInUrl() && !sessionStorage.getItem(BRIDGE_RELOAD_FLAG)) {
+            sessionStorage.setItem(BRIDGE_RELOAD_FLAG, '1')
+            window.location.reload()
+            return
+          }
+        } catch {
+          /* */
+        }
+        setUiKind('action')
+        setMsg(
+          'LINE との接続が完了しませんでした（ブラウザをバックグラウンドにしたままだと進まないことがあります）。\n\n' +
+            '「問い合わせ中の物件ページに戻る」を押すか、**ページを閉じて**もう一度物件ページから「LINEで受け取る」→確定をお試しください。\n\n' +
+            '公式LINEでは10桁コードの案内が出る場合がありますが、LIFFでつながる場合はコード入力は不要です。'
+        )
+      }, 800)
+    }
+
     ;(async () => {
       // OAuth の ?code= があるときはこのページで liff.init がトークン交換する必要があるため、先に飛ばさない
       if (
@@ -244,6 +310,7 @@ export default function LineInquiryBridgePage() {
         !hasOAuthCodeInUrl() &&
         redirectFromSessionResume(safeFallback)
       ) {
+        markFlowDone()
         return
       }
       try {
@@ -256,13 +323,24 @@ export default function LineInquiryBridgePage() {
             ),
           ])
         } catch (initErr) {
-          if (
-            initErr instanceof Error &&
-            initErr.message === 'LIFF_INIT_TIMEOUT' &&
-            typeof window !== 'undefined' &&
-            redirectFromSessionResume(safeFallback)
-          ) {
-            return
+          if (initErr instanceof Error && initErr.message === 'LIFF_INIT_TIMEOUT') {
+            clearBridgeLiffInitSlot()
+            if (typeof window !== 'undefined') {
+              if (redirectFromSessionResume(safeFallback)) {
+                markFlowDone()
+                return
+              }
+              try {
+                if (hasOAuthCodeInUrl() && !sessionStorage.getItem(BRIDGE_RELOAD_FLAG)) {
+                  sessionStorage.setItem(BRIDGE_RELOAD_FLAG, '1')
+                  markFlowDone()
+                  window.location.reload()
+                  return
+                }
+              } catch {
+                /* */
+              }
+            }
           }
           throw initErr
         }
@@ -280,6 +358,7 @@ export default function LineInquiryBridgePage() {
         }
         if (!state) {
           if (effectGen !== inquiryBridgeEffectGeneration) return
+          markFlowDone()
           setUiKind('action')
           setMsg(
             '問い合わせの続きが見つかりませんでした（この画面は完了ではありません）。' +
@@ -291,6 +370,7 @@ export default function LineInquiryBridgePage() {
         const parsed = parseLiffState(state, safeFallback)
         if (!parsed) {
           if (effectGen !== inquiryBridgeEffectGeneration) return
+          markFlowDone()
           setUiKind('action')
           setMsg('リンクが無効です。物件ページからやり直してください。')
           return
@@ -302,18 +382,23 @@ export default function LineInquiryBridgePage() {
           sessionStorage.removeItem('inquiry_resume_line')
           sessionStorage.removeItem('inquiry_resume_property_id')
           sessionStorage.removeItem('inquiry_resume_locale')
+          sessionStorage.removeItem(BRIDGE_RELOAD_FLAG)
         } catch {
           /* private mode */
         }
 
+        markFlowDone()
         const path = `/${safeLocale}/properties/${propId}`
         window.location.replace(`${window.location.origin}${path}`)
       } catch (e) {
         console.error('[line-inquiry-bridge]', e)
         if (!cancelled && effectGen === inquiryBridgeEffectGeneration) {
+          clearBridgeLiffInitSlot()
           if (typeof window !== 'undefined' && redirectFromSessionResume(safeFallback)) {
+            markFlowDone()
             return
           }
+          markFlowDone()
           setUiKind('action')
           const detail = formatLiffError(e)
           setMsg(
@@ -328,6 +413,10 @@ export default function LineInquiryBridgePage() {
     return () => {
       cancelled = true
       inquiryBridgeEffectGeneration += 1
+      if (failsafeId != null) {
+        clearInterval(failsafeId)
+        failsafeId = null
+      }
     }
   }, [safeFallback])
 
