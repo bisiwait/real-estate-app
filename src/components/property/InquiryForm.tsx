@@ -47,8 +47,21 @@ function armAutoSubmitLock(lockKey: string): void {
   flowStorageSet(lockKey, String(Date.now()))
 }
 
+function LineBrandIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden focusable="false">
+      <path
+        fill="currentColor"
+        d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.345.28-.63.63-.63.231 0 .437.125.547.309l2.473 3.34V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.63.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.084.923.258 1.058.592.12.303.079.778.038 1.085l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"
+      />
+    </svg>
+  )
+}
+
 /** LINE 内で liff.login() 直後: ブリッジを通っていなくても自動送信 effect を走らせる */
 const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
+/** LIFF getFriendship で公式アカウント友だち済みを記録（メイン送信の可否・公式LINE登録ボタン表示） */
+const LINE_OFFICIAL_FRIEND_STORAGE_KEY = 'inquiry_line_official_friend_ok_v1'
 const PENDING_LINE_MAX_MS = 15 * 60 * 1000
 
 /** false のとき返信方法 UI を出さず、問い合わせは常にメール希望として保存する（スマホの LINE 問い合わせも無効になる） */
@@ -410,8 +423,13 @@ export default function InquiryForm({
   const lineAutoSubmitInFlightRef = useRef(false)
   /** LINE エリア下の「公式LINE登録」から確定した場合、同意チェックなしで送信を許可 */
   const lineAreaSubmitWithoutConsentRef = useRef(false)
+  /** 公式LINE登録エリアからの送信（友だち未確認でも確定まで進める） */
+  const lineRegisterFlowRef = useRef(false)
   /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
   const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
+  /** 公式LINE友だち済み（getFriendship / 保存済み / LINE送信成功） */
+  const [officialLineFriendOk, setOfficialLineFriendOk] = useState(false)
+  const officialLineFriendOkRef = useRef(false)
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -425,6 +443,7 @@ export default function InquiryForm({
   useEffect(() => {
     if (!contactSendConsent) {
       lineAreaSubmitWithoutConsentRef.current = false
+      lineRegisterFlowRef.current = false
       setSubmitPhase('idle')
       clearConfirmTimer()
     }
@@ -438,6 +457,72 @@ export default function InquiryForm({
       confirmTimerRef.current = null
     }, 3000)
   }, [clearConfirmTimer])
+
+  useEffect(() => {
+    officialLineFriendOkRef.current = officialLineFriendOk
+  }, [officialLineFriendOk])
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY) === '1') {
+        setOfficialLineFriendOk(true)
+      }
+    } catch {
+      /* */
+    }
+  }, [])
+
+  /** スマホ×LINE: 友だち状態でメイン送信と「公式LINE登録」表示を切り替え */
+  useEffect(() => {
+    if (!SHOW_INQUIRY_REPLY_CHANNEL || !isSmartphone) return
+    if (preferredReplyChannel !== 'line' || !liffId) return
+
+    let cancelled = false
+    const probe = async () => {
+      try {
+        const liff = (await import('@line/liff')).default
+        await liff.init({ liffId, withLoginOnExternalBrowser: false })
+        if (cancelled) return
+        if (!liff.isLoggedIn()) return
+
+        if (
+          typeof liff.isApiAvailable === 'function' &&
+          liff.isApiAvailable('getFriendship') &&
+          liff.getFriendship
+        ) {
+          const { friendFlag } = await liff.getFriendship()
+          if (cancelled) return
+          if (friendFlag) {
+            try {
+              localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
+            } catch {
+              /* */
+            }
+            setOfficialLineFriendOk(true)
+          } else {
+            try {
+              localStorage.removeItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY)
+            } catch {
+              /* */
+            }
+            setOfficialLineFriendOk(false)
+          }
+        }
+      } catch {
+        /* */
+      }
+    }
+
+    void probe()
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void probe()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      cancelled = true
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [isSmartphone, preferredReplyChannel, liffId, lineAutoResumeNonce])
 
   useEffect(() => {
     setIsDesktop(window.innerWidth >= 1024)
@@ -792,6 +877,12 @@ export default function InquiryForm({
       } catch {
         /* */
       }
+      try {
+        localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
+      } catch {
+        /* */
+      }
+      setOfficialLineFriendOk(true)
       void requestInquiryConfirmationEmail(sb, {
         property_id: propertyId,
         locale,
@@ -853,7 +944,25 @@ export default function InquiryForm({
     if (!contactSendConsent && !lineAreaSubmitWithoutConsentRef.current) {
       return
     }
+
+    const effectiveChannel: 'email' | 'line' =
+      SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone ? preferredReplyChannel : 'email'
+
+    const fromLineRegisterArea = lineRegisterFlowRef.current
+    lineRegisterFlowRef.current = false
     lineAreaSubmitWithoutConsentRef.current = false
+
+    if (
+      SHOW_INQUIRY_REPLY_CHANNEL &&
+      isSmartphone &&
+      effectiveChannel === 'line' &&
+      !officialLineFriendOkRef.current &&
+      !fromLineRegisterArea
+    ) {
+      setSubmitPhase('idle')
+      clearConfirmTimer()
+      return
+    }
 
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
@@ -867,9 +976,6 @@ export default function InquiryForm({
 
     setLoading(true)
     setError(null)
-
-    const effectiveChannel: 'email' | 'line' =
-      SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone ? preferredReplyChannel : 'email'
     if (SHOW_INQUIRY_REPLY_CHANNEL && !isSmartphone && preferredReplyChannel === 'line') {
       setError(
         p.inquiry_line_blocked_desktop ??
@@ -1099,6 +1205,12 @@ export default function InquiryForm({
         } catch {
           /* ignore */
         }
+        try {
+          localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
+        } catch {
+          /* */
+        }
+        setOfficialLineFriendOk(true)
       }
       void requestInquiryConfirmationEmail(supabase, {
         property_id: propertyId,
@@ -1119,6 +1231,12 @@ export default function InquiryForm({
       setLoading(false)
     }
   }
+
+  const lineBlocksMainInquirySend =
+    SHOW_INQUIRY_REPLY_CHANNEL &&
+    isSmartphone &&
+    preferredReplyChannel === 'line' &&
+    !officialLineFriendOk
 
   if (success) {
     return (
@@ -1286,20 +1404,21 @@ export default function InquiryForm({
                         </span>
                       </label>
                     </div>
-                    {preferredReplyChannel === 'line' ? (
+                    {preferredReplyChannel === 'line' && !officialLineFriendOk ? (
                       <>
                         {submitPhase === 'idle' ? (
                           <button
                             type="button"
                             disabled={loading}
                             onClick={() => {
+                              lineRegisterFlowRef.current = true
                               lineAreaSubmitWithoutConsentRef.current = !contactSendConsent
                               armSubmitConfirm()
                             }}
                             className={clsx(
                               'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
                               !loading
-                                ? 'bg-navy-primary text-white hover:bg-navy-secondary hover:shadow-xl'
+                                ? 'bg-[#06C755] text-white shadow-lg shadow-[#06C755]/35 hover:bg-[#05b34c]'
                                 : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55 shadow-none'
                             )}
                           >
@@ -1307,8 +1426,8 @@ export default function InquiryForm({
                               <Loader2 className="h-5 w-5 animate-spin" />
                             ) : (
                               <>
+                                <LineBrandIcon className="h-5 w-5 shrink-0" />
                                 <span>公式LINE登録</span>
-                                <Send className="h-4 w-4 shrink-0" />
                               </>
                             )}
                           </button>
@@ -1393,14 +1512,15 @@ export default function InquiryForm({
             {submitPhase === 'idle' ? (
               <button
                 type="button"
-                disabled={loading || !contactSendConsent}
+                disabled={loading || !contactSendConsent || lineBlocksMainInquirySend}
                 onClick={() => {
+                  lineRegisterFlowRef.current = false
                   lineAreaSubmitWithoutConsentRef.current = false
-                  if (contactSendConsent) armSubmitConfirm()
+                  if (contactSendConsent && !lineBlocksMainInquirySend) armSubmitConfirm()
                 }}
                 className={clsx(
                   'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
-                  contactSendConsent && !loading
+                  contactSendConsent && !loading && !lineBlocksMainInquirySend
                     ? 'bg-navy-primary text-white hover:bg-navy-secondary hover:shadow-xl'
                     : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55 shadow-none'
                 )}
@@ -1417,10 +1537,10 @@ export default function InquiryForm({
             ) : (
               <button
                 type="submit"
-                disabled={loading || !contactSendConsent}
+                disabled={loading || !contactSendConsent || lineBlocksMainInquirySend}
                 className={clsx(
                   'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
-                  !loading && contactSendConsent
+                  !loading && contactSendConsent && !lineBlocksMainInquirySend
                     ? 'bg-orange-600 text-white shadow-orange-600/30 hover:bg-orange-700 hover:shadow-xl'
                     : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55'
                 )}
