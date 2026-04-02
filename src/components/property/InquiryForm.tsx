@@ -330,6 +330,10 @@ export default function InquiryForm({
   const [contactSendConsent, setContactSendConsent] = useState(false)
   const [submitPhase, setSubmitPhase] = useState<'idle' | 'armed'>('idle')
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** LINE 自動送信の二重実行防止（await 中に別 effect が走る対策） */
+  const lineAutoSubmitInFlightRef = useRef(false)
+  /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
+  const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -437,6 +441,37 @@ export default function InquiryForm({
     }
   }, [isLoggedIn, propertyId, isSmartphone])
 
+  /** LINE 連携後にブラウザへ戻ったタイミングで、保留中の自動送信をもう一度試す */
+  useEffect(() => {
+    if (!SHOW_INQUIRY_REPLY_CHANNEL || !isLoggedIn) return
+    let wasHidden = document.visibilityState === 'hidden'
+    const bump = () => {
+      const pending = readPendingLineInquiry()
+      if (!pending || pending.propertyId !== propertyId) return
+      let ready = false
+      try {
+        ready = sessionStorage.getItem('inquiry_liff_ready_pid') === propertyId
+      } catch {
+        return
+      }
+      if (!ready) return
+      if (lineAutoSubmitInFlightRef.current) return
+      try {
+        sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+      } catch {
+        /* */
+      }
+      setLineAutoResumeNonce((n) => n + 1)
+    }
+    const onVis = () => {
+      const hidden = document.visibilityState === 'hidden'
+      if (wasHidden && !hidden) bump()
+      wasHidden = hidden
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [isLoggedIn, propertyId])
+
   useEffect(() => {
     if (!SHOW_INQUIRY_REPLY_CHANNEL) return
     if (preferredReplyChannel !== 'line' || !liffId) return
@@ -449,7 +484,7 @@ export default function InquiryForm({
   /** ブリッジから戻ったあと、保存済みの1回目の確定内容で自動送信（ユーザーに2回押させない） */
   useEffect(() => {
     if (!SHOW_INQUIRY_REPLY_CHANNEL) return
-    if (!isSmartphone || !isLoggedIn || !liffId) return
+    if (!isLoggedIn || !liffId) return
 
     const pending = readPendingLineInquiry()
     if (!pending || pending.propertyId !== propertyId) return
@@ -472,6 +507,16 @@ export default function InquiryForm({
       return
     }
 
+    if (lineAutoSubmitInFlightRef.current) {
+      try {
+        sessionStorage.removeItem(lockKey)
+      } catch {
+        /* */
+      }
+      return
+    }
+    lineAutoSubmitInFlightRef.current = true
+
     const liffHint =
       p.inquiry_liff_endpoint_hint ??
       'LINE Developers の LIFF で「エンドポイント URL」を、いま表示しているページの URL（https・www の有無・パスまで）と一致させてください。'
@@ -493,6 +538,7 @@ export default function InquiryForm({
 
     ;(async () => {
       try {
+      await new Promise((r) => setTimeout(r, 450))
       const sb = createClient()
       const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
       if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
@@ -528,7 +574,11 @@ export default function InquiryForm({
         return
       }
 
-      const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, pending.locale)
+      let lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, pending.locale)
+      if (!lineResult.ok && lineResult.reason === 'error') {
+        await new Promise((r) => setTimeout(r, 1200))
+        lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, pending.locale)
+      }
       if (!lineResult.ok) {
         if (lineResult.reason === 'login') {
           try {
@@ -635,10 +685,25 @@ export default function InquiryForm({
         }
         setError(formatted)
         setLoading(false)
+      } finally {
+        lineAutoSubmitInFlightRef.current = false
+        try {
+          sessionStorage.removeItem(lockKey)
+        } catch {
+          /* */
+        }
       }
     })()
+    return () => {
+      lineAutoSubmitInFlightRef.current = false
+      try {
+        sessionStorage.removeItem(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
+      } catch {
+        /* */
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- dict 全体を依存に入れると毎レンダーで再実行される
-  }, [isSmartphone, isLoggedIn, propertyId, locale, liffId])
+  }, [isLoggedIn, propertyId, locale, liffId, lineAutoResumeNonce])
 
   const innerVisible = !isLoggedIn || isOpen || isDesktop
 
@@ -1086,10 +1151,28 @@ export default function InquiryForm({
                       </label>
                     </div>
                     {preferredReplyChannel === 'line' ? (
-                      <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
-                        {p.inquiry_line_submit_liff_note ??
-                          'オレンジの「確定」ボタンを押したときに LINE ログインが始まります。ログイン後はもう一度確定を押して送信を完了してください。'}
-                      </p>
+                      <div className="mt-3 space-y-2">
+                        <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
+                          {p.inquiry_line_submit_liff_note ??
+                            'オレンジの「確定」ボタンを押したときに LINE ログインが始まります。ログイン後はもう一度確定を押して送信を完了してください。'}
+                        </p>
+                        {officialLineAddFriendUrl ? (
+                          <p className="rounded-lg border border-slate-100 bg-white px-3 py-2 text-[10px] leading-relaxed text-slate-600">
+                            <a
+                              href={officialLineAddFriendUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-bold text-navy-primary underline decoration-navy-primary/30"
+                            >
+                              {p.inquiry_line_add_friend_first_link ?? '先に公式LINEの友だち追加だけ行う'}
+                            </a>
+                            <span className="mt-1 block text-slate-500">
+                              {p.inquiry_line_add_friend_first_hint ??
+                                'LINEで友だち追加したら、このブラウザのタブに戻り、同意にチェックを入れてから「問い合わせを送信する」で送信してください。自動送信されない場合はもう一度「確定」からお試しください。'}
+                            </span>
+                          </p>
+                        ) : null}
+                      </div>
                     ) : null}
                   </>
                 ) : (
