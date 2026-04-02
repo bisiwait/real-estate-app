@@ -247,16 +247,20 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
         const useLineNotify =
           pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail && !linePushUsed
         const expanded = expandedId === inquiry.id
+        const isMemoOnlyMode =
+          pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
         const placeholderText = useLineNotify
           ? 'LINEで送信するメッセージを入力…'
-          : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
-            ? '社内メモ・履歴用（Pushは送信されません。続きは LINE 管理画面のチャットから）…'
+          : isMemoOnlyMode
+            ? 'メモを入力…'
             : '返信メール本文を入力…'
         const labelText = useLineNotify
           ? 'LINE で送信する内容'
-          : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
+          : isMemoOnlyMode
             ? '返信メモ（履歴に保存）'
             : '返信メールの本文'
+        const lineMemoNotSentNotice =
+          'ここからはLINEに送信されません続きのやり取りは LINE Official Account Manager のチャットから、上記の LINE ユーザーIDの友だち宛にご返信ください。'
 
         return (
           <div
@@ -445,106 +449,144 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                 </div>
 
                 <div className="space-y-6">
-                  <h5 className="text-sm font-black text-navy-secondary mb-4 flex items-center">
-                    <Reply className="w-4 h-4 mr-2" />
-                    返信履歴
-                  </h5>
+                  <div>
+                    <h5 className="text-sm font-black text-navy-secondary mb-4 flex items-center">
+                      <Reply className="w-4 h-4 mr-2" />
+                      返信履歴
+                    </h5>
 
-                  {inquiry.replies && inquiry.replies.length > 0 ? (
-                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                      {inquiry.replies.map((reply) => (
-                        <div
-                          key={reply.id}
-                          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm ml-4 relative"
-                        >
-                          <div className="absolute top-4 -left-2 w-4 h-4 bg-white border-l border-t border-slate-100 rotate-45"></div>
-                          <p className="text-xs text-slate-400 mb-2 font-bold">
-                            {new Date(reply.created_at).toLocaleString('ja-JP', {
-                              timeZone: 'Asia/Bangkok',
-                              year: 'numeric',
-                              month: '2-digit',
-                              day: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
-                            {reply.message}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400 italic">まだ返信はありません</p>
-                  )}
-
-                  <div className="mt-6 pt-6 border-t border-slate-100">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
-                      {labelText}
-                    </label>
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                          <Sparkles className="h-3 w-3" />
-                          定型文
-                        </span>
-                        {INQUIRY_REPLY_TEMPLATES.map((t) => (
-                          <button
-                            key={t.label}
-                            type="button"
-                            onClick={() => setReplyText(t.text)}
-                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
+                    {inquiry.replies && inquiry.replies.length > 0 ? (
+                      <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {inquiry.replies.map((reply) => (
+                          <div
+                            key={reply.id}
+                            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm ml-4 relative"
                           >
-                            {t.label}
-                          </button>
+                            <div className="absolute top-4 -left-2 w-4 h-4 bg-white border-l border-t border-slate-100 rotate-45"></div>
+                            <p className="text-xs text-slate-400 mb-2 font-bold">
+                              {new Date(reply.created_at).toLocaleString('ja-JP', {
+                                timeZone: 'Asia/Bangkok',
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+                              {reply.message}
+                            </p>
+                          </div>
                         ))}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setReplyText('')}
-                        disabled={!replyText}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                        title="本文を空にします"
-                      >
-                        <Eraser className="h-3 w-3" />
-                        本文をクリア
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <textarea
-                        rows={6}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
-                        placeholder={placeholderText}
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleSendReply(inquiry)}
-                        disabled={isSubmittingReply || !replyText.trim()}
-                        className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                        title={
-                          useLineNotify
-                            ? 'LINE で送信'
-                            : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
-                              ? '履歴に保存（Pushは送りません）'
-                              : 'メールで送信'
-                        }
-                      >
-                        {isSubmittingReply ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : useLineNotify ? (
-                          <MessageCircle className="w-5 h-5" />
-                        ) : (
-                          <Send className="w-5 h-5" />
-                        )}
-                      </button>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">まだ返信はありません</p>
+                    )}
+                  </div>
+
+                  <hr className="my-8 border-0 border-t-2 border-slate-200" />
+
+                  <div>
+                    <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
+                      {isMemoOnlyMode ? (
+                        <>
+                          <MessageCircle className="w-4 h-4 mr-2 text-[#047c3d]" />
+                          返信メモ
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          {labelText}
+                        </>
+                      )}
+                    </h5>
+                    {!isMemoOnlyMode ? (
+                      <label className="sr-only" htmlFor={`inquiry-reply-${inquiry.id}`}>
+                        {labelText}
+                      </label>
+                    ) : null}
+                    {!isMemoOnlyMode ? (
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <Sparkles className="h-3 w-3" />
+                            定型文
+                          </span>
+                          {INQUIRY_REPLY_TEMPLATES.map((t) => (
+                            <button
+                              key={t.label}
+                              type="button"
+                              onClick={() => setReplyText(t.text)}
+                              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setReplyText('')}
+                          disabled={!replyText}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                          title="本文を空にします"
+                        >
+                          <Eraser className="h-3 w-3" />
+                          本文をクリア
+                        </button>
+                      </div>
+                    ) : null}
+                    <div
+                      className={
+                        isMemoOnlyMode
+                          ? 'flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5'
+                          : ''
+                      }
+                    >
+                      <div className={`relative min-w-0 ${isMemoOnlyMode ? 'flex-1' : ''}`}>
+                        <textarea
+                          id={`inquiry-reply-${inquiry.id}`}
+                          rows={isMemoOnlyMode ? 8 : 6}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
+                          placeholder={placeholderText}
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          aria-label={isMemoOnlyMode ? '返信メモ（履歴に保存）' : labelText}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleSendReply(inquiry)}
+                          disabled={isSubmittingReply || !replyText.trim()}
+                          className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                          title={
+                            useLineNotify
+                              ? 'LINE で送信'
+                              : isMemoOnlyMode
+                                ? '履歴に保存（Pushは送りません）'
+                                : 'メールで送信'
+                          }
+                        >
+                          {isSubmittingReply ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : useLineNotify ? (
+                            <MessageCircle className="w-5 h-5" />
+                          ) : (
+                            <Send className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                      {isMemoOnlyMode ? (
+                        <aside className="md:w-[min(100%,20rem)] shrink-0 rounded-2xl border border-red-200 bg-red-50 p-4">
+                          <p className="text-xs font-black leading-relaxed text-red-600">
+                            {lineMemoNotSentNotice}
+                          </p>
+                        </aside>
+                      ) : null}
                     </div>
                     <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
                       {useLineNotify
                         ? '※送信すると公式 LINE からお客様の LINE に Push 通知されます（お問い合わせあたり1回まで）。内容は返信履歴にも保存されます。'
-                        : pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
-                          ? '※Push は送信されません。履歴への保存のみです。お客様へ届ける内容は LINE 管理画面のチャットから送信してください。'
+                        : isMemoOnlyMode
+                          ? '※この欄の内容は履歴にのみ保存されます。'
                           : '※送信するとお客様のメール宛に届きます。内容は返信履歴にも保存されます。'}
                     </p>
                     {pref.mode === 'line' && !lineMissing && (useLineNotify || linePushUsed) ? (
