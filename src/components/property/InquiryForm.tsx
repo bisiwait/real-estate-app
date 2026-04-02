@@ -405,9 +405,6 @@ export default function InquiryForm({
   })
   const [preferredReplyChannel, setPreferredReplyChannel] = useState<'email' | 'line'>('email')
   const { isSmartphone } = useDeviceType()
-  /** スマホ×LINE: 二重確認なしで 1 タップから連携・友だち追加（可能な環境）・送信まで */
-  const lineSingleSubmitFlow =
-    SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone && preferredReplyChannel === 'line'
   const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim() || undefined
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -437,14 +434,6 @@ export default function InquiryForm({
       clearConfirmTimer()
     }
   }, [contactSendConsent, clearConfirmTimer])
-
-  /** メール用の「確定待ち」のまま LINE 一発送信に切り替えたときリセット */
-  useEffect(() => {
-    if (lineSingleSubmitFlow) {
-      setSubmitPhase('idle')
-      clearConfirmTimer()
-    }
-  }, [lineSingleSubmitFlow, clearConfirmTimer])
 
   const armSubmitConfirm = useCallback(() => {
     clearConfirmTimer()
@@ -866,9 +855,7 @@ export default function InquiryForm({
     if (!contactSendConsent) {
       return
     }
-    const lineSingleNow =
-      SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone && preferredReplyChannel === 'line'
-    if (!lineSingleNow && submitPhase !== 'armed') {
+    if (submitPhase !== 'armed') {
       return
     }
 
@@ -1304,14 +1291,35 @@ export default function InquiryForm({
                       </label>
                     </div>
                     {preferredReplyChannel === 'line' ? (
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3 space-y-3">
                         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] font-medium leading-relaxed text-amber-950">
                           {p.inquiry_line_linking_required ??
-                            '重要: 友だち追加は公式LINEからメッセージを受け取るために必要です。フォームの内容をサイトに保存するには、オレンジの「確定」から LINE 連携を完了し物件ページに戻ることも必要です。'}
+                            '友だち追加（公式LINE）と、サイトへのLINE連携（問い合わせ保存）は別の操作です。'}
                         </p>
                         <p className="rounded-lg bg-slate-50 px-3 py-2 text-[10px] leading-relaxed text-slate-600">
                           {p.inquiry_line_submit_liff_note ??
-                            '下のボタン 1 回で LINE の画面に進みます。友だち追加・ログイン後、物件ページに戻ると自動で送信が完了します。'}
+                            '① 先に友だち追加（緑）② フォーム下で「問い合わせを送信する」→「LINE連携して送信（確定）」の順で進めてください。'}
+                        </p>
+                        {officialLineAddFriendUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              window.location.assign(officialLineAddFriendUrl)
+                            }}
+                            className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white py-3.5 text-sm font-black text-[#06C755] shadow-sm transition hover:bg-[#06C755]/10"
+                          >
+                            {p.inquiry_line_btn_add_friend ??
+                              '① 公式LINEを友だち追加（このタブで開く）'}
+                          </button>
+                        ) : (
+                          <p className="rounded-lg border border-amber-100 bg-amber-50/80 px-3 py-2 text-[10px] leading-relaxed text-amber-950">
+                            {p.inquiry_line_add_friend_url_missing ??
+                              '公式LINEの友だち追加URLが未設定です。環境変数 NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL 等をご確認ください。'}
+                          </p>
+                        )}
+                        <p className="text-center text-[10px] font-medium text-slate-500">
+                          {p.inquiry_line_link_step_2 ??
+                            '② 連携して問い合わせを保存するには、下の送信ボタンから進んでください。'}
                         </p>
                       </div>
                     ) : null}
@@ -1368,30 +1376,7 @@ export default function InquiryForm({
               </label>
             </div>
 
-            {lineSingleSubmitFlow ? (
-              <button
-                type="submit"
-                disabled={loading || !contactSendConsent}
-                className={clsx(
-                  'mt-3 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl py-4 text-sm font-black shadow-lg transition-all',
-                  !loading && contactSendConsent
-                    ? 'bg-[#06C755] text-white shadow-[#06C755]/35 hover:bg-[#05b34c] hover:shadow-xl'
-                    : 'cursor-not-allowed bg-slate-300 text-slate-500 opacity-55'
-                )}
-              >
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <span className="text-center leading-tight">
-                      {p.inquiry_send_line_one_shot ??
-                        'LINEで送信する（友だち追加・連携・問い合わせ完了）'}
-                    </span>
-                    <Send className="h-4 w-4 shrink-0" />
-                  </>
-                )}
-              </button>
-            ) : submitPhase === 'idle' ? (
+            {submitPhase === 'idle' ? (
               <button
                 type="button"
                 disabled={loading || !contactSendConsent}
@@ -1429,7 +1414,13 @@ export default function InquiryForm({
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    <span className="text-center leading-tight">{p.inquiry_send_btn_confirm}</span>
+                    <span className="text-center leading-tight">
+                      {SHOW_INQUIRY_REPLY_CHANNEL &&
+                      isSmartphone &&
+                      preferredReplyChannel === 'line'
+                        ? (p.inquiry_send_btn_confirm_line ?? p.inquiry_send_btn_confirm)
+                        : p.inquiry_send_btn_confirm}
+                    </span>
                     <Send className="h-4 w-4 shrink-0" />
                   </>
                 )}
