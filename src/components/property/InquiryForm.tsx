@@ -711,6 +711,7 @@ export default function InquiryForm({
             } catch {
               /* */
             }
+            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`)
             const res = await obtainLineUserIdForInquiry(liffId, propertyId, locale)
             if (!res.ok) {
               if (res.reason === 'login') {
