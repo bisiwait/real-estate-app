@@ -30,6 +30,7 @@ import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
 import { isPremiumActive } from '@/lib/utils/plan'
+import { getAgentSettingsLineCopy } from '@/lib/i18n/locale-plans-copy'
 
 interface ProfileData {
     full_name: string
@@ -247,6 +248,8 @@ export default function ProfileForm() {
         is_admin: formData.is_admin,
     })
 
+    const lineSection = getAgentSettingsLineCopy(locale)
+
     return (
         <div className="space-y-12">
             {/* メッセージ表示 */}
@@ -370,30 +373,25 @@ export default function ProfileForm() {
                 >
                     <h3 className="text-sm font-black text-navy-secondary mb-3 flex items-center gap-2">
                         <MessageCircle className={`h-5 w-5 ${isPremium ? 'text-[#06C755]' : 'text-[#047c3d]'}`} />
-                        物件ページの LINE 問い合わせ
+                        {lineSection.title}
                     </h3>
                     {isPremium ? (
-                        <p className="text-sm font-medium leading-relaxed text-slate-600">
-                            プレミアムプランでは、お客様がスマートフォンから「LINEで返信を受け取る」を選べます。タイでの成約につながる
-                            <span className="font-black text-navy-secondary"> Key to Success in Thailand</span>
-                            として、LINE 経由のスピーディなやり取りが可能です。
+                        <p className="text-sm font-medium leading-relaxed text-slate-600 whitespace-pre-line">
+                            {lineSection.premium_body}
                         </p>
                     ) : (
                         <div className="space-y-4">
-                            <p className="text-sm font-bold leading-relaxed text-navy-secondary">
-                                この機能は<strong className="text-[#047c3d]">プレミアムプラン専用</strong>
-                                です。スタンダードでは物件問い合わせの返信はメールのみとなります。
+                            <p className="text-sm font-bold leading-relaxed text-navy-secondary whitespace-pre-line">
+                                {lineSection.standard_lead}
                             </p>
-                            <p className="text-xs font-medium leading-relaxed text-slate-600">
-                                Premium unlocks LINE-based inquiries: higher engagement and faster closings in Thailand — the{' '}
-                                <span className="font-black text-navy-secondary">Key to Success in Thailand</span> for many
-                                agents. / แพ็กเกียมพรีเมียมช่วยให้รับข้อความผ่าน LINE ได้ ลูกค้าไทยและญี่ปุ่นนิยมใช้ LINE ในการติดต่อ
+                            <p className="text-xs font-medium leading-relaxed text-slate-600 whitespace-pre-line">
+                                {lineSection.standard_body}
                             </p>
                             <Link
                                 href={`/${locale}/pricing`}
                                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary px-6 py-3 text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
                             >
-                                アップグレードはこちら
+                                {lineSection.upgrade_cta}
                             </Link>
                         </div>
                     )}

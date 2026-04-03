@@ -1,6 +1,7 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
 import { isPremiumActive } from '@/lib/utils/plan'
+import { getAgentsPageLineGateCopy } from '@/lib/i18n/locale-plans-copy'
 import { notFound, useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
@@ -135,7 +136,7 @@ export default function AgentProfilePage() {
                                     />
                                 ) : agent.show_line_in_inquiry !== false && agent.line_id ? (
                                     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs font-bold text-slate-500">
-                                        LINEでの直接連絡はプレミアム掲載エージェントのみ表示されます（メール・電話をご利用ください）
+                                        {getAgentsPageLineGateCopy(locale)}
                                     </div>
                                 ) : null}
                                 {agent.phone ? (

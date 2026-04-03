@@ -218,9 +218,7 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                                     />
                                 </div>
                                 <p className="mt-2 text-[11px] font-medium leading-relaxed text-slate-500">
-                                    物件ページでお客様が「LINEで返信を受け取る」を選べるのは
-                                    <strong className="font-black text-navy-secondary">プレミアムプラン</strong>
-                                    のみです（登録時点ではスタンダードのため、メール問い合わせが中心になります）。
+                                    {dict.auth?.agent_line_listing_note ?? ''}
                                 </p>
                             </div>
                         </div>

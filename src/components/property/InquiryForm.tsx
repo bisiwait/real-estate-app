@@ -1303,17 +1303,13 @@ export default function InquiryForm({
                 </legend>
                 {!ownerPremiumLineInquiry ? (
                   <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4">
-                    <p className="text-sm font-bold text-navy-secondary">
+                    <p className="text-sm font-bold leading-relaxed text-navy-secondary">
                       {p.inquiry_owner_standard_line_notice ??
-                        'この掲載エージェントはメールでの返信のみ対応しています。'}
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-slate-600">
-                      {p.inquiry_owner_standard_line_notice_en ??
-                        'This listing agent replies by email only. LINE inquiry is a Premium feature for agents.'}
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-slate-600">
-                      {p.inquiry_owner_standard_line_notice_th ??
-                        'เอเจนท์ท่านนี้ตอบกลับทางอีเมลเท่านั้น การสอบถามผ่าน LINE ใช้ได้กับแพ็กเกียมพรีเมียมของเอเจนท์'}
+                        (locale === 'en'
+                          ? 'This listing agent replies by email only. The “by LINE” option is available with Premium listing agents.'
+                          : locale === 'th'
+                            ? 'ตัวแทนประกาศนี้ตอบกลับทางอีเมลเท่านั้น การเลือกรับทาง LINE มีเฉพาะตัวแทนแพ็กเกียมพรีเมียม'
+                            : 'この掲載エージェントはメールでの返信のみ対応しています。LINEでの返信を選べるのはプレミアム掲載エージェントのみです。')}
                     </p>
                     <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2">
                       <p className="text-xs font-bold text-slate-500">
@@ -1324,7 +1320,14 @@ export default function InquiryForm({
                       <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-400 line-through">
                         LINE
                       </span>
-                      <span className="text-[10px] font-bold text-slate-400">Premium agents only</span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {p.inquiry_line_premium_only_badge ??
+                          (locale === 'en'
+                            ? 'Premium listings only'
+                            : locale === 'th'
+                              ? 'เฉพาะแพ็กเกียมพรีเมียม'
+                              : 'プレミアム掲載のみ')}
+                      </span>
                     </div>
                   </div>
                 ) : isSmartphone ? (

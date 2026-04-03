@@ -75,6 +75,7 @@
         "benefit_support_desc": "Smooth chat consultation with agents",
         "confirm_sent": "Registration completed.",
         "signup_complete": "Registration completed. Please sign in to continue.",
+        "agent_line_listing_note": "The “reply by LINE” option on property pages is Premium-only. New accounts start on Standard, so inquiries are mainly handled by email.",
         "signup_success": "Agent registration completed. Sign in to use your dashboard."
     },
     "metadata": {
@@ -458,6 +459,8 @@
         "inquiry_reply_channel_intro_v2": "Choose how you want replies. Enter your email in both cases for our records.",
         "inquiry_reply_channel_intro_desktop": "We will reply to the email address you enter below.",
         "inquiry_reply_desktop_notice": "Replies will be sent by email.",
+        "inquiry_owner_standard_line_notice": "This listing agent replies by email only. The “by LINE” option is available with Premium listing agents.",
+        "inquiry_line_premium_only_badge": "Premium listings only",
         "inquiry_line_blocked_desktop": "“By LINE” is not available on desktop or tablet. Please use email for replies.",
         "inquiry_pc_line_qr_hint": "To use LINE, scan the QR code below on your smartphone to add our official account, then send your inquiry from the property page form.",
         "inquiry_reply_by_email": "By email",
@@ -834,6 +837,31 @@
         "listings_label": "Published listings",
         "empty_title": "No agents found",
         "empty_desc": "There are no agents with published listings right now.",
-        "verified": "Verified"
+        "verified": "Verified",
+        "line_contact_premium_only": "Direct LINE contact is shown only for Premium listing agents. Please use email or phone."
+    },
+    "list_property_plans": {
+        "tagline": "Key to Success in Thailand",
+        "heading": "Two plans to choose from",
+        "intro": "Reach Japanese, Thai, and international buyers. In Thailand, LINE is often the key to faster deals. Premium unlocks direct inquiries via our official LINE channel.",
+        "standard_title": "Standard",
+        "standard_price": "List for free",
+        "standard_bullet1": "Receive and reply to inquiries by email",
+        "standard_bullet2": "Core tools to publish and manage listings",
+        "standard_footer": "The “reply by LINE” option on property pages is shown only for Premium listing agents.",
+        "premium_badge": "Recommended",
+        "premium_title": "Premium",
+        "premium_tagline": "LINE integration that supports conversions",
+        "premium_bullet1": "Supports LINE-based inquiries. Capture the customer’s LINE user ID and reply faster via the official account.",
+        "premium_bullet2": "Works alongside email replies",
+        "premium_bullet3": "Higher-tier perks such as PDF flyers and social sharing (see Pricing for details)",
+        "premium_cta": "View pricing & Premium details"
+    },
+    "agent_settings_line": {
+        "title": "LINE inquiries on your listings",
+        "premium_body": "On Premium, buyers on smartphones can choose “reply by LINE”. LINE is a major channel for deals in Thailand and helps you respond quickly.",
+        "standard_lead": "This feature is Premium-only. On Standard, property inquiries are handled by email.",
+        "standard_body": "Premium lets you handle LINE-based inquiries—often an advantage for speed and conversions in the Thai market.",
+        "upgrade_cta": "Upgrade here"
     }
 }
