@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { adminResetPassword } from '@/app/actions/adminAuth'
+import { useAuth } from '@/contexts/AuthContext'
+import { invokeAdminAgentLifecycle } from '@/lib/supabase/invoke-admin-agent-lifecycle'
 
 export type AdminUserManagementVariant = 'agent' | 'general'
 
@@ -42,8 +44,11 @@ export default function AdminUserManagement({
     const [searchQuery, setSearchQuery] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const PAGE_SIZE = 9
+    const [agentActionBusy, setAgentActionBusy] = useState<string | null>(null)
 
     const supabase = createClient()
+    const { userData } = useAuth()
+    const isAdminUser = userData.isAdmin || userData.role === 'admin'
 
     const fetchUsers = async () => {
         setLoading(true)
@@ -99,6 +104,52 @@ export default function AdminUserManagement({
             alert(getErrorMessage(err))
         } finally {
             setLoading(false)
+        }
+    }
+
+    const runAgentSuspendResume = async (user: any, suspend: boolean) => {
+        const msg = suspend
+            ? 'このエージェントを停止しますか？公開中の物件は非公開（下書き）になります。'
+            : 'このエージェントのアカウントを再開しますか？'
+        if (!confirm(msg)) return
+        setAgentActionBusy(user.id)
+        try {
+            const result = await invokeAdminAgentLifecycle(
+                supabase,
+                suspend ? 'suspend' : 'resume',
+                user.id,
+                { propertyHandling: suspend ? 'unpublish' : 'keep' }
+            )
+            if (result.error) {
+                alert(result.error)
+                return
+            }
+            await fetchUsers()
+        } finally {
+            setAgentActionBusy(null)
+        }
+    }
+
+    const runAgentDelete = async (user: any) => {
+        if (
+            !confirm(
+                'このエージェントを削除（論理削除）し、認証アカウントを完全に削除しますか？\n公開中の物件は非公開になります。この操作は取り消せません。'
+            )
+        ) {
+            return
+        }
+        setAgentActionBusy(user.id)
+        try {
+            const result = await invokeAdminAgentLifecycle(supabase, 'delete', user.id, {
+                propertyHandling: 'unpublish',
+            })
+            if (result.error) {
+                alert(result.error)
+                return
+            }
+            await fetchUsers()
+        } finally {
+            setAgentActionBusy(null)
         }
     }
 
@@ -237,9 +288,21 @@ export default function AdminUserManagement({
                                             {user.user_role === 'admin' && <ShieldCheck className="w-3 h-3 ml-1 text-amber-500 inline" />}
                                         </p>
                                         {variant === 'agent' && (
-                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${user.plan === 'premium' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
-                                                {user.plan === 'premium' ? 'Premium' : 'Free'}
-                                            </span>
+                                            <>
+                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${user.plan === 'premium' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                    {user.plan === 'premium' ? 'Premium' : 'Free'}
+                                                </span>
+                                                {user.deleted_at && (
+                                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                                        削除済み
+                                                    </span>
+                                                )}
+                                                {!user.deleted_at && (user.status === 'suspended' || user.is_suspended) && (
+                                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-50 text-red-500 border border-red-100">
+                                                        一時停止中
+                                                    </span>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-0.5">{user.email}</p>
@@ -299,6 +362,33 @@ export default function AdminUserManagement({
                                                     >
                                                         公開ページ
                                                     </Link>
+                                                    {isAdminUser && !user.deleted_at && (
+                                                        <div className="flex flex-col items-end gap-1.5 sm:items-end">
+                                                            <button
+                                                                type="button"
+                                                                disabled={agentActionBusy === user.id}
+                                                                onClick={() =>
+                                                                    runAgentSuspendResume(
+                                                                        user,
+                                                                        !(user.status === 'suspended' || user.is_suspended)
+                                                                    )
+                                                                }
+                                                                className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                                                            >
+                                                                {user.status === 'suspended' || user.is_suspended
+                                                                    ? '再開'
+                                                                    : '利用停止'}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled={agentActionBusy === user.id}
+                                                                onClick={() => runAgentDelete(user)}
+                                                                className="rounded-lg bg-red-600 px-2.5 py-1 text-[10px] font-black text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                                                            >
+                                                                削除
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <Link

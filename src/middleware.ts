@@ -7,6 +7,15 @@ const PROPERTY_UUID_IN_PATH =
     /^\/(jp|en|th)\/properties\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
 const defaultLocale = 'jp'
 
+/** Supabase の signOut が更新した Cookie をリダイレクト応答へ載せる */
+function redirectWithAuthCookies(from: NextResponse, url: URL) {
+    const to = NextResponse.redirect(url)
+    from.cookies.getAll().forEach((c) => {
+        to.cookies.set(c)
+    })
+    return to
+}
+
 function getLocale(request: NextRequest): string {
     // 1. Cookie check (NEXT_LOCALE)
     const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
@@ -218,14 +227,14 @@ export default async function middleware(request: NextRequest) {
         if (pathWithoutLocale.startsWith('/admin-secret') || pathWithoutLocale.startsWith('/dashboard')) {
             let { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('user_role, is_admin')
+                .select('user_role, is_admin, status, deleted_at')
                 .eq('id', user.id)
                 .single()
 
             if (profileError) {
                 const { data: fallbackProfile } = await supabase
                     .from('profiles')
-                    .select('is_admin, user_role')
+                    .select('is_admin, user_role, status, deleted_at')
                     .eq('id', user.id)
                     .single()
                 profile = fallbackProfile as any
@@ -233,13 +242,28 @@ export default async function middleware(request: NextRequest) {
 
             const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin';
             const isAgent = profile?.user_role === 'agent';
+            const agentBlocked =
+                isAgent &&
+                (profile?.status === 'suspended' || profile?.deleted_at != null);
 
             if (pathWithoutLocale.startsWith('/admin-secret') && !isAdmin) {
                 return NextResponse.redirect(new URL(`/${currentLocale}`, request.url))
             }
 
-            if (pathWithoutLocale.startsWith('/dashboard') && !isAdmin && !isAgent) {
-                return NextResponse.redirect(new URL(`/${currentLocale}/mypage`, request.url))
+            if (pathWithoutLocale.startsWith('/dashboard')) {
+                if (agentBlocked) {
+                    await supabase.auth.signOut()
+                    return redirectWithAuthCookies(
+                        response,
+                        new URL(
+                            `/${currentLocale}/login?error=account_unavailable`,
+                            request.url
+                        )
+                    )
+                }
+                if (!isAdmin && !isAgent) {
+                    return NextResponse.redirect(new URL(`/${currentLocale}/mypage`, request.url))
+                }
             }
 
             if (pathWithoutLocale.startsWith('/mypage') || pathWithoutLocale.startsWith('/favorites')) {
@@ -253,14 +277,14 @@ export default async function middleware(request: NextRequest) {
         } else if (pathWithoutLocale.startsWith('/mypage') || pathWithoutLocale.startsWith('/favorites')) {
             let { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('user_role, is_admin')
+                .select('user_role, is_admin, status, deleted_at')
                 .eq('id', user.id)
                 .single()
 
             if (profileError) {
                 const { data: fallbackProfile } = await supabase
                     .from('profiles')
-                    .select('is_admin, user_role')
+                    .select('is_admin, user_role, status, deleted_at')
                     .eq('id', user.id)
                     .single()
                 profile = fallbackProfile as any
@@ -268,11 +292,24 @@ export default async function middleware(request: NextRequest) {
 
             const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin';
             const isAgent = profile?.user_role === 'agent';
+            const agentBlocked =
+                isAgent &&
+                (profile?.status === 'suspended' || profile?.deleted_at != null);
 
             if (isAdmin) {
                 return NextResponse.redirect(new URL(`/${currentLocale}/admin-secret`, request.url))
             }
             if (isAgent) {
+                if (agentBlocked) {
+                    await supabase.auth.signOut()
+                    return redirectWithAuthCookies(
+                        response,
+                        new URL(
+                            `/${currentLocale}/login?error=account_unavailable`,
+                            request.url
+                        )
+                    )
+                }
                 return NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, request.url))
             }
         }

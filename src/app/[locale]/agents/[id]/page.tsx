@@ -32,6 +32,7 @@ export default function AgentProfilePage() {
     const [properties, setProperties] = useState<any[]>([])
     const [totalListings, setTotalListings] = useState(0)
     const [loading, setLoading] = useState(true)
+    const [hideAgent, setHideAgent] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -40,6 +41,11 @@ export default function AgentProfilePage() {
             // Fetch Agent Profile
             const { data: aData } = await supabase.from('profiles').select('*').eq('id', agentId).single()
             if (aData) {
+                if (aData.deleted_at != null || aData.status === 'suspended') {
+                    setHideAgent(true)
+                    setLoading(false)
+                    return
+                }
                 setAgent(aData)
                 
                 // Fetch Properties
@@ -66,6 +72,7 @@ export default function AgentProfilePage() {
     }, [agentId])
 
     if (loading) return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
+    if (hideAgent) return notFound()
     if (!agent) return notFound()
 
     const languages = ['日本語', 'English', 'ภาษาไทย']

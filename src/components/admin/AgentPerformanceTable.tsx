@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -23,6 +23,8 @@ import {
 } from 'lucide-react'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { useAuth } from '@/contexts/AuthContext'
+import { invokeAdminAgentLifecycle } from '@/lib/supabase/invoke-admin-agent-lifecycle'
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -35,6 +37,8 @@ interface AgentPerformance {
     company_name: string
     is_verified: boolean
     is_suspended: boolean
+    status: string | null
+    deleted_at: string | null
     active_properties: number
     total_properties: number
     total_views: number
@@ -57,41 +61,43 @@ export default function AgentPerformanceTable({
     const [sortConfig, setSortConfig] = useState<{ key: keyof AgentPerformance, direction: 'asc' | 'desc' } | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
     const PAGE_SIZE = 10
+    const [actionBusy, setActionBusy] = useState<string | null>(null)
 
     const supabase = createClient()
+    const { userData } = useAuth()
+    const isAdminUser = userData.isAdmin || userData.role === 'admin'
 
-    useEffect(() => {
-        const fetchAgentPerformance = async () => {
-            setLoading(true)
+    const loadAgents = useCallback(async () => {
+        setLoading(true)
+        const { data: profiles, error: pError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_role', 'agent')
 
-            // プロフィール取得
-            const { data: profiles, error: pError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('user_role', 'agent')
+        if (pError) {
+            console.error('Fetch profiles error:', pError)
+            setLoading(false)
+            return
+        }
 
-            if (pError) {
-                console.error('Fetch profiles error:', pError)
-                setLoading(false)
-                return
-            }
-
-            // 物件統計と組み合わせる (本来は一つの複雑なクエリにするのが望ましいが、段階的に)
-            const perfData: AgentPerformance[] = await Promise.all(profiles.map(async (p) => {
+        const perfData: AgentPerformance[] = await Promise.all(
+            (profiles ?? []).map(async (p) => {
                 const { data: props } = await supabase
                     .from('properties')
                     .select('id, status, total_views')
                     .eq('user_id', p.id)
 
-                const activeCount = props?.filter(pr => pr.status === 'published').length || 0
+                const activeCount = props?.filter((pr) => pr.status === 'published').length || 0
                 const totalCount = props?.length || 0
-                const sumViews = props?.reduce((acc, curr) => acc + (curr.total_views || 0), 0) || 0
+                const sumViews =
+                    props?.reduce((acc, curr) => acc + (curr.total_views || 0), 0) || 0
 
-                // お気に入り数 (仮)
                 const { count: favoritesCount } = await supabase
                     .from('favorites')
                     .select('id', { count: 'exact', head: true })
-                    .in('property_id', props?.map(pr => pr.id) || [])
+                    .in('property_id', props?.map((pr) => pr.id) || [])
+
+                const suspended = p.status === 'suspended' || p.is_suspended === true
 
                 return {
                     id: p.id,
@@ -99,23 +105,73 @@ export default function AgentPerformanceTable({
                     email: p.email,
                     company_name: p.company_name || 'N/A',
                     is_verified: p.is_verified || false,
-                    is_suspended: p.is_suspended || false,
+                    is_suspended: suspended,
+                    status: p.status ?? 'active',
+                    deleted_at: p.deleted_at ?? null,
                     active_properties: activeCount,
                     total_properties: totalCount,
                     total_views: sumViews,
                     total_favorites: favoritesCount || 0,
-                    avg_response_time: 2.5, // Mock
-                    response_rate: 98, // Mock
-                    last_activity: p.updated_at || p.created_at
+                    avg_response_time: 2.5,
+                    response_rate: 98,
+                    last_activity: p.updated_at || p.created_at,
                 }
-            }))
+            })
+        )
 
-            setAgents(perfData)
-            setLoading(false)
+        setAgents(perfData)
+        setLoading(false)
+    }, [supabase])
+
+    useEffect(() => {
+        void loadAgents()
+    }, [loadAgents])
+
+    const runSuspendResume = async (agent: AgentPerformance, suspend: boolean) => {
+        const msg = suspend
+            ? 'このエージェントを停止しますか？公開中の物件は非公開（下書き）になります。'
+            : 'このエージェントのアカウントを再開しますか？'
+        if (!confirm(msg)) return
+        setActionBusy(agent.id)
+        try {
+            const result = await invokeAdminAgentLifecycle(
+                supabase,
+                suspend ? 'suspend' : 'resume',
+                agent.id,
+                { propertyHandling: suspend ? 'unpublish' : 'keep' }
+            )
+            if (result.error) {
+                alert(result.error)
+                return
+            }
+            await loadAgents()
+        } finally {
+            setActionBusy(null)
         }
+    }
 
-        fetchAgentPerformance()
-    }, [])
+    const runDelete = async (agent: AgentPerformance) => {
+        if (
+            !confirm(
+                'このエージェントを削除（論理削除）し、認証アカウントを完全に削除しますか？\n公開中の物件は非公開になります。この操作は取り消せません。'
+            )
+        ) {
+            return
+        }
+        setActionBusy(agent.id)
+        try {
+            const result = await invokeAdminAgentLifecycle(supabase, 'delete', agent.id, {
+                propertyHandling: 'unpublish',
+            })
+            if (result.error) {
+                alert(result.error)
+                return
+            }
+            await loadAgents()
+        } finally {
+            setActionBusy(null)
+        }
+    }
 
     // Sorting Logic
     const sortedAgents = [...agents].sort((a, b) => {
@@ -188,20 +244,23 @@ export default function AgentPerformanceTable({
                                 </button>
                             </th>
                             <th className="px-4 py-5 text-right">最終アクティビティ</th>
+                            {isAdminUser && (
+                                <th className="px-4 py-5 text-right whitespace-nowrap">アクション</th>
+                            )}
                             <th className="px-8 py-5 text-right">詳細</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                         {loading ? (
                             <tr>
-                                <td colSpan={6} className="py-20 text-center">
+                                <td colSpan={isAdminUser ? 7 : 6} className="py-20 text-center">
                                     <Loader2 className="w-10 h-10 text-navy-primary/10 animate-spin mx-auto mb-4" />
                                     <p className="text-slate-400 font-bold tracking-widest text-[10px] uppercase">データを読み込み中...</p>
                                 </td>
                             </tr>
                         ) : paginatedAgents.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="py-20 text-center">
+                                <td colSpan={isAdminUser ? 7 : 6} className="py-20 text-center">
                                     <div className="bg-slate-50 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4">
                                         <Users className="w-8 h-8 text-slate-200" />
                                     </div>
@@ -211,7 +270,11 @@ export default function AgentPerformanceTable({
                             </tr>
                         ) : (
                             paginatedAgents.map((agent) => (
-                                <tr key={agent.id} className="group hover:bg-slate-50/50 transition-all cursor-pointer" onClick={() => onSelectAgent(agent.id)}>
+                                <tr
+                                    key={agent.id}
+                                    className="group hover:bg-slate-50/50 transition-all cursor-pointer"
+                                    onClick={() => onSelectAgent(agent.id)}
+                                >
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
                                             <div className="relative">
@@ -227,7 +290,12 @@ export default function AgentPerformanceTable({
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-sm font-black text-navy-secondary">{agent.full_name}</p>
-                                                    {agent.is_suspended && (
+                                                    {agent.deleted_at && (
+                                                        <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-0.5 rounded-full border border-slate-200 uppercase">
+                                                            削除済み
+                                                        </span>
+                                                    )}
+                                                    {!agent.deleted_at && agent.is_suspended && (
                                                         <span className="bg-red-50 text-red-500 text-[10px] font-black px-2 py-0.5 rounded-full border border-red-100 uppercase">一時停止中</span>
                                                     )}
                                                 </div>
@@ -269,6 +337,32 @@ export default function AgentPerformanceTable({
                                         <p className="text-[11px] font-bold text-navy-secondary">{new Date(agent.last_activity).toLocaleDateString('ja-JP')}</p>
                                         <p className="text-[10px] text-slate-400 mt-0.5">{new Date(agent.last_activity).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</p>
                                     </td>
+                                    {isAdminUser && (
+                                        <td className="px-4 py-6 text-right align-top" onClick={(e) => e.stopPropagation()}>
+                                            <div className="flex flex-col items-end gap-1.5">
+                                                {!agent.deleted_at && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            disabled={actionBusy === agent.id}
+                                                            onClick={() => runSuspendResume(agent, !agent.is_suspended)}
+                                                            className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                                                        >
+                                                            {agent.is_suspended ? '再開' : '利用停止'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={actionBusy === agent.id}
+                                                            onClick={() => runDelete(agent)}
+                                                            className="rounded-lg bg-red-600 px-2.5 py-1 text-[10px] font-black text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                                                        >
+                                                            削除
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    )}
                                     <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex flex-wrap items-center justify-end gap-2">
                                             <Link

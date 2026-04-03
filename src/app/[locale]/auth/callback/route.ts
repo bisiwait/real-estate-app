@@ -47,6 +47,22 @@ export async function GET(request: NextRequest) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error && data.user) {
             await syncAgentProfileFromAuthUser(data.user)
+            const { data: prof } = await supabase
+                .from('profiles')
+                .select('user_role, status, deleted_at')
+                .eq('id', data.user.id)
+                .maybeSingle()
+            if (
+                prof?.user_role === 'agent' &&
+                (prof.deleted_at != null || prof.status === 'suspended')
+            ) {
+                await supabase.auth.signOut()
+                const blocked = NextResponse.redirect(
+                    `${url.origin}/${locale}/login?error=account_unavailable`
+                )
+                redirectOk.cookies.getAll().forEach((c) => blocked.cookies.set(c))
+                return blocked
+            }
             return redirectOk
         }
         // LINE の code を Supabase に渡した場合など: 物件ページ Cookie があれば code/state を付けて戻し LIFF を継続

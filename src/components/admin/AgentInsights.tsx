@@ -13,6 +13,7 @@ import {
     Edit3
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { invokeAdminAgentLifecycle } from '@/lib/supabase/invoke-admin-agent-lifecycle'
 
 // Mock Data for the chart
 const mockChartData = [
@@ -68,7 +69,9 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
 
                 setAgentData(profile)
                 setIsVerified(profile.is_verified || false)
-                setIsSuspended(profile.is_suspended || false)
+                setIsSuspended(
+                    profile.is_suspended === true || profile.status === 'suspended'
+                )
                 setAdminNote(profile.admin_notes || '')
 
                 // 2. Fetch Stale Properties (updated > 30 days ago)
@@ -145,12 +148,27 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
         setSaving(true)
         setSaveSuccess(false)
         try {
+            const wasSuspended =
+                agentData?.is_suspended === true || agentData?.status === 'suspended'
+            if (isSuspended !== wasSuspended) {
+                const result = await invokeAdminAgentLifecycle(
+                    supabase,
+                    isSuspended ? 'suspend' : 'resume',
+                    agentId,
+                    { propertyHandling: isSuspended ? 'unpublish' : 'keep' }
+                )
+                if (result.error) {
+                    throw new Error(result.error)
+                }
+            }
+
             const { error } = await supabase
                 .from('profiles')
                 .update({
                     is_verified: isVerified,
                     is_suspended: isSuspended,
-                    admin_notes: adminNote
+                    status: isSuspended ? 'suspended' : 'active',
+                    admin_notes: adminNote,
                 })
                 .eq('id', agentId)
 
@@ -158,10 +176,23 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                 throw error
             }
 
+            setAgentData((prev: any) =>
+                prev
+                    ? {
+                          ...prev,
+                          is_verified: isVerified,
+                          is_suspended: isSuspended,
+                          status: isSuspended ? 'suspended' : 'active',
+                          admin_notes: adminNote,
+                      }
+                    : prev
+            )
+
             setSaveSuccess(true)
             setTimeout(() => setSaveSuccess(false), 3000)
         } catch (error: any) {
             console.error('Error saving settings:', error)
+            alert(error?.message || '保存に失敗しました')
         } finally {
             setSaving(false)
         }
@@ -365,12 +396,19 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                                     <span className="text-sm font-black">アカウント一時停止</span>
                                 </div>
                                 <button
+                                    type="button"
+                                    disabled={!!agentData?.deleted_at}
                                     onClick={() => setIsSuspended(!isSuspended)}
-                                    className={`w-12 h-6 rounded-full relative transition-colors ${isSuspended ? 'bg-red-500' : 'bg-slate-600'}`}
+                                    className={`w-12 h-6 rounded-full relative transition-colors ${isSuspended ? 'bg-red-500' : 'bg-slate-600'} disabled:opacity-40`}
                                 >
                                     <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isSuspended ? 'right-1' : 'left-1'}`} />
                                 </button>
                             </div>
+                            {agentData?.deleted_at && (
+                                <p className="text-xs font-bold text-red-300">
+                                    このエージェントは削除済みです（認証は削除済み）。プロフィール履歴のみ表示しています。
+                                </p>
+                            )}
                         </div>
                     </div>
 

@@ -8,9 +8,9 @@ export async function isAdmin() {
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('is_admin, user_role')
         .eq('id', user.id)
         .single()
 
-    return !!profile?.is_admin
+    return profile?.is_admin === true || profile?.user_role === 'admin'
 }

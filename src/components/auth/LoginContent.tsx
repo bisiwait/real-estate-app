@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Mail, Lock, Loader2, ArrowRight, Chrome, ShieldCheck, Heart, Search, CheckCircle2 } from 'lucide-react'
@@ -30,6 +30,18 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
     const router = useRouter()
     const supabase = createClient()
+
+    const ACCOUNT_UNAVAILABLE =
+        'このアカウントは現在ご利用いただけません。お困りの場合はサポートまでお問い合わせください。'
+
+    useEffect(() => {
+        const err = searchParams.get('error')
+        if (err === 'account_unavailable') {
+            void supabase.auth.signOut().finally(() => {
+                setMessage({ type: 'error', text: ACCOUNT_UNAVAILABLE })
+            })
+        }
+    }, [searchParams, supabase])
 
     const handleTabChange = (signUp: boolean) => {
         setIsSignUp(signUp)
@@ -111,17 +123,27 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
                     let { data: profile, error: profileError } = await supabase
                         .from('profiles')
-                        .select('user_role, is_admin')
+                        .select('user_role, is_admin, status, deleted_at')
                         .eq('id', user.id)
                         .single()
 
                     if (profileError) {
                         const { data: fallbackProfile } = await supabase
                             .from('profiles')
-                            .select('is_admin, user_role')
+                            .select('is_admin, user_role, status, deleted_at')
                             .eq('id', user.id)
                             .single()
                         profile = fallbackProfile as any
+                    }
+
+                    if (
+                        profile?.user_role === 'agent' &&
+                        (profile?.deleted_at != null || profile?.status === 'suspended')
+                    ) {
+                        await supabase.auth.signOut()
+                        setMessage({ type: 'error', text: ACCOUNT_UNAVAILABLE })
+                        setLoading(false)
+                        return
                     }
 
                     router.refresh()
