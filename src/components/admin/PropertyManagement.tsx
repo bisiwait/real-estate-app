@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
     Check,
@@ -31,6 +31,8 @@ export default function AdminPropertyManagement() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const supabase = createClient()
 
+    const agentIdSet = useMemo(() => new Set(users.map((u) => u.id)), [users])
+
     // Search & Pagination
     const [searchQuery, setSearchQuery] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
@@ -48,17 +50,39 @@ export default function AdminPropertyManagement() {
             console.error('Fetch properties error:', error)
             setErrorMessage(getErrorMessage(error))
         } else if (propertiesData) {
-            // Fetch all users to populate the target user dropdown
+            // 担当変更プルダウンはエージェントのみ（論理削除済みは除外）
             const { data: profilesData, error: profilesError } = await supabase
                 .from('profiles')
                 .select('id, full_name, email')
+                .eq('user_role', 'agent')
+                .is('deleted_at', null)
                 .order('full_name')
 
             if (!profilesError && profilesData) {
                 setUsers(profilesData)
-                // Map profiles to properties
-                const propertiesWithProfiles = propertiesData.map(property => {
-                    const profile = profilesData.find(p => p.id === property.user_id)
+                const ownerIds = [
+                    ...new Set(
+                        propertiesData
+                            .map((p) => p.user_id)
+                            .filter((id): id is string => Boolean(id))
+                    ),
+                ]
+                const missingOwnerIds = ownerIds.filter(
+                    (id) => !profilesData.some((p) => p.id === id)
+                )
+                let ownerProfiles: { id: string; full_name: string | null; email: string | null }[] =
+                    []
+                if (missingOwnerIds.length > 0) {
+                    const { data: owners } = await supabase
+                        .from('profiles')
+                        .select('id, full_name, email')
+                        .in('id', missingOwnerIds)
+                    ownerProfiles = owners ?? []
+                }
+                const propertiesWithProfiles = propertiesData.map((property) => {
+                    const profile =
+                        profilesData.find((p) => p.id === property.user_id) ||
+                        ownerProfiles.find((p) => p.id === property.user_id)
                     return { ...property, profile }
                 })
                 setProperties(propertiesWithProfiles)
@@ -105,7 +129,7 @@ export default function AdminPropertyManagement() {
     }
 
     const handleAssignUser = async (id: string, newUserId: string) => {
-        if (!confirm('担当者を変更しますか？')) return
+        if (!confirm('掲載エージェントを変更しますか？')) return
 
         setLoading(true)
         try {
@@ -201,7 +225,7 @@ export default function AdminPropertyManagement() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="物件名・担当者で検索..."
+                            placeholder="物件名・エージェント名で検索..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] md:text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
@@ -310,18 +334,28 @@ export default function AdminPropertyManagement() {
                                     <div className="hidden md:flex items-center gap-2 flex-shrink-0">
                                         <div className="flex items-center gap-1">
                                             <select
-                                                value={selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || '')}
+                                                value={
+                                                    selectedUsers[property.id] !== undefined
+                                                        ? selectedUsers[property.id]
+                                                        : agentIdSet.has(property.user_id || '')
+                                                          ? (property.user_id || '')
+                                                          : ''
+                                                }
                                                 onChange={(e) => setSelectedUsers(prev => ({ ...prev, [property.id]: e.target.value }))}
                                                 className="text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-navy-primary max-w-[120px]"
                                             >
-                                                <option value="">担当者...</option>
+                                                <option value="">エージェントを選択...</option>
                                                 {users.map(u => (
                                                     <option key={u.id} value={u.id}>{u.full_name || u.email || '未設定'}</option>
                                                 ))}
                                             </select>
                                             <button
                                                 onClick={() => handleAssignUser(property.id, selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || ''))}
-                                                disabled={selectedUsers[property.id] === undefined || selectedUsers[property.id] === (property.user_id || '')}
+                                                disabled={
+                                                    selectedUsers[property.id] === undefined ||
+                                                    selectedUsers[property.id] === (property.user_id || '') ||
+                                                    selectedUsers[property.id] === ''
+                                                }
                                                 className="px-2 py-1.5 bg-slate-100 text-navy-primary text-[10px] font-bold rounded-lg hover:bg-navy-primary hover:text-white transition-all disabled:opacity-30"
                                             >変更</button>
                                         </div>
@@ -356,18 +390,28 @@ export default function AdminPropertyManagement() {
                                 <div className="md:hidden mt-3 flex flex-col gap-2">
                                     <div className="flex gap-2">
                                         <select
-                                            value={selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || '')}
+                                            value={
+                                                selectedUsers[property.id] !== undefined
+                                                    ? selectedUsers[property.id]
+                                                    : agentIdSet.has(property.user_id || '')
+                                                      ? (property.user_id || '')
+                                                      : ''
+                                            }
                                             onChange={(e) => setSelectedUsers(prev => ({ ...prev, [property.id]: e.target.value }))}
                                             className="flex-1 text-[10px] font-bold bg-slate-50 border border-slate-200 rounded-lg px-2 py-2 outline-none"
                                         >
-                                            <option value="">担当者...</option>
+                                            <option value="">エージェントを選択...</option>
                                             {users.map(u => (
                                                 <option key={u.id} value={u.id}>{u.full_name || u.email || '未設定'}</option>
                                             ))}
                                         </select>
                                         <button
                                             onClick={() => handleAssignUser(property.id, selectedUsers[property.id] !== undefined ? selectedUsers[property.id] : (property.user_id || ''))}
-                                            disabled={selectedUsers[property.id] === undefined || selectedUsers[property.id] === (property.user_id || '')}
+                                            disabled={
+                                                selectedUsers[property.id] === undefined ||
+                                                selectedUsers[property.id] === (property.user_id || '') ||
+                                                selectedUsers[property.id] === ''
+                                            }
                                             className="px-3 py-2 bg-navy-primary text-white text-[10px] font-bold rounded-lg disabled:opacity-30"
                                         >変更</button>
                                     </div>
