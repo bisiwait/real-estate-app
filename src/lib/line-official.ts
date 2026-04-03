@@ -37,6 +37,27 @@ export function getOfficialLineAddFriendUrl(): string {
   return basicIdOrUrlToAddFriendUrl(id)
 }
 
+/** Basic ID（@xxx）を正規化（クライアント・サーバー共通・公開 env のみ） */
+export function getOfficialLineBasicIdForPaths(): string {
+  const id = (process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID || DEFAULT_OFFICIAL_LINE_ID).trim()
+  return id.startsWith('@') ? id : `@${id.replace(/^@+/g, '')}`
+}
+
+/**
+ * LINE Official Account Manager のチャット一覧（ブラウザ）。
+ * 特定ユーザーとのトークへ直接飛ぶ公開 URL は提供されないため、一覧から該当トークを開いてください。
+ */
+export function getLineOfficialManagerChatUrl(): string {
+  const pathId = getOfficialLineBasicIdForPaths()
+  return `https://manager.line.biz/account/${pathId}/chat/`
+}
+
+/** 外出先対応用「LINE公式アカウント」アプリ（LY Corporation） */
+export const LINE_OFFICIAL_ACCOUNT_APP_IOS =
+  'https://apps.apple.com/jp/app/line-official-account/id1450599059'
+export const LINE_OFFICIAL_ACCOUNT_APP_ANDROID =
+  'https://play.google.com/store/apps/details?id=com.linecorp.lineoa'
+
 async function fetchAddFriendUrlFromMessagingApi(
   accessToken: string
 ): Promise<string | null> {

@@ -30,6 +30,7 @@ type InquiryNotifyRow = {
   inquirer_name: string | null
   preferred_reply_channel: string | null
   line_user_id: string | null
+  first_reply_sent?: boolean | null
 }
 
 /** 成功したエージェント返信の LINE Push が既に記録されているか（失敗時はログが残らないため再送可） */
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
     const { data: inquiry, error: inqError } = await supabase
       .from('inquiries')
       .select(
-        'id, owner_id, property_id, inquirer_email, inquirer_name, preferred_reply_channel, line_user_id, property:properties(title)'
+        'id, owner_id, property_id, inquirer_email, inquirer_name, preferred_reply_channel, line_user_id, first_reply_sent, property:properties(title)'
       )
       .eq('id', inquiryId)
       .single()
@@ -174,7 +175,9 @@ export async function POST(req: NextRequest) {
 
     const adminForLineCheck = await createAdminClient()
     if (preferred === 'line' && !forceEmail && lineUid) {
-      const alreadyPushed = await hasSuccessfulAgentLinePush(adminForLineCheck, inquiryId)
+      const flagged = row.first_reply_sent === true
+      const alreadyPushed =
+        flagged || (await hasSuccessfulAgentLinePush(adminForLineCheck, inquiryId))
       if (alreadyPushed) {
         return NextResponse.json(
           {
@@ -239,6 +242,15 @@ export async function POST(req: NextRequest) {
         resendId: null,
         linePushStatus: pushResult.status,
       })
+
+      const { error: frErr } = await supabase
+        .from('inquiries')
+        .update({ first_reply_sent: true })
+        .eq('id', inquiryId)
+        .eq('owner_id', row.owner_id)
+      if (frErr) {
+        console.warn('[notify-reply] first_reply_sent update', frErr.message)
+      }
 
       return NextResponse.json({
         success: true,

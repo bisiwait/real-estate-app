@@ -17,6 +17,11 @@ import type {
   AdminMailInquiryRow,
   AdminLineLeadRow,
 } from '@/lib/supabase/fetch-admin-inquiries'
+import {
+  getLineOfficialManagerChatUrl,
+  LINE_OFFICIAL_ACCOUNT_APP_IOS,
+  LINE_OFFICIAL_ACCOUNT_APP_ANDROID,
+} from '@/lib/line-official'
 
 type SubTab = 'mail' | 'line'
 
@@ -512,6 +517,54 @@ export default function AdminInquiriesPanel({
                       <dd className="mt-1 break-all font-mono text-xs text-slate-700">
                         {mailDetail.line_user_id?.trim() ? mailDetail.line_user_id : '未登録（送信不可）'}
                       </dd>
+                      {mailDetail.line_user_id?.trim() ? (
+                        <div className="mt-3 space-y-2 border-t border-slate-200/80 pt-3">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[#047c3d]">
+                            LINE 返信フロー（エージェント向け）
+                          </p>
+                          {mailDetail.first_reply_sent ? (
+                            <p className="text-xs font-bold text-[#035c2e]">
+                              Push送信済み。以降は公式チャットでの継続を推奨します。
+                            </p>
+                          ) : (
+                            <p className="text-xs font-bold text-slate-600">
+                              初回1通のみダッシュボードから Push。2通目以降は公式チャット（無料枠節約）。
+                            </p>
+                          )}
+                          <a
+                            href={getLineOfficialManagerChatUrl()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#06C755] px-3 py-3 text-xs font-black text-white shadow-md shadow-[#06C755]/25 hover:bg-[#05b34c]"
+                          >
+                            LINE公式チャットを開く
+                            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                          </a>
+                          <ol className="list-decimal space-y-1 pl-4 text-[11px] font-semibold leading-relaxed text-slate-700">
+                            <li>初回：エージェントのダッシュボードから送信（Push）。</li>
+                            <li>継続：上のボタンから Manager のチャットで対応。</li>
+                          </ol>
+                          <div className="flex flex-wrap gap-2 text-[10px] font-black">
+                            <a
+                              href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-navy-primary underline"
+                            >
+                              iOS アプリ
+                            </a>
+                            <span className="text-slate-300">|</span>
+                            <a
+                              href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-navy-primary underline"
+                            >
+                              Android アプリ
+                            </a>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </dl>

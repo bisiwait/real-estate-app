@@ -30,6 +30,7 @@ type InquiryRow = {
   inquirer_email: string | null
   preferred_reply_channel: string | null
   line_user_id: string | null
+  first_reply_sent?: boolean | null
 }
 
 /**
@@ -78,7 +79,9 @@ export async function POST(req: NextRequest) {
     const admin = await createAdminClient()
     const { data: inquiry, error: inqErr } = await admin
       .from('inquiries')
-      .select('id, property_id, owner_id, inquirer_name, inquirer_email, preferred_reply_channel, line_user_id')
+      .select(
+        'id, property_id, owner_id, inquirer_name, inquirer_email, preferred_reply_channel, line_user_id, first_reply_sent'
+      )
       .eq('id', inquiryId)
       .maybeSingle()
 
@@ -108,6 +111,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           { error: 'LINE ユーザーIDが記録されていません。メールでの連絡をご検討ください。' },
           { status: 422 }
+        )
+      }
+      if (row.first_reply_sent === true) {
+        return NextResponse.json(
+          {
+            error:
+              'このお問い合わせには既に公式 LINE から初回 Push を送信済みです。続きは LINE Official Account Manager のチャットから行ってください。',
+            code: 'LINE_PUSH_ALREADY_SENT',
+          },
+          { status: 409 }
         )
       }
     }
@@ -215,6 +228,14 @@ export async function POST(req: NextRequest) {
           },
           { status: 502 }
         )
+      }
+
+      const { error: frErr } = await admin
+        .from('inquiries')
+        .update({ first_reply_sent: true })
+        .eq('id', inquiryId)
+      if (frErr) {
+        console.warn('[admin/inquiries/reply] first_reply_sent update', frErr.message)
       }
     }
 

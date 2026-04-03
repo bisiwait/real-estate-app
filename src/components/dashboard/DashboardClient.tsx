@@ -31,6 +31,9 @@ interface DashboardClientProps {
     leadsCount: number
     locale: string
     activePlan: string
+    lineOfficialManagerChatUrl: string
+    lineOfficialAccountAppIosUrl: string
+    lineOfficialAccountAppAndroidUrl: string
 }
 
 export default function DashboardClient({
@@ -44,6 +47,9 @@ export default function DashboardClient({
     leadsCount,
     locale,
     activePlan,
+    lineOfficialManagerChatUrl,
+    lineOfficialAccountAppIosUrl,
+    lineOfficialAccountAppAndroidUrl,
 }: DashboardClientProps) {
     const [tab, setTab] = useState(initialTab)
     const [filter, setFilter] = useState(initialFilter)
@@ -302,6 +308,9 @@ export default function DashboardClient({
                         initialInquiries={inquiries || []}
                         agentDisplayName={profile?.full_name ?? ''}
                         viewerPremiumLineInquiry={isPremium(profile)}
+                        lineOfficialManagerChatUrl={lineOfficialManagerChatUrl}
+                        lineOfficialAccountAppIosUrl={lineOfficialAccountAppIosUrl}
+                        lineOfficialAccountAppAndroidUrl={lineOfficialAccountAppAndroidUrl}
                     />
                 )}
             </div>

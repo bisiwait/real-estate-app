@@ -18,6 +18,11 @@ import { getEffectivePlan } from '@/lib/utils/plan'
 import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
+import {
+  getLineOfficialManagerChatUrl,
+  LINE_OFFICIAL_ACCOUNT_APP_IOS,
+  LINE_OFFICIAL_ACCOUNT_APP_ANDROID,
+} from '@/lib/line-official'
 
 export default async function DashboardPage({
     searchParams,
@@ -81,27 +86,30 @@ export default async function DashboardPage({
             }))
         }
 
-        const { data: agentLineLogs, error: agentLineLogsError } = await supabase
+        const { data: linePushLogs, error: linePushLogsError } = await supabase
             .from('inquiry_logs')
             .select('inquiry_id, metadata')
             .in('inquiry_id', inquiryIds)
-            .eq('inquiry_type', 'agent_reply')
-            .eq('agent_id', user.id)
+            .in('inquiry_type', ['agent_reply', 'admin_reply'])
 
-        if (agentLineLogsError) {
-            console.error('Error fetching inquiry_logs (agent LINE push):', agentLineLogsError)
+        if (linePushLogsError) {
+            console.error('Error fetching inquiry_logs (LINE push flags):', linePushLogsError)
         }
         const linePushSentIds = new Set<string>()
-        for (const log of agentLineLogs || []) {
+        for (const log of linePushLogs || []) {
             const m = log.metadata as { sent_via?: string } | null
             if (log.inquiry_id && m?.sent_via === 'line') {
                 linePushSentIds.add(log.inquiry_id)
             }
         }
-        inquiries = inquiries.map((inq) => ({
-            ...inq,
-            line_push_already_sent: linePushSentIds.has(inq.id),
-        }))
+        inquiries = inquiries.map((inq) => {
+            const row = inq as { id: string; first_reply_sent?: boolean | null }
+            const fromColumn = row.first_reply_sent === true
+            return {
+                ...inq,
+                line_push_already_sent: fromColumn || linePushSentIds.has(inq.id),
+            }
+        })
     }
 
 
@@ -228,6 +236,9 @@ export default async function DashboardPage({
                             initialLeads={leads}
                             locale={locale}
                             activePlan={activePlan}
+                            lineOfficialManagerChatUrl={getLineOfficialManagerChatUrl()}
+                            lineOfficialAccountAppIosUrl={LINE_OFFICIAL_ACCOUNT_APP_IOS}
+                            lineOfficialAccountAppAndroidUrl={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
                         />
                     </div>
 

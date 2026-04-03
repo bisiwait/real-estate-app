@@ -15,6 +15,7 @@ export type AdminMailInquiryRow = {
   owner_name: string | null
   preferred_reply_channel: string | null
   line_user_id: string | null
+  first_reply_sent?: boolean | null
 }
 
 /** LINE ボタン等の inquiry_logs（line のみ、管理者一覧用） */
@@ -40,7 +41,7 @@ export async function fetchAdminMailInquiries(
   const { data: rows, error } = await supabase
     .from('inquiries')
     .select(
-      'id, created_at, inquirer_name, inquirer_email, inquirer_phone, message, is_read, property_id, owner_id, preferred_reply_channel, line_user_id'
+      'id, created_at, inquirer_name, inquirer_email, inquirer_phone, message, is_read, property_id, owner_id, preferred_reply_channel, line_user_id, first_reply_sent'
     )
     .order('created_at', { ascending: false })
     .limit(400)
@@ -81,6 +82,7 @@ export async function fetchAdminMailInquiries(
     owner_name: r.owner_id ? profMap.get(r.owner_id as string) ?? null : null,
     preferred_reply_channel: (r.preferred_reply_channel as string | null) ?? 'email',
     line_user_id: (r.line_user_id as string | null) ?? null,
+    first_reply_sent: Boolean((r as { first_reply_sent?: boolean | null }).first_reply_sent),
   }))
 }
 
