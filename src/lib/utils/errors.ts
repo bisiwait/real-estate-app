@@ -51,6 +51,14 @@ export function getErrorMessage(error: any): string {
     if (message.includes('Could not find the') && message.includes('column'))
         return 'データベースの列が見つかりません。Supabase に inquiries 用の最新マイグレーション（email / preferred_reply_channel など）を適用してください。'
 
+    if (
+        message.includes('backup_and_draft_properties_for_agent_suspend') ||
+        message.includes('restore_properties_after_agent_resume') ||
+        (message.includes('function') && message.includes('does not exist'))
+    ) {
+        return 'データベースの関数または列が見つかりません。Supabase に 20260403150000_properties_status_before_suspension.sql を含む最新マイグレーションを適用してください。'
+    }
+
     if (message.includes('inquiries_preferred_reply_channel_check') || message.includes('preferred_reply_channel'))
         return '返信方法の値がデータベースと一致しません。マイグレーションで preferred_reply_channel を email / line に更新したか確認してください。'
 

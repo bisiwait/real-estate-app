@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
+import { getErrorMessage } from '@/lib/utils/errors'
 
 // Mock Data for the chart
 const mockChartData = [
@@ -198,7 +199,7 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
             setTimeout(() => setSaveSuccess(false), 3000)
         } catch (error: any) {
             console.error('Error saving settings:', error)
-            alert(error?.message || '保存に失敗しました')
+            alert(getErrorMessage(error))
         } finally {
             setResumeRestoringUi(false)
             setSaving(false)

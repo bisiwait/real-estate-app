@@ -3,6 +3,7 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { isAdmin } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
+import { getErrorMessage } from '@/lib/utils/errors'
 
 export type AdminAgentLifecycleAction = 'suspend' | 'resume' | 'delete'
 export type PropertyHandling = 'unpublish' | 'keep'
@@ -174,8 +175,8 @@ export async function adminAgentLifecycle(
             draftedPropertyCount,
         }
     } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : String(e)
-        console.error('[adminAgentLifecycle]', msg)
+        const msg = getErrorMessage(e)
+        console.error('[adminAgentLifecycle]', e)
         return { error: msg || '操作に失敗しました。' }
     }
 }

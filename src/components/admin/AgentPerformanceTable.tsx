@@ -25,6 +25,7 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAuth } from '@/contexts/AuthContext'
 import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
+import { getErrorMessage } from '@/lib/utils/errors'
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -142,7 +143,7 @@ export default function AgentPerformanceTable({
                 property_handling: suspend ? 'unpublish' : 'keep',
             })
             if (result.error) {
-                alert(result.error)
+                alert(getErrorMessage(result.error))
                 return
             }
             if (!suspend && result.restoredPropertyCount != null) {
@@ -151,7 +152,7 @@ export default function AgentPerformanceTable({
             await loadAgents()
         } catch (e) {
             console.error(e)
-            alert(e instanceof Error ? e.message : '通信に失敗しました。')
+            alert(getErrorMessage(e))
         } finally {
             setResumeRestoringUi(false)
             setActionBusy(null)
@@ -174,13 +175,13 @@ export default function AgentPerformanceTable({
                 property_handling: 'unpublish',
             })
             if (result.error) {
-                alert(result.error)
+                alert(getErrorMessage(result.error))
                 return
             }
             await loadAgents()
         } catch (e) {
             console.error(e)
-            alert(e instanceof Error ? e.message : '通信に失敗しました。')
+            alert(getErrorMessage(e))
         } finally {
             setActionBusy(null)
         }

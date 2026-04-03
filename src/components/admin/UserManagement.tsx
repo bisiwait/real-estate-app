@@ -122,7 +122,7 @@ export default function AdminUserManagement({
                 property_handling: suspend ? 'unpublish' : 'keep',
             })
             if (result.error) {
-                alert(result.error)
+                alert(getErrorMessage(result.error))
                 return
             }
             if (!suspend && result.restoredPropertyCount != null) {
@@ -131,7 +131,7 @@ export default function AdminUserManagement({
             await fetchUsers()
         } catch (e) {
             console.error(e)
-            alert(e instanceof Error ? e.message : '通信に失敗しました。')
+            alert(getErrorMessage(e))
         } finally {
             setResumeRestoringUi(false)
             setAgentActionBusy(null)
@@ -154,13 +154,13 @@ export default function AdminUserManagement({
                 property_handling: 'unpublish',
             })
             if (result.error) {
-                alert(result.error)
+                alert(getErrorMessage(result.error))
                 return
             }
             await fetchUsers()
         } catch (e) {
             console.error(e)
-            alert(e instanceof Error ? e.message : '通信に失敗しました。')
+            alert(getErrorMessage(e))
         } finally {
             setAgentActionBusy(null)
         }
