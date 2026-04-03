@@ -13,7 +13,7 @@ import {
     Edit3
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { invokeAdminAgentLifecycle } from '@/lib/supabase/invoke-admin-agent-lifecycle'
+import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
 
 // Mock Data for the chart
 const mockChartData = [
@@ -151,12 +151,11 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
             const wasSuspended =
                 agentData?.is_suspended === true || agentData?.status === 'suspended'
             if (isSuspended !== wasSuspended) {
-                const result = await invokeAdminAgentLifecycle(
-                    supabase,
-                    isSuspended ? 'suspend' : 'resume',
-                    agentId,
-                    { propertyHandling: isSuspended ? 'unpublish' : 'keep' }
-                )
+                const result = await adminAgentLifecycle({
+                    action: isSuspended ? 'suspend' : 'resume',
+                    targetUserId: agentId,
+                    property_handling: isSuspended ? 'unpublish' : 'keep',
+                })
                 if (result.error) {
                     throw new Error(result.error)
                 }

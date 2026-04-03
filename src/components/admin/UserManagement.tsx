@@ -21,7 +21,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/errors'
 import { adminResetPassword } from '@/app/actions/adminAuth'
 import { useAuth } from '@/contexts/AuthContext'
-import { invokeAdminAgentLifecycle } from '@/lib/supabase/invoke-admin-agent-lifecycle'
+import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
 
 export type AdminUserManagementVariant = 'agent' | 'general'
 
@@ -114,17 +114,19 @@ export default function AdminUserManagement({
         if (!confirm(msg)) return
         setAgentActionBusy(user.id)
         try {
-            const result = await invokeAdminAgentLifecycle(
-                supabase,
-                suspend ? 'suspend' : 'resume',
-                user.id,
-                { propertyHandling: suspend ? 'unpublish' : 'keep' }
-            )
+            const result = await adminAgentLifecycle({
+                action: suspend ? 'suspend' : 'resume',
+                targetUserId: user.id,
+                property_handling: suspend ? 'unpublish' : 'keep',
+            })
             if (result.error) {
                 alert(result.error)
                 return
             }
             await fetchUsers()
+        } catch (e) {
+            console.error(e)
+            alert(e instanceof Error ? e.message : '通信に失敗しました。')
         } finally {
             setAgentActionBusy(null)
         }
@@ -140,14 +142,19 @@ export default function AdminUserManagement({
         }
         setAgentActionBusy(user.id)
         try {
-            const result = await invokeAdminAgentLifecycle(supabase, 'delete', user.id, {
-                propertyHandling: 'unpublish',
+            const result = await adminAgentLifecycle({
+                action: 'delete',
+                targetUserId: user.id,
+                property_handling: 'unpublish',
             })
             if (result.error) {
                 alert(result.error)
                 return
             }
             await fetchUsers()
+        } catch (e) {
+            console.error(e)
+            alert(e instanceof Error ? e.message : '通信に失敗しました。')
         } finally {
             setAgentActionBusy(null)
         }

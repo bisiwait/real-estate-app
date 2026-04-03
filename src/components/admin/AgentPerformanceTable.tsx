@@ -24,7 +24,7 @@ import {
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAuth } from '@/contexts/AuthContext'
-import { invokeAdminAgentLifecycle } from '@/lib/supabase/invoke-admin-agent-lifecycle'
+import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -134,17 +134,19 @@ export default function AgentPerformanceTable({
         if (!confirm(msg)) return
         setActionBusy(agent.id)
         try {
-            const result = await invokeAdminAgentLifecycle(
-                supabase,
-                suspend ? 'suspend' : 'resume',
-                agent.id,
-                { propertyHandling: suspend ? 'unpublish' : 'keep' }
-            )
+            const result = await adminAgentLifecycle({
+                action: suspend ? 'suspend' : 'resume',
+                targetUserId: agent.id,
+                property_handling: suspend ? 'unpublish' : 'keep',
+            })
             if (result.error) {
                 alert(result.error)
                 return
             }
             await loadAgents()
+        } catch (e) {
+            console.error(e)
+            alert(e instanceof Error ? e.message : '通信に失敗しました。')
         } finally {
             setActionBusy(null)
         }
@@ -160,14 +162,19 @@ export default function AgentPerformanceTable({
         }
         setActionBusy(agent.id)
         try {
-            const result = await invokeAdminAgentLifecycle(supabase, 'delete', agent.id, {
-                propertyHandling: 'unpublish',
+            const result = await adminAgentLifecycle({
+                action: 'delete',
+                targetUserId: agent.id,
+                property_handling: 'unpublish',
             })
             if (result.error) {
                 alert(result.error)
                 return
             }
             await loadAgents()
+        } catch (e) {
+            console.error(e)
+            alert(e instanceof Error ? e.message : '通信に失敗しました。')
         } finally {
             setActionBusy(null)
         }
