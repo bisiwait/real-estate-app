@@ -351,9 +351,9 @@ export default function AdminUserManagement({
                                     )}
                                 </div>
                                 {/* Actions */}
-                                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                <div className="flex flex-shrink-0 flex-col items-end gap-2">
                                     {resettingPassword === user.id ? (
-                                        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                        <div className="flex flex-row flex-wrap items-center justify-end gap-1.5">
                                             <div className="relative">
                                                 <input
                                                     type={showPassword ? 'text' : 'password'}
@@ -370,12 +370,12 @@ export default function AdminUserManagement({
                                             <button onClick={() => { setResettingPassword(null); setNewPassword('') }} className="text-[10px] font-black text-slate-400">✕</button>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+                                        <div className="flex flex-row flex-wrap items-center justify-end gap-2">
                                             {variant === 'agent' ? (
                                                 <>
                                                     <Link
                                                         href={`/${locale}/admin-secret/agents?agent=${user.id}`}
-                                                        className="inline-flex items-center gap-1 rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
+                                                        className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
                                                     >
                                                         詳細（分析）
                                                         <ExternalLink className="h-3 w-3 opacity-70" />
@@ -384,12 +384,13 @@ export default function AdminUserManagement({
                                                         href={`/${locale}/agents/${user.id}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 underline-offset-2 hover:text-navy-primary hover:underline"
+                                                        className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black text-slate-600 transition-colors hover:border-navy-primary/30 hover:text-navy-primary"
                                                     >
                                                         公開ページ
+                                                        <ExternalLink className="h-3 w-3 opacity-70" />
                                                     </Link>
                                                     {isAdminUser && !user.deleted_at && (
-                                                        <div className="flex flex-col items-end gap-1.5 sm:items-end">
+                                                        <>
                                                             <button
                                                                 type="button"
                                                                 disabled={agentActionBusy === user.id}
@@ -399,7 +400,7 @@ export default function AdminUserManagement({
                                                                         !(user.status === 'suspended' || user.is_suspended)
                                                                     )
                                                                 }
-                                                                className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                                                                className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-black text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
                                                             >
                                                                 {user.status === 'suspended' || user.is_suspended
                                                                     ? '再開'
@@ -409,25 +410,26 @@ export default function AdminUserManagement({
                                                                 type="button"
                                                                 disabled={agentActionBusy === user.id}
                                                                 onClick={() => runAgentDelete(user)}
-                                                                className="rounded-lg bg-red-600 px-2.5 py-1 text-[10px] font-black text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                                                                className="shrink-0 rounded-lg bg-red-600 px-2.5 py-1.5 text-[10px] font-black text-white transition-colors hover:bg-red-700 disabled:opacity-50"
                                                             >
                                                                 削除
                                                             </button>
-                                                        </div>
+                                                        </>
                                                     )}
                                                 </>
                                             ) : (
                                                 <Link
                                                     href={`/${locale}/admin-secret/users/${user.id}`}
-                                                    className="inline-flex items-center gap-1 rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
+                                                    className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
                                                 >
                                                     詳細
                                                     <ExternalLink className="h-3 w-3 opacity-70" />
                                                 </Link>
                                             )}
                                             <button
+                                                type="button"
                                                 onClick={() => { setResettingPassword(user.id); setNewPassword('') }}
-                                                className="p-2 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-100 transition-all"
+                                                className="inline-flex shrink-0 items-center justify-center p-2 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-100 transition-all"
                                                 title="PW変更"
                                             >
                                                 <KeyRound className="w-3.5 h-3.5" />
