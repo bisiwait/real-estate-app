@@ -297,7 +297,10 @@ export default function DashboardClient({
                         )}
                     </>
                 ) : (
-                    <InquiryList initialInquiries={inquiries || []} />
+                    <InquiryList
+                        initialInquiries={inquiries || []}
+                        agentDisplayName={profile?.full_name ?? ''}
+                    />
                 )}
             </div>
         </div>

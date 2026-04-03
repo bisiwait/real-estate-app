@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Mail,
@@ -18,7 +18,7 @@ import {
   Eraser,
 } from 'lucide-react'
 import { normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
-import { INQUIRY_REPLY_TEMPLATES } from '@/lib/inquiry-reply-templates'
+import { getInquiryReplyTemplates } from '@/lib/inquiry-reply-templates'
 
 interface Inquiry {
   id: string
@@ -45,6 +45,8 @@ interface Inquiry {
 
 interface InquiryListProps {
   initialInquiries: any[]
+  /** 定型文「初回返信」の【名前】に使う（profiles.full_name など） */
+  agentDisplayName?: string | null
 }
 
 function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; channelLabel: string } {
@@ -55,8 +57,12 @@ function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; chann
   }
 }
 
-export default function InquiryList({ initialInquiries }: InquiryListProps) {
+export default function InquiryList({ initialInquiries, agentDisplayName }: InquiryListProps) {
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries)
+  const replyTemplates = useMemo(
+    () => getInquiryReplyTemplates(agentDisplayName ?? ''),
+    [agentDisplayName],
+  )
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
   const [isSubmittingReply, setIsSubmittingReply] = useState(false)
@@ -511,7 +517,7 @@ export default function InquiryList({ initialInquiries }: InquiryListProps) {
                             <Sparkles className="h-3 w-3" />
                             定型文
                           </span>
-                          {INQUIRY_REPLY_TEMPLATES.map((t) => (
+                          {replyTemplates.map((t) => (
                             <button
                               key={t.label}
                               type="button"
