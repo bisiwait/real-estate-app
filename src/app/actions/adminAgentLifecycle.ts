@@ -1,6 +1,5 @@
 'use server'
 
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { isAdmin } from '@/lib/admin'
 import { revalidatePath } from 'next/cache'
@@ -14,21 +13,21 @@ export type AdminAgentLifecycleInput = {
     property_handling?: PropertyHandling
 }
 
-async function unpublishAgentProperties(admin: SupabaseClient, agentId: string) {
-    await admin
-        .from('properties')
-        .update({ status: 'draft', updated_at: new Date().toISOString() })
-        .eq('user_id', agentId)
-        .eq('status', 'published')
+export type AdminAgentLifecycleResult = {
+    ok?: true
+    error?: string
+    /** 再開時に status を復元した物件件数 */
+    restoredPropertyCount?: number
+    /** 停止時に下書きへ退避した物件件数（新規にスナップショットした行） */
+    draftedPropertyCount?: number
 }
 
 /**
  * エージェントの利用停止・再開・削除（論理削除＋Auth 削除）。
- * Edge Function の代わりに Server Action で実行し、デプロイ漏れなく動作させる。
  */
 export async function adminAgentLifecycle(
     input: AdminAgentLifecycleInput
-): Promise<{ ok?: true; error?: string }> {
+): Promise<AdminAgentLifecycleResult> {
     const action = input.action
     const targetUserId = input.targetUserId?.trim()
     const property_handling = input.property_handling ?? 'unpublish'
@@ -82,10 +81,20 @@ export async function adminAgentLifecycle(
             return { ...prev, ...patch }
         }
 
+        let restoredPropertyCount: number | undefined
+        let draftedPropertyCount: number | undefined
+
         if (action === 'suspend') {
-            if (property_handling === 'unpublish') {
-                await unpublishAgentProperties(adminSb, targetUserId)
+            if (property_handling !== 'keep') {
+                const { data: drafted, error: rpcErr } = await adminSb.rpc(
+                    'backup_and_draft_properties_for_agent_suspend',
+                    { p_user_id: targetUserId }
+                )
+                if (rpcErr) throw rpcErr
+                draftedPropertyCount =
+                    typeof drafted === 'number' ? drafted : Number(drafted) || 0
             }
+
             const { error: upErr } = await adminSb
                 .from('profiles')
                 .update({
@@ -103,6 +112,14 @@ export async function adminAgentLifecycle(
             })
             if (banErr) throw banErr
         } else if (action === 'resume') {
+            const { data: restored, error: rpcErr } = await adminSb.rpc(
+                'restore_properties_after_agent_resume',
+                { p_user_id: targetUserId }
+            )
+            if (rpcErr) throw rpcErr
+            restoredPropertyCount =
+                typeof restored === 'number' ? restored : Number(restored) || 0
+
             const { error: upErr } = await adminSb
                 .from('profiles')
                 .update({
@@ -120,9 +137,16 @@ export async function adminAgentLifecycle(
             })
             if (unbanErr) throw unbanErr
         } else {
-            if (property_handling === 'unpublish') {
-                await unpublishAgentProperties(adminSb, targetUserId)
+            if (property_handling !== 'keep') {
+                const { data: drafted, error: rpcErr } = await adminSb.rpc(
+                    'backup_and_draft_properties_for_agent_suspend',
+                    { p_user_id: targetUserId }
+                )
+                if (rpcErr) throw rpcErr
+                draftedPropertyCount =
+                    typeof drafted === 'number' ? drafted : Number(drafted) || 0
             }
+
             const now = new Date().toISOString()
             const { error: delProfErr } = await adminSb
                 .from('profiles')
@@ -144,7 +168,11 @@ export async function adminAgentLifecycle(
             revalidatePath(`/${loc}/admin-secret/agents`, 'page')
         }
 
-        return { ok: true }
+        return {
+            ok: true,
+            restoredPropertyCount,
+            draftedPropertyCount,
+        }
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e)
         console.error('[adminAgentLifecycle]', msg)

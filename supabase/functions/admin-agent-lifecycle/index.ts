@@ -9,14 +9,6 @@ const corsHeaders: Record<string, string> = {
 type Action = "suspend" | "resume" | "delete"
 type PropertyHandling = "unpublish" | "keep"
 
-async function unpublishAgentProperties(admin: any, agentId: string) {
-  await admin
-    .from("properties")
-    .update({ status: "draft", updated_at: new Date().toISOString() })
-    .eq("user_id", agentId)
-    .eq("status", "published")
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders })
@@ -131,8 +123,12 @@ serve(async (req) => {
     }
 
     if (action === "suspend") {
-      if (property_handling === "unpublish") {
-        await unpublishAgentProperties(adminSb, targetUserId)
+      if (property_handling !== "keep") {
+        const { error: rpcErr } = await adminSb.rpc(
+          "backup_and_draft_properties_for_agent_suspend",
+          { p_user_id: targetUserId },
+        )
+        if (rpcErr) throw rpcErr
       }
       const { error: upErr } = await adminSb
         .from("profiles")
@@ -157,6 +153,12 @@ serve(async (req) => {
     }
 
     if (action === "resume") {
+      const { data: restored, error: rpcErr } = await adminSb.rpc(
+        "restore_properties_after_agent_resume",
+        { p_user_id: targetUserId },
+      )
+      if (rpcErr) throw rpcErr
+
       const { error: upErr } = await adminSb
         .from("profiles")
         .update({
@@ -174,14 +176,25 @@ serve(async (req) => {
       })
       if (unbanErr) throw unbanErr
 
-      return new Response(JSON.stringify({ ok: true, action: "resume" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      })
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          action: "resume",
+          restoredPropertyCount: typeof restored === "number" ? restored : Number(restored) || 0,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      )
     }
 
-    // delete (論理削除 + 公開物件の非公開化 + Auth ユーザー削除)
-    if (property_handling === "unpublish") {
-      await unpublishAgentProperties(adminSb, targetUserId)
+    // delete (論理削除 + 物件の退避・下書き化 + Auth ユーザー削除)
+    if (property_handling !== "keep") {
+      const { error: rpcErr } = await adminSb.rpc(
+        "backup_and_draft_properties_for_agent_suspend",
+        { p_user_id: targetUserId },
+      )
+      if (rpcErr) throw rpcErr
     }
 
     const now = new Date().toISOString()

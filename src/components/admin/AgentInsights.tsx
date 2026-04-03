@@ -10,7 +10,8 @@ import {
     RefreshCw,
     ShieldCheck,
     Ban,
-    Edit3
+    Edit3,
+    Loader2,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
@@ -143,6 +144,7 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
     }, [agentId, dateRange])
 
     const [saveSuccess, setSaveSuccess] = useState(false)
+    const [resumeRestoringUi, setResumeRestoringUi] = useState(false)
 
     const handleSaveSettings = async () => {
         setSaving(true)
@@ -150,6 +152,8 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
         try {
             const wasSuspended =
                 agentData?.is_suspended === true || agentData?.status === 'suspended'
+            const resuming = isSuspended !== wasSuspended && !isSuspended
+            if (resuming) setResumeRestoringUi(true)
             if (isSuspended !== wasSuspended) {
                 const result = await adminAgentLifecycle({
                     action: isSuspended ? 'suspend' : 'resume',
@@ -158,6 +162,9 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                 })
                 if (result.error) {
                     throw new Error(result.error)
+                }
+                if (resuming && result.restoredPropertyCount != null) {
+                    alert(`${result.restoredPropertyCount}件の物件ステータスを復元しました。`)
                 }
             }
 
@@ -193,6 +200,7 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
             console.error('Error saving settings:', error)
             alert(error?.message || '保存に失敗しました')
         } finally {
+            setResumeRestoringUi(false)
             setSaving(false)
         }
     }
@@ -206,6 +214,19 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
     }
 
     return (
+        <>
+            {resumeRestoringUi && (
+                <div
+                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-navy-secondary/40 backdrop-blur-sm px-6"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <Loader2 className="h-10 w-10 animate-spin text-white" />
+                    <p className="text-center text-sm font-black text-white drop-shadow-sm">
+                        物件ステータスを復元しています…
+                    </p>
+                </div>
+            )}
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -441,6 +462,7 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                 </div>
             </div>
         </div>
+        </>
     )
 }
 

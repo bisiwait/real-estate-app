@@ -62,6 +62,7 @@ export default function AgentPerformanceTable({
     const [currentPage, setCurrentPage] = useState(1)
     const PAGE_SIZE = 10
     const [actionBusy, setActionBusy] = useState<string | null>(null)
+    const [resumeRestoringUi, setResumeRestoringUi] = useState(false)
 
     const supabase = createClient()
     const { userData } = useAuth()
@@ -129,9 +130,10 @@ export default function AgentPerformanceTable({
 
     const runSuspendResume = async (agent: AgentPerformance, suspend: boolean) => {
         const msg = suspend
-            ? 'このエージェントを停止しますか？公開中の物件は非公開（下書き）になります。'
-            : 'このエージェントのアカウントを再開しますか？'
+            ? 'このエージェントを停止しますか？掲載中の物件は、停止前のステータスを記録したうえで一括で下書きになります。'
+            : 'このエージェントのアカウントを再開しますか？停止前の状態に戻せる物件は一覧で復元されます。'
         if (!confirm(msg)) return
+        if (!suspend) setResumeRestoringUi(true)
         setActionBusy(agent.id)
         try {
             const result = await adminAgentLifecycle({
@@ -143,11 +145,15 @@ export default function AgentPerformanceTable({
                 alert(result.error)
                 return
             }
+            if (!suspend && result.restoredPropertyCount != null) {
+                alert(`${result.restoredPropertyCount}件の物件ステータスを復元しました。`)
+            }
             await loadAgents()
         } catch (e) {
             console.error(e)
             alert(e instanceof Error ? e.message : '通信に失敗しました。')
         } finally {
+            setResumeRestoringUi(false)
             setActionBusy(null)
         }
     }
@@ -208,6 +214,19 @@ export default function AgentPerformanceTable({
     }
 
     return (
+        <>
+            {resumeRestoringUi && (
+                <div
+                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-navy-secondary/40 backdrop-blur-sm px-6"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <Loader2 className="h-10 w-10 animate-spin text-white" />
+                    <p className="text-center text-sm font-black text-white drop-shadow-sm">
+                        物件ステータスを復元しています…
+                    </p>
+                </div>
+            )}
         <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
             <div className="p-8 border-b border-slate-50 flex flex-wrap items-center justify-between gap-6">
                 <div>
@@ -423,5 +442,6 @@ export default function AgentPerformanceTable({
                 </div>
             )}
         </div>
+        </>
     )
 }
