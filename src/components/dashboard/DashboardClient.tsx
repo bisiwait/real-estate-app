@@ -18,6 +18,7 @@ import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
 import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
 import DashboardActions from '@/components/dashboard/DashboardActions'
 import InquiryList from '@/components/dashboard/InquiryList'
+import { isPremium } from '@/lib/utils/plan'
 
 interface DashboardClientProps {
     initialTab: string
@@ -300,6 +301,7 @@ export default function DashboardClient({
                     <InquiryList
                         initialInquiries={inquiries || []}
                         agentDisplayName={profile?.full_name ?? ''}
+                        viewerPremiumLineInquiry={isPremium(profile)}
                     />
                 )}
             </div>

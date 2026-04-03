@@ -20,6 +20,7 @@ import {
     RefreshCw,
     Crown,
     Check,
+    MessageCircle,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -28,6 +29,7 @@ import Image from 'next/image'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
+import { isPremiumActive } from '@/lib/utils/plan'
 
 interface ProfileData {
     full_name: string
@@ -37,9 +39,11 @@ interface ProfileData {
     website: string
     email: string
     avatar_url: string
+    plan: string
     plan_type: string
     current_period_end: string | null
     auto_renew: boolean
+    is_admin: boolean
 }
 
 export default function ProfileForm() {
@@ -54,9 +58,11 @@ export default function ProfileForm() {
         website: '',
         email: '',
         avatar_url: '',
-        plan_type: 'free',
+        plan: 'free',
+        plan_type: 'standard',
         current_period_end: null,
         auto_renew: true,
+        is_admin: false,
     })
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
@@ -90,9 +96,11 @@ export default function ProfileForm() {
                     website: data.website || '',
                     email: user.email || '',
                     avatar_url: data.avatar_url || '',
-                    plan_type: data.plan_type || 'free',
+                    plan: data.plan || 'free',
+                    plan_type: data.plan_type || 'standard',
                     current_period_end: data.current_period_end || null,
                     auto_renew: data.auto_renew ?? true,
+                    is_admin: data.is_admin === true,
                 })
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
@@ -232,7 +240,12 @@ export default function ProfileForm() {
         )
     }
 
-    const isPremium = formData.plan_type === 'premium'
+    const isPremium = isPremiumActive({
+        plan: formData.plan,
+        plan_type: formData.plan_type,
+        current_period_end: formData.current_period_end,
+        is_admin: formData.is_admin,
+    })
 
     return (
         <div className="space-y-12">
@@ -346,6 +359,44 @@ export default function ProfileForm() {
                             )}
                         </div>
                     </div>
+                </section>
+
+                <section
+                    className={`rounded-[2.5rem] border p-6 md:p-8 ${
+                        isPremium
+                            ? 'border-emerald-200/80 bg-emerald-50/40'
+                            : 'border-[#06C755]/25 bg-[#06C755]/5'
+                    }`}
+                >
+                    <h3 className="text-sm font-black text-navy-secondary mb-3 flex items-center gap-2">
+                        <MessageCircle className={`h-5 w-5 ${isPremium ? 'text-[#06C755]' : 'text-[#047c3d]'}`} />
+                        物件ページの LINE 問い合わせ
+                    </h3>
+                    {isPremium ? (
+                        <p className="text-sm font-medium leading-relaxed text-slate-600">
+                            プレミアムプランでは、お客様がスマートフォンから「LINEで返信を受け取る」を選べます。タイでの成約につながる
+                            <span className="font-black text-navy-secondary"> Key to Success in Thailand</span>
+                            として、LINE 経由のスピーディなやり取りが可能です。
+                        </p>
+                    ) : (
+                        <div className="space-y-4">
+                            <p className="text-sm font-bold leading-relaxed text-navy-secondary">
+                                この機能は<strong className="text-[#047c3d]">プレミアムプラン専用</strong>
+                                です。スタンダードでは物件問い合わせの返信はメールのみとなります。
+                            </p>
+                            <p className="text-xs font-medium leading-relaxed text-slate-600">
+                                Premium unlocks LINE-based inquiries: higher engagement and faster closings in Thailand — the{' '}
+                                <span className="font-black text-navy-secondary">Key to Success in Thailand</span> for many
+                                agents. / แพ็กเกียมพรีเมียมช่วยให้รับข้อความผ่าน LINE ได้ ลูกค้าไทยและญี่ปุ่นนิยมใช้ LINE ในการติดต่อ
+                            </p>
+                            <Link
+                                href={`/${locale}/pricing`}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary px-6 py-3 text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
+                            >
+                                アップグレードはこちら
+                            </Link>
+                        </div>
+                    )}
                 </section>
 
                 {/* アバターアップロードセクション */}

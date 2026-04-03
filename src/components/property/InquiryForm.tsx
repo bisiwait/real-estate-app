@@ -375,6 +375,8 @@ interface InquiryFormProps {
   contactPrefill?: InquiryContactPrefill | null
   /** 問い合わせ完了後の公式LINE友だち追加URL */
   officialLineAddFriendUrl: string
+  /** false のとき LINE 返信オプションを出さずメールのみ（掲載者がプレミアムでない場合） */
+  ownerPremiumLineInquiry?: boolean
 }
 
 export default function InquiryForm({
@@ -385,7 +387,9 @@ export default function InquiryForm({
   onRequireAuth,
   contactPrefill,
   officialLineAddFriendUrl,
+  ownerPremiumLineInquiry = false,
 }: InquiryFormProps) {
+  const showLineInquiryUi = SHOW_INQUIRY_REPLY_CHANNEL && ownerPremiumLineInquiry
   const routeParams = useParams()
   const locale = (routeParams?.locale as string) || 'jp'
 
@@ -483,7 +487,7 @@ export default function InquiryForm({
   }, [isLoggedIn, contactPrefill])
 
   useEffect(() => {
-    if (!SHOW_INQUIRY_REPLY_CHANNEL) {
+    if (!showLineInquiryUi) {
       setPreferredReplyChannel('email')
       return
     }
@@ -498,11 +502,11 @@ export default function InquiryForm({
       }
       setPreferredReplyChannel('email')
     }
-  }, [isSmartphone, propertyId])
+  }, [showLineInquiryUi, isSmartphone, propertyId])
 
   /** sessionStorage 単体では別タブで消えるため、httpOnly からも下書きを戻す */
   useEffect(() => {
-    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
+    if (!showLineInquiryUi) return
     if (!isLoggedIn) return
     if (readPendingLineInquiry()) return
 
@@ -529,11 +533,11 @@ export default function InquiryForm({
     return () => {
       cancelled = true
     }
-  }, [isLoggedIn, propertyId])
+  }, [isLoggedIn, propertyId, showLineInquiryUi])
 
   /** LINE から liff.line.me 経由で戻ったあと「LINEで受け取る」を復元（スマートフォンのみ） */
   useEffect(() => {
-    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
+    if (!showLineInquiryUi) return
     if (!isLoggedIn) return
     if (!isSmartphone) {
       try {
@@ -565,11 +569,11 @@ export default function InquiryForm({
     } catch {
       /* private mode 等 */
     }
-  }, [isLoggedIn, propertyId, isSmartphone])
+  }, [isLoggedIn, propertyId, isSmartphone, showLineInquiryUi])
 
   /** LINE 連携後にブラウザへ戻ったタイミングで、保留中の自動送信をもう一度試す */
   useEffect(() => {
-    if (!SHOW_INQUIRY_REPLY_CHANNEL || !isLoggedIn) return
+    if (!showLineInquiryUi || !isLoggedIn) return
     let wasHidden = document.visibilityState === 'hidden'
     const bump = () => {
       const pending = readPendingLineInquiry()
@@ -601,13 +605,13 @@ export default function InquiryForm({
     }
     document.addEventListener('visibilitychange', onVis)
     return () => document.removeEventListener('visibilitychange', onVis)
-  }, [isLoggedIn, propertyId])
+  }, [isLoggedIn, propertyId, showLineInquiryUi])
 
   useEffect(() => {
-    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
+    if (!showLineInquiryUi) return
     if (preferredReplyChannel !== 'line' || !liffId) return
     void import('@line/liff').catch(() => {})
-  }, [preferredReplyChannel, liffId])
+  }, [preferredReplyChannel, liffId, showLineInquiryUi])
 
   const supabase = createClient()
   const p = dict.property ?? {}
@@ -615,7 +619,7 @@ export default function InquiryForm({
 
   /** ブリッジから戻ったあと、保存済みの1回目の確定内容で自動送信（ユーザーに2回押させない） */
   useEffect(() => {
-    if (!SHOW_INQUIRY_REPLY_CHANNEL) return
+    if (!showLineInquiryUi) return
     if (!isLoggedIn || !liffId) return
 
     const pending = readPendingLineInquiry()
@@ -852,7 +856,7 @@ export default function InquiryForm({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- dict 全体を依存に入れると毎レンダーで再実行される
-  }, [isLoggedIn, propertyId, locale, liffId, lineAutoResumeNonce])
+  }, [isLoggedIn, propertyId, locale, liffId, lineAutoResumeNonce, showLineInquiryUi])
 
   const innerVisible = !isLoggedIn || isOpen || isDesktop
 
@@ -875,7 +879,7 @@ export default function InquiryForm({
     }
 
     const effectiveChannel: 'email' | 'line' =
-      SHOW_INQUIRY_REPLY_CHANNEL && isSmartphone ? preferredReplyChannel : 'email'
+      showLineInquiryUi && isSmartphone ? preferredReplyChannel : 'email'
 
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
@@ -889,7 +893,7 @@ export default function InquiryForm({
 
     setLoading(true)
     setError(null)
-    if (SHOW_INQUIRY_REPLY_CHANNEL && !isSmartphone && preferredReplyChannel === 'line') {
+    if (showLineInquiryUi && !isSmartphone && preferredReplyChannel === 'line') {
       setError(
         p.inquiry_line_blocked_desktop ??
           'PC・タブレットでは「LINEで受け取る」はご利用いただけません。メールでの返信のみとなります。'
@@ -1297,7 +1301,33 @@ export default function InquiryForm({
                 <legend className={clsx(fieldLabelClass, 'mb-2 px-1')}>
                   {p.inquiry_reply_channel_heading ?? '返信方法'}
                 </legend>
-                {isSmartphone ? (
+                {!ownerPremiumLineInquiry ? (
+                  <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4">
+                    <p className="text-sm font-bold text-navy-secondary">
+                      {p.inquiry_owner_standard_line_notice ??
+                        'この掲載エージェントはメールでの返信のみ対応しています。'}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-600">
+                      {p.inquiry_owner_standard_line_notice_en ??
+                        'This listing agent replies by email only. LINE inquiry is a Premium feature for agents.'}
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-600">
+                      {p.inquiry_owner_standard_line_notice_th ??
+                        'เอเจนท์ท่านนี้ตอบกลับทางอีเมลเท่านั้น การสอบถามผ่าน LINE ใช้ได้กับแพ็กเกียมพรีเมียมของเอเจนท์'}
+                    </p>
+                    <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2">
+                      <p className="text-xs font-bold text-slate-500">
+                        {p.inquiry_reply_desktop_notice ?? '返信はメールにて差し上げます。'}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 opacity-60">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-400 line-through">
+                        LINE
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">Premium agents only</span>
+                    </div>
+                  </div>
+                ) : isSmartphone ? (
                   <>
                     <p className="mb-3 text-[11px] leading-relaxed text-slate-500">
                       {p.inquiry_reply_channel_intro_v2 ??
@@ -1435,7 +1465,7 @@ export default function InquiryForm({
                 ) : (
                   <>
                     <span className="text-center leading-tight">
-                      {SHOW_INQUIRY_REPLY_CHANNEL &&
+                      {showLineInquiryUi &&
                       isSmartphone &&
                       preferredReplyChannel === 'line'
                         ? (p.inquiry_send_btn_confirm_line ?? p.inquiry_send_btn_confirm)

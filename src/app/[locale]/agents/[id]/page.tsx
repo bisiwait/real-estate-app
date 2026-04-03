@@ -1,5 +1,6 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
+import { isPremiumActive } from '@/lib/utils/plan'
 import { notFound, useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
@@ -75,6 +76,11 @@ export default function AgentProfilePage() {
     if (hideAgent) return notFound()
     if (!agent) return notFound()
 
+    const agentLineContactVisible =
+        agent.show_line_in_inquiry !== false &&
+        Boolean(agent.line_id?.toString().trim()) &&
+        isPremiumActive(agent)
+
     const languages = ['日本語', 'English', 'ภาษาไทย']
     const areas = ['パタヤ', 'ジョムティエン', 'シラチャ']
 
@@ -117,7 +123,7 @@ export default function AgentProfilePage() {
                         <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 sticky top-28">
                             <h3 className="text-sm font-normal text-navy-secondary mb-6">このエージェントに連絡する</h3>
                             <div className="space-y-4">
-                                {agent.show_line_in_inquiry !== false && agent.line_id ? (
+                                {agentLineContactVisible ? (
                                     <ContactBtn
                                         href={(() => {
                                             const s = String(agent.line_id).trim()
@@ -127,6 +133,10 @@ export default function AgentProfilePage() {
                                         icon={MessageCircle}
                                         color="emerald"
                                     />
+                                ) : agent.show_line_in_inquiry !== false && agent.line_id ? (
+                                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs font-bold text-slate-500">
+                                        LINEでの直接連絡はプレミアム掲載エージェントのみ表示されます（メール・電話をご利用ください）
+                                    </div>
                                 ) : null}
                                 {agent.phone ? (
                                     <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />

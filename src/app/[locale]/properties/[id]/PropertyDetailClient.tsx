@@ -17,7 +17,7 @@ import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
-import { isPremium } from '@/lib/utils/plan'
+import { isPremium, isPremiumActive } from '@/lib/utils/plan'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -93,6 +93,16 @@ export default function PropertyDetailClient({
 
     const viewerHasPremium = isPremium(profile)
 
+    const ownerPremiumLineInquiry = useMemo(() => {
+        if (!agent) return false
+        return isPremiumActive({
+            plan: agent.plan,
+            plan_type: agent.plan_type,
+            current_period_end: agent.current_period_end,
+            is_admin: agent.is_admin,
+        })
+    }, [agent])
+
     useEffect(() => {
         titleTranslateAttemptKey.current = ''
     }, [property?.id, activeLang])
@@ -118,7 +128,9 @@ export default function PropertyDetailClient({
                 if (initialProperty?.user_id) {
                     const { data: aData } = await supabase
                         .from('profiles')
-                        .select('phone, full_name, line_id, show_line_in_inquiry')
+                        .select(
+                            'phone, full_name, line_id, show_line_in_inquiry, plan, plan_type, current_period_end, is_admin'
+                        )
                         .eq('id', initialProperty.user_id)
                         .maybeSingle()
                     setAgent(aData)
@@ -354,6 +366,7 @@ export default function PropertyDetailClient({
                                 onRequireAuth={() => setContactAuthOpen(true)}
                                 contactPrefill={contactPrefill}
                                 officialLineAddFriendUrl={officialLineAddFriendUrl}
+                                ownerPremiumLineInquiry={ownerPremiumLineInquiry}
                             />
                         </div>
                     </div>

@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -47,6 +49,8 @@ interface InquiryListProps {
   initialInquiries: any[]
   /** 定型文「初回返信」に挿入する表示名（profiles.full_name など） */
   agentDisplayName?: string | null
+  /** 公式 LINE Push 返信（プレミアム）。false のときはメール経路のみ */
+  viewerPremiumLineInquiry?: boolean
 }
 
 function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; channelLabel: string } {
@@ -57,7 +61,13 @@ function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; chann
   }
 }
 
-export default function InquiryList({ initialInquiries, agentDisplayName }: InquiryListProps) {
+export default function InquiryList({
+  initialInquiries,
+  agentDisplayName,
+  viewerPremiumLineInquiry = false,
+}: InquiryListProps) {
+  const params = useParams()
+  const locale = (params?.locale as string) || 'jp'
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries)
   const replyTemplates = useMemo(
     () => getInquiryReplyTemplates(agentDisplayName ?? ''),
@@ -134,12 +144,18 @@ export default function InquiryList({ initialInquiries, agentDisplayName }: Inqu
       const lineUid = inquiry.line_user_id?.trim()
       const linePushUsed = inquiry.line_push_already_sent === true
       const autoForceEmail = preferred === 'line' && !lineUid
-      const forceEmail = autoForceEmail || forceEmailAfterLineFail
+      const forceEmail =
+        autoForceEmail ||
+        forceEmailAfterLineFail ||
+        (!viewerPremiumLineInquiry && preferred === 'line' && Boolean(lineUid))
+      const canLinePush =
+        viewerPremiumLineInquiry &&
+        preferred === 'line' &&
+        Boolean(lineUid) &&
+        !linePushUsed &&
+        !forceEmailAfterLineFail
 
-      const shouldCallNotify =
-        preferred === 'email' ||
-        forceEmail ||
-        (preferred === 'line' && Boolean(lineUid) && !linePushUsed)
+      const shouldCallNotify = preferred === 'email' || forceEmail || canLinePush
 
       try {
         if (shouldCallNotify) {
@@ -251,7 +267,11 @@ export default function InquiryList({ initialInquiries, agentDisplayName }: Inqu
         const linePushUsed = inquiry.line_push_already_sent === true
         /** ダッシュボードから公式 LINE へ Push する経路（初回のみ） */
         const useLineNotify =
-          pref.mode === 'line' && !lineMissing && !forceEmailAfterLineFail && !linePushUsed
+          viewerPremiumLineInquiry &&
+          pref.mode === 'line' &&
+          !lineMissing &&
+          !forceEmailAfterLineFail &&
+          !linePushUsed
         const expanded = expandedId === inquiry.id
         const isMemoOnlyMode =
           pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
@@ -370,6 +390,22 @@ export default function InquiryList({ initialInquiries, agentDisplayName }: Inqu
                       での返信を希望されていますが、<strong>LINE ユーザーID が記録されていません</strong>
                       。この場合は <strong>メール</strong> で返信が送信されます（下のフォームから送信してください）。
                     </p>
+                  </div>
+                ) : null}
+
+                {!viewerPremiumLineInquiry && pref.mode === 'line' && lineUid ? (
+                  <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-950 space-y-2">
+                    <p>
+                      お客様は <strong>LINE</strong> での返信を希望されていますが、
+                      <strong>ダッシュボードからの LINE Push はプレミアムプラン専用</strong>
+                      です。下のフォームから送信すると <strong>メール</strong> で通知されます。
+                    </p>
+                    <Link
+                      href={`/${locale}/pricing`}
+                      className="inline-flex text-xs font-black text-navy-primary underline decoration-navy-primary/40 hover:text-navy-secondary"
+                    >
+                      プレミアムにアップグレードする
+                    </Link>
                   </div>
                 ) : null}
 

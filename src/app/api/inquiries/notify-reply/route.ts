@@ -10,6 +10,7 @@ import {
 } from '@/lib/resend-from'
 import { lineOfficialPushText } from '@/lib/line-official-push'
 import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
+import { isPremiumActive } from '@/lib/utils/plan'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -157,7 +158,7 @@ export async function POST(req: NextRequest) {
 
     const preferred = normalizeInquiryReplyChannel(row.preferred_reply_channel)
     const lineUid = row.line_user_id?.trim() || ''
-    const useLine = preferred === 'line' && !forceEmail && Boolean(lineUid)
+    let useLine = preferred === 'line' && !forceEmail && Boolean(lineUid)
 
     if (preferred === 'line' && !forceEmail && !lineUid) {
       return NextResponse.json(
@@ -192,12 +193,16 @@ export async function POST(req: NextRequest) {
 
     const { data: agentProfile } = await supabase
       .from('profiles')
-      .select('email, full_name')
+      .select('email, full_name, plan, plan_type, current_period_end, is_admin')
       .eq('id', user.id)
       .maybeSingle()
 
     const agentEmail = agentProfile?.email?.trim() || user.email?.trim() || ''
     const agentDisplayName = agentProfile?.full_name?.trim() || '担当エージェント'
+
+    if (useLine && !isPremiumActive(agentProfile)) {
+      useLine = false
+    }
 
     if (useLine) {
       const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
@@ -307,7 +312,8 @@ export async function POST(req: NextRequest) {
       message,
       sentVia: 'email',
       inquiryReplyId,
-      forcedEmail: preferred === 'line' && forceEmail,
+      forcedEmail:
+        preferred === 'line' && (forceEmail || !isPremiumActive(agentProfile)),
       resendId: sent?.id ?? null,
       linePushStatus: null,
     })
@@ -317,7 +323,7 @@ export async function POST(req: NextRequest) {
       sent: true,
       sent_via: 'email',
       id: sent?.id,
-      used_email_fallback: preferred === 'line' && forceEmail,
+      used_email_fallback: preferred === 'line' && (forceEmail || !isPremiumActive(agentProfile)),
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Unknown error'

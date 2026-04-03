@@ -217,6 +217,11 @@ export default function AgentSignupContent({ dict, locale }: AgentSignupContentP
                                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-4 focus:ring-navy-primary/5 focus:border-navy-primary outline-none transition-all font-medium"
                                     />
                                 </div>
+                                <p className="mt-2 text-[11px] font-medium leading-relaxed text-slate-500">
+                                    物件ページでお客様が「LINEで返信を受け取る」を選べるのは
+                                    <strong className="font-black text-navy-secondary">プレミアムプラン</strong>
+                                    のみです（登録時点ではスタンダードのため、メール問い合わせが中心になります）。
+                                </p>
                             </div>
                         </div>
 
