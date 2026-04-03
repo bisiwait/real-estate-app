@@ -45,7 +45,7 @@ interface Inquiry {
 
 interface InquiryListProps {
   initialInquiries: any[]
-  /** 定型文「初回返信」の【名前】に使う（profiles.full_name など） */
+  /** 定型文「初回返信」に挿入する表示名（profiles.full_name など） */
   agentDisplayName?: string | null
 }
 

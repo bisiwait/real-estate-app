@@ -12,14 +12,14 @@ const OTHER_TEMPLATES: { label: string; text: string }[] = [
 ]
 
 /**
- * @param accountDisplayName プロフィールのアカウント名（通常は full_name）。空のときは従来どおり「担当」を括弧付きで入れる。
+ * @param accountDisplayName プロフィールのアカウント名（通常は full_name）。空のときは「担当」。
  */
 export function getInquiryReplyTemplates(accountDisplayName: string): { label: string; text: string }[] {
   const name = accountDisplayName.trim() || '担当'
   return [
     {
       label: '初回返信',
-      text: `お問い合わせありがとうございます。\n【${name}】でございます。いただいた内容を確認のうえ、改めてご連絡いたします。\n引き続きよろしくお願いいたします。`,
+      text: `お問い合わせありがとうございます。\n${name}でございます。いただいた内容を確認のうえ、改めてご連絡いたします。\n引き続きよろしくお願いいたします。`,
     },
     ...OTHER_TEMPLATES,
   ]
