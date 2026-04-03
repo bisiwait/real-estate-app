@@ -201,6 +201,7 @@ export default function AdminUserManagement({
 
         if (variant === 'agent') {
             if (!isAgentRole) return false
+            if (user.deleted_at != null) return false
         } else {
             if (isAgentRole) return false
         }
@@ -497,7 +498,7 @@ export default function AdminUserManagement({
                 <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
                     {variant === 'agent' ? (
                         <>
-                            ※ エージェント会員は <code className="text-slate-500">user_role = agent</code>、または掲載物件があるプロフィールに含まれます。
+                            ※ エージェント会員は <code className="text-slate-500">user_role = agent</code>、または掲載物件があるプロフィールに含まれます。削除済み（論理削除）のエージェントはこの一覧には表示されません。
                             <br />
                             不審な操作はログを確認し、必要に応じてプランやアカウントを見直してください。
                         </>
