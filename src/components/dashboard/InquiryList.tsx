@@ -87,7 +87,21 @@ export default function InquiryList({
   const [isSubmittingReply, setIsSubmittingReply] = useState(false)
   /** LINE 送信失敗後に、明示的にメールへ切り替えて再送する */
   const [forceEmailAfterLineFail, setForceEmailAfterLineFail] = useState(false)
+  const [channelFilter, setChannelFilter] = useState<'all' | 'email' | 'line'>('all')
+  const [replyFilter, setReplyFilter] = useState<'all' | 'pending' | 'replied'>('all')
   const supabase = createClient()
+
+  const filteredInquiries = useMemo(() => {
+    return inquiries.filter((inq) => {
+      const mode = normalizeInquiryReplyChannel(inq.preferred_reply_channel)
+      if (channelFilter === 'email' && mode !== 'email') return false
+      if (channelFilter === 'line' && mode !== 'line') return false
+      const hasReplies = (inq.replies?.length ?? 0) > 0
+      if (replyFilter === 'pending' && hasReplies) return false
+      if (replyFilter === 'replied' && !hasReplies) return false
+      return true
+    })
+  }, [inquiries, channelFilter, replyFilter])
 
   const handleToggleRead = async (id: string, currentReadStatus: boolean) => {
     if (currentReadStatus) return
@@ -267,9 +281,79 @@ export default function InquiryList({
     )
   }
 
+  const filterChip = (active: boolean) =>
+    `whitespace-nowrap px-3 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all ${
+      active ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'
+    }`
+
   return (
-    <div className="divide-y divide-slate-50">
-      {inquiries.map((inquiry) => {
+    <div>
+      <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-6 space-y-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
+            種別
+          </span>
+          <div className="flex flex-1 min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
+            <button type="button" onClick={() => setChannelFilter('all')} className={filterChip(channelFilter === 'all')}>
+              すべて
+            </button>
+            <button
+              type="button"
+              onClick={() => setChannelFilter('email')}
+              className={`${filterChip(channelFilter === 'email')} flex items-center justify-center gap-1`}
+            >
+              <Mail className="h-3.5 w-3.5 shrink-0 opacity-70" />
+              メール
+            </button>
+            <button
+              type="button"
+              onClick={() => setChannelFilter('line')}
+              className={`${filterChip(channelFilter === 'line')} flex items-center justify-center gap-1`}
+            >
+              <MessageCircle className="h-3.5 w-3.5 shrink-0 opacity-70" />
+              LINE
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
+            対応
+          </span>
+          <div className="flex flex-1 min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
+            <button type="button" onClick={() => setReplyFilter('all')} className={filterChip(replyFilter === 'all')}>
+              すべて
+            </button>
+            <button type="button" onClick={() => setReplyFilter('pending')} className={filterChip(replyFilter === 'pending')}>
+              未対応
+            </button>
+            <button type="button" onClick={() => setReplyFilter('replied')} className={filterChip(replyFilter === 'replied')}>
+              返信済み
+            </button>
+          </div>
+        </div>
+        <p className="text-[10px] font-bold text-slate-400">
+          表示 {filteredInquiries.length} / 全 {inquiries.length} 件
+        </p>
+      </div>
+
+      {filteredInquiries.length === 0 ? (
+        <div className="p-16 text-center space-y-3">
+          <p className="text-slate-500 font-medium text-sm">条件に一致するお問い合わせはありません</p>
+          <button
+            type="button"
+            onClick={() => {
+              setChannelFilter('all')
+              setReplyFilter('all')
+            }}
+            className="text-xs font-black text-navy-primary underline decoration-navy-primary/30 hover:text-navy-secondary"
+          >
+            フィルターをリセット
+          </button>
+        </div>
+      ) : null}
+
+      <div className={`divide-y divide-slate-50 ${filteredInquiries.length === 0 ? 'hidden' : ''}`}>
+      {filteredInquiries.map((inquiry) => {
         const pref = replyPreferenceLabel(inquiry)
         const lineUid = inquiry.line_user_id?.trim()
         const lineMissing = pref.mode === 'line' && !lineUid
@@ -822,6 +906,7 @@ export default function InquiryList({
           </div>
         )
       })}
+      </div>
     </div>
   )
 }
