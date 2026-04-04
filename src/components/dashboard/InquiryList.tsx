@@ -311,10 +311,6 @@ export default function InquiryList({
                 ボタンから管理画面のチャットを開き、通常のLINEのように<strong>無料で</strong>続けてください。
               </li>
             </ol>
-            <p className="rounded-lg bg-white/80 p-2.5 text-[11px] text-slate-700 border border-sky-100/80">
-              <strong>メリット:</strong>{' '}
-              2通目以降を公式チャットで行うと、毎月の<strong>無料Push送信枠</strong>を節約できます。
-            </p>
             <p className="text-[11px] text-slate-600">
               パタヤの現場では、技術より<strong>コストと手軽さ</strong>で説明すると伝わりやすいです。最初の1通は「お知らせ」、それ以降は普段のLINE感覚で大丈夫です。
             </p>
