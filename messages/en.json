@@ -808,10 +808,6 @@
                 "a": "Yes. Saving specific listings as favorites and receiving automatic notifications when new properties that match your criteria are published (system notifications) require a free member account."
             },
             {
-                "q": "My LINE ID can’t be found.",
-                "a": "In LINE, turn on “Allow others to add me by ID”, or copy your add-friend URL from your profile and register that instead."
-            },
-            {
                 "q": "Are listing details guaranteed accurate?",
                 "a": "Agents update their own listings; Thailand’s market moves quickly. Always confirm the latest availability on LINE or by phone."
             },
