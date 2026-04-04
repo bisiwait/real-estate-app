@@ -14,6 +14,21 @@ import { isPremiumActive } from '@/lib/utils/plan'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/** anon キーを SERVICE_ROLE に誤設定すると RLS が効き inquiries が常に 0 件になる */
+function isLikelyServiceRoleKey(key: string | undefined): boolean {
+  const k = key?.trim()
+  if (!k) return false
+  try {
+    const parts = k.split('.')
+    if (parts.length < 2) return false
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const payload = JSON.parse(Buffer.from(b64, 'base64').toString('utf8')) as { role?: string }
+    return payload.role === 'service_role'
+  } catch {
+    return false
+  }
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -25,7 +40,7 @@ function escapeHtml(text: string): string {
 type InquiryNotifyRow = {
   id: string
   owner_id: string
-  property_id: string
+  property_id: string | null
   inquirer_email: string | null
   inquirer_name: string | null
   preferred_reply_channel: string | null
@@ -50,7 +65,7 @@ async function hasSuccessfulAgentLinePush(admin: Awaited<ReturnType<typeof creat
 
 async function insertAgentDeliveryLog(params: {
   inquiryId: string
-  propertyId: string
+  propertyId: string | null
   agentId: string
   senderUserId: string
   message: string
@@ -75,7 +90,7 @@ async function insertAgentDeliveryLog(params: {
 
     const { error } = await admin.from('inquiry_logs').insert({
       inquiry_id: params.inquiryId,
-      property_id: params.propertyId,
+      property_id: params.propertyId ?? null,
       agent_id: params.agentId,
       user_id: null,
       inquiry_type: 'agent_reply',
@@ -130,27 +145,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '本文が長すぎます（4500文字以内）。' }, { status: 400 })
     }
 
-    // ユーザー JWT + RLS だと、埋め込み properties(title) が物件側 RLS で弾かれたとき
-    // 親の inquiries 行まで取得失敗し「見つからない」になる。認証後は service_role で行を取り、owner を検証する。
-    const admin = await createAdminClient()
-    const { data: inquiry, error: inqError } = await admin
-      .from('inquiries')
-      .select(
-        'id, owner_id, property_id, inquirer_email, inquirer_name, preferred_reply_channel, line_user_id, first_reply_sent'
-      )
-      .eq('id', inquiryId)
-      .maybeSingle()
+    // 1) service_role が正しいときは管理クライアントで取得（埋め込み RLS 問題も回避）
+    // 2) SUPABASE_SERVICE_ROLE_KEY が未設定・anon 誤設定だと「管理クライアント」が実質 anon になり
+    //    inquiries が常に 0 件 → 404。ダッシュボードはブラウザのユーザー JWT で見えているため齟齬が出る。
+    // 3) その場合はログインセッション付き supabase で同じ id を取得する。
+    const adminKeyOk = isLikelyServiceRoleKey(process.env.SUPABASE_SERVICE_ROLE_KEY)
+    let admin: Awaited<ReturnType<typeof createAdminClient>> | null = null
+    let inquiry: Record<string, unknown> | null = null
 
-    if (inqError || !inquiry) {
-      console.warn('[notify-reply] inquiry select:', inqError?.message)
-      return NextResponse.json({ error: 'お問い合わせが見つかりません。' }, { status: 404 })
+    if (adminKeyOk) {
+      admin = await createAdminClient()
+      const { data, error } = await admin.from('inquiries').select('*').eq('id', inquiryId).maybeSingle()
+      if (error) console.warn('[notify-reply] admin inquiries:', error.message, error.code)
+      if (data) inquiry = data as Record<string, unknown>
+    } else {
+      console.warn(
+        '[notify-reply] SUPABASE_SERVICE_ROLE_KEY missing or not service_role JWT; falling back to session client for inquiries'
+      )
     }
 
-    const row = inquiry as InquiryNotifyRow
+    if (!inquiry) {
+      const { data, error } = await supabase.from('inquiries').select('*').eq('id', inquiryId).maybeSingle()
+      if (error) console.warn('[notify-reply] session inquiries:', error.message, error.code)
+      if (data) inquiry = data as Record<string, unknown>
+    }
+
+    if (!inquiry) {
+      return NextResponse.json(
+        { error: 'お問い合わせが見つかりません。', code: 'INQUIRY_NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+
+    const row = inquiry as unknown as InquiryNotifyRow
     const isOwner = row.owner_id === user.id
     let isAdminUser = false
     if (!isOwner) {
-      const { data: prof } = await admin
+      const { data: prof } = await supabase
         .from('profiles')
         .select('is_admin, user_role')
         .eq('id', user.id)
@@ -165,12 +196,20 @@ export async function POST(req: NextRequest) {
 
     let propertyTitle = '物件'
     if (row.property_id) {
-      const { data: prop } = await admin
+      const { data: propUser } = await supabase
         .from('properties')
         .select('title')
         .eq('id', row.property_id)
         .maybeSingle()
-      if (prop?.title?.trim()) propertyTitle = prop.title.trim()
+      if (propUser?.title?.trim()) propertyTitle = propUser.title.trim()
+      else if (admin) {
+        const { data: propAdmin } = await admin
+          .from('properties')
+          .select('title')
+          .eq('id', row.property_id)
+          .maybeSingle()
+        if (propAdmin?.title?.trim()) propertyTitle = propAdmin.title.trim()
+      }
     }
 
     const preferred = normalizeInquiryReplyChannel(row.preferred_reply_channel)
@@ -192,7 +231,7 @@ export async function POST(req: NextRequest) {
     if (preferred === 'line' && !forceEmail && lineUid) {
       const flagged = row.first_reply_sent === true
       const alreadyPushed =
-        flagged || (await hasSuccessfulAgentLinePush(admin, inquiryId))
+        flagged || (admin ? await hasSuccessfulAgentLinePush(admin, inquiryId) : false)
       if (alreadyPushed) {
         return NextResponse.json(
           {
@@ -257,7 +296,8 @@ export async function POST(req: NextRequest) {
         linePushStatus: pushResult.status,
       })
 
-      const { error: frErr } = await admin
+      const clientForFr = isOwner ? supabase : admin ?? supabase
+      const { error: frErr } = await clientForFr
         .from('inquiries')
         .update({ first_reply_sent: true })
         .eq('id', inquiryId)
