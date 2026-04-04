@@ -289,11 +289,11 @@ export default function InquiryList({
   return (
     <div>
       <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-6 space-y-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
             種別
           </span>
-          <div className="flex flex-1 min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
+          <div className="flex min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
             <button type="button" onClick={() => setChannelFilter('all')} className={filterChip(channelFilter === 'all')}>
               すべて
             </button>
@@ -314,12 +314,10 @@ export default function InquiryList({
               LINE
             </button>
           </div>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
             対応
           </span>
-          <div className="flex flex-1 min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
+          <div className="flex min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
             <button type="button" onClick={() => setReplyFilter('all')} className={filterChip(replyFilter === 'all')}>
               すべて
             </button>
