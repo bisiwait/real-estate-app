@@ -738,6 +738,8 @@
         "stripe_not_configured_notice": "ยังไม่เปิดรับสมัครออนไลน์ (ทดลองฟรี) ในขณะนี้ หากสนใจแพ็กเกจโปร โปรดติดต่อเรา",
         "trial_disabled_stripe": "กำลังเตรียมการรับสมัคร",
         "trial_disabled_premium": "คุณใช้แพ็กเกจโปรอยู่แล้ว",
+        "pro_benefit_line_title": "เชื่อม LINE และรับสอบถาม",
+        "pro_benefit_line_desc": "รองรับผู้ซื้อที่เลือกรับคำตอบทาง LINE ในหน้าประกาศ เก็บ LINE user ID และตอบผ่าน LINE ทางการ—ช่องทางหลักในตลาดไทย",
         "pro_benefit_presale_title": "ลำดับพิเศษพรีเซลล์",
         "pro_benefit_presale_desc": "จัดการข้อมูลก่อนเปิดตัวและเข้าถึงนักลงทุนจริจังได้เร็วขึ้น",
         "pro_benefit_ai_title": "AI แปลและข้อความ 3 ภาษา",

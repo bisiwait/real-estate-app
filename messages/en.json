@@ -739,6 +739,8 @@
         "stripe_not_configured_notice": "Online signup (free trial) is not available yet. For Pro, please contact us and we’ll help you get started.",
         "trial_disabled_stripe": "Signup coming soon",
         "trial_disabled_premium": "You’re already on Pro",
+        "pro_benefit_line_title": "LINE integration & inquiries",
+        "pro_benefit_line_desc": "Serve buyers who choose “reply by LINE” on your listings. Capture LINE user IDs and reply from the official account—Thailand’s default channel for closing deals.",
         "pro_benefit_presale_title": "Presale priority placement",
         "pro_benefit_presale_desc": "Work scarce pre-launch inventory and reach serious investors earlier.",
         "pro_benefit_ai_title": "AI JP / EN / TH copy & translation",

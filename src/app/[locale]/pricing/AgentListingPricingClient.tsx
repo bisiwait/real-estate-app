@@ -226,6 +226,7 @@ export default function AgentListingPricingClient({
     ] as const;
 
     const proHighlights = [
+        { icon: MessageCircle, title: p.pro_benefit_line_title, desc: p.pro_benefit_line_desc },
         { icon: Building2, title: p.pro_benefit_presale_title, desc: p.pro_benefit_presale_desc },
         { icon: Sparkles, title: p.pro_benefit_ai_title, desc: p.pro_benefit_ai_desc },
         { icon: FileText, title: p.pro_benefit_pdf_title, desc: p.pro_benefit_pdf_desc },
