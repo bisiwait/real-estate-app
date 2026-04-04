@@ -282,20 +282,12 @@ export default function InquiryList({
           !forceEmailAfterLineFail &&
           !linePushUsed
         const expanded = expandedId === inquiry.id
-        const isMemoOnlyMode =
+        const isLineChatOnlyAfterPush =
           pref.mode === 'line' && !lineMissing && linePushUsed && !forceEmailAfterLineFail
         const placeholderText = useLineNotify
           ? 'LINEで送信するメッセージを入力…'
-          : isMemoOnlyMode
-            ? 'メモを入力…'
-            : '返信メール本文を入力…'
-        const labelText = useLineNotify
-          ? 'LINE で送信する内容'
-          : isMemoOnlyMode
-            ? '返信メモ（履歴に保存）'
-            : '返信メールの本文'
-        const lineMemoNotSentNotice =
-          'ここからはLINEに送信されません続きのやり取りは LINE Official Account Manager のチャットから、上記の LINE ユーザーIDの友だち宛にご返信ください。'
+          : '返信メール本文を入力…'
+        const labelText = useLineNotify ? 'LINE で送信する内容' : '返信メールの本文'
         const linePremiumFlow =
           viewerPremiumLineInquiry && pref.mode === 'line' && Boolean(lineUid) && !lineMissing
 
@@ -675,75 +667,6 @@ export default function InquiryList({
                           </div>
 
                           {lineGuidePanel}
-
-                          <div>
-                            <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
-                              <MessageCircle className="w-4 h-4 mr-2 text-[#047c3d]" />
-                              返信メモ（履歴に保存）
-                            </h5>
-                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                  <Sparkles className="h-3 w-3" />
-                                  定型文
-                                </span>
-                                {replyTemplates.map((t) => (
-                                  <button
-                                    key={t.label}
-                                    type="button"
-                                    onClick={() => setReplyText(t.text)}
-                                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
-                                  >
-                                    {t.label}
-                                  </button>
-                                ))}
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setReplyText('')}
-                                disabled={!replyText}
-                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                                title="本文を空にします"
-                              >
-                                <Eraser className="h-3 w-3" />
-                                本文をクリア
-                              </button>
-                            </div>
-                            <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5">
-                              <div className="relative min-w-0 flex-1">
-                                <textarea
-                                  id={`inquiry-reply-memo-${inquiry.id}`}
-                                  rows={8}
-                                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
-                                  placeholder={placeholderText}
-                                  value={replyText}
-                                  onChange={(e) => setReplyText(e.target.value)}
-                                  aria-label="返信メモ（履歴に保存）"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleSendReply(inquiry)}
-                                  disabled={isSubmittingReply || !replyText.trim()}
-                                  className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                                  title="履歴に保存（Pushは送りません）"
-                                >
-                                  {isSubmittingReply ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                  ) : (
-                                    <MessageCircle className="w-5 h-5" />
-                                  )}
-                                </button>
-                              </div>
-                              <aside className="md:w-[min(100%,20rem)] shrink-0 rounded-2xl border border-red-200 bg-red-50 p-4">
-                                <p className="text-xs font-black leading-relaxed text-red-600">
-                                  {lineMemoNotSentNotice}
-                                </p>
-                              </aside>
-                            </div>
-                            <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
-                              ※この欄の内容は履歴にのみ保存されます（Push・メールは送りません）。
-                            </p>
-                          </div>
                         </div>
                       ) : null}
 
@@ -757,126 +680,133 @@ export default function InquiryList({
                     </div>
                   ) : (
                     <div>
-                      <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
-                        {isMemoOnlyMode ? (
-                          <>
-                            <MessageCircle className="w-4 h-4 mr-2 text-[#047c3d]" />
-                            返信メモ
-                          </>
-                        ) : (
-                          <>
+                      {isLineChatOnlyAfterPush ? (
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h5 className="text-sm font-black text-navy-secondary flex items-center gap-2">
+                              <MessageCircle className="h-4 w-4 text-[#06C755]" />
+                              LINE で返信
+                            </h5>
+                            <span className="rounded-full bg-[#06C755]/15 px-2.5 py-0.5 text-[10px] font-black text-[#035c2e]">
+                              公式チャットで継続
+                            </span>
+                          </div>
+                          <div>
+                            <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-[#047c3d]">
+                              公式チャットへ移動
+                            </p>
+                            <a
+                              href={lineOfficialManagerChatUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#06C755] px-4 py-4 text-sm font-black text-white shadow-lg shadow-[#06C755]/30 transition-colors hover:bg-[#05b34c]"
+                            >
+                              LINE公式チャットを開いて続きを話す
+                              <ExternalLink className="h-4 w-4 shrink-0" />
+                            </a>
+                            <p className="mt-2 text-[10px] font-semibold text-slate-500">
+                              管理画面が開いたら画面上部の<strong>「チャット」</strong>タブを選び、一覧から上記 LINE
+                              ユーザーIDの友だちとのトークを開いてください（個別トークへの直リンクは LINE
+                              側で提供されていません）。
+                            </p>
+                          </div>
+                          {lineGuidePanel}
+                          <button
+                            type="button"
+                            onClick={() => setForceEmailAfterLineFail(true)}
+                            className="text-xs font-black text-sky-700 underline decoration-sky-300 hover:text-sky-900"
+                          >
+                            代わりにメールで返信する
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
                             <Send className="w-4 h-4 mr-2" />
                             {labelText}
-                          </>
-                        )}
-                      </h5>
-                      {!isMemoOnlyMode ? (
-                        <label className="sr-only" htmlFor={`inquiry-reply-${inquiry.id}`}>
-                          {labelText}
-                        </label>
-                      ) : null}
-                      {!isMemoOnlyMode ? (
-                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
-                              <Sparkles className="h-3 w-3" />
-                              定型文
-                            </span>
-                            {replyTemplates.map((t) => (
-                              <button
-                                key={t.label}
-                                type="button"
-                                onClick={() => setReplyText(t.text)}
-                                className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
-                              >
-                                {t.label}
-                              </button>
-                            ))}
+                          </h5>
+                          <label className="sr-only" htmlFor={`inquiry-reply-${inquiry.id}`}>
+                            {labelText}
+                          </label>
+                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                <Sparkles className="h-3 w-3" />
+                                定型文
+                              </span>
+                              {replyTemplates.map((t) => (
+                                <button
+                                  key={t.label}
+                                  type="button"
+                                  onClick={() => setReplyText(t.text)}
+                                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
+                                >
+                                  {t.label}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setReplyText('')}
+                              disabled={!replyText}
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                              title="本文を空にします"
+                            >
+                              <Eraser className="h-3 w-3" />
+                              本文をクリア
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setReplyText('')}
-                            disabled={!replyText}
-                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                            title="本文を空にします"
-                          >
-                            <Eraser className="h-3 w-3" />
-                            本文をクリア
-                          </button>
-                        </div>
-                      ) : null}
-                      <div
-                        className={
-                          isMemoOnlyMode
-                            ? 'flex flex-col gap-4 md:flex-row md:items-stretch md:gap-5'
-                            : ''
-                        }
-                      >
-                        <div className={`relative min-w-0 ${isMemoOnlyMode ? 'flex-1' : ''}`}>
-                          <textarea
-                            id={`inquiry-reply-${inquiry.id}`}
-                            rows={isMemoOnlyMode ? 8 : 6}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
-                            placeholder={placeholderText}
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            aria-label={isMemoOnlyMode ? '返信メモ（履歴に保存）' : labelText}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleSendReply(inquiry)}
-                            disabled={isSubmittingReply || !replyText.trim()}
-                            className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                            title={
-                              useLineNotify
-                                ? 'LINE で送信'
-                                : isMemoOnlyMode
-                                  ? '履歴に保存（Pushは送りません）'
-                                  : 'メールで送信'
-                            }
-                          >
-                            {isSubmittingReply ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : useLineNotify ? (
-                              <MessageCircle className="w-5 h-5" />
-                            ) : (
-                              <Send className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                        {isMemoOnlyMode ? (
-                          <aside className="md:w-[min(100%,20rem)] shrink-0 rounded-2xl border border-red-200 bg-red-50 p-4">
-                            <p className="text-xs font-black leading-relaxed text-red-600">
-                              {lineMemoNotSentNotice}
-                            </p>
-                          </aside>
-                        ) : null}
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
-                        {useLineNotify
-                          ? '※送信すると公式 LINE からお客様の LINE に Push 通知されます（お問い合わせあたり1回まで）。内容は返信履歴にも保存されます。'
-                          : isMemoOnlyMode
-                            ? '※この欄の内容は履歴にのみ保存されます。'
-                            : '※送信するとお客様のメール宛に届きます。内容は返信履歴にも保存されます。'}
-                      </p>
-                      {pref.mode === 'line' && !lineMissing && (useLineNotify || linePushUsed) ? (
-                        <button
-                          type="button"
-                          onClick={() => setForceEmailAfterLineFail(true)}
-                          className="mt-2 text-xs font-black text-sky-700 underline decoration-sky-300 hover:text-sky-900"
-                        >
-                          代わりにメールで返信する
-                        </button>
-                      ) : null}
-                      {forceEmailAfterLineFail && pref.mode === 'line' && lineUid && !linePushUsed ? (
-                        <button
-                          type="button"
-                          onClick={() => setForceEmailAfterLineFail(false)}
-                          className="mt-2 text-xs font-black text-slate-500 underline hover:text-navy-secondary"
-                        >
-                          LINE で送り直すモードに戻す
-                        </button>
-                      ) : null}
+                          <div className="relative min-w-0">
+                            <textarea
+                              id={`inquiry-reply-${inquiry.id}`}
+                              rows={6}
+                              className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
+                              placeholder={placeholderText}
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              aria-label={labelText}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSendReply(inquiry)}
+                              disabled={isSubmittingReply || !replyText.trim()}
+                              className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                              title={useLineNotify ? 'LINE で送信' : 'メールで送信'}
+                            >
+                              {isSubmittingReply ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : useLineNotify ? (
+                                <MessageCircle className="w-5 h-5" />
+                              ) : (
+                                <Send className="w-5 h-5" />
+                              )}
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
+                            {useLineNotify
+                              ? '※送信すると公式 LINE からお客様の LINE に Push 通知されます（お問い合わせあたり1回まで）。内容は返信履歴にも保存されます。'
+                              : '※送信するとお客様のメール宛に届きます。内容は返信履歴にも保存されます。'}
+                          </p>
+                          {pref.mode === 'line' && !lineMissing && (useLineNotify || linePushUsed) ? (
+                            <button
+                              type="button"
+                              onClick={() => setForceEmailAfterLineFail(true)}
+                              className="mt-2 text-xs font-black text-sky-700 underline decoration-sky-300 hover:text-sky-900"
+                            >
+                              代わりにメールで返信する
+                            </button>
+                          ) : null}
+                          {forceEmailAfterLineFail && pref.mode === 'line' && lineUid && !linePushUsed ? (
+                            <button
+                              type="button"
+                              onClick={() => setForceEmailAfterLineFail(false)}
+                              className="mt-2 text-xs font-black text-slate-500 underline hover:text-navy-secondary"
+                            >
+                              LINE で送り直すモードに戻す
+                            </button>
+                          ) : null}
+                        </>
+                      )}
                     </div>
                   )}
 
