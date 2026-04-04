@@ -376,7 +376,7 @@ export default function AgentListingPricingClient({
                                 <FeatureRow label={p.feat_priority} value={p.feat_priority_free} muted />
                                 <FeatureRow label={p.feat_inquiry} value={p.feat_included} />
                                 <FeatureRow label={p.feat_profile} value={p.feat_included} />
-                                <FeatureRow label={p.feat_line} value={p.feat_included} />
+                                <FeatureRow label={p.feat_line} value={p.feat_not_included} muted />
                                 <FeatureRow label={p.feat_ai} value={p.feat_not_included} muted />
                                 <FeatureRow label={p.feat_presale} value={p.feat_not_included} muted />
                                 <FeatureRow label={p.feat_pdf} value={p.feat_not_included} muted />
@@ -551,7 +551,7 @@ export default function AgentListingPricingClient({
                                 />
                                 <CmpRow label={p.row_inquiry} free={true} premium={true} />
                                 <CmpRow label={p.row_profile} free={true} premium={true} />
-                                <CmpRow label={p.row_line} free={true} premium={true} />
+                                <CmpRow label={p.row_line} free={false} premium={true} />
                                 <CmpRow
                                     label={p.row_ai}
                                     labelDesktop={p.row_ai_desktop}
