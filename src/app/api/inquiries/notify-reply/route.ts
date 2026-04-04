@@ -123,28 +123,34 @@ export async function POST(req: NextRequest) {
     if (!inquiryId || !message) {
       return NextResponse.json({ error: 'inquiry_id と message が必要です。' }, { status: 400 })
     }
+    if (!UUID_RE.test(inquiryId)) {
+      return NextResponse.json({ error: '無効な inquiry_id です。' }, { status: 400 })
+    }
     if (message.length > 4500) {
       return NextResponse.json({ error: '本文が長すぎます（4500文字以内）。' }, { status: 400 })
     }
 
-    const { data: inquiry, error: inqError } = await supabase
+    // ユーザー JWT + RLS だと、埋め込み properties(title) が物件側 RLS で弾かれたとき
+    // 親の inquiries 行まで取得失敗し「見つからない」になる。認証後は service_role で行を取り、owner を検証する。
+    const admin = await createAdminClient()
+    const { data: inquiry, error: inqError } = await admin
       .from('inquiries')
       .select(
-        'id, owner_id, property_id, inquirer_email, inquirer_name, preferred_reply_channel, line_user_id, first_reply_sent, property:properties(title)'
+        'id, owner_id, property_id, inquirer_email, inquirer_name, preferred_reply_channel, line_user_id, first_reply_sent'
       )
       .eq('id', inquiryId)
-      .single()
+      .maybeSingle()
 
     if (inqError || !inquiry) {
       console.warn('[notify-reply] inquiry select:', inqError?.message)
       return NextResponse.json({ error: 'お問い合わせが見つかりません。' }, { status: 404 })
     }
 
-    const row = inquiry as InquiryNotifyRow & { property?: { title?: string } | null }
+    const row = inquiry as InquiryNotifyRow
     const isOwner = row.owner_id === user.id
     let isAdminUser = false
     if (!isOwner) {
-      const { data: prof } = await supabase
+      const { data: prof } = await admin
         .from('profiles')
         .select('is_admin, user_role')
         .eq('id', user.id)
@@ -155,6 +161,16 @@ export async function POST(req: NextRequest) {
     if (!isOwner && !isAdminUser) {
       console.warn('[notify-reply] forbidden', { userId: user.id, ownerId: row.owner_id })
       return NextResponse.json({ error: 'このお問い合わせに返信する権限がありません。' }, { status: 403 })
+    }
+
+    let propertyTitle = '物件'
+    if (row.property_id) {
+      const { data: prop } = await admin
+        .from('properties')
+        .select('title')
+        .eq('id', row.property_id)
+        .maybeSingle()
+      if (prop?.title?.trim()) propertyTitle = prop.title.trim()
     }
 
     const preferred = normalizeInquiryReplyChannel(row.preferred_reply_channel)
@@ -173,11 +189,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const adminForLineCheck = await createAdminClient()
     if (preferred === 'line' && !forceEmail && lineUid) {
       const flagged = row.first_reply_sent === true
       const alreadyPushed =
-        flagged || (await hasSuccessfulAgentLinePush(adminForLineCheck, inquiryId))
+        flagged || (await hasSuccessfulAgentLinePush(admin, inquiryId))
       if (alreadyPushed) {
         return NextResponse.json(
           {
@@ -191,7 +206,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const propertyTitle = row.property?.title ?? '物件'
     const inquirerName = row.inquirer_name?.trim() || 'お客様'
 
     const { data: agentProfile } = await supabase
@@ -243,11 +257,10 @@ export async function POST(req: NextRequest) {
         linePushStatus: pushResult.status,
       })
 
-      const { error: frErr } = await supabase
+      const { error: frErr } = await admin
         .from('inquiries')
         .update({ first_reply_sent: true })
         .eq('id', inquiryId)
-        .eq('owner_id', row.owner_id)
       if (frErr) {
         console.warn('[notify-reply] first_reply_sent update', frErr.message)
       }
