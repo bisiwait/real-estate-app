@@ -10,7 +10,6 @@ import ProfileSection from "@/components/dashboard/ProfileSection";
 import FavoritesSection from "@/components/dashboard/FavoritesSection";
 import SavedSearchesSection from "@/components/dashboard/SavedSearchesSection";
 import UserPasswordChangeForm from "@/components/dashboard/UserPasswordChangeForm";
-import NotificationSettingsSection from "@/components/dashboard/NotificationSettingsSection";
 
 export default function MyPageClient({ dict, locale }: { dict: any, locale: string }) {
     const [activeTab, setActiveTab] = useState("profile");
@@ -129,14 +128,7 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
                         {activeTab === "favorites" && <FavoritesSection favorites={favorites} dict={dict} locale={locale} />}
                         {activeTab === "searches" && <SavedSearchesSection searches={searches} dict={dict} locale={locale} />}
                         {activeTab === "settings" && (
-                            <SettingsSection
-                                user={user}
-                                profile={profile}
-                                onProfilePatch={(patch) => setProfile((prev: any) => (prev ? { ...prev, ...patch } : prev))}
-                                handleLogout={handleLogout}
-                                dict={dict}
-                                locale={locale}
-                            />
+                            <SettingsSection handleLogout={handleLogout} dict={dict} locale={locale} />
                         )}
                     </div>
                 </div>
@@ -146,22 +138,15 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
 }
 
 function SettingsSection({
-    user,
-    profile,
-    onProfilePatch,
     handleLogout,
     dict,
     locale,
 }: {
-    user: any;
-    profile: any;
-    onProfilePatch: (patch: Record<string, unknown>) => void;
     handleLogout: () => void;
     dict: any;
     locale: string;
 }) {
     const [passwordOpen, setPasswordOpen] = useState(false);
-    const [notificationOpen, setNotificationOpen] = useState(false);
 
     return (
         <div className="p-12 max-w-2xl mx-auto space-y-10">
@@ -197,32 +182,6 @@ function SettingsSection({
                     {passwordOpen ? (
                         <div className="border-t border-slate-200/80 px-4 pb-5 pt-1 sm:px-6">
                             <UserPasswordChangeForm dict={dict} locale={locale} embedded />
-                        </div>
-                    ) : null}
-                </div>
-                <div className="overflow-hidden rounded-2xl border border-transparent bg-slate-50 transition-all hover:border-navy-primary/20">
-                    <button
-                        type="button"
-                        onClick={() => setNotificationOpen((o) => !o)}
-                        aria-expanded={notificationOpen}
-                        className="group flex w-full items-center justify-between p-6 text-left transition-all hover:bg-navy-primary/5"
-                    >
-                        <span className="font-bold text-navy-secondary">{dict.labels.notification_settings}</span>
-                        <ChevronRight
-                            size={18}
-                            className={`shrink-0 text-slate-300 transition-transform group-hover:text-navy-primary ${notificationOpen ? "rotate-90" : "group-hover:translate-x-1"}`}
-                            aria-hidden
-                        />
-                    </button>
-                    {notificationOpen ? (
-                        <div className="border-t border-slate-200/80 px-4 pb-5 pt-1 sm:px-6">
-                            <NotificationSettingsSection
-                                user={user}
-                                profile={profile}
-                                onProfilePatch={onProfilePatch}
-                                dict={dict}
-                                locale={locale}
-                            />
                         </div>
                     ) : null}
                 </div>
