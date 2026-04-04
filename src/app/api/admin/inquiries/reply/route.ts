@@ -11,6 +11,8 @@ import {
 } from '@/lib/resend-from'
 import { lineOfficialPushText } from '@/lib/line-official-push'
 import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import { getLineOfficialChannelAccessTokenForHostname } from '@/lib/env/line-data-plane'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -208,7 +210,7 @@ export async function POST(req: NextRequest) {
       }
       resendId = sent?.id ?? null
     } else {
-      const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+      const token = getLineOfficialChannelAccessTokenForHostname(hostHeaderFromRequest(req))
       if (!token) {
         return NextResponse.json(
           { error: 'LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN が未設定です。' },

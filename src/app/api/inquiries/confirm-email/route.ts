@@ -3,6 +3,8 @@ import { createClient as createBaseClient, type User } from '@supabase/supabase-
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { sendInquirerConfirmationEmail } from '@/lib/inquiry-inquirer-confirmation-email'
 import { getPublicSiteUrl } from '@/lib/site-url'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import { getSupabasePublicConfig } from '@/lib/env/supabase-data-plane'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -60,10 +62,8 @@ function normEmail(s: string | null | undefined): string {
 async function getAuthenticatedUser(req: NextRequest): Promise<User | null> {
   const m = req.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)
   if (m?.[1]) {
-    const sb = createBaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const { url, anonKey } = getSupabasePublicConfig(hostHeaderFromRequest(req))
+    const sb = createBaseClient(url, anonKey)
     const {
       data: { user },
       error,

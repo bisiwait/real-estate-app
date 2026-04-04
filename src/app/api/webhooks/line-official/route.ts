@@ -4,6 +4,11 @@ import {
   verifyLineChannelSignature,
 } from '@/lib/line-official-signature'
 import { NextResponse } from 'next/server'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import {
+  getLineOfficialChannelAccessTokenForHostname,
+  getLineOfficialChannelSecretForHostname,
+} from '@/lib/env/line-data-plane'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,21 +40,22 @@ async function isKnownLineMessagingUser(
   return Boolean(intent)
 }
 
-function officialEnabled() {
+function officialEnabledForRequest(req: Request) {
+  const host = hostHeaderFromRequest(req)
   return Boolean(
-    process.env.LINE_OFFICIAL_CHANNEL_SECRET?.trim() &&
-      process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+    getLineOfficialChannelSecretForHostname(host)?.trim() &&
+      getLineOfficialChannelAccessTokenForHostname(host)?.trim()
   )
 }
 
 /** LINE Webhook は raw body で署名するため text() のみ使用 */
 export async function POST(req: Request) {
-  if (!officialEnabled()) {
+  if (!officialEnabledForRequest(req)) {
     return NextResponse.json({ error: 'Not configured' }, { status: 503 })
   }
 
   const raw = await req.text()
-  const secret = process.env.LINE_OFFICIAL_CHANNEL_SECRET!.trim()
+  const secret = getLineOfficialChannelSecretForHostname(hostHeaderFromRequest(req))!.trim()
   const sig = req.headers.get('x-line-signature')
   if (!verifyLineChannelSignature(raw, sig, secret)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
@@ -62,7 +68,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN!.trim()
+  const token = getLineOfficialChannelAccessTokenForHostname(hostHeaderFromRequest(req))!.trim()
   const admin = await createAdminClient()
 
   const events = Array.isArray(body.events) ? body.events : []

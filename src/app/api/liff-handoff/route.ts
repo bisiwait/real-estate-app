@@ -4,6 +4,8 @@ import {
   buildLiffInquiryHandoffUrl,
 } from '@/lib/line/liff-open-url'
 import { getPublicSiteUrl } from '@/lib/site-url'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import { getLineLiffIdForHostname } from '@/lib/env/line-data-plane'
 
 const PROPERTY_UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -57,7 +59,7 @@ function resolveHandoffOrigin(request: NextRequest): string {
  * NEXT_PUBLIC_LIFF_HANDOFF_VIA_LINE_ME=true のとき従来どおり liff.line.me へ 302。
  */
 export async function GET(request: NextRequest) {
-  const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim()
+  const liffId = getLineLiffIdForHostname(hostHeaderFromRequest(request))
   if (!liffId) {
     return NextResponse.json({ error: 'LIFF not configured' }, { status: 503 })
   }

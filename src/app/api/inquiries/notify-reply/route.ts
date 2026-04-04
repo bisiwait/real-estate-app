@@ -11,6 +11,9 @@ import {
 import { lineOfficialPushText } from '@/lib/line-official-push'
 import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
 import { isPremiumActive } from '@/lib/utils/plan'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import { getSupabaseServiceRoleConfig } from '@/lib/env/supabase-data-plane'
+import { getLineOfficialChannelAccessTokenForHostname } from '@/lib/env/line-data-plane'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -149,7 +152,13 @@ export async function POST(req: NextRequest) {
     // 2) SUPABASE_SERVICE_ROLE_KEY が未設定・anon 誤設定だと「管理クライアント」が実質 anon になり
     //    inquiries が常に 0 件 → 404。ダッシュボードはブラウザのユーザー JWT で見えているため齟齬が出る。
     // 3) その場合はログインセッション付き supabase で同じ id を取得する。
-    const adminKeyOk = isLikelyServiceRoleKey(process.env.SUPABASE_SERVICE_ROLE_KEY)
+    let adminKeyOk = false
+    try {
+      const { serviceRoleKey } = getSupabaseServiceRoleConfig(hostHeaderFromRequest(req))
+      adminKeyOk = isLikelyServiceRoleKey(serviceRoleKey)
+    } catch {
+      adminKeyOk = false
+    }
     let admin: Awaited<ReturnType<typeof createAdminClient>> | null = null
     let inquiry: Record<string, unknown> | null = null
 
@@ -261,7 +270,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (useLine) {
-      const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+      const token = getLineOfficialChannelAccessTokenForHostname(hostHeaderFromRequest(req))
       if (!token) {
         return NextResponse.json(
           { error: 'LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN が未設定のため LINE で送信できません。' },

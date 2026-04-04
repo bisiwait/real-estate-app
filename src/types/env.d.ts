@@ -1,8 +1,13 @@
 namespace NodeJS {
     interface ProcessEnv {
+        /** 本番（またはデフォルト）Supabase プロジェクト */
         NEXT_PUBLIC_SUPABASE_URL: string;
         NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
         SUPABASE_SERVICE_ROLE_KEY: string;
+        /** 開発ホスト（localhost / dev.chonburihome.com）向け。未設定時は本番 URL/キーにフォールバック */
+        NEXT_PUBLIC_SUPABASE_URL_DEV?: string;
+        NEXT_PUBLIC_SUPABASE_ANON_KEY_DEV?: string;
+        SUPABASE_SERVICE_ROLE_KEY_DEV?: string;
         /** 本番: https://chonburihome.com（末尾スラッシュなし）。Vercel Production では必須。 */
         NEXT_PUBLIC_SITE_URL?: string;
         NEXT_PUBLIC_BASE_URL?: string;
@@ -27,5 +32,21 @@ namespace NodeJS {
          * 未設定時は `/account/@basicId/`（アカウントホーム）。旧 `/chat/` は 404 になり得る。
          */
         NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL?: string;
+        NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL_DEV?: string;
+        /** LIFF（本番 / 開発ホスト用） */
+        NEXT_PUBLIC_LINE_LIFF_ID?: string;
+        NEXT_PUBLIC_LINE_LIFF_ID_DEV?: string;
+        /** 友だち追加 URL・Basic ID（開発ホスト用オーバーライド） */
+        NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?: string;
+        NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL_DEV?: string;
+        NEXT_PUBLIC_LINE_OFFICIAL_ID?: string;
+        NEXT_PUBLIC_LINE_OFFICIAL_ID_DEV?: string;
+        /** Messaging API（サーバーのみ）。開発ホスト用 */
+        LINE_OFFICIAL_CHANNEL_SECRET?: string;
+        LINE_OFFICIAL_CHANNEL_SECRET_DEV?: string;
+        LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?: string;
+        LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN_DEV?: string;
+        /** Supabase Custom OAuth（LINE ログイン）のプロバイダー識別子 */
+        NEXT_PUBLIC_SUPABASE_LINE_PROVIDER?: string;
     }
 }

@@ -1,22 +1,22 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { getBrowserSupabasePublicConfig } from '@/lib/env/supabase-data-plane'
 
 let client: SupabaseClient | undefined
+let cachedUrl: string | undefined
 
 export function createClient() {
-  if (client) return client
+  const { url, anonKey } = getBrowserSupabasePublicConfig()
+  if (client && cachedUrl === url) return client
 
-  client = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        persistSession: true,
-        detectSessionInUrl: true,
-        flowType: 'pkce'
-      }
-    }
-  )
+  client = createBrowserClient(url, anonKey, {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+    },
+  })
+  cachedUrl = url
 
   return client
 }

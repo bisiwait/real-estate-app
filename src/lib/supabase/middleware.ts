@@ -1,5 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import { getSupabasePublicConfig } from '@/lib/env/supabase-data-plane'
 
 export async function updateSession(request: NextRequest) {
     let response = NextResponse.next({
@@ -8,9 +10,11 @@ export async function updateSession(request: NextRequest) {
         },
     })
 
+    const { url, anonKey } = getSupabasePublicConfig(hostHeaderFromRequest(request))
+
     const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        url,
+        anonKey,
         {
             cookies: {
                 get(name: string) {

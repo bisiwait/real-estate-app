@@ -1,5 +1,6 @@
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import AgentPropertiesList from './AgentPropertiesList'
+import { createAdminClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,12 +9,7 @@ export default async function AgentPropertiesPage({ params, searchParams }: { pa
     const searchParamsObj = await searchParams
     const dict = await getDictionary(locale)
 
-    // We use the admin client here to bypass RLS on the profiles table since public read isn't enabled
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabase = await createAdminClient()
 
     // Fetch Agent Name for Header
     const { data: agent, error: agentError } = await supabase

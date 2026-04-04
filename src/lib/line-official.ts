@@ -1,4 +1,12 @@
 import { unstable_cache } from 'next/cache'
+import {
+  getLineOfficialChannelAccessTokenForHostname,
+  getLineOfficialIdForHostname,
+  getLineOfficialManagerChatUrlOverrideForHostname,
+  getOfficialLineAddFriendUrlForHostname,
+  lineMessagingPlaneForHostname,
+} from '@/lib/env/line-data-plane'
+import { resolveDataPlaneHostname } from '@/lib/env/deployment-target'
 
 /**
  * サイト共通の公式 LINE（友だち追加）URL。
@@ -30,16 +38,27 @@ export function basicIdOrUrlToAddFriendUrl(idOrUrl: string): string {
 
 /** ビルド時・クライアントで参照。env の公開変数とコードデフォルトのみ（トークンは使わない）。 */
 export function getOfficialLineAddFriendUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?.trim()
+  const fromEnv =
+    getOfficialLineAddFriendUrlForHostname(
+      typeof window !== 'undefined' ? window.location.hostname : null
+    ) || process.env.NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?.trim()
   if (fromEnv) return fromEnv
 
-  const id = (process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID || DEFAULT_OFFICIAL_LINE_ID).trim()
+  const id = (
+    getLineOfficialIdForHostname(typeof window !== 'undefined' ? window.location.hostname : null) ||
+    process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID ||
+    DEFAULT_OFFICIAL_LINE_ID
+  ).trim()
   return basicIdOrUrlToAddFriendUrl(id)
 }
 
 /** Basic ID（@xxx）を正規化（クライアント・サーバー共通・公開 env のみ） */
-export function getOfficialLineBasicIdForPaths(): string {
-  const id = (process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID || DEFAULT_OFFICIAL_LINE_ID).trim()
+export function getOfficialLineBasicIdForPaths(hostname?: string | null): string {
+  const id = (
+    getLineOfficialIdForHostname(hostname ?? null) ||
+    process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID ||
+    DEFAULT_OFFICIAL_LINE_ID
+  ).trim()
   return id.startsWith('@') ? id : `@${id.replace(/^@+/g, '')}`
 }
 
@@ -47,16 +66,16 @@ export function getOfficialLineBasicIdForPaths(): string {
  * LINE Official Account Manager の該当公式アカウント画面（ブラウザ）。
  *
  * 旧: `.../account/@xxx/chat/` は LINE 側のルーティング変更等で **404** になることがある。
- * 現状: **アカウントホーム**（`/account/@basicId/`）へ開き、画面上部の **「チャット」タブ**から一覧へ進む。
+ * 現状: **アカウントホーム**（`/account/@basicId/`）へ開き、画面上部の **「チャット」**タブから一覧へ進む。
  *
  * 運用で確実な URL が分かる場合は `NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL` で全文指定。
  * ダッシュボード SSR では `resolveLineOfficialManagerChatUrl()` を推奨（トークンから real basicId を取得）。
  */
-export function getLineOfficialManagerChatUrl(): string {
-  const override = process.env.NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL?.trim()
+export function getLineOfficialManagerChatUrl(hostname?: string | null): string {
+  const override = getLineOfficialManagerChatUrlOverrideForHostname(hostname ?? null)?.trim()
   if (override) return override
 
-  const pathId = getOfficialLineBasicIdForPaths()
+  const pathId = getOfficialLineBasicIdForPaths(hostname ?? null)
   return `https://manager.line.biz/account/${pathId}/`
 }
 
@@ -96,7 +115,22 @@ async function fetchAddFriendUrlFromMessagingApi(
   return basicIdOrUrlToAddFriendUrl(bid)
 }
 
-const getCachedManagerBaseUrlFromBotToken = unstable_cache(
+const cachedManagerBaseUrlFromBotTokenDev = unstable_cache(
+  async () => {
+    const token =
+      process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN_DEV?.trim() ||
+      process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+    if (!token) return null
+    const bid = await fetchBotInfoBasicId(token)
+    if (!bid) return null
+    const pathId = bid.startsWith('@') ? bid : `@${bid.replace(/^@+/g, '')}`
+    return `https://manager.line.biz/account/${pathId}/`
+  },
+  ['line-official-manager-base-from-bot-info', 'dev'],
+  { revalidate: 3600 }
+)
+
+const cachedManagerBaseUrlFromBotTokenProd = unstable_cache(
   async () => {
     const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
     if (!token) return null
@@ -105,44 +139,66 @@ const getCachedManagerBaseUrlFromBotToken = unstable_cache(
     const pathId = bid.startsWith('@') ? bid : `@${bid.replace(/^@+/g, '')}`
     return `https://manager.line.biz/account/${pathId}/`
   },
-  ['line-official-manager-base-from-bot-info'],
+  ['line-official-manager-base-from-bot-info', 'prod'],
   { revalidate: 3600 }
 )
 
 /** サーバー専用。env 上書き → bot/info の Basic ID → 公開 env / デフォルトの順 */
-export async function resolveLineOfficialManagerChatUrl(): Promise<string> {
-  const override = process.env.NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL?.trim()
+export async function resolveLineOfficialManagerChatUrl(hostname?: string | null): Promise<string> {
+  const host = resolveDataPlaneHostname(hostname ?? null)
+  const override = getLineOfficialManagerChatUrlOverrideForHostname(host)?.trim()
   if (override) return override
 
-  const fromApi = await getCachedManagerBaseUrlFromBotToken()
+  const plane = lineMessagingPlaneForHostname(host)
+  const fromApi =
+    plane === 'dev'
+      ? await cachedManagerBaseUrlFromBotTokenDev()
+      : await cachedManagerBaseUrlFromBotTokenProd()
   if (fromApi) return fromApi
 
-  return getLineOfficialManagerChatUrl()
+  return getLineOfficialManagerChatUrl(host)
 }
 
-const getCachedAddFriendUrlFromBotToken = unstable_cache(
+const cachedAddFriendUrlFromBotTokenDev = unstable_cache(
+  async () => {
+    const token =
+      process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN_DEV?.trim() ||
+      process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+    if (!token) return null
+    return fetchAddFriendUrlFromMessagingApi(token)
+  },
+  ['line-official-add-friend-from-bot-info', 'dev'],
+  { revalidate: 3600 }
+)
+
+const cachedAddFriendUrlFromBotTokenProd = unstable_cache(
   async () => {
     const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
     if (!token) return null
     return fetchAddFriendUrlFromMessagingApi(token)
   },
-  ['line-official-add-friend-from-bot-info'],
+  ['line-official-add-friend-from-bot-info', 'prod'],
   { revalidate: 3600 }
 )
 
 /**
  * サーバー専用。公開 env → Messaging API（basicId）→ コードデフォルトの順で解決する。
  */
-export async function resolveOfficialLineAddFriendUrl(): Promise<string> {
-  const fromEnv = process.env.NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?.trim()
+export async function resolveOfficialLineAddFriendUrl(hostname?: string | null): Promise<string> {
+  const host = resolveDataPlaneHostname(hostname ?? null)
+  const fromEnv = getOfficialLineAddFriendUrlForHostname(host)?.trim()
   if (fromEnv) return fromEnv
 
-  const lineOfficialId = process.env.NEXT_PUBLIC_LINE_OFFICIAL_ID?.trim()
+  const lineOfficialId = getLineOfficialIdForHostname(host)?.trim()
   if (lineOfficialId) return basicIdOrUrlToAddFriendUrl(lineOfficialId)
 
-  const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+  const token = getLineOfficialChannelAccessTokenForHostname(host)
   if (token) {
-    const fromApi = await getCachedAddFriendUrlFromBotToken()
+    const plane = lineMessagingPlaneForHostname(host)
+    const fromApi =
+      plane === 'dev'
+        ? await cachedAddFriendUrlFromBotTokenDev()
+        : await cachedAddFriendUrlFromBotTokenProd()
     if (fromApi) return fromApi
   }
 

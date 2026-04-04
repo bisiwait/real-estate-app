@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { headers } from 'next/headers'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import stripe from '@/lib/stripe'
-
-// RLS をバイパスするためサービスロールキーで Supabase クライアントを作成
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://dummy.supabase.co',
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'dummy_key_for_build'
-)
+import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
+import { getSupabaseServiceRoleConfig } from '@/lib/env/supabase-data-plane'
 
 // -------- ヘルパー --------
 
@@ -23,6 +20,7 @@ function extractSubscriptionId(sub: string | Stripe.Subscription | null): string
  * - stripe_subscription_id / auto_renew は別途試行（カラムがなくても 500 にしない）
  */
 async function activatePremium(
+    supabaseAdmin: SupabaseClient,
     userId: string,
     subscriptionId: string | null,
     trialEnd: number | null
@@ -31,7 +29,6 @@ async function activatePremium(
         ? new Date(trialEnd * 1000).toISOString()
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    // ── 必須フィールド（既存カラム確定分）──
     const { error: coreError } = await supabaseAdmin
         .from('profiles')
         .update({
@@ -44,10 +41,9 @@ async function activatePremium(
 
     if (coreError) {
         console.error('[webhook] activatePremium core update error:', coreError)
-        throw coreError // 必須フィールドの失敗はエラーとして扱う
+        throw coreError
     }
 
-    // ── オプショナルフィールド（カラムがなければ無視）──
     if (subscriptionId) {
         const { error: subError } = await supabaseAdmin
             .from('profiles')
@@ -55,7 +51,6 @@ async function activatePremium(
             .eq('id', userId)
 
         if (subError) {
-            // カラム未作成の場合でも 500 にしない
             console.warn('[webhook] activatePremium optional fields skipped:', subError.message)
         }
     }
@@ -63,7 +58,7 @@ async function activatePremium(
     console.log(`[webhook] profiles updated to premium for user: ${userId}`)
 }
 
-async function deactivatePremium(userId: string) {
+async function deactivatePremium(supabaseAdmin: SupabaseClient, userId: string) {
     const { error: coreError } = await supabaseAdmin
         .from('profiles')
         .update({
@@ -79,7 +74,6 @@ async function deactivatePremium(userId: string) {
         throw coreError
     }
 
-    // オプショナルフィールドのクリア
     await supabaseAdmin
         .from('profiles')
         .update({ stripe_subscription_id: null, auto_renew: false })
@@ -89,7 +83,10 @@ async function deactivatePremium(userId: string) {
         })
 }
 
-async function findUserBySubscriptionId(subscriptionId: string): Promise<string | null> {
+async function findUserBySubscriptionId(
+    supabaseAdmin: SupabaseClient,
+    subscriptionId: string
+): Promise<string | null> {
     const { data, error } = await supabaseAdmin
         .from('profiles')
         .select('id')
@@ -104,13 +101,15 @@ async function findUserBySubscriptionId(subscriptionId: string): Promise<string 
 }
 
 /** payments テーブルへのログ記録（失敗しても 500 にしない）*/
-async function logPayment(params: {
-    userId: string
-    sessionId: string
-    subscriptionId: string | null
-    amount: number
-}) {
-    // まず最小限のカラムで insert
+async function logPayment(
+    supabaseAdmin: SupabaseClient,
+    params: {
+        userId: string
+        sessionId: string
+        subscriptionId: string | null
+        amount: number
+    }
+) {
     const { error } = await supabaseAdmin.from('payments').insert({
         user_id: params.userId,
         stripe_session_id: params.sessionId,
@@ -124,7 +123,6 @@ async function logPayment(params: {
         return
     }
 
-    // stripe_subscription_id カラムがある場合のみ更新
     if (params.subscriptionId) {
         await supabaseAdmin
             .from('payments')
@@ -152,7 +150,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
     }
 
-    // ----- 署名検証 -----
     let event: Stripe.Event
     try {
         event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret)
@@ -164,13 +161,21 @@ export async function POST(req: Request) {
 
     console.log(`[webhook] Received event: ${event.type} (${event.id})`)
 
+    const hdrs = await headers()
+    let supabaseAdmin: SupabaseClient
+    try {
+        const { url, serviceRoleKey } = getSupabaseServiceRoleConfig(hostHeaderFromHeaders(hdrs))
+        supabaseAdmin = createClient(url, serviceRoleKey)
+    } catch (e) {
+        console.error('[webhook] Supabase admin client:', e)
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
     try {
         switch (event.type) {
-
             case 'checkout.session.completed': {
                 const session = event.data.object as Stripe.Checkout.Session
 
-                // userId の取得: metadata.userId → client_reference_id の順で試みる
                 const userId = session.metadata?.userId ?? session.client_reference_id
 
                 if (!userId) {
@@ -180,13 +185,11 @@ export async function POST(req: Request) {
 
                 const subscriptionId = extractSubscriptionId(session.subscription)
 
-                // trial_end を Stripe から取得（失敗しても処理を続行）
                 let trialEnd: number | null = null
                 if (subscriptionId) {
                     try {
                         const sub = await stripe.subscriptions.retrieve(subscriptionId)
                         trialEnd = sub.trial_end
-                        // トライアル付きサブスクなら「初回トライアル消化済み」にする（再 Checkout で trial を付けない）
                         if (sub.trial_end != null) {
                             const { error: trialFlagError } = await supabaseAdmin
                                 .from('profiles')
@@ -204,9 +207,9 @@ export async function POST(req: Request) {
                     }
                 }
 
-                await activatePremium(userId, subscriptionId, trialEnd)
+                await activatePremium(supabaseAdmin, userId, subscriptionId, trialEnd)
 
-                await logPayment({
+                await logPayment(supabaseAdmin, {
                     userId,
                     sessionId: session.id,
                     subscriptionId,
@@ -229,7 +232,6 @@ export async function POST(req: Request) {
                 const periodEnd = new Date(sub.current_period_end * 1000).toISOString()
 
                 if (sub.status === 'active' || sub.status === 'trialing') {
-                    // cancel_at_period_end=true のとき auto_renew=false にして「解約予約」状態を記録
                     const { error } = await supabaseAdmin
                         .from('profiles')
                         .update({
@@ -248,7 +250,6 @@ export async function POST(req: Request) {
                         )
                     }
 
-                    // auto_renew カラムが存在する場合のみ更新（オプショナル）
                     await supabaseAdmin
                         .from('profiles')
                         .update({ auto_renew: !sub.cancel_at_period_end })
@@ -261,8 +262,7 @@ export async function POST(req: Request) {
                     sub.status === 'unpaid' ||
                     sub.status === 'incomplete_expired'
                 ) {
-                    // 支払不能・キャンセル完了などはフリーに戻す（past_due は猶予のため維持）
-                    await deactivatePremium(userId)
+                    await deactivatePremium(supabaseAdmin, userId)
                     console.log(`[webhook] Premium deactivated (subscription ${sub.status}) for user: ${userId}`)
                 }
                 break
@@ -270,14 +270,15 @@ export async function POST(req: Request) {
 
             case 'customer.subscription.deleted': {
                 const sub = event.data.object as Stripe.Subscription
-                const userId = sub.metadata?.userId ?? await findUserBySubscriptionId(sub.id)
+                const userId =
+                    sub.metadata?.userId ?? (await findUserBySubscriptionId(supabaseAdmin, sub.id))
 
                 if (!userId) {
                     console.warn('[webhook] customer.subscription.deleted: userId not found')
                     break
                 }
 
-                await deactivatePremium(userId)
+                await deactivatePremium(supabaseAdmin, userId)
                 console.log(`[webhook] ✅ Premium deactivated for user: ${userId}`)
                 break
             }
@@ -290,7 +291,6 @@ export async function POST(req: Request) {
             }
 
             default:
-                // 200 を返して Stripe のリトライを防ぐ
                 break
         }
     } catch (err: unknown) {

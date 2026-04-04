@@ -19,6 +19,7 @@ import {
 } from '@/lib/inquiry-line-return-cookie'
 import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cookie'
 import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
+import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -404,7 +405,7 @@ export default function InquiryForm({
   })
   const [preferredReplyChannel, setPreferredReplyChannel] = useState<'email' | 'line'>('email')
   const { isSmartphone } = useDeviceType()
-  const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim() || undefined
+  const liffId = getBrowserLineLiffId()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -923,7 +924,7 @@ export default function InquiryForm({
         if (!liffId) {
           const msg =
             p.inquiry_liff_env_required ??
-            '「LINEで受け取る」を利用するにはサイトに LIFF ID（NEXT_PUBLIC_LINE_LIFF_ID）の設定が必要です。'
+            '「LINEで受け取る」を利用するには LIFF ID の設定が必要です（本番: NEXT_PUBLIC_LINE_LIFF_ID、開発ホスト用: NEXT_PUBLIC_LINE_LIFF_ID_DEV）。'
           inquiryDebugAlert('設定', msg)
           setError(msg)
           setSubmitPhase('idle')

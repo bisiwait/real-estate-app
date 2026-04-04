@@ -3,6 +3,11 @@ import { hasUsableLineContact } from '@/lib/line-contact-url'
 import { resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import {
+  getLineOfficialChannelAccessTokenForHostname,
+  getLineOfficialChannelSecretForHostname,
+} from '@/lib/env/line-data-plane'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,10 +16,10 @@ const UUID_RE =
 
 const INTENT_TTL_HOURS = 72
 
-function isOfficialLineRoutingEnabled(): boolean {
+function isOfficialLineRoutingEnabled(host: string | null): boolean {
   return Boolean(
-    process.env.LINE_OFFICIAL_CHANNEL_SECRET?.trim() &&
-      process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+    getLineOfficialChannelSecretForHostname(host)?.trim() &&
+      getLineOfficialChannelAccessTokenForHostname(host)?.trim()
   )
 }
 
@@ -28,10 +33,7 @@ function isUniqueViolation(err: { code?: string; message?: string }): boolean {
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('inquiry-logs/line: SUPABASE_SERVICE_ROLE_KEY is not set')
-      return NextResponse.json({ error: 'Server misconfigured' }, { status: 503 })
-    }
+    const host = hostHeaderFromRequest(req)
 
     let body: { property_id?: string }
     try {
@@ -55,7 +57,7 @@ export async function POST(req: Request) {
     }
 
     const admin = await createAdminClient()
-    const officialOn = isOfficialLineRoutingEnabled()
+    const officialOn = isOfficialLineRoutingEnabled(host)
 
     const { data: prop, error: propErr } = await admin
       .from('properties')
@@ -132,7 +134,7 @@ export async function POST(req: Request) {
       })
 
       if (!intErr) {
-        const add_friend_url = await resolveOfficialLineAddFriendUrl()
+        const add_friend_url = await resolveOfficialLineAddFriendUrl(host)
         return NextResponse.json({
           ok: true,
           official_routing: {

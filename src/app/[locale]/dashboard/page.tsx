@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import CreditSection from '@/components/dashboard/CreditSection'
@@ -24,6 +25,7 @@ import {
   LINE_OFFICIAL_ACCOUNT_APP_IOS,
   LINE_OFFICIAL_ACCOUNT_APP_ANDROID,
 } from '@/lib/line-official'
+import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 
 export default async function DashboardPage({
     searchParams,
@@ -119,7 +121,8 @@ export default async function DashboardPage({
         console.error('Error fetching inquiry_logs (leads):', leadsError)
     }
 
-    const lineOfficialManagerChatUrl = await resolveLineOfficialManagerChatUrl()
+    const hdrs = await headers()
+    const lineOfficialManagerChatUrl = await resolveLineOfficialManagerChatUrl(hostHeaderFromHeaders(hdrs))
 
     const stats = {
         total: properties?.length || 0,

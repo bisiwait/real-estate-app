@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chonburi Home（real_estate）
 
-## Getting Started
+Next.js（App Router）の不動産掲載・問い合わせアプリです。
 
-First, run the development server:
+## 必要環境
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js（プロジェクトに合わせた LTS 推奨）
+- npm（このリポジトリは `npm` を想定）
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 初回セットアップ
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. 依存関係のインストール
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   npm install
+   ```
 
-## Learn More
+2. 環境変数
 
-To learn more about Next.js, take a look at the following resources:
+   リポジトリ直下の `.env.example` をコピーして `.env.local` を作成し、値を埋めます。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   cp .env.example .env.local
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   **`.env.local` とサーバー専用シークレット（`SUPABASE_SERVICE_ROLE_KEY` 等）は Git にコミットしないでください。**
 
-## Deploy on Vercel
+3. 開発サーバー
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。
+
+4. 本番ビルド確認（任意）
+
+   ```bash
+   npm run build
+   npm run start
+   ```
+
+## 環境の切り替え（本番 DB / 開発 DB）
+
+アプリは **リクエストのホスト名** に応じて、Supabase・LINE（LIFF / Messaging API）の接続先を切り替えられます。
+
+### 開発扱いになるホスト
+
+次のとき **開発用** の変数（`*_DEV` サフィックス）が使われます。
+
+- `localhost`
+- `127.0.0.1`
+- `::1`
+- `dev.chonburihome.com`（完全一致）
+
+それ以外（例: `chonburihome.com`、Vercel の本番ドメイン）は **本番用** の `NEXT_PUBLIC_SUPABASE_URL` 等が使われます。
+
+### 設定のルール
+
+| 用途 | 本番（既定） | 開発ホスト用（任意） |
+|------|-------------|----------------------|
+| Supabase URL / anon | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `NEXT_PUBLIC_SUPABASE_URL_DEV`, `NEXT_PUBLIC_SUPABASE_ANON_KEY_DEV` |
+| Supabase サービスロール | `SUPABASE_SERVICE_ROLE_KEY` | `SUPABASE_SERVICE_ROLE_KEY_DEV` |
+| LIFF ID | `NEXT_PUBLIC_LINE_LIFF_ID` | `NEXT_PUBLIC_LINE_LIFF_ID_DEV` |
+| 公式 LINE 友だち追加 URL 等 | `NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL` 等 | `NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL_DEV` 等 |
+| Messaging API | `LINE_OFFICIAL_CHANNEL_SECRET`, `LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN` | `LINE_OFFICIAL_CHANNEL_SECRET_DEV`, `LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN_DEV` |
+
+開発ホストと判定されたが `*_DEV` の Supabase ペアが **未設定** の場合は、コンソールに警告を出し **本番 Supabase** にフォールバックします（誤って空の開発 DB に繋がないため）。
+
+### 実装の置き場所
+
+- ホスト判定: `src/lib/env/deployment-target.ts`（`isDevelopmentDeploymentHost`, `resolveDataPlaneHostname` など）
+- Supabase: `src/lib/env/supabase-data-plane.ts`
+- LINE / LIFF: `src/lib/env/line-data-plane.ts`
+
+### ローカルでの推奨
+
+`.env.local` では次を推奨します。
+
+- `NEXT_PUBLIC_SITE_URL=http://localhost:3000`  
+  → ISR / `unstable_cache` など **HTTP リクエストが無い処理** でも「開発扱い」で Supabase を選びやすくなります。
+
+### Vercel の例
+
+- **本番プロジェクト**: 本番用の `NEXT_PUBLIC_*` と `SUPABASE_*` のみ。`*_DEV` は空でよい。
+- **開発用デプロイ（dev.chonburihome.com）**: 上表の `*_DEV` にステージング用 Supabase / LINE を設定。
+
+## その他コマンド
+
+| コマンド | 説明 |
+|----------|------|
+| `npm run lint` | ESLint |
+| `npm run icons:generate` | タブ用アイコン生成（`scripts/`） |
+
+## English summary
+
+- Copy `.env.example` to `.env.local` and fill in secrets (never commit `.env.local`).
+- **Dev hosts** `localhost`, `127.0.0.1`, `::1`, and `dev.chonburihome.com` use optional `*_DEV` Supabase/LIFF/LINE env vars when set; otherwise production keys are used (with a dev warning).
+- Set `NEXT_PUBLIC_SITE_URL=http://localhost:3000` locally so background jobs without a `Host` header still resolve the dev data plane.
+- See `src/lib/env/deployment-target.ts` and `supabase-data-plane.ts` for details.

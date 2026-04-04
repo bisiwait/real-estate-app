@@ -1,13 +1,21 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import type { NextRequest, NextResponse } from 'next/server'
 import { createClient as createBaseClient } from '@supabase/supabase-js'
+import { hostHeaderFromHeaders, hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import { getSupabasePublicConfig, getSupabaseServiceRoleConfig } from '@/lib/env/supabase-data-plane'
+
+async function supabasePublicFromHeaders() {
+    const h = await headers()
+    return getSupabasePublicConfig(hostHeaderFromHeaders(h))
+}
 
 /**
  * Route Handler 用。exchangeCodeForSession が Set-Cookie する先を NextResponse に載せる（cookies() だけだとリダイレクトに乗らないことがある）。
  */
 export function createRouteHandlerSupabaseClient(request: NextRequest, response: NextResponse) {
-    return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    const { url, anonKey } = getSupabasePublicConfig(hostHeaderFromRequest(request))
+    return createServerClient(url, anonKey, {
         cookies: {
             getAll() {
                 return request.cookies.getAll()
@@ -27,10 +35,11 @@ export function createRouteHandlerSupabaseClient(request: NextRequest, response:
  */
 export async function createClient() {
     const cookieStore = await cookies()
+    const { url, anonKey } = await supabasePublicFromHeaders()
 
     return createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        url,
+        anonKey,
         {
             cookies: {
                 getAll() {
@@ -55,8 +64,7 @@ export async function createClient() {
  * Use this only in server-side contexts where you need to bypass RLS.
  */
 export async function createAdminClient() {
-    return createBaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const h = await headers()
+    const { url, serviceRoleKey } = getSupabaseServiceRoleConfig(hostHeaderFromHeaders(h))
+    return createBaseClient(url, serviceRoleKey)
 }

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { formatLiffError } from '@/lib/utils/inquiry-errors'
 import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
+import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
 
 const LOCALES = new Set(['jp', 'en', 'th'])
 const PROP_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -279,9 +280,11 @@ export default function LineInquiryBridgePage() {
   }, [safeFallback])
 
   useEffect(() => {
-    const liffId = process.env.NEXT_PUBLIC_LINE_LIFF_ID?.trim()
+    const liffId = getBrowserLineLiffId()
     if (!liffId) {
-      setMsg('LIFF ID が設定されていません（本番の環境変数 NEXT_PUBLIC_LINE_LIFF_ID）。')
+      setMsg(
+        'LIFF ID が設定されていません（NEXT_PUBLIC_LINE_LIFF_ID、または開発ホスト向け NEXT_PUBLIC_LINE_LIFF_ID_DEV）。'
+      )
       setUiKind('action')
       return
     }

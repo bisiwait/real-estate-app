@@ -1,16 +1,18 @@
 import { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
-import { createStaticClient } from '@/lib/supabase/static'
+import { createStaticClientForHostname } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
+import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 
 export const revalidate = 60
 
-async function fetchProperty(id: string) {
-    const supabase = createStaticClient()
+async function fetchProperty(id: string, hostname: string | null) {
+    const supabase = createStaticClientForHostname(hostname)
     const embedded = await supabase
         .from('properties')
         .select('*, area:areas(name, slug, region:regions(name)), project:projects(*, developers(name)), developers(name)')
@@ -31,9 +33,11 @@ export async function generateMetadata(
     { params }: { params: Promise<{ locale: string; id: string }> }
 ): Promise<Metadata> {
     const { locale, id } = await params
+    const hdrs = await headers()
+    const hostname = hostHeaderFromHeaders(hdrs)
 
     try {
-        const property = await fetchProperty(id)
+        const property = await fetchProperty(id, hostname)
 
         if (!property) {
             return {
@@ -114,13 +118,15 @@ export default async function Page({
     params: Promise<{ locale: string; id: string }>
 }) {
     const { id } = await params
-    const property = await fetchProperty(id)
+    const hdrs = await headers()
+    const hostname = hostHeaderFromHeaders(hdrs)
+    const property = await fetchProperty(id, hostname)
 
     if (!property) {
         notFound()
     }
 
-    const officialLineAddFriendUrl = await resolveOfficialLineAddFriendUrl()
+    const officialLineAddFriendUrl = await resolveOfficialLineAddFriendUrl(hostname)
 
     return (
         <Suspense
