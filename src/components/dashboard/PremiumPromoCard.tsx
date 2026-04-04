@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { Crown, Building2, Sparkles, FileText, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Crown, Building2, Sparkles, FileText, ArrowRight, CheckCircle2, MessageCircle } from 'lucide-react'
 
 interface PremiumPromoCardProps {
     plan?: string
@@ -39,6 +39,9 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
 
             {/* Features List */}
             <div className="p-5 space-y-4">
+                <p className={`text-[10px] font-bold leading-relaxed ${isPremium ? 'text-slate-400' : 'text-amber-900/80'}`}>
+                    （プレセール物件掲載、AI自動翻訳・紹介文、高品質PDF出力）
+                </p>
                 <div className="space-y-3">
                     <BenefitItem
                         icon={<Building2 className="w-4 h-4" />}
@@ -56,6 +59,12 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
                         icon={<FileText className="w-4 h-4" />}
                         title="高品質PDF出力"
                         description="プロ仕様の販売チラシを1クリック作成"
+                        isPremium={isPremium}
+                    />
+                    <BenefitItem
+                        icon={<MessageCircle className="w-4 h-4" />}
+                        title="LINE問い合わせ"
+                        description="LINEからの問い合わせを受け取れます"
                         isPremium={isPremium}
                     />
                 </div>
