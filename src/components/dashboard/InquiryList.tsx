@@ -53,7 +53,7 @@ interface InquiryListProps {
   agentDisplayName?: string | null
   /** 公式 LINE Push 返信（プレミアム）。false のときはメール経路のみ */
   viewerPremiumLineInquiry?: boolean
-  /** LINE Official Account Manager のチャット一覧 URL（Basic ID は NEXT_PUBLIC_LINE_OFFICIAL_ID） */
+  /** LINE Official Account Manager の該当アカウント画面 URL（アカウントホーム。チャットは画面上部タブから） */
   lineOfficialManagerChatUrl: string
   lineOfficialAccountAppIosUrl: string
   lineOfficialAccountAppAndroidUrl: string
@@ -672,7 +672,9 @@ export default function InquiryList({
                               <ExternalLink className="h-4 w-4 shrink-0" />
                             </a>
                             <p className="mt-2 text-[10px] font-semibold text-slate-500">
-                              チャット一覧から、上記の LINE ユーザーIDの友だちとのトークを開いてください（個別トークへの直リンクは提供されていません）。
+                              管理画面が開いたら画面上部の<strong>「チャット」</strong>タブを選び、一覧から上記 LINE
+                              ユーザーIDの友だちとのトークを開いてください（個別トークへの直リンクは LINE
+                              側で提供されていません）。
                             </p>
                           </div>
 

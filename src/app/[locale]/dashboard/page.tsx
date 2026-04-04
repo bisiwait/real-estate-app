@@ -20,7 +20,7 @@ import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
 import {
-  getLineOfficialManagerChatUrl,
+  resolveLineOfficialManagerChatUrl,
   LINE_OFFICIAL_ACCOUNT_APP_IOS,
   LINE_OFFICIAL_ACCOUNT_APP_ANDROID,
 } from '@/lib/line-official'
@@ -118,6 +118,8 @@ export default async function DashboardPage({
     if (leadsError) {
         console.error('Error fetching inquiry_logs (leads):', leadsError)
     }
+
+    const lineOfficialManagerChatUrl = await resolveLineOfficialManagerChatUrl()
 
     const stats = {
         total: properties?.length || 0,
@@ -239,7 +241,7 @@ export default async function DashboardPage({
                             initialLeads={leads}
                             locale={locale}
                             activePlan={activePlan}
-                            lineOfficialManagerChatUrl={getLineOfficialManagerChatUrl()}
+                            lineOfficialManagerChatUrl={lineOfficialManagerChatUrl}
                             lineOfficialAccountAppIosUrl={LINE_OFFICIAL_ACCOUNT_APP_IOS}
                             lineOfficialAccountAppAndroidUrl={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
                         />

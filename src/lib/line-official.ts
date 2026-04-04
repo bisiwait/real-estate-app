@@ -44,12 +44,20 @@ export function getOfficialLineBasicIdForPaths(): string {
 }
 
 /**
- * LINE Official Account Manager のチャット一覧（ブラウザ）。
- * 特定ユーザーとのトークへ直接飛ぶ公開 URL は提供されないため、一覧から該当トークを開いてください。
+ * LINE Official Account Manager の該当公式アカウント画面（ブラウザ）。
+ *
+ * 旧: `.../account/@xxx/chat/` は LINE 側のルーティング変更等で **404** になることがある。
+ * 現状: **アカウントホーム**（`/account/@basicId/`）へ開き、画面上部の **「チャット」タブ**から一覧へ進む。
+ *
+ * 運用で確実な URL が分かる場合は `NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL` で全文指定。
+ * ダッシュボード SSR では `resolveLineOfficialManagerChatUrl()` を推奨（トークンから real basicId を取得）。
  */
 export function getLineOfficialManagerChatUrl(): string {
+  const override = process.env.NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL?.trim()
+  if (override) return override
+
   const pathId = getOfficialLineBasicIdForPaths()
-  return `https://manager.line.biz/account/${pathId}/chat/`
+  return `https://manager.line.biz/account/${pathId}/`
 }
 
 /** 外出先対応用「LINE公式アカウント」アプリ（LY Corporation） */
@@ -58,9 +66,8 @@ export const LINE_OFFICIAL_ACCOUNT_APP_IOS =
 export const LINE_OFFICIAL_ACCOUNT_APP_ANDROID =
   'https://play.google.com/store/apps/details?id=com.linecorp.lineoa'
 
-async function fetchAddFriendUrlFromMessagingApi(
-  accessToken: string
-): Promise<string | null> {
+/** Messaging API の bot/info から Basic ID のみ取得 */
+async function fetchBotInfoBasicId(accessToken: string): Promise<string | null> {
   try {
     const res = await fetch('https://api.line.me/v2/bot/info', {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -74,13 +81,43 @@ async function fetchAddFriendUrlFromMessagingApi(
       return null
     }
     const data = (await res.json()) as { basicId?: string }
-    const bid = data.basicId?.trim()
-    if (!bid) return null
-    return basicIdOrUrlToAddFriendUrl(bid)
+    return data.basicId?.trim() || null
   } catch (e) {
     console.warn('[line-official] bot/info error', e)
     return null
   }
+}
+
+async function fetchAddFriendUrlFromMessagingApi(
+  accessToken: string
+): Promise<string | null> {
+  const bid = await fetchBotInfoBasicId(accessToken)
+  if (!bid) return null
+  return basicIdOrUrlToAddFriendUrl(bid)
+}
+
+const getCachedManagerBaseUrlFromBotToken = unstable_cache(
+  async () => {
+    const token = process.env.LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?.trim()
+    if (!token) return null
+    const bid = await fetchBotInfoBasicId(token)
+    if (!bid) return null
+    const pathId = bid.startsWith('@') ? bid : `@${bid.replace(/^@+/g, '')}`
+    return `https://manager.line.biz/account/${pathId}/`
+  },
+  ['line-official-manager-base-from-bot-info'],
+  { revalidate: 3600 }
+)
+
+/** サーバー専用。env 上書き → bot/info の Basic ID → 公開 env / デフォルトの順 */
+export async function resolveLineOfficialManagerChatUrl(): Promise<string> {
+  const override = process.env.NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL?.trim()
+  if (override) return override
+
+  const fromApi = await getCachedManagerBaseUrlFromBotToken()
+  if (fromApi) return fromApi
+
+  return getLineOfficialManagerChatUrl()
 }
 
 const getCachedAddFriendUrlFromBotToken = unstable_cache(

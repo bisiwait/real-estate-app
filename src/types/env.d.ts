@@ -22,5 +22,10 @@ namespace NodeJS {
         RESEND_FROM?: string;
         /** next.config の旧ホスト → 本番への 308 用（カンマ区切りホスト名） */
         LEGACY_REDIRECT_HOSTS?: string;
+        /**
+         * 任意。LINE Official Account Manager の「続きはチャットで」ボタン先を全文指定。
+         * 未設定時は `/account/@basicId/`（アカウントホーム）。旧 `/chat/` は 404 になり得る。
+         */
+        NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL?: string;
     }
 }
