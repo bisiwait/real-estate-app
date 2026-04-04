@@ -1,3 +1,8 @@
+/**
+ * Stripe Checkout（サブスク）。`line_items[].price` はダッシュボードの Price ID を参照するため、
+ * 通貨は各 Price の設定に従う。日本円で課金する場合は Stripe 上で JPY の recurring Price を作成し、
+ * STRIPE_PRICE_ID_MONTHLY / STRIPE_PRICE_ID_YEARLY（または NEXT_PUBLIC_*）をそれらに差し替えること。
+ */
 import { NextResponse } from 'next/server'
 import stripe from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
