@@ -25,6 +25,18 @@ export function isPremiumActive(profile: any | null): boolean {
 /** UI・機能ゲート用。実質「契約期内のプレミアム」。 */
 export const isPremium = isPremiumActive;
 
+/** DB がプレミアムかつ current_period_end が過去（契約終了）。サイドバー用。 */
+export function isPremiumSubscriptionExpired(profile: any | null): boolean {
+    if (!profile || profile.is_admin) return false;
+    const premiumFlag = profile.plan_type === 'premium' || profile.plan === 'premium';
+    if (!premiumFlag) return false;
+    const end = profile.current_period_end;
+    if (!end || typeof end !== 'string') return false;
+    const t = new Date(end).getTime();
+    if (Number.isNaN(t)) return false;
+    return t <= Date.now();
+}
+
 export function getEffectivePlan(profile: any | null): string {
     if (!profile) return 'free';
     if (profile.is_admin) return profile.plan_type || profile.plan || 'premium';

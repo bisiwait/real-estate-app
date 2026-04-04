@@ -13,8 +13,9 @@ import {
     CheckCircle2
 } from 'lucide-react'
 import PremiumPromoCard from '@/components/dashboard/PremiumPromoCard'
+import PlanExpiredNotice from '@/components/dashboard/PlanExpiredNotice'
 import SubscriptionStatus from '@/components/dashboard/SubscriptionStatus'
-import { getEffectivePlan } from '@/lib/utils/plan'
+import { getEffectivePlan, isPremiumSubscriptionExpired } from '@/lib/utils/plan'
 import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
@@ -171,12 +172,14 @@ export default async function DashboardPage({
                     {/* Stats Sidebar — スマホでは要望ボタンはページ下部（メインの下）へ */}
                     <div className="order-1 lg:col-span-1 space-y-6">
                         {/* Subscription Status (Trial countdown / Portal link) */}
-                        <SubscriptionStatus profile={profile} locale={locale} />
+                        <SubscriptionStatus profile={profile} />
 
                         {/* プラン表示（フリープラン時のみ。プレミアムは別カード） */}
                         {activePlan !== 'premium' && (
                             <CreditSection profile={profile} />
                         )}
+
+                        {isPremiumSubscriptionExpired(profile) && <PlanExpiredNotice />}
 
                         {/* Premium Promo Card (Free users only) */}
                         {activePlan !== 'premium' && (
