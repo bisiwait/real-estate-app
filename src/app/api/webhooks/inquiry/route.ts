@@ -6,6 +6,7 @@ import { getResendFromAddress } from '@/lib/resend-from'
 import { lineOfficialPushText } from '@/lib/line-official-push'
 import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
 import { getLineOfficialChannelAccessTokenForHostname } from '@/lib/env/line-data-plane'
+import { fetchAgentLineAccessToken } from '@/lib/line-agent-credentials'
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'dummy_key_for_build')
 
@@ -153,7 +154,11 @@ export async function POST(req: NextRequest) {
 
     /** 問い合わせ者への控えメールは /api/inquiries/confirm-email（フォーム送信直後）で送る */
 
-    const lineToken = getLineOfficialChannelAccessTokenForHostname(hostHeaderFromRequest(req))
+    const ownerToken = property.user_id
+      ? await fetchAgentLineAccessToken(supabase, property.user_id as string)
+      : null
+    const lineToken =
+      ownerToken || getLineOfficialChannelAccessTokenForHostname(hostHeaderFromRequest(req))
     let linePushOk = false
     let linePushError: string | null = null
 

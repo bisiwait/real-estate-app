@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { createStaticClientForHostname } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
-import { resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
+import { basicIdOrUrlToAddFriendUrl, resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 
 export const revalidate = 60
@@ -126,7 +126,19 @@ export default async function Page({
         notFound()
     }
 
-    const officialLineAddFriendUrl = await resolveOfficialLineAddFriendUrl(hostname)
+    let officialLineAddFriendUrl = await resolveOfficialLineAddFriendUrl(hostname)
+    if (property.user_id) {
+        const supabase = createStaticClientForHostname(hostname)
+        const { data: ownerProfile } = await supabase
+            .from('profiles')
+            .select('line_basic_id')
+            .eq('id', property.user_id as string)
+            .maybeSingle()
+        const bid = ownerProfile?.line_basic_id?.trim()
+        if (bid) {
+            officialLineAddFriendUrl = basicIdOrUrlToAddFriendUrl(bid)
+        }
+    }
 
     return (
         <Suspense

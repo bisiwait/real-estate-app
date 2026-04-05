@@ -1,5 +1,5 @@
 /**
- * 公式 LINE（Messaging API）の Push 送信。LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN を使用。
+ * 公式 LINE（Messaging API）の Push 送信。Bearer は呼び出し元で渡す（エージェントごとのチャネルアクセストークンまたはサイト共通トークン）。
  */
 export async function lineOfficialPushText(
   toUserId: string,

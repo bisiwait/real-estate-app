@@ -21,6 +21,7 @@ import {
     Crown,
     Check,
     MessageCircle,
+    KeyRound,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -69,6 +70,9 @@ export default function ProfileForm() {
     const [success, setSuccess] = useState<string | null>(null)
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+    const [lineBasicId, setLineBasicId] = useState('')
+    const [lineChannelAccessToken, setLineChannelAccessToken] = useState('')
+    const [lineChannelSecret, setLineChannelSecret] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
     const router = useRouter()
     const params = useParams()
@@ -106,6 +110,15 @@ export default function ProfileForm() {
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
                 }
+                setLineBasicId((data as { line_basic_id?: string | null }).line_basic_id?.trim() || '')
+
+                const { data: lineCred } = await supabase
+                    .from('profile_line_messaging_credentials')
+                    .select('line_channel_access_token, line_channel_secret')
+                    .eq('user_id', user.id)
+                    .maybeSingle()
+                setLineChannelAccessToken(lineCred?.line_channel_access_token?.trim() || '')
+                setLineChannelSecret(lineCred?.line_channel_secret?.trim() || '')
             }
             setLoading(false)
         }
@@ -218,11 +231,34 @@ export default function ProfileForm() {
                     bio: formData.bio,
                     website: formData.website,
                     avatar_url: finalAvatarUrl,
+                    line_basic_id: lineBasicId.trim() || null,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id)
 
             if (error) throw error
+
+            const tok = lineChannelAccessToken.trim()
+            const sec = lineChannelSecret.trim()
+            if (!tok && !sec) {
+                const { error: delCredErr } = await supabase
+                    .from('profile_line_messaging_credentials')
+                    .delete()
+                    .eq('user_id', user.id)
+                if (delCredErr) throw delCredErr
+            } else {
+                const { error: credErr } = await supabase.from('profile_line_messaging_credentials').upsert(
+                    {
+                        user_id: user.id,
+                        line_channel_access_token: tok || null,
+                        line_channel_secret: sec || null,
+                        updated_at: new Date().toISOString(),
+                    },
+                    { onConflict: 'user_id' }
+                )
+                if (credErr) throw credErr
+            }
+
             setSuccess('プロフィールを更新しました。')
             window.scrollTo({ top: 0, behavior: 'smooth' })
         } catch (err: any) {
@@ -395,6 +431,63 @@ export default function ProfileForm() {
                             </Link>
                         </div>
                     )}
+                </section>
+
+                <section className="rounded-[2.5rem] border border-slate-200 bg-white p-6 md:p-8 shadow-sm space-y-5">
+                    <h3 className="text-sm font-black text-navy-secondary flex items-center gap-2">
+                        <KeyRound className="h-5 w-5 text-[#06C755]" />
+                        LINE公式アカウント連携
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                        ご自身の LINE 公式アカウントで問い合わせを受け付ける場合に設定します。
+                        物件ページの「LINEで問い合わせ」は Basic ID から友だち追加 URL（line.me/R/ti/p/…）を生成します。
+                        ダッシュボードからの Push 返信にはチャネルアクセストークンが必要です。チャネルシークレットは Webhook 署名検証など将来の拡張用に保存されます。
+                    </p>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                Basic ID
+                            </label>
+                            <input
+                                type="text"
+                                value={lineBasicId}
+                                onChange={(e) => setLineBasicId(e.target.value)}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
+                                placeholder="@your_basic_id"
+                                autoComplete="off"
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1 ml-1">例: @abc1234（@ から入力してください）</p>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                チャネルアクセストークン（長期）
+                            </label>
+                            <input
+                                type="password"
+                                value={lineChannelAccessToken}
+                                onChange={(e) => setLineChannelAccessToken(e.target.value)}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all font-mono"
+                                placeholder="Messaging API のチャネルアクセストークン"
+                                autoComplete="off"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                チャネルシークレット
+                            </label>
+                            <input
+                                type="password"
+                                value={lineChannelSecret}
+                                onChange={(e) => setLineChannelSecret(e.target.value)}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all font-mono"
+                                placeholder="チャネルシークレット"
+                                autoComplete="off"
+                            />
+                            <p className="text-[10px] text-slate-400 mt-1 ml-1">
+                                Push 送信には使用しません。チャネルアクセストークンとシークレットの両方を空にして保存すると、Messaging API 用の保存情報を削除します。
+                            </p>
+                        </div>
+                    </div>
                 </section>
 
                 {/* アバターアップロードセクション */}

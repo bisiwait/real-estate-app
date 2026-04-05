@@ -13,7 +13,7 @@ import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/
 import { isPremiumActive } from '@/lib/utils/plan'
 import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
 import { getSupabaseServiceRoleConfig } from '@/lib/env/supabase-data-plane'
-import { getLineOfficialChannelAccessTokenForHostname } from '@/lib/env/line-data-plane'
+import { fetchAgentLineAccessToken } from '@/lib/line-agent-credentials'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -270,10 +270,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (useLine) {
-      const token = getLineOfficialChannelAccessTokenForHostname(hostHeaderFromRequest(req))
+      const adminForLine = admin ?? (await createAdminClient())
+      const token = await fetchAgentLineAccessToken(adminForLine, row.owner_id)
       if (!token) {
         return NextResponse.json(
-          { error: 'LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN が未設定のため LINE で送信できません。' },
+          {
+            error:
+              'LINE連携が未設定です。設定画面の「LINE公式アカウント連携」でチャネルアクセストークンを登録してください。',
+          },
           { status: 503 }
         )
       }
