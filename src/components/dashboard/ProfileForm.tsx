@@ -22,6 +22,7 @@ import {
     Check,
     MessageCircle,
     KeyRound,
+    ShieldCheck,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -32,6 +33,7 @@ import { ja } from 'date-fns/locale'
 import Link from 'next/link'
 import { isPremiumActive } from '@/lib/utils/plan'
 import { getAgentSettingsLineCopy } from '@/lib/i18n/locale-plans-copy'
+import { LineMessagingSetupTutorial } from '@/components/dashboard/LineMessagingSetupTutorial'
 
 interface ProfileData {
     full_name: string
@@ -443,7 +445,14 @@ export default function ProfileForm() {
                         物件ページの「LINEで問い合わせ」は Basic ID から友だち追加 URL（line.me/R/ti/p/…）を生成します。
                         ダッシュボードからの Push 返信にはチャネルアクセストークンが必要です。チャネルシークレットは Webhook 署名検証など将来の拡張用に保存されます。
                     </p>
-                    <div className="space-y-4">
+                    <div className="flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5">
+                        <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
+                        <p className="text-xs font-bold leading-relaxed text-emerald-900">
+                            ここに入力した情報は、お客様とのやり取りをスムーズにするためだけに安全に使用されます。
+                        </p>
+                    </div>
+                    <LineMessagingSetupTutorial />
+                    <div className="space-y-4 pt-1">
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
                                 Basic ID
