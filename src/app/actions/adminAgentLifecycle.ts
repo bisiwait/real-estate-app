@@ -166,7 +166,6 @@ export async function adminAgentLifecycle(
 
         for (const loc of ['jp', 'en', 'th'] as const) {
             revalidatePath(`/${loc}/admin-secret`, 'layout')
-            revalidatePath(`/${loc}/admin-secret/agents`, 'page')
         }
 
         return {

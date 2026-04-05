@@ -375,7 +375,7 @@ export default function AdminUserManagement({
                                             {variant === 'agent' ? (
                                                 <>
                                                     <Link
-                                                        href={`/${locale}/admin-secret/agents?agent=${user.id}`}
+                                                        href={`/${locale}/admin-secret?tab=agents&agent=${encodeURIComponent(user.id)}`}
                                                         className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-navy-primary/20 bg-navy-primary/5 px-3 py-1.5 text-[10px] font-black text-navy-primary transition-colors hover:bg-navy-primary hover:text-white"
                                                     >
                                                         詳細（分析）

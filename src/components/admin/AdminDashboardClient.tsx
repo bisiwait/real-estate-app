@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import nextDynamic from 'next/dynamic'
 import {
     BarChart3,
     Home,
@@ -14,7 +16,8 @@ import {
     Sparkles,
     Bell,
     Building2,
-    Lightbulb
+    Lightbulb,
+    ChevronLeft,
 } from 'lucide-react'
 import Link from 'next/link'
 import AdminPropertyManagement from './PropertyManagement'
@@ -24,23 +27,24 @@ import AdminDeveloperManagement from './DeveloperManagement'
 import AdminFeedbackManagement from './FeedbackManagement'
 import AdminInquiriesPanel from './AdminInquiriesPanel'
 import type { AdminMailInquiryRow, AdminLineLeadRow } from '@/lib/supabase/fetch-admin-inquiries'
+import {
+    type AdminDashboardTabId as TabId,
+    isAdminAgentDetailId,
+    parseAdminDashboardTabFromSearchParams,
+} from '@/lib/admin-dashboard-url'
 
-type TabId =
-    | 'overview'
-    | 'projects'
-    | 'developers'
-    | 'properties'
-    | 'agents'
-    | 'general_users'
-    | 'feedback'
-    | 'inquiries'
+const AgentInsights = nextDynamic(() => import('@/components/admin/AgentInsights'), {
+    ssr: false,
+    loading: () => <div className="h-[300px] animate-pulse rounded-2xl bg-slate-50/50" />,
+})
 
 interface Props {
     pendingCount: number
     activeCount: number
     recentInquiries: number
     newFeedbackCount: number
-    initialTab?: TabId
+    /** サーバーが URL から解決した初期タブ（ハイドレーション整合用） */
+    urlInitialTab: TabId
     locale: string
     mailInquiries: AdminMailInquiryRow[]
     lineLeads: AdminLineLeadRow[]
@@ -51,12 +55,15 @@ export default function AdminDashboardClient({
     activeCount,
     recentInquiries,
     newFeedbackCount,
-    initialTab = 'overview',
+    urlInitialTab,
     locale,
     mailInquiries,
     lineLeads,
 }: Props) {
-    const [tab, setTab] = useState<TabId>(initialTab)
+    const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const [tab, setTab] = useState<TabId>(urlInitialTab)
     const [feedbackTabBadge, setFeedbackTabBadge] = useState(newFeedbackCount)
     const consumedNewFeedbackBadgeIds = useRef(new Set<string>())
 
@@ -67,9 +74,36 @@ export default function AdminDashboardClient({
         setFeedbackTabBadge((n) => Math.max(0, n - 1))
     }, [])
 
-    const selectTab = (id: TabId) => {
-        setTab(id)
-    }
+    useEffect(() => {
+        setTab(parseAdminDashboardTabFromSearchParams(new URLSearchParams(searchParams.toString())))
+    }, [searchParams])
+
+    const selectTab = useCallback(
+        (id: TabId) => {
+            setTab(id)
+            const p = new URLSearchParams(searchParams.toString())
+            if (id === 'overview') {
+                p.delete('tab')
+                p.delete('agent')
+            } else {
+                p.set('tab', id)
+                if (id !== 'agents') p.delete('agent')
+            }
+            const qs = p.toString()
+            router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+        },
+        [pathname, router, searchParams]
+    )
+
+    const clearAgentDetail = useCallback(() => {
+        const p = new URLSearchParams(searchParams.toString())
+        p.delete('agent')
+        p.set('tab', 'agents')
+        router.replace(`${pathname}?${p.toString()}`, { scroll: false })
+    }, [pathname, router, searchParams])
+
+    const detailAgentId = searchParams.get('agent')
+    const showAgentInsights = tab === 'agents' && isAdminAgentDetailId(detailAgentId)
 
     const tabClass = (id: TabId) =>
         `flex min-h-14 flex-1 basis-[calc(50%-4px)] items-center justify-start gap-1.5 rounded-xl py-3 pl-2 pr-2 font-black transition-all cursor-pointer sm:min-h-0 sm:basis-auto sm:flex-none sm:gap-2 sm:px-3 sm:py-3.5 md:flex-1 ${
@@ -219,7 +253,22 @@ export default function AdminDashboardClient({
                 {tab === 'projects' && <AdminProjectManagement />}
                 {tab === 'developers' && <AdminDeveloperManagement />}
                 {tab === 'properties' && <AdminPropertyManagement />}
-                {tab === 'agents' && <AdminUserManagement locale={locale} variant="agent" />}
+                {tab === 'agents' &&
+                    (showAgentInsights ? (
+                        <div className="animate-in fade-in space-y-6 duration-500">
+                            <button
+                                type="button"
+                                onClick={clearAgentDetail}
+                                className="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-navy-primary transition-colors hover:text-blue-600"
+                            >
+                                <ChevronLeft className="transition-transform group-hover:-translate-x-1" size={16} />
+                                エージェント会員一覧に戻る
+                            </button>
+                            <AgentInsights agentId={detailAgentId} />
+                        </div>
+                    ) : (
+                        <AdminUserManagement locale={locale} variant="agent" />
+                    ))}
                 {tab === 'general_users' && <AdminUserManagement locale={locale} variant="general" />}
                 {tab === 'inquiries' && (
                     <AdminInquiriesPanel

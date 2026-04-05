@@ -1,18 +1,21 @@
-import { Suspense } from "react";
-import AgentsPageClient from "./AgentsPageClient";
+import { redirect } from 'next/navigation'
 
-function AgentsFallback() {
-    return (
-        <div className="bg-slate-50 min-h-screen pb-20 pt-24 flex items-center justify-center">
-            <p className="text-sm font-bold text-slate-400">読み込み中...</p>
-        </div>
-    );
-}
+/** 旧 URL 互換: エージェント管理はメインダッシュボードのエージェントタブに統合済み */
+export default async function AgentsManagementPageRedirect({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ locale: string }>
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+    const { locale } = await params
+    const sp = await searchParams
+    const agentRaw = sp.agent
+    const agent = typeof agentRaw === 'string' ? agentRaw : undefined
 
-export default function AgentsManagementPage() {
-    return (
-        <Suspense fallback={<AgentsFallback />}>
-            <AgentsPageClient />
-        </Suspense>
-    );
+    const q = new URLSearchParams()
+    q.set('tab', 'agents')
+    if (agent) q.set('agent', agent)
+
+    redirect(`/${locale}/admin-secret?${q.toString()}`)
 }

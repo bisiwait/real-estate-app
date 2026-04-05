@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin'
 import { createAdminClient } from '@/lib/supabase/server'
@@ -6,13 +7,20 @@ import {
     fetchAdminMailInquiries,
     fetchAdminLineLeads,
 } from '@/lib/supabase/fetch-admin-inquiries'
+import { resolveAdminDashboardTab } from '@/lib/admin-dashboard-url'
 
 export default async function AdminSecretDashboard({
     params,
+    searchParams,
 }: {
     params: Promise<{ locale: string }>
+    searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
     const { locale } = await params
+    const sp = await searchParams
+    const tabParam = typeof sp.tab === 'string' ? sp.tab : undefined
+    const agentParam = typeof sp.agent === 'string' ? sp.agent : undefined
+    const urlInitialTab = resolveAdminDashboardTab({ tab: tabParam, agent: agentParam })
     const isUserAdmin = await isAdmin()
 
     if (!isUserAdmin) {
@@ -41,15 +49,24 @@ export default async function AdminSecretDashboard({
     return (
         <div className="bg-slate-50 min-h-screen pb-20 pt-6 md:pt-24">
             <div className="container mx-auto px-4">
-                <AdminDashboardClient
-                    pendingCount={pendingCount}
-                    activeCount={activeCount}
-                    recentInquiries={recentInquiries}
-                    newFeedbackCount={newFeedbackCount}
-                    locale={locale}
-                    mailInquiries={mailInquiries}
-                    lineLeads={lineLeads}
-                />
+                <Suspense
+                    fallback={
+                        <div className="flex min-h-[40vh] items-center justify-center text-sm font-bold text-slate-400">
+                            読み込み中…
+                        </div>
+                    }
+                >
+                    <AdminDashboardClient
+                        pendingCount={pendingCount}
+                        activeCount={activeCount}
+                        recentInquiries={recentInquiries}
+                        newFeedbackCount={newFeedbackCount}
+                        locale={locale}
+                        mailInquiries={mailInquiries}
+                        lineLeads={lineLeads}
+                        urlInitialTab={urlInitialTab}
+                    />
+                </Suspense>
             </div>
         </div>
     )
