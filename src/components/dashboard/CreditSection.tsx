@@ -34,7 +34,7 @@ export default function CreditSection({ profile }: CreditSectionProps) {
                               : 'bg-slate-500 text-white shadow-sm'
                     } uppercase tracking-wider`}
                 >
-                    {isPremiumStatus ? 'プレミアム' : isStandard ? 'スタンダード' : 'フリー'}プラン
+                    {isPremiumStatus ? 'プロ' : isStandard ? 'スタンダード' : 'フリー'}プラン
                 </span>
             </div>
 

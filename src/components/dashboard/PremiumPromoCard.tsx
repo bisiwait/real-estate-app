@@ -13,7 +13,7 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
     const params = useParams()
     const isPremium = plan === 'premium'
 
-    // If already premium, we could show a "Premium Active" subtle card or nothing.
+    // If already on Pro (DB: premium), show active summary or promo for free users.
     // The user asked for a promo/explanation, so if already premium, we can show a summary of their benefits.
 
     return (
@@ -29,7 +29,7 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
                 </div>
                 <div>
                     <h3 className={`text-sm font-black tracking-tight ${isPremium ? 'text-amber-400' : 'text-amber-900'}`}>
-                        {isPremium ? 'PREMIUM ACTIVE' : 'PREMIUM PLAN'}
+                        {isPremium ? 'PRO ACTIVE' : 'PRO PLAN'}
                     </h3>
                     <p className={`text-[10px] font-bold uppercase tracking-widest ${isPremium ? 'text-slate-400' : 'text-amber-700/60'}`}>
                         Exclusive Benefits

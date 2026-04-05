@@ -56,12 +56,12 @@ export default function SubscriptionStatus({ profile }: SubscriptionStatusProps)
                     <Crown className="w-5 h-5" />
                 </div>
                 <span className="px-3 py-1 rounded-full bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
-                    {isCancelScheduled ? 'Cancelling' : 'Premium Active'}
+                    {isCancelScheduled ? 'Cancelling' : 'Pro Active'}
                 </span>
             </div>
 
             <div className="space-y-2 mb-6">
-                <h3 className="text-xl font-black text-navy-secondary">プレミアムプラン利用中</h3>
+                <h3 className="text-xl font-black text-navy-secondary">プロプラン利用中</h3>
 
                 {/* 解約予約済み: 目立つ通知を表示 */}
                 {isCancelScheduled ? (

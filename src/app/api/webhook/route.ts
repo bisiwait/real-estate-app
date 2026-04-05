@@ -15,7 +15,7 @@ function extractSubscriptionId(sub: string | Stripe.Subscription | null): string
 }
 
 /**
- * profiles テーブルをプレミアムに昇格させる
+ * profiles をプロプラン相当に昇格（DB 内部値は後方互換のため plan / plan_type は 'premium' のまま）
  * - まず確実に存在する plan / plan_type / current_period_end を更新
  * - stripe_subscription_id / auto_renew は別途試行（カラムがなくても 500 にしない）
  */
@@ -55,7 +55,7 @@ async function activatePremium(
         }
     }
 
-    console.log(`[webhook] profiles updated to premium for user: ${userId}`)
+    console.log(`[webhook] profiles updated to Pro plan (plan_type=premium) for user: ${userId}`)
 }
 
 async function deactivatePremium(supabaseAdmin: SupabaseClient, userId: string) {
@@ -216,7 +216,7 @@ export async function POST(req: Request) {
                     amount: session.amount_total ?? 0,
                 })
 
-                console.log(`[webhook] ✅ Premium activated for user: ${userId}`)
+                console.log(`[webhook] ✅ Pro plan activated for user: ${userId}`)
                 break
             }
 
@@ -263,7 +263,7 @@ export async function POST(req: Request) {
                     sub.status === 'incomplete_expired'
                 ) {
                     await deactivatePremium(supabaseAdmin, userId)
-                    console.log(`[webhook] Premium deactivated (subscription ${sub.status}) for user: ${userId}`)
+                    console.log(`[webhook] Pro plan deactivated (subscription ${sub.status}) for user: ${userId}`)
                 }
                 break
             }
@@ -279,7 +279,7 @@ export async function POST(req: Request) {
                 }
 
                 await deactivatePremium(supabaseAdmin, userId)
-                console.log(`[webhook] ✅ Premium deactivated for user: ${userId}`)
+                console.log(`[webhook] ✅ Pro plan deactivated for user: ${userId}`)
                 break
             }
 

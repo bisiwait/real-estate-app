@@ -54,7 +54,7 @@ export default function PresalePropertyPage() {
                     </div>
                     <h2 className="text-2xl font-black text-navy-secondary mb-4">プレミアプラン限定機能です</h2>
                     <p className="text-slate-500 mb-10 leading-relaxed">
-                        プレセール（新築投資案件）の投稿機能は、契約有効なプレミアムプランのエージェント様のみご利用いただけます。プランの更新は料金ページからどうぞ。
+                        プレセール（新築投資案件）の投稿機能は、契約有効なプロプランのエージェント様のみご利用いただけます。プランの更新は料金ページからどうぞ。
                     </p>
                     <div className="flex flex-col gap-3">
                         <Link
@@ -90,7 +90,7 @@ export default function PresalePropertyPage() {
                     <div className="flex items-center justify-between mb-12">
                         <div>
                             <div className="flex items-center space-x-2 mb-2">
-                                <span className="bg-amber-100 text-amber-600 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">Premium</span>
+                                <span className="bg-amber-100 text-amber-600 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">Pro</span>
                             </div>
                             <h1 className="text-3xl font-black text-navy-secondary mb-2">プレセール物件を投稿する</h1>
                             <p className="text-slate-500">新築や建設中の投資用プロジェクト情報を公開しましょう。</p>

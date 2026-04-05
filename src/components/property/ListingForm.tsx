@@ -773,9 +773,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         <Crown className="w-10 h-10 text-amber-500" />
                     </div>
 
-                    <h3 className="text-2xl font-black text-navy-secondary mb-4">プレミアム限定機能</h3>
+                    <h3 className="text-2xl font-black text-navy-secondary mb-4">プロプラン限定機能</h3>
                     <p className="text-slate-500 font-medium mb-10 leading-relaxed">
-                        「プレセール物件」の掲載はプレミアム会員限定の機能です。<br />
+                        「プレセール物件」の掲載はプロプラン会員限定の機能です。<br />
                         アップグレードして、投資価格の高い先行販売案件を独占的に掲載しましょう。
                     </p>
 

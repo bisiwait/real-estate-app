@@ -282,7 +282,7 @@ export default function ProfileForm() {
                             <div>
                                 <div className="flex items-center gap-3 mb-1">
                                     <h2 className="text-2xl font-black text-navy-secondary">
-                                        {isPremium ? 'Premium Plan' : 'Standard Plan'}
+                                        {isPremium ? 'Pro Plan' : 'Standard Plan'}
                                     </h2>
                                     {isPremium && (
                                         <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -325,7 +325,7 @@ export default function ProfileForm() {
                                     className="flex items-center justify-center gap-2 bg-navy-primary text-white px-8 py-4 rounded-2xl font-black hover:bg-navy-secondary transition-all shadow-lg active:scale-95 text-sm"
                                 >
                                     <Zap className="w-4 h-4 fill-white" />
-                                    プレミアムにアップグレード
+                                    プロプランにアップグレード
                                 </Link>
                             ) : (
                                 <button

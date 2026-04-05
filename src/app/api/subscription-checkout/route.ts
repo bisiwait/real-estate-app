@@ -44,7 +44,7 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'jpy',
             product_data: {
-              name: `Chonburi Home: PREMIUM (${period.toUpperCase()})`,
+              name: `Chonburi Home: PRO (${period.toUpperCase()})`,
               description: period === 'yearly' ? '年払い（20% OFF）' : '月払い',
             },
             unit_amount: amountJPY,
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         ...(trialAlreadyUsed ? {} : { trial_period_days: 30 }),
         metadata: {
           userId: user.id,
-          plan: 'premium',
+          plan: 'pro',
           billingPeriod: period,
         },
       },
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       cancel_url: `${origin}/jp/pricing`,
       metadata: {
         userId: user.id,
-        plan: 'premium',
+        plan: 'pro',
         billingPeriod: period,
       },
     })

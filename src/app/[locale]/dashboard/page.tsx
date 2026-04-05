@@ -179,14 +179,14 @@ export default async function DashboardPage({
                         {/* Subscription Status (Trial countdown / Portal link) */}
                         <SubscriptionStatus profile={profile} />
 
-                        {/* プラン表示（フリープラン時のみ。プレミアムは別カード） */}
+                        {/* プラン表示（フリープラン時のみ。プロプランは別カード） */}
                         {activePlan !== 'premium' && (
                             <CreditSection profile={profile} />
                         )}
 
                         {isPremiumSubscriptionExpired(profile) && <PlanExpiredNotice />}
 
-                        {/* Premium Promo Card (Free users only) */}
+                        {/* Pro plan promo card (free users only) */}
                         {activePlan !== 'premium' && (
                             <PremiumPromoCard plan={activePlan} />
                         )}

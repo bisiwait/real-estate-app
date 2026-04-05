@@ -24,7 +24,7 @@ async function setPremium() {
     if (updateErr) {
         console.error('Update failed:', updateErr);
     } else {
-        console.log('Successfully updated agent@example.com to premium plan with 50 credits.');
+        console.log('Successfully updated agent@example.com to Pro plan (DB plan=premium) with 50 credits.');
     }
 }
 

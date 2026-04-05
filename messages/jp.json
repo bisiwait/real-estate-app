@@ -93,7 +93,7 @@
         "agent_name": "担当者名",
         "phone_number": "電話番号",
         "line_id": "LINE ID",
-        "agent_line_listing_note": "物件ページでお客様が「LINEで返信を受け取る」を選べるのはプレミアムプランのみです（新規登録直後はスタンダードのため、問い合わせは主にメールになります）。",
+        "agent_line_listing_note": "物件ページでお客様が「LINEで返信を受け取る」を選べるのはプロプランのみです（新規登録直後はスタンダードのため、問い合わせは主にメールになります）。",
         "target_area": "主な担当エリア",
         "area_pattaya": "パタヤ",
         "area_sriracha": "シラチャ",
@@ -485,8 +485,8 @@
         "inquiry_reply_channel_intro_v2": "担当からの返信の受け取り方を選びます。メールアドレスは記録のためどちらの場合も入力してください。",
         "inquiry_reply_channel_intro_desktop": "ご登録のメールアドレス宛に、担当から返信いたします。",
         "inquiry_reply_desktop_notice": "返信はメールにて差し上げます。",
-        "inquiry_owner_standard_line_notice": "この掲載エージェントはメールでの返信のみ対応しています。LINEでの返信を選べるのはプレミアム掲載エージェントのみです。",
-        "inquiry_line_premium_only_badge": "プレミアム掲載のみ",
+        "inquiry_owner_standard_line_notice": "この掲載エージェントはメールでの返信のみ対応しています。LINEでの返信を選べるのはプロプラン掲載エージェントのみです。",
+        "inquiry_line_premium_only_badge": "プロ掲載のみ",
         "inquiry_line_blocked_desktop": "PC・タブレットでは「LINEで受け取る」はご利用いただけません。メールでの返信のみとなります。",
         "inquiry_pc_line_qr_hint": "LINEでのやり取りをご希望の方は、スマートフォンで下のQRコードを読み取り、公式アカウントを友だち追加のうえ、物件ページの問い合わせフォームからお手続きください。",
         "inquiry_reply_by_email": "メールで受け取る",
@@ -691,7 +691,7 @@
         "feat_unlimited_listings_pro": "無制限（標準＋優先表示）",
         "feat_priority": "検索・一覧での優先表示",
         "feat_priority_free": "なし",
-        "feat_priority_pro": "あり（プレミアム掲載）",
+        "feat_priority_pro": "あり（プロ掲載・優先表示）",
         "feat_inquiry": "お問い合わせの受信",
         "feat_profile": "プロフィール表示",
         "feat_line": "LINE連携・問い合わせ",
@@ -862,30 +862,30 @@
         "empty_title": "エージェントが見つかりません",
         "empty_desc": "現在、公開中の物件をお持ちのエージェントは表示されていません。",
         "verified": "認証済み",
-        "line_contact_premium_only": "LINEでの直接連絡はプレミアム掲載エージェントのみ表示されます（メール・電話をご利用ください）"
+        "line_contact_premium_only": "LINEでの直接連絡はプロプラン掲載エージェントのみ表示されます（メール・電話をご利用ください）"
     },
     "list_property_plans": {
         "tagline": "タイの成約の鍵",
         "heading": "選べる2つのプラン",
-        "intro": "日本人・タイ人・欧米のお客様に届く掲載。タイでは LINE が成約につながる重要なチャネルです。プレミアムなら公式 LINE 経由の直接問い合わせにも対応できます。",
+        "intro": "日本人・タイ人・欧米のお客様に届く掲載。タイでは LINE が成約につながる重要なチャネルです。プロプランなら公式 LINE 経由の直接問い合わせにも対応できます。",
         "standard_title": "スタンダード",
         "standard_price": "無料で掲載開始",
         "standard_bullet1": "お問い合わせはメールで受け取り・返信",
         "standard_bullet2": "物件の公開・管理に必要な基本機能",
-        "standard_footer": "物件ページの「LINEで返信を受け取る」オプションはプレミアム掲載エージェントのみに表示されます。",
+        "standard_footer": "物件ページの「LINEで返信を受け取る」オプションはプロプラン掲載エージェントのみに表示されます。",
         "premium_badge": "おすすめ",
-        "premium_title": "プレミアム",
-        "premium_tagline": "LINE連携・問い合わせはProプランの機能です。",
+        "premium_title": "プロプラン",
+        "premium_tagline": "LINE連携・問い合わせはプロプランの機能です。",
         "premium_bullet1": "LINE での直接問い合わせに対応。顧客の LINE ユーザーID を取得し、公式アカウントから返信しやすい体制が整います。",
         "premium_bullet2": "メール返信と併用可能",
         "premium_bullet3": "PDFチラシ・SNSシェアなど上位プラン特典（料金ページで詳細）",
-        "premium_cta": "料金・プレミアムの詳細を見る"
+        "premium_cta": "料金・プロプランの詳細を見る"
     },
     "agent_settings_line": {
         "title": "物件ページの LINE 問い合わせ",
-        "premium_body": "プレミアムプランでは、お客様がスマートフォンから「LINEで返信を受け取る」を選べます。タイでの成約につながる重要なチャネルとして、LINE 経由のスピーディなやり取りが可能です。",
-        "standard_lead": "この機能はプレミアムプラン専用です。スタンダードでは物件問い合わせの返信はメールのみとなります。",
-        "standard_body": "プレミアムでは LINE ベースの問い合わせに対応でき、タイ市場での反応速度と成約に有利になりやすい運用ができます。",
+        "premium_body": "プロプランでは、お客様がスマートフォンから「LINEで返信を受け取る」を選べます。タイでの成約につながる重要なチャネルとして、LINE 経由のスピーディなやり取りが可能です。",
+        "standard_lead": "この機能はプロプラン専用です。スタンダードでは物件問い合わせの返信はメールのみとなります。",
+        "standard_body": "プロプランでは LINE ベースの問い合わせに対応でき、タイ市場での反応速度と成約に有利になりやすい運用ができます。",
         "upgrade_cta": "アップグレードはこちら"
     }
 }

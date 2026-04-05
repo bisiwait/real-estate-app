@@ -376,7 +376,7 @@ interface InquiryFormProps {
   contactPrefill?: InquiryContactPrefill | null
   /** 問い合わせ完了後の公式LINE友だち追加URL */
   officialLineAddFriendUrl: string
-  /** false のとき LINE 返信オプションを出さずメールのみ（掲載者がプレミアムでない場合） */
+  /** false のとき LINE 返信オプションを出さずメールのみ（掲載者がプロプランでない場合／DB: premium） */
   ownerPremiumLineInquiry?: boolean
 }
 
@@ -1307,10 +1307,10 @@ export default function InquiryForm({
                     <p className="text-sm font-bold leading-relaxed text-navy-secondary">
                       {p.inquiry_owner_standard_line_notice ??
                         (locale === 'en'
-                          ? 'This listing agent replies by email only. The “by LINE” option is available with Premium listing agents.'
+                          ? 'This listing agent replies by email only. The “by LINE” option is available with Pro listing agents.'
                           : locale === 'th'
                             ? 'ตัวแทนประกาศนี้ตอบกลับทางอีเมลเท่านั้น การเลือกรับทาง LINE มีเฉพาะตัวแทนแพ็กเกียมพรีเมียม'
-                            : 'この掲載エージェントはメールでの返信のみ対応しています。LINEでの返信を選べるのはプレミアム掲載エージェントのみです。')}
+                            : 'この掲載エージェントはメールでの返信のみ対応しています。LINEでの返信を選べるのはプロプラン掲載エージェントのみです。')}
                     </p>
                     <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2">
                       <p className="text-xs font-bold text-slate-500">
@@ -1324,10 +1324,10 @@ export default function InquiryForm({
                       <span className="text-[10px] font-bold text-slate-400">
                         {p.inquiry_line_premium_only_badge ??
                           (locale === 'en'
-                            ? 'Premium listings only'
+                            ? 'Pro listings only'
                             : locale === 'th'
                               ? 'เฉพาะแพ็กเกียมพรีเมียม'
-                              : 'プレミアム掲載のみ')}
+                              : 'プロ掲載のみ')}
                       </span>
                     </div>
                   </div>

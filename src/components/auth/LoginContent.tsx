@@ -223,7 +223,7 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                     </div>
 
                     <div className="relative z-10 pt-10">
-                        <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Premium Search Experience</p>
+                        <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Pro Search Experience</p>
                     </div>
                 </div>
 

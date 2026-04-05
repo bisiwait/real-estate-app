@@ -317,7 +317,7 @@ export default function AdminUserManagement({
                                         {variant === 'agent' && (
                                             <>
                                                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${user.plan === 'premium' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>
-                                                    {user.plan === 'premium' ? 'Premium' : 'Free'}
+                                                    {user.plan === 'premium' ? 'Pro' : 'Free'}
                                                 </span>
                                                 {user.deleted_at && (
                                                     <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
@@ -346,7 +346,7 @@ export default function AdminUserManagement({
                                                 className="text-[10px] font-bold px-2 py-1 rounded-lg border outline-none bg-white border-slate-200 ml-1"
                                             >
                                                 <option value="free">Free</option>
-                                                <option value="premium">Premium</option>
+                                                <option value="premium">Pro</option>
                                             </select>
                                         </div>
                                     )}

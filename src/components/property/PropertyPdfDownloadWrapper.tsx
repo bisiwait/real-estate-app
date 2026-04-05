@@ -49,10 +49,10 @@ export default function PropertyPdfDownloadWrapper({
                 </div>
                 <div>
                     <h4 className="text-sm font-bold text-amber-900 mb-1">
-                        プレミアム機能
+                        プロプラン機能
                     </h4>
                     <p className="text-[10px] text-amber-700 leading-relaxed px-4">
-                        プレミアム会員限定で、この物件の<br />
+                        プロプラン会員限定で、この物件の<br />
                         高品質なPDFチラシを作成・保存できます。
                     </p>
                 </div>

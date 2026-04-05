@@ -47,10 +47,10 @@ function SuccessContent() {
                     {/* テキストセクション */}
                     <div className="space-y-4 mb-12">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-[0.15em] border border-blue-100">
-                            Premium Plan Activated
+                            Pro Plan Activated
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                            プレミアム・エージェントへようこそ！
+                            プロプラン・エージェントへようこそ！
                         </h1>
                         <p className="text-slate-500 text-base sm:text-lg font-medium leading-relaxed max-w-lg mx-auto">
                             パタヤ・シラチャでの成約を加速させる<br className="hidden sm:block" />

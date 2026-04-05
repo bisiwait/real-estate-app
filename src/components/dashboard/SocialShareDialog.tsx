@@ -336,7 +336,7 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
                <Crown className="w-6 h-6 text-amber-400" />
              </div>
              <div>
-               <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">AI機能 & シェア画像 <span className="text-amber-400 font-black text-sm uppercase tracking-widest ml-1">(Premium)</span></h2>
+               <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">AI機能 & シェア画像 <span className="text-amber-400 font-black text-sm uppercase tracking-widest ml-1">(Pro)</span></h2>
                <p className="text-xs font-bold text-slate-300 mt-0.5">物件説明の翻訳や、SNS投稿用のバナー画像を取得</p>
              </div>
           </div>

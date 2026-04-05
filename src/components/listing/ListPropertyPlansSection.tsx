@@ -6,7 +6,7 @@ import { Mail, MessageCircle, Sparkles, Crown, TrendingUp } from 'lucide-react'
 import { getListPropertyPlansCopy } from '@/lib/i18n/locale-plans-copy'
 
 /**
- * 物件掲載（集客）ページ用：スタンダード / プレミアムの比較（locale ごとに1言語）
+ * 物件掲載（集客）ページ用：スタンダード / プロプランの比較（locale ごとに1言語）
  */
 export default function ListPropertyPlansSection() {
   const params = useParams()

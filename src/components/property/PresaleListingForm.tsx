@@ -896,7 +896,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
                     <span className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center mr-3 text-amber-500 text-sm font-black">2</span>
-                    プレセール詳細 (Premium)
+                    プレセール詳細 (Pro)
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>

@@ -1,4 +1,4 @@
-/** DB 上のプランが premium か（Webhook 遅延時は期限切れでも true のことがある） */
+/** DB 上のプランが premium（表示名: プロプラン）か。Webhook 遅延時は期限切れでも true のことがある */
 export function isPremiumPlanFlag(profile: any | null): boolean {
     if (!profile) return false;
     if (profile.is_admin) return true;
@@ -6,7 +6,7 @@ export function isPremiumPlanFlag(profile: any | null): boolean {
 }
 
 /**
- * プレミアム機能の利用可否。管理ユーザーは常に true。
+ * プロプラン機能の利用可否（DB: plan/plan_type === 'premium'）。管理ユーザーは常に true。
  * 契約終了日（current_period_end）が過去なら false（DB がまだ premium でも制限）。
  * current_period_end が無い旧データは premium フラグが立っていれば true（互換）。
  */
@@ -22,10 +22,10 @@ export function isPremiumActive(profile: any | null): boolean {
     return t > Date.now();
 }
 
-/** UI・機能ゲート用。実質「契約期内のプレミアム」。 */
+/** UI・機能ゲート用。実質「契約期内のプロプラン（DB: premium）」。 */
 export const isPremium = isPremiumActive;
 
-/** DB がプレミアムかつ current_period_end が過去（契約終了）。サイドバー用。 */
+/** DB が premium かつ current_period_end が過去（契約終了）。サイドバー用。 */
 export function isPremiumSubscriptionExpired(profile: any | null): boolean {
     if (!profile || profile.is_admin) return false;
     const premiumFlag = profile.plan_type === 'premium' || profile.plan === 'premium';
@@ -45,6 +45,6 @@ export function getEffectivePlan(profile: any | null): string {
     return flag === 'standard' ? 'standard' : 'free';
 }
 
-export const PREMIUM_UPSELL_LINKS = {
+export const PRO_UPSELL_LINKS = {
     upgrade: '/pricing',
-};
+}

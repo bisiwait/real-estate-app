@@ -51,7 +51,7 @@ interface InquiryListProps {
   initialInquiries: any[]
   /** 定型文「初回返信」に挿入する表示名（profiles.full_name など） */
   agentDisplayName?: string | null
-  /** 公式 LINE Push 返信（プレミアム）。false のときはメール経路のみ */
+  /** 公式 LINE Push 返信（プロプラン／DB: premium）。false のときはメール経路のみ */
   viewerPremiumLineInquiry?: boolean
   /** LINE Official Account Manager の該当アカウント画面 URL（アカウントホーム。チャットは画面上部タブから） */
   lineOfficialManagerChatUrl: string
@@ -531,14 +531,14 @@ export default function InquiryList({
                   <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-bold text-sky-950 space-y-2">
                     <p>
                       お客様は <strong>LINE</strong> での返信を希望されていますが、
-                      <strong>ダッシュボードからの LINE Push はプレミアムプラン専用</strong>
+                      <strong>ダッシュボードからの LINE Push はプロプラン専用</strong>
                       です。下のフォームから送信すると <strong>メール</strong> で通知されます。
                     </p>
                     <Link
                       href={`/${locale}/pricing`}
                       className="inline-flex text-xs font-black text-navy-primary underline decoration-navy-primary/40 hover:text-navy-secondary"
                     >
-                      プレミアムにアップグレードする
+                      プロプランにアップグレードする
                     </Link>
                   </div>
                 ) : null}
