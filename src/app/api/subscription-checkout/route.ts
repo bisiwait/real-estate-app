@@ -14,8 +14,8 @@ export async function POST(req: Request) {
     const { billingPeriod } = (await req.json()) as { billingPeriod?: BillingPeriod }
 
     const period: BillingPeriod = billingPeriod === 'yearly' ? 'yearly' : 'monthly'
-    /** 日本円はゼロデシマル。Stripe の unit_amount は円の整数（*100 しない） */
-    const amountJPY = period === 'yearly' ? 48000 : 5000
+    /** USD: Stripe unit_amount はセント単位（$160 → 16000） */
+    const unitAmountUsdCents = period === 'yearly' ? 160_000 : 16_000
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -42,12 +42,12 @@ export async function POST(req: Request) {
       line_items: [
         {
           price_data: {
-            currency: 'jpy',
+            currency: 'usd',
             product_data: {
               name: `Chonburi Home: PRO (${period.toUpperCase()})`,
-              description: period === 'yearly' ? '年払い（20% OFF）' : '月払い',
+              description: period === 'yearly' ? 'Yearly (USD)' : 'Monthly (USD)',
             },
-            unit_amount: amountJPY,
+            unit_amount: unitAmountUsdCents,
             recurring: { interval: period === 'yearly' ? 'year' : 'month' },
           },
           quantity: 1,

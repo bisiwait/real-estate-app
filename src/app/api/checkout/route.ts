@@ -1,7 +1,7 @@
 /**
  * Stripe Checkout（サブスク）。`line_items[].price` はダッシュボードの Price ID を参照するため、
- * 通貨は各 Price の設定に従う。日本円で課金する場合は Stripe 上で JPY の recurring Price を作成し、
- * STRIPE_PRICE_ID_MONTHLY / STRIPE_PRICE_ID_YEARLY（または NEXT_PUBLIC_*）をそれらに差し替えること。
+ * 通貨・金額は各 Price の設定に従う（例: プロプラン US$160/月・US$1,600/年 の recurring Price）。
+ * STRIPE_PRICE_ID_MONTHLY / STRIPE_PRICE_ID_YEARLY（または NEXT_PUBLIC_*）を Stripe の Price ID に合わせること。
  */
 import { NextResponse } from 'next/server'
 import stripe from '@/lib/stripe'

@@ -1,5 +1,5 @@
 /**
- * エージェント向けサブスクの Stripe Price ID。
+ * エージェント向けサブスクの Stripe Price ID（プロプラン: US$160/月・US$1,600/年 に相当する recurring Price を Stripe で作成し、その ID を設定）。
  * Vercel ではサーバー専用の STRIPE_PRICE_ID_* を推奨（NEXT_PUBLIC 不要）。
  * ローカル互換のため NEXT_PUBLIC_* もフォールバックで読む。
  */
