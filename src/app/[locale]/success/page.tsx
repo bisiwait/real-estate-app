@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, Crown, Loader2, PlusCircle, LayoutDashboard, FileText, Languages, Building2, ArrowRight } from 'lucide-react'
+import { CheckCircle2, Crown, Loader2, PlusCircle, FileText, Languages, Building2, ArrowRight, MessageCircle } from 'lucide-react'
 
 function SuccessContent() {
     const searchParams = useSearchParams()
@@ -73,6 +73,21 @@ function SuccessContent() {
                                         <span className="font-black text-slate-900">3ヶ国語自動翻訳 (日・泰・英)</span>
                                     </div>
                                     <p className="text-xs text-slate-400 font-medium mt-0.5">日本人・タイ人・欧米人すべてにアプローチ可能。</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
+                                    <MessageCircle className="w-5 h-5 text-[#06C755]" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-blue-600 font-bold">✓</span>
+                                        <span className="font-black text-slate-900">LINEでのお問い合わせ受付</span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                                        物件ページから「LINEで返信を受け取る」を選んだお客様の問い合わせに対応。公式LINE経由でタイ市場に合ったスピーディなやり取りが可能です。
+                                    </p>
                                 </div>
                             </div>
 
