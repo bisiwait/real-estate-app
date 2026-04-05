@@ -186,6 +186,7 @@
         "back_to_top": "Back to Top",
         "logout": "Log Out",
         "settings": "Account Settings",
+        "line_connect": "LINE integration",
         "edit_profile": "Edit Profile",
         "change_email_pass": "Change Email/Password",
         "settings_password_section_title": "Change login password",

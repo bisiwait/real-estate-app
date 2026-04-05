@@ -21,8 +21,6 @@ import {
     Crown,
     Check,
     MessageCircle,
-    KeyRound,
-    ShieldCheck,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -33,8 +31,6 @@ import { ja } from 'date-fns/locale'
 import Link from 'next/link'
 import { isPremiumActive } from '@/lib/utils/plan'
 import { getAgentSettingsLineCopy } from '@/lib/i18n/locale-plans-copy'
-import { LineMessagingSetupTutorial } from '@/components/dashboard/LineMessagingSetupTutorial'
-
 interface ProfileData {
     full_name: string
     company_name: string
@@ -72,9 +68,6 @@ export default function ProfileForm() {
     const [success, setSuccess] = useState<string | null>(null)
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-    const [lineBasicId, setLineBasicId] = useState('')
-    const [lineChannelAccessToken, setLineChannelAccessToken] = useState('')
-    const [lineChannelSecret, setLineChannelSecret] = useState('')
     const fileInputRef = useRef<HTMLInputElement>(null)
     const router = useRouter()
     const params = useParams()
@@ -112,15 +105,6 @@ export default function ProfileForm() {
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
                 }
-                setLineBasicId((data as { line_basic_id?: string | null }).line_basic_id?.trim() || '')
-
-                const { data: lineCred } = await supabase
-                    .from('profile_line_messaging_credentials')
-                    .select('line_channel_access_token, line_channel_secret')
-                    .eq('user_id', user.id)
-                    .maybeSingle()
-                setLineChannelAccessToken(lineCred?.line_channel_access_token?.trim() || '')
-                setLineChannelSecret(lineCred?.line_channel_secret?.trim() || '')
             }
             setLoading(false)
         }
@@ -233,33 +217,11 @@ export default function ProfileForm() {
                     bio: formData.bio,
                     website: formData.website,
                     avatar_url: finalAvatarUrl,
-                    line_basic_id: lineBasicId.trim() || null,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id)
 
             if (error) throw error
-
-            const tok = lineChannelAccessToken.trim()
-            const sec = lineChannelSecret.trim()
-            if (!tok && !sec) {
-                const { error: delCredErr } = await supabase
-                    .from('profile_line_messaging_credentials')
-                    .delete()
-                    .eq('user_id', user.id)
-                if (delCredErr) throw delCredErr
-            } else {
-                const { error: credErr } = await supabase.from('profile_line_messaging_credentials').upsert(
-                    {
-                        user_id: user.id,
-                        line_channel_access_token: tok || null,
-                        line_channel_secret: sec || null,
-                        updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: 'user_id' }
-                )
-                if (credErr) throw credErr
-            }
 
             setSuccess('プロフィールを更新しました。')
             window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -435,68 +397,20 @@ export default function ProfileForm() {
                     )}
                 </section>
 
-                <section className="rounded-[2.5rem] border border-slate-200 bg-white p-6 md:p-8 shadow-sm space-y-5">
+                <section className="rounded-[2.5rem] border border-[#06C755]/25 bg-[#06C755]/5 p-6 md:p-8 shadow-sm">
                     <h3 className="text-sm font-black text-navy-secondary flex items-center gap-2">
-                        <KeyRound className="h-5 w-5 text-[#06C755]" />
-                        LINE公式アカウント連携
+                        <MessageCircle className="h-5 w-5 text-[#06C755]" />
+                        LINE公式アカウント連携の設定
                     </h3>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                        ご自身の LINE 公式アカウントで問い合わせを受け付ける場合に設定します。
-                        物件ページの「LINEで問い合わせ」は Basic ID から友だち追加 URL（line.me/R/ti/p/…）を生成します。
-                        ダッシュボードからの Push 返信にはチャネルアクセストークンが必要です。チャネルシークレットは Webhook 署名検証など将来の拡張用に保存されます。
+                    <p className="mt-3 text-xs font-medium leading-relaxed text-slate-600">
+                        LINE Developers の用語に慣れていなくても、図つきの専用ページで手順どおりに進めれば完了できます。物件ページの「LINEで問い合わせ」やダッシュボードからの返信に必要な値をまとめて保存します。
                     </p>
-                    <div className="flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5">
-                        <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
-                        <p className="text-xs font-bold leading-relaxed text-emerald-900">
-                            ここに入力した情報は、お客様とのやり取りをスムーズにするためだけに安全に使用されます。
-                        </p>
-                    </div>
-                    <LineMessagingSetupTutorial />
-                    <div className="space-y-4 pt-1">
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
-                                Basic ID
-                            </label>
-                            <input
-                                type="text"
-                                value={lineBasicId}
-                                onChange={(e) => setLineBasicId(e.target.value)}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
-                                placeholder="@your_basic_id"
-                                autoComplete="off"
-                            />
-                            <p className="text-[10px] text-slate-400 mt-1 ml-1">例: @abc1234（@ から入力してください）</p>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
-                                チャネルアクセストークン（長期）
-                            </label>
-                            <input
-                                type="password"
-                                value={lineChannelAccessToken}
-                                onChange={(e) => setLineChannelAccessToken(e.target.value)}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all font-mono"
-                                placeholder="Messaging API のチャネルアクセストークン"
-                                autoComplete="off"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
-                                チャネルシークレット
-                            </label>
-                            <input
-                                type="password"
-                                value={lineChannelSecret}
-                                onChange={(e) => setLineChannelSecret(e.target.value)}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all font-mono"
-                                placeholder="チャネルシークレット"
-                                autoComplete="off"
-                            />
-                            <p className="text-[10px] text-slate-400 mt-1 ml-1">
-                                Push 送信には使用しません。チャネルアクセストークンとシークレットの両方を空にして保存すると、Messaging API 用の保存情報を削除します。
-                            </p>
-                        </div>
-                    </div>
+                    <Link
+                        href={`/${locale}/dashboard/line-connect`}
+                        className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#06C755] px-6 py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05b34c] active:scale-[0.98]"
+                    >
+                        LINE連携の設定ページを開く
+                    </Link>
                 </section>
 
                 {/* アバターアップロードセクション */}

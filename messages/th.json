@@ -185,6 +185,7 @@
         "back_to_top": "กลับไปหน้าหลัก",
         "logout": "ออกจากระบบ",
         "settings": "ตั้งค่าบัญชี",
+        "line_connect": "เชื่อม LINE",
         "edit_profile": "แก้ไขโปรไฟล์",
         "change_email_pass": "เปลี่ยนอีเมล/รหัสผ่าน",
         "settings_password_section_title": "เปลี่ยนรหัสผ่านเข้าสู่ระบบ",

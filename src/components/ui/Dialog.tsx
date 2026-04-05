@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useEffect, ReactNode } from "react";
+import { twMerge } from "tailwind-merge";
 import Portal from "./Portal";
 
 interface DialogProps {
@@ -11,9 +12,11 @@ interface DialogProps {
     title: string;
     description?: string;
     children: ReactNode;
+    /** モーダル幅（デフォルト max-w-lg） */
+    panelClassName?: string;
 }
 
-export default function Dialog({ isOpen, onClose, title, description, children }: DialogProps) {
+export default function Dialog({ isOpen, onClose, title, description, children, panelClassName }: DialogProps) {
     // Escape key to close
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -59,7 +62,10 @@ export default function Dialog({ isOpen, onClose, title, description, children }
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                className="relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl border border-slate-100 z-[10000] my-auto"
+                                className={twMerge(
+                                    "relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl border border-slate-100 z-[10000] my-auto",
+                                    panelClassName
+                                )}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="p-6 md:p-10">
