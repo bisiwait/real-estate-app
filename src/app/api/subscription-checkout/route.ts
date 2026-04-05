@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         },
       },
       client_reference_id: user.id,
-      success_url: `${origin}/jp/dashboard/settings?upgrade_success=true`,
+      success_url: `${origin}/jp/dashboard/settings?upgrade_success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/jp/pricing`,
       metadata: {
         userId: user.id,

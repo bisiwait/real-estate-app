@@ -1,15 +1,13 @@
 "use client";
 import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams, useParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, Crown, Loader2, PlusCircle, FileText, Languages, Building2, ArrowRight, MessageCircle } from 'lucide-react'
+import { CheckoutSessionSync } from '@/components/stripe/CheckoutSessionSync'
 
 function SuccessContent() {
-    const searchParams = useSearchParams()
     const params = useParams()
     const locale = (params.locale as string) || 'jp'
-    const sessionId = searchParams.get('session_id')
-
     const [status, setStatus] = useState<'loading' | 'ready'>('loading')
 
     useEffect(() => {
@@ -18,15 +16,14 @@ function SuccessContent() {
         return () => clearTimeout(timer)
     }, [])
 
-    if (status === 'loading') {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-            </div>
-        )
-    }
-
     return (
+        <>
+            <CheckoutSessionSync />
+            {status === 'loading' ? (
+                <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                    <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+                </div>
+            ) : (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
             <div className="max-w-2xl w-full bg-white border border-slate-200 rounded-[2.5rem] shadow-2xl overflow-hidden">
                 {/* 装飾的なヘッダーアクセント */}
@@ -139,6 +136,8 @@ function SuccessContent() {
                 </div>
             </div>
         </div>
+            )}
+        </>
     )
 }
 

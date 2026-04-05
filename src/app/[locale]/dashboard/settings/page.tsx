@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Settings, UserCircle } from 'lucide-react'
 import ProfileForm from '@/components/dashboard/ProfileForm'
+import { CheckoutSessionSync } from '@/components/stripe/CheckoutSessionSync'
 
 export default async function SettingsPage() {
     const supabase = await createClient()
@@ -13,6 +15,9 @@ export default async function SettingsPage() {
 
     return (
         <div className="bg-slate-50 min-h-screen pb-20">
+            <Suspense fallback={null}>
+                <CheckoutSessionSync />
+            </Suspense>
             {/* Header */}
             <div className="bg-navy-secondary py-16 text-white pt-24">
                 <div className="container mx-auto px-4">
