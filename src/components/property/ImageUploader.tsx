@@ -13,7 +13,7 @@ interface ImageUploaderProps {
 export default function ImageUploader({
     initialImages = [],
     onImagesChange,
-    maxImages = 10
+    maxImages = 20
 }: ImageUploaderProps) {
     const [previews, setPreviews] = useState<string[]>(initialImages)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -77,7 +77,7 @@ export default function ImageUploader({
                         画像をドラッグ＆ドロップ
                     </p>
                     <p className="text-slate-400 text-sm font-medium">
-                        またはクリックしてファイルを選択（最大10枚、5MBまで）
+                        またはクリックしてファイルを選択（最大{maxImages}枚、5MBまで）
                     </p>
                     <p className="text-[10px] text-slate-300 mt-4 uppercase tracking-widest font-bold">
                         SUPPORTED: JPG, PNG, WEBP
