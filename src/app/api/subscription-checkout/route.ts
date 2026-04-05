@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { getPublicSiteUrl } from '@/lib/site-url'
+import { buildProPlanInlineSubscriptionLineItem } from '@/lib/stripe-inline-pro-subscription'
+import type { SubscriptionBillingInterval } from '@/lib/stripe-subscription-prices'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
   apiVersion: '2026-01-28.clover',
@@ -14,8 +16,7 @@ export async function POST(req: Request) {
     const { billingPeriod } = (await req.json()) as { billingPeriod?: BillingPeriod }
 
     const period: BillingPeriod = billingPeriod === 'yearly' ? 'yearly' : 'monthly'
-    /** USD: Stripe unit_amount はセント単位（$160 → 16000） */
-    const unitAmountUsdCents = period === 'yearly' ? 160_000 : 16_000
+    const stripeInterval: SubscriptionBillingInterval = period === 'yearly' ? 'year' : 'month'
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -39,20 +40,7 @@ export async function POST(req: Request) {
       branding_settings: {
         display_name: 'Chonburi Home',
       },
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Chonburi Home: PRO (${period.toUpperCase()})`,
-              description: period === 'yearly' ? 'Yearly (USD)' : 'Monthly (USD)',
-            },
-            unit_amount: unitAmountUsdCents,
-            recurring: { interval: period === 'yearly' ? 'year' : 'month' },
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: [buildProPlanInlineSubscriptionLineItem(stripeInterval)],
       subscription_data: {
         ...(trialAlreadyUsed ? {} : { trial_period_days: 30 }),
         metadata: {

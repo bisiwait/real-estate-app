@@ -1,20 +1,28 @@
 /**
- * Stripe Checkout（サブスク）。`line_items[].price` はダッシュボードの Price ID を参照するため、
- * 通貨・金額は各 Price の設定に従う（例: プロプラン US$160/月・US$1,600/年 の recurring Price）。
- * STRIPE_PRICE_ID_MONTHLY / STRIPE_PRICE_ID_YEARLY（または NEXT_PUBLIC_*）を Stripe の Price ID に合わせること。
+ * Stripe Checkout（サブスク）。
+ * 既定ではダッシュボードの Product に依存せず、インラインの price_data（Pro・USD $160/月・$1,600/年）で Session を作成する。
+ * 旧カタログ Price を使う場合のみ `STRIPE_CHECKOUT_USE_CATALOG_PRICES=true` と Price ID を設定する。
  */
 import { NextResponse } from 'next/server'
 import stripe from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
-import { resolveSubscriptionPriceId, type SubscriptionBillingInterval } from '@/lib/stripe-subscription-prices'
+import {
+    resolveSubscriptionPriceId,
+    type SubscriptionBillingInterval,
+} from '@/lib/stripe-subscription-prices'
+import { buildProPlanInlineSubscriptionLineItem } from '@/lib/stripe-inline-pro-subscription'
 import { getPublicSiteUrl } from '@/lib/site-url'
 
 const BASE_URL = getPublicSiteUrl()
 
 interface CheckoutRequestBody {
     priceId?: string
-    /** 未指定時はサーバー環境変数から Price ID を解決 */
+    /** 未指定時はサーバー環境変数から Price ID を解決（カタログモード時のみ） */
     billingInterval?: SubscriptionBillingInterval
+}
+
+function useCatalogPrices(): boolean {
+    return process.env.STRIPE_CHECKOUT_USE_CATALOG_PRICES === 'true'
 }
 
 export async function POST(req: Request) {
@@ -23,16 +31,19 @@ export async function POST(req: Request) {
         const billingInterval: SubscriptionBillingInterval =
             body.billingInterval === 'year' ? 'year' : 'month'
 
-        const priceId = resolveSubscriptionPriceId({
-            billingInterval,
-            explicitPriceId: body.priceId,
-        })
+        const catalogMode = useCatalogPrices()
+        const priceId = catalogMode
+            ? resolveSubscriptionPriceId({
+                  billingInterval,
+                  explicitPriceId: body.priceId,
+              })
+            : null
 
-        if (!priceId) {
+        if (catalogMode && !priceId) {
             return NextResponse.json(
                 {
                     error:
-                        'Stripe の Price ID が未設定です。STRIPE_PRICE_ID_MONTHLY / STRIPE_PRICE_ID_YEARLY（または NEXT_PUBLIC 相当）を環境変数に設定してください。',
+                        'カタログ課金モードですが Price ID が解決できません。STRIPE_PRICE_ID_MONTHLY / STRIPE_PRICE_ID_YEARLY を設定するか、STRIPE_CHECKOUT_USE_CATALOG_PRICES を外してインライン課金にしてください。',
                 },
                 { status: 400 }
             )
@@ -59,18 +70,17 @@ export async function POST(req: Request) {
 
         const trialAlreadyUsed = Boolean(profileRow?.stripe_trial_consumed_at)
 
+        const lineItems = catalogMode
+            ? [{ price: priceId!, quantity: 1 }]
+            : [buildProPlanInlineSubscriptionLineItem(billingInterval)]
+
         const session = await stripe.checkout.sessions.create({
             mode: 'subscription',
             payment_method_types: ['card'],
             branding_settings: {
                 display_name: 'Chonburi Home',
             },
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
+            line_items: lineItems,
             subscription_data: {
                 ...(trialAlreadyUsed
                     ? {}

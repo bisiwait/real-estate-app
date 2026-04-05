@@ -26,6 +26,17 @@ export function stripeSubscriptionPriceIdsConfigured(): boolean {
     return monthlyId().length > 0 && yearlyId().length > 0;
 }
 
+/** Stripe Secret があれば、Price ID なしでもインライン price_data で Checkout 可能 */
+export function stripeSecretKeyConfigured(): boolean {
+    const k = process.env.STRIPE_SECRET_KEY?.trim()
+    return Boolean(k && k !== 'dummy_key_for_build')
+}
+
+/** 料金ページで「お申し込み」ボタンを出す条件（Price ID 方式 or シークレットキー方式） */
+export function stripeSubscriptionCheckoutAvailable(): boolean {
+    return stripeSubscriptionPriceIdsConfigured() || stripeSecretKeyConfigured()
+}
+
 export function resolveSubscriptionPriceId(params: {
     billingInterval: SubscriptionBillingInterval;
     /** クライアントから明示された場合（後方互換） */

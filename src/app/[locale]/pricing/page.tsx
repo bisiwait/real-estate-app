@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
-import { stripeSubscriptionPriceIdsConfigured } from "@/lib/stripe-subscription-prices";
+import { stripeSubscriptionCheckoutAvailable } from "@/lib/stripe-subscription-prices";
 import AgentListingPricingClient from "./AgentListingPricingClient";
 
 /** Stripe の設定はデプロイ後に変わるため、ビルド時固定の SSG にしない */
@@ -23,7 +23,7 @@ export async function generateMetadata({
 export default async function PricingPage({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
     const dict = await getDictionary(locale);
-    const stripeCheckoutReady = stripeSubscriptionPriceIdsConfigured();
+    const stripeCheckoutReady = stripeSubscriptionCheckoutAvailable();
     return (
         <AgentListingPricingClient dict={dict} locale={locale} stripeCheckoutReady={stripeCheckoutReady} />
     );
