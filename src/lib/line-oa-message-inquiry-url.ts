@@ -3,10 +3,8 @@ import { expandShortLineFriendUrlServer } from '@/lib/expand-line-friend-url'
 import { repairMistypedLinEeOnLineMeHost } from '@/lib/repair-line-friend-host'
 import { basicIdOrUrlToAddFriendUrl, tryResolveOfficialBasicIdViaMessagingApi } from '@/lib/line-official'
 
-/** 物件ページの下書き文末尾（日本語固定・ユーザー指定） */
-export const LINE_PROPERTY_INQUIRY_PREFILL_SUFFIX_JA = 'について空室を確認したいです'
-
 export type LinePropertyTitleFields = {
+  id?: string | null
   title?: string | null
   title_ja?: string | null
   title_en?: string | null
@@ -88,6 +86,7 @@ export function buildLineOaMessageUrl(atBasicId: string, text: string): string {
   return `https://line.me/R/oaMessage/${id}${q}`
 }
 
+/** LINE oaMessage の下書き。サイト名・物件名・物件IDでエージェントが即判別できるようにする */
 export function buildPropertyLineInquiryPrefillMessage(
   property: LinePropertyTitleFields,
   locale: string
@@ -98,10 +97,11 @@ export function buildPropertyLineInquiryPrefillMessage(
       : locale === 'th'
         ? (property.title_th || property.title_en || property.title_ja || property.title || '').trim()
         : (property.title_ja || property.title_en || property.title || '').trim()
-  const base =
+  const name =
     title ||
     (locale === 'jp' ? '物件' : locale === 'th' ? 'ประกาศ' : 'Property')
-  return `${base}${LINE_PROPERTY_INQUIRY_PREFILL_SUFFIX_JA}`
+  const pid = (property.id ?? '').trim() || '—'
+  return `【Chonburi Home】 ${name} (${pid}) について空室状況を教えてください。`
 }
 
 /**

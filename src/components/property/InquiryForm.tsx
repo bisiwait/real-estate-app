@@ -20,12 +20,7 @@ import {
 import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cookie'
 import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
 import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
-import {
-  lineAddFriendLinkHref,
-  isLineInAppBrowser,
-  shouldUseLineInAppAssignWorkaround,
-  normalizeLineFriendUrlInput,
-} from '@/lib/line-contact-url'
+import { LineOaLaunchOverlay, useLineOaLaunch } from '@/components/property/LineOaLaunch'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -425,6 +420,7 @@ export default function InquiryForm({
   /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
   const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
   const [portalReady, setPortalReady] = useState(false)
+  const lineOaLaunch = useLineOaLaunch(officialLineAddFriendUrl || undefined)
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -1236,27 +1232,22 @@ export default function InquiryForm({
       >
         {officialLineAddFriendUrl ? (
           <div className="mb-5 rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm">
-            <a
-              href={lineAddFriendLinkHref(officialLineAddFriendUrl)}
-              rel="noopener"
-              onClick={(e) => {
-                const raw = normalizeLineFriendUrlInput(officialLineAddFriendUrl)
-                const go = lineAddFriendLinkHref(raw)
-                if (!go.startsWith('http')) return
-                if (!isLineInAppBrowser()) return
-                if (!shouldUseLineInAppAssignWorkaround(go)) return
-                e.preventDefault()
-                window.location.assign(go)
-              }}
+            <LineOaLaunchOverlay
+              open={lineOaLaunch.launching}
+              message={p.line_launching_line_app ?? 'LINEアプリを起動中…'}
+            />
+            <button
+              type="button"
+              onClick={lineOaLaunch.launch}
               className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05a649]"
             >
               <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
-              <span>{p.line_inquiry_btn ?? 'LINEで問い合わせ'}</span>
+              <span>{p.line_inquiry_btn ?? 'LINEで空室を確認する'}</span>
               <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-            </a>
+            </button>
             <p className="mt-2 text-center text-[10px] font-medium leading-relaxed text-slate-600">
-              {p.inquiry_line_direct_hint ??
-                '担当者のLINEが開きます。サイトに問い合わせを残す場合は下のフォームもご利用ください。'}
+              {p.inquiry_line_vacancy_sub ??
+                '※自動で物件名が入力された状態でLINEが開きます'}
             </p>
           </div>
         ) : null}
