@@ -51,12 +51,28 @@ export function buildLineAgentReplyUrls(
   }
 }
 
-/** https の line.me URL から LINE アプリ用 line:// を生成（ホストが line.me 系のみ） */
+/**
+ * line.me 上で line:// ディープリンク化してよいパスのみ true。
+ * `https://line.me/RkXyf5D` のように lin.ee のスラッグを誤って line.me に載せると、
+ * 無条件変換で `line://RkXyf5D` となり LINE が「URLを確認」と出すためホワイトリストする。
+ */
+function lineMePathAllowsAppDeepLink(pathname: string): boolean {
+  return (
+    /^\/R\/ti\/p(\/|$)/.test(pathname) ||
+    pathname.startsWith('/R/oaMessage/') ||
+    /^\/ti\/p(\/|$)/.test(pathname)
+  )
+}
+
+/** https の line.me URL から LINE アプリ用 line:// を生成（公式トーク／友だち追加の既知パスのみ） */
 export function lineAppUrlFromHttps(httpsUrl: string): string | null {
   try {
     const u = new URL(httpsUrl)
     if (u.protocol !== 'https:' && u.protocol !== 'http:') return null
-    if (u.hostname !== 'line.me' && !u.hostname.endsWith('.line.me')) return null
+    const host = u.hostname.toLowerCase()
+    // liff.line.me 等は別用途のため、line:// へ載せ替えない
+    if (host !== 'line.me' && host !== 'www.line.me') return null
+    if (!lineMePathAllowsAppDeepLink(u.pathname)) return null
     const path = `${u.pathname.replace(/^\//, '')}${u.search}${u.hash}`
     return path ? `line://${path}` : null
   } catch {
