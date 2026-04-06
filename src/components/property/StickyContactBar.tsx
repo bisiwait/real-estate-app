@@ -1,12 +1,14 @@
 'use client'
 
 import React from 'react'
-import { Phone, Mail } from 'lucide-react'
+import { Phone, Mail, MessageCircle } from 'lucide-react'
 
 interface StickyContactBarProps {
     phoneNumber?: string
     /** false のとき電話ボタンを出さない（エージェント設定） */
     showPhoneInquiry?: boolean
+    /** 物件オーナー／サイト既定の友だち追加URL。あればスティッキーに LINE ショートカットを表示 */
+    lineInquiryUrl?: string
     dict: any
     isLoggedIn?: boolean
     onRequireAuth?: () => void
@@ -15,6 +17,7 @@ interface StickyContactBarProps {
 export default function StickyContactBar({
     phoneNumber,
     showPhoneInquiry = true,
+    lineInquiryUrl,
     dict,
     isLoggedIn = true,
     onRequireAuth,
@@ -56,6 +59,18 @@ export default function StickyContactBar({
                         >
                             <Phone className="w-5 h-5 mb-0.5" />
                             <span className="text-[9px] font-black uppercase text-center">{dict.common.call_btn || 'Call'}</span>
+                        </a>
+                    ) : null}
+
+                    {lineInquiryUrl ? (
+                        <a
+                            href={lineInquiryUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center border border-[#06C755]/40 bg-[#06C755] text-white w-14 h-14 rounded-xl active:scale-95 transition-all flex-shrink-0 shadow-md shadow-[#06C755]/20"
+                        >
+                            <MessageCircle className="w-5 h-5 mb-0.5" aria-hidden />
+                            <span className="text-[9px] font-black uppercase text-center">LINE</span>
                         </a>
                     ) : null}
 

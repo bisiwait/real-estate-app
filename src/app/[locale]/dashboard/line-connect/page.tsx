@@ -25,7 +25,7 @@ export default async function LineConnectPage({ params }: { params: Promise<{ lo
                         <div>
                             <h1 className="text-2xl font-black tracking-tight !text-slate-100 md:text-3xl">LINE連携の設定</h1>
                             <p className="mt-1 text-xs font-bold uppercase tracking-widest text-slate-400">
-                                専用ガイド付き · 3ステップで完了
+                                かんたん連携 · 友だち追加URLだけでOK
                             </p>
                         </div>
                     </div>

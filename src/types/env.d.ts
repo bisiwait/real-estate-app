@@ -39,6 +39,8 @@ namespace NodeJS {
         /** 友だち追加 URL・Basic ID（開発ホスト用オーバーライド） */
         NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?: string;
         NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL_DEV?: string;
+        /** 任意。LINE連携設定画面の「運営代行」案内リンク先（未設定時は公式LINEの友だち追加URLにフォールバック） */
+        NEXT_PUBLIC_OPERATIONS_SUPPORT_LINE_URL?: string;
         NEXT_PUBLIC_LINE_OFFICIAL_ID?: string;
         NEXT_PUBLIC_LINE_OFFICIAL_ID_DEV?: string;
         /** Messaging API（サーバーのみ）。開発ホスト用 */

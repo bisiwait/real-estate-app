@@ -403,7 +403,7 @@ export default function ProfileForm() {
                         LINE公式アカウント連携の設定
                     </h3>
                     <p className="mt-3 text-xs font-medium leading-relaxed text-slate-600">
-                        LINE Developers の用語に慣れていなくても、図つきの専用ページで手順どおりに進めれば完了できます。物件ページの「LINEで問い合わせ」やダッシュボードからの返信に必要な値をまとめて保存します。
+                        まずは<strong>友だち追加URLだけ</strong>で物件ページからお客様をLINEへ案内できます（API設定は不要）。管理画面からPushで初回返信を送りたい上級者向けの設定も、同じページの「上級者向け」から行えます。
                     </p>
                     <Link
                         href={`/${locale}/dashboard/line-connect`}
