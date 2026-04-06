@@ -1,3 +1,5 @@
+import { repairMistypedLinEeOnLineMeHost } from '@/lib/repair-line-friend-host'
+
 /** 問い合わせ者の LINE 連絡先として有効か（空・空白のみは false） */
 export function hasUsableLineContact(raw: string | null | undefined): boolean {
   return normalizeStoredLineContact(raw ?? '').length > 0
@@ -95,16 +97,17 @@ export function normalizeLineFriendUrlInput(raw: string): string {
 export function lineAddFriendLinkHref(publicUrl: string): string {
   const clean = normalizeLineFriendUrlInput(publicUrl)
   if (!clean) return clean
-  let normalized = clean
+  const repaired = repairMistypedLinEeOnLineMeHost(clean)
+  let normalized = repaired
   try {
-    const u = new URL(clean)
+    const u = new URL(repaired)
     if (u.protocol === 'http:') {
-      normalized = clean.replace(/^http:/i, 'https:')
+      normalized = repaired.replace(/^http:/i, 'https:')
     }
   } catch {
-    return clean
+    return repaired
   }
-  return lineAppUrlFromHttps(normalized) ?? clean
+  return lineAppUrlFromHttps(normalized) ?? normalized
 }
 
 /** LINE アプリ内 WebView かどうか（ユーザーエージェント簡易判定） */

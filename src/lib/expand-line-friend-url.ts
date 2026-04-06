@@ -1,4 +1,5 @@
 import { unstable_cache } from 'next/cache'
+import { repairMistypedLinEeOnLineMeHost } from '@/lib/repair-line-friend-host'
 
 function isLinEeHost(hostname: string): boolean {
   const h = hostname.toLowerCase()
@@ -47,17 +48,18 @@ async function expandLinEeOnce(startUrl: string): Promise<string> {
 export async function expandShortLineFriendUrlServer(url: string): Promise<string> {
   const trimmed = url.trim()
   if (!trimmed) return trimmed
+  const repaired = repairMistypedLinEeOnLineMeHost(trimmed)
   try {
-    const u = new URL(trimmed)
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return trimmed
-    if (!isLinEeHost(u.hostname)) return trimmed
+    const u = new URL(repaired)
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return repaired
+    if (!isLinEeHost(u.hostname)) return repaired
   } catch {
-    return trimmed
+    return repaired
   }
 
   return unstable_cache(
-    async () => expandLinEeOnce(trimmed),
-    ['expand-lin-ee-friend', trimmed],
+    async () => expandLinEeOnce(repaired),
+    ['expand-lin-ee-friend', repaired],
     { revalidate: 86_400 }
   )()
 }
