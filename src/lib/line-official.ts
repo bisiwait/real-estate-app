@@ -7,6 +7,7 @@ import {
   lineMessagingPlaneForHostname,
 } from '@/lib/env/line-data-plane'
 import { resolveDataPlaneHostname } from '@/lib/env/deployment-target'
+import { expandShortLineFriendUrlServer } from '@/lib/expand-line-friend-url'
 
 /**
  * サイト共通の公式 LINE（友だち追加）URL。
@@ -187,10 +188,12 @@ const cachedAddFriendUrlFromBotTokenProd = unstable_cache(
 export async function resolveOfficialLineAddFriendUrl(hostname?: string | null): Promise<string> {
   const host = resolveDataPlaneHostname(hostname ?? null)
   const fromEnv = getOfficialLineAddFriendUrlForHostname(host)?.trim()
-  if (fromEnv) return fromEnv
+  if (fromEnv) return expandShortLineFriendUrlServer(fromEnv)
 
   const lineOfficialId = getLineOfficialIdForHostname(host)?.trim()
-  if (lineOfficialId) return basicIdOrUrlToAddFriendUrl(lineOfficialId)
+  if (lineOfficialId) {
+    return expandShortLineFriendUrlServer(basicIdOrUrlToAddFriendUrl(lineOfficialId))
+  }
 
   const token = getLineOfficialChannelAccessTokenForHostname(host)
   if (token) {
@@ -199,8 +202,8 @@ export async function resolveOfficialLineAddFriendUrl(hostname?: string | null):
       plane === 'dev'
         ? await cachedAddFriendUrlFromBotTokenDev()
         : await cachedAddFriendUrlFromBotTokenProd()
-    if (fromApi) return fromApi
+    if (fromApi) return expandShortLineFriendUrlServer(fromApi)
   }
 
-  return basicIdOrUrlToAddFriendUrl(DEFAULT_OFFICIAL_LINE_ID)
+  return expandShortLineFriendUrlServer(basicIdOrUrlToAddFriendUrl(DEFAULT_OFFICIAL_LINE_ID))
 }

@@ -7,6 +7,7 @@ import { createStaticClientForHostname } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { basicIdOrUrlToAddFriendUrl, resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
+import { expandShortLineFriendUrlServer } from '@/lib/expand-line-friend-url'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 
 export const revalidate = 60
@@ -139,6 +140,8 @@ export default async function Page({
             officialLineAddFriendUrl = basicIdOrUrlToAddFriendUrl(bid)
         }
     }
+
+    officialLineAddFriendUrl = await expandShortLineFriendUrlServer(officialLineAddFriendUrl)
 
     return (
         <Suspense
