@@ -165,7 +165,7 @@ export function buildLineInquiryEntryUrl(
     const msg = prefilledMessage.trim()
     const q = msg ? `?text=${encodeURIComponent(msg)}` : ''
     return {
-      url: `https://line.me/R/oaMessage/${basicId}${q}`,
+      url: `https://line.me/R/oaMessage/${basicId}/${q}`,
       mode: 'oa_prefill',
     }
   }

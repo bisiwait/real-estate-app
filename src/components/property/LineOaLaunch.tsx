@@ -1,72 +1,78 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  lineAddFriendLinkHref,
-  isLineInAppBrowser,
-  normalizeLineFriendUrlInput,
-  shouldUseLineInAppAssignWorkaround,
-} from '@/lib/line-contact-url'
-import { Loader2 } from 'lucide-react'
+import { normalizeLineFriendUrlInput } from '@/lib/line-contact-url'
+
+/** 描画を1フレーム進めてから叩くまでの待ち（ms） */
+const ASSIGN_DELAY_MS = 100
+/** 同一ページのままならフォールバックリンクを出すまで（ms） */
+const FALLBACK_CHECK_MS = 3000
 
 /**
- * LINE 内蔵ブラウザの assign ワークアラウンドを踏まえて遷移する。
- * 必ずユーザークリックと同一の同期スタックで呼ぶこと（setTimeout 後だと iOS / LINE WebView でブロックされやすい）。
+ * サーバーが組んだ `https://line.me/R/oaMessage/...` をそのまま assign。
+ * line:// へは変換しない（直通 https の方が起動が安定しやすい）。
  */
-export function navigateToLineInquiry(officialUrl: string) {
-  const raw = normalizeLineFriendUrlInput(officialUrl)
-  const go = lineAddFriendLinkHref(raw)
-  if (go.startsWith('http') && isLineInAppBrowser() && shouldUseLineInAppAssignWorkaround(go)) {
-    window.location.assign(go)
-    return
-  }
-  window.location.assign(go)
+export function assignLineMeOaMessageUrl(officialUrl: string) {
+  const u = normalizeLineFriendUrlInput(officialUrl).trim()
+  if (!u) return
+  window.location.assign(u)
 }
 
-export function LineOaLaunchOverlay({ open, message }: { open: boolean; message: string }) {
-  if (!open) return null
-  return (
-    <div
-      className="fixed inset-0 z-[100020] flex flex-col items-center justify-center bg-slate-900/55 p-6 backdrop-blur-[2px]"
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      <Loader2 className="mb-4 h-12 w-12 animate-spin text-white" aria-hidden />
-      <p className="max-w-xs text-center text-base font-bold text-white">{message}</p>
-    </div>
-  )
-}
-
-const OVERLAY_FAILSAFE_MS = 2800
+export type LineOaLaunchPhase = 'idle' | 'sending' | 'fallback'
 
 export function useLineOaLaunch(officialLineUrl: string | undefined) {
-  const [launching, setLaunching] = useState(false)
-  const failSafeRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [phase, setPhase] = useState<LineOaLaunchPhase>('idle')
+  const assignTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const startHrefRef = useRef<string>('')
 
-  useEffect(() => {
-    return () => {
-      if (failSafeRef.current) {
-        clearTimeout(failSafeRef.current)
-        failSafeRef.current = null
-      }
+  const clearTimers = useCallback(() => {
+    if (assignTimerRef.current) {
+      clearTimeout(assignTimerRef.current)
+      assignTimerRef.current = null
+    }
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current)
+      fallbackTimerRef.current = null
     }
   }, [])
 
-  const launch = useCallback(() => {
-    if (!officialLineUrl?.trim()) return
-    if (failSafeRef.current) {
-      clearTimeout(failSafeRef.current)
-      failSafeRef.current = null
-    }
-    setLaunching(true)
-    // 遅延なしで遷移（遅延するとユーザージスチャーが切れて LINE 起動が無視される）
-    navigateToLineInquiry(officialLineUrl)
-    failSafeRef.current = window.setTimeout(() => {
-      failSafeRef.current = null
-      setLaunching(false)
-    }, OVERLAY_FAILSAFE_MS)
-  }, [officialLineUrl])
+  useEffect(() => () => clearTimers(), [clearTimers])
 
-  return { launching, launch }
+  const launch = useCallback(() => {
+    const url = officialLineUrl?.trim()
+    if (!url) return
+    clearTimers()
+    startHrefRef.current = window.location.href
+    setPhase('sending')
+    assignTimerRef.current = window.setTimeout(() => {
+      assignTimerRef.current = null
+      assignLineMeOaMessageUrl(url)
+    }, ASSIGN_DELAY_MS)
+    fallbackTimerRef.current = window.setTimeout(() => {
+      fallbackTimerRef.current = null
+      try {
+        if (
+          document.visibilityState === 'visible' &&
+          window.location.href === startHrefRef.current
+        ) {
+          setPhase('fallback')
+        } else {
+          setPhase('idle')
+        }
+      } catch {
+        setPhase('idle')
+      }
+    }, FALLBACK_CHECK_MS)
+  }, [officialLineUrl, clearTimers])
+
+  const directUrl = officialLineUrl?.trim() ?? ''
+
+  return {
+    phase,
+    isSending: phase === 'sending',
+    showFallback: phase === 'fallback',
+    launch,
+    directUrl,
+  }
 }

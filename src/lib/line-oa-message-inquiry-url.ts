@@ -20,7 +20,7 @@ export function extractAtBasicIdFromLineFriendOrOaHttpsUrl(url: string): string 
     const host = u.hostname.toLowerCase()
     if (host !== 'line.me' && host !== 'www.line.me') return null
     const p = u.pathname
-    const oa = p.match(/^\/R\/oaMessage\/(@[^/]+)/i)
+    const oa = p.match(/^\/R\/oaMessage\/(@[^/]+)\/?/i)
     if (oa) return oa[1]
     const ti = p.match(/^\/R\/ti\/p\/([^/]+)/i)
     if (!ti) return null
@@ -76,17 +76,17 @@ export async function resolveLineOfficialBasicIdForOaMessage(
 }
 
 /**
- * `https://line.me/R/oaMessage/@BasicId?text=...`（LINE 公式の下書き付きトーク用）
+ * 直通: `https://line.me/R/oaMessage/@BasicId/?text=...`（公式 oaMessage・下書き付きトーク）
  */
 export function buildLineOaMessageUrl(atBasicId: string, text: string): string {
   const raw = atBasicId.trim()
   const id = raw.startsWith('@') ? raw : `@${raw.replace(/^@+/, '')}`
   const body = text.trim()
   const q = body ? `?text=${encodeURIComponent(body)}` : ''
-  return `https://line.me/R/oaMessage/${id}${q}`
+  return `https://line.me/R/oaMessage/${id}/${q}`
 }
 
-/** LINE oaMessage の下書き。サイト名・物件名・物件IDでエージェントが即判別できるようにする */
+/** oaMessage の下書き本文（物件名＋空室の一文） */
 export function buildPropertyLineInquiryPrefillMessage(
   property: LinePropertyTitleFields,
   locale: string
@@ -100,8 +100,7 @@ export function buildPropertyLineInquiryPrefillMessage(
   const name =
     title ||
     (locale === 'jp' ? '物件' : locale === 'th' ? 'ประกาศ' : 'Property')
-  const pid = (property.id ?? '').trim() || '—'
-  return `【Chonburi Home】 ${name} (${pid}) について空室状況を教えてください。`
+  return `${name}の空室状況を教えてください`
 }
 
 /**

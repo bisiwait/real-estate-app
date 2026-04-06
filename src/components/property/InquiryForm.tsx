@@ -20,7 +20,7 @@ import {
 import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cookie'
 import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
 import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
-import { LineOaLaunchOverlay, useLineOaLaunch } from '@/components/property/LineOaLaunch'
+import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -1232,19 +1232,31 @@ export default function InquiryForm({
       >
         {officialLineAddFriendUrl ? (
           <div className="mb-5 rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm">
-            <LineOaLaunchOverlay
-              open={lineOaLaunch.launching}
-              message={p.line_launching_line_app ?? 'LINEアプリを起動中…'}
-            />
             <button
               type="button"
               onClick={lineOaLaunch.launch}
-              className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05a649]"
+              disabled={lineOaLaunch.isSending}
+              className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05a649] disabled:opacity-85"
             >
               <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
-              <span>{p.line_inquiry_btn ?? 'LINEで空室を確認する'}</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+              <span>
+                {lineOaLaunch.isSending
+                  ? (p.line_inquiry_sending_btn ?? '送信中…')
+                  : (p.line_inquiry_btn ?? 'LINEで空室を確認する')}
+              </span>
+              {!lineOaLaunch.isSending ? (
+                <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+              ) : null}
             </button>
+            {lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
+              <a
+                href={lineOaLaunch.directUrl}
+                className="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-[#06C755] bg-white py-2.5 text-center text-sm font-black text-[#047c3d] underline-offset-2 hover:bg-[#06C755]/5"
+                rel="noopener noreferrer"
+              >
+                {p.line_open_line_direct_link ?? 'LINEを直接開く'}
+              </a>
+            ) : null}
             <p className="mt-2 text-center text-[10px] font-medium leading-relaxed text-slate-600">
               {p.inquiry_line_vacancy_sub ??
                 '※自動で物件名が入力された状態でLINEが開きます'}

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Phone, Mail, MessageCircle } from 'lucide-react'
-import { LineOaLaunchOverlay, useLineOaLaunch } from '@/components/property/LineOaLaunch'
+import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
 
 interface StickyContactBarProps {
     phoneNumber?: string
@@ -54,10 +54,6 @@ export default function StickyContactBar({
             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/95 to-transparent h-full -top-4 pointer-events-none" />
 
             <div className="relative min-w-0 max-w-full bg-white border-t border-slate-100 p-3 pb-2 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] pointer-events-auto">
-                <LineOaLaunchOverlay
-                    open={lineOaLaunch.launching}
-                    message={dict.property?.line_launching_line_app ?? 'LINEアプリを起動中…'}
-                />
                 <div className="container mx-auto flex min-w-0 max-w-full items-center justify-center gap-2 sm:gap-3 px-1">
                     {tel ? (
                         <a
@@ -73,12 +69,15 @@ export default function StickyContactBar({
                         <button
                             type="button"
                             onClick={lineOaLaunch.launch}
-                            className="flex min-h-14 min-w-[3.75rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#06C755]/40 bg-[#06C755] px-1 py-1 text-white shadow-md shadow-[#06C755]/20 transition-all active:scale-95 flex-shrink-0"
+                            disabled={lineOaLaunch.isSending}
+                            className="flex min-h-14 min-w-[3.75rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#06C755]/40 bg-[#06C755] px-1 py-1 text-white shadow-md shadow-[#06C755]/20 transition-all active:scale-95 flex-shrink-0 disabled:opacity-85"
                             aria-label={dict.property?.line_inquiry_btn ?? 'LINEで空室を確認する'}
                         >
                             <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
                             <span className="max-w-[4.25rem] text-center text-[8px] font-black leading-tight">
-                                {dict.property?.line_inquiry_sticky_short ?? '空室'}
+                                {lineOaLaunch.isSending
+                                    ? (dict.property?.line_inquiry_sending_short ?? '送信中')
+                                    : (dict.property?.line_inquiry_sticky_short ?? '空室')}
                             </span>
                         </button>
                     ) : null}
@@ -96,10 +95,21 @@ export default function StickyContactBar({
                 </div>
 
                 {lineInquiryUrl ? (
-                    <p className="mx-auto mt-1.5 max-w-md px-2 text-center text-[9px] font-medium leading-snug text-slate-500">
-                        {dict.property?.inquiry_line_vacancy_sub ??
-                            '※自動で物件名が入力された状態でLINEが開きます'}
-                    </p>
+                    <div className="mx-auto mt-1.5 max-w-md px-2 text-center">
+                        {lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
+                            <a
+                                href={lineOaLaunch.directUrl}
+                                className="mb-1 inline-block text-[10px] font-black text-[#047c3d] underline"
+                                rel="noopener noreferrer"
+                            >
+                                {dict.property?.line_open_line_direct_link ?? 'LINEを直接開く'}
+                            </a>
+                        ) : null}
+                        <p className="text-[9px] font-medium leading-snug text-slate-500">
+                            {dict.property?.inquiry_line_vacancy_sub ??
+                                '※自動で物件名が入力された状態でLINEが開きます'}
+                        </p>
+                    </div>
                 ) : null}
 
                 <div className="h-safe-bottom pt-1" />
