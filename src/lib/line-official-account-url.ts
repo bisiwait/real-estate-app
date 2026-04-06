@@ -1,4 +1,25 @@
 /**
+ * アプリでコピーした友だち追加URL（https://lin.ee/... または https://line.me/...）として有効か。
+ */
+export function isLineOfficialConnectionUrl(raw: string): boolean {
+    const t = raw.trim()
+    if (!t) return false
+    let u: URL
+    try {
+        u = new URL(t)
+    } catch {
+        return false
+    }
+    if (u.protocol !== 'https:') return false
+    const host = u.hostname.toLowerCase()
+    // 友だち追加用ショートリンク
+    if (host === 'lin.ee' || host.endsWith('.lin.ee')) return true
+    // 公式の line.me ドメイン（liff./api. 等は除外）
+    if (host === 'line.me' || host === 'www.line.me') return true
+    return false
+}
+
+/**
  * LINE 公式アカウントの友だち追加URL（例: https://line.me/R/ti/p/@basicId）かどうか。
  * パス内の @ は URL エンコード（%40）されていても可。
  */
@@ -32,6 +53,5 @@ export function isLineOfficialAccountAddFriendUrl(raw: string): boolean {
         return false
     }
 
-    // Basic ID（@から始まる英数字・._- など。実際のIDに合わせてやや寛容に）
     return /^@[a-zA-Z0-9._-]{1,128}$/.test(seg)
 }

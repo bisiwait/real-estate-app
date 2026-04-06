@@ -15,15 +15,53 @@ import {
     ChevronUp,
     ExternalLink,
     Wrench,
-    Smartphone,
+    ArrowBigDown,
 } from 'lucide-react'
 import Dialog from '@/components/ui/Dialog'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { getOfficialLineAddFriendUrl, LINE_OFFICIAL_ACCOUNT_APP_IOS, LINE_OFFICIAL_ACCOUNT_APP_ANDROID } from '@/lib/line-official'
-import { isLineOfficialAccountAddFriendUrl } from '@/lib/line-official-account-url'
+import { isLineOfficialConnectionUrl } from '@/lib/line-official-account-url'
 import { clsx } from 'clsx'
 
 type GuideStep = 1 | 2 | 3
+
+/**
+ * 提供スクリーンショット（Screenshot_2026-04-06-13-34-08-16… 等）を次のファイル名で配置してください:
+ * public/images/line-official-app-guide/step-1-home.png
+ * public/images/line-official-app-guide/step-2-url-create.png
+ * public/images/line-official-app-guide/step-3-copy-url.png
+ */
+const LINE_APP_GUIDE_IMAGES = {
+    step1: '/images/line-official-app-guide/step-1-home.png',
+    step2: '/images/line-official-app-guide/step-2-url-create.png',
+    step3: '/images/line-official-app-guide/step-3-copy-url.png',
+} as const
+
+function GuideStepScreenshot({ src, alt }: { src: string; alt: string }) {
+    const [failed, setFailed] = useState(false)
+    if (failed) {
+        return (
+            <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+                <ImageIcon className="h-10 w-10 text-slate-400" aria-hidden />
+                <p className="text-xs font-black text-slate-600">スクリーンショット画像を配置してください</p>
+                <code className="max-w-full break-all rounded-lg bg-white px-2 py-1 text-[10px] text-slate-600">{src}</code>
+                <p className="text-[10px] font-medium leading-relaxed text-slate-500">
+                    ご提供の画像（Screenshot_2026-04-06-13-34-08-16… / 13-34-16-20… / 13-34-22-86…）を上記パスに保存してください。
+                </p>
+            </div>
+        )
+    }
+    return (
+        // eslint-disable-next-line @next/next/no-img-element -- 動的パス・配置漏れ時の onError 表示のため
+        <img
+            src={src}
+            alt={alt}
+            className="mx-auto max-h-[min(52vh,460px)] w-full max-w-[300px] rounded-2xl border border-slate-200 bg-slate-900/5 object-contain shadow-lg"
+            loading="lazy"
+            onError={() => setFailed(true)}
+        />
+    )
+}
 
 function getOperationsSupportLineUrl(): string {
     const env = process.env.NEXT_PUBLIC_OPERATIONS_SUPPORT_LINE_URL?.trim()
@@ -254,12 +292,11 @@ export default function LineConnectClient({ locale }: { locale: string }) {
     const [lineChannelAccessToken, setLineChannelAccessToken] = useState('')
     const [guideOpen, setGuideOpen] = useState<GuideStep | null>(null)
     const [advancedOpen, setAdvancedOpen] = useState(false)
-    const [createAccountGuideOpen, setCreateAccountGuideOpen] = useState(false)
     const successRef = useRef<HTMLDivElement>(null)
     const operationsLineUrl = getOperationsSupportLineUrl()
 
     const urlFormatOk = useMemo(
-        () => isLineOfficialAccountAddFriendUrl(lineFriendAddUrl),
+        () => isLineOfficialConnectionUrl(lineFriendAddUrl),
         [lineFriendAddUrl]
     )
 
@@ -432,142 +469,159 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                 </p>
             </div>
 
-            <div className="mb-6 rounded-2xl border-2 border-navy-primary/15 bg-gradient-to-br from-slate-50 to-white p-1 shadow-sm">
-                <button
-                    type="button"
-                    onClick={() => setCreateAccountGuideOpen((o) => !o)}
-                    className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-4 text-left transition hover:bg-white/80"
-                >
-                    <span className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#06C755]/15 text-[#047c3d]">
-                            <Smartphone className="h-6 w-6" aria-hidden />
-                        </span>
-                        <span className="min-w-0">
-                            <span className="block text-sm font-black leading-snug text-navy-secondary md:text-base">
-                                LINE公式アカウントをお持ちでない方はこちら（3分で作成）
-                            </span>
-                            <span className="mt-0.5 block text-[11px] font-medium text-slate-500">
-                                スマホアプリだけで作成〜友だち追加URLの取得まで
-                            </span>
-                        </span>
-                    </span>
-                    {createAccountGuideOpen ? (
-                        <ChevronUp className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />
-                    ) : (
-                        <ChevronDown className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />
-                    )}
-                </button>
-                {createAccountGuideOpen ? (
-                    <div className="space-y-4 border-t border-slate-200/80 px-4 py-5 md:px-5">
-                        <ol className="list-none space-y-4 text-sm font-medium text-slate-700">
-                            <li className="flex gap-3">
-                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-xs font-black text-white">
-                                    1
-                                </span>
-                                <div className="min-w-0 pt-0.5 leading-relaxed">
-                                    スマホで「LINE公式アカウント」アプリ（<strong>L字型のアイコン</strong>
-                                    ）をインストールしてください。
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                        <a
-                                            href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black text-navy-secondary transition hover:bg-slate-50"
-                                        >
-                                            App Store
-                                            <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
-                                        </a>
-                                        <a
-                                            href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black text-navy-secondary transition hover:bg-slate-50"
-                                        >
-                                            Google Play
-                                            <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
-                                        </a>
-                                    </div>
-                                </div>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-xs font-black text-white">
-                                    2
-                                </span>
-                                <p className="min-w-0 pt-0.5 leading-relaxed">
-                                    アプリを開き、<strong>「LINEアプリでログイン」</strong>
-                                    を選び、画面の案内に沿ってアカウント名（屋号）を入力して作成します。
-                                </p>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-xs font-black text-white">
-                                    3
-                                </span>
-                                <p className="min-w-0 pt-0.5 leading-relaxed">
-                                    ホーム画面の<strong>「友だちを増やす」</strong>→
-                                    <strong>「URLを作成」</strong>
-                                    で表示されたURLをコピーし、下の入力欄に貼り付けて保存してください。
-                                </p>
-                            </li>
-                        </ol>
-                    </div>
-                ) : null}
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm space-y-3">
-                    <div className="space-y-2">
-                        <label htmlFor="line-official-account-url" className="block text-sm font-black text-navy-secondary">
-                            LINE公式アカウントのURL
-                        </label>
-                        <p className="text-xs font-medium text-slate-500">
-                            例：{' '}
-                            <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px]">https://line.me/R/ti/p/@あなたのID</code>
-                            。入力中に形式が正しければ緑のチェックが表示されます。
-                        </p>
-                        <div className="relative">
-                            <input
-                                id="line-official-account-url"
-                                type="text"
-                                inputMode="url"
-                                value={lineFriendAddUrl}
-                                onChange={(e) => {
-                                    setLineFriendAddUrl(e.target.value)
-                                    setCelebrate(false)
-                                }}
-                                className={clsx(
-                                    'w-full rounded-xl border bg-slate-50 py-3 pl-4 pr-12 text-sm outline-none transition focus:ring-2',
-                                    urlFormatOk
-                                        ? 'border-emerald-400 ring-navy-primary/0 focus:border-emerald-500 focus:ring-emerald-500/20'
-                                        : 'border-slate-200 ring-navy-primary/0 focus:ring-navy-primary/30'
-                                )}
-                                placeholder="https://line.me/R/ti/p/@your_basic_id"
-                                autoComplete="off"
-                                aria-invalid={lineFriendAddUrl.trim().length > 0 && !urlFormatOk}
-                            />
-                            {urlFormatOk ? (
-                                <>
-                                    <span
-                                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600"
-                                        title="URLの形式を確認しました"
-                                    >
-                                        <CheckCircle2 className="h-6 w-6" strokeWidth={2.25} aria-hidden />
-                                    </span>
-                                    <span className="sr-only" aria-live="polite">
-                                        LINE公式アカウントのURLの形式は正しく見えます。
-                                    </span>
-                                </>
-                            ) : null}
-                        </div>
-                        {lineFriendAddUrl.trim().length > 0 && !urlFormatOk ? (
-                            <p className="text-[11px] font-medium text-amber-800/90">
-                                URLは <code className="rounded bg-amber-100/80 px-1">https://line.me/R/ti/p/@</code>{' '}
-                                で始まる形式かご確認ください（https必須）。
+                <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
+                    <div className="min-w-0 space-y-10">
+                        <div>
+                            <h2 className="text-lg font-black tracking-tight text-navy-secondary md:text-xl">
+                                アプリからURLをコピーするだけ
+                            </h2>
+                            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">
+                                左の画面どおりに進め、最後にコピーしたURLを右の欄に貼って保存してください。
                             </p>
-                        ) : null}
-                    </div>
-                </div>
+                            <p className="mt-3 text-[11px] font-bold text-slate-500">
+                                アプリをまだ入れていない方：
+                                <a
+                                    href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ml-2 inline-flex items-center gap-0.5 font-black text-[#047c3d] underline decoration-[#06C755]/40 underline-offset-2 hover:text-[#035c2e]"
+                                >
+                                    App Store
+                                    <ExternalLink className="h-3 w-3" aria-hidden />
+                                </a>
+                                <span className="mx-1.5 text-slate-300">|</span>
+                                <a
+                                    href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-0.5 font-black text-[#047c3d] underline decoration-[#06C755]/40 underline-offset-2 hover:text-[#035c2e]"
+                                >
+                                    Google Play
+                                    <ExternalLink className="h-3 w-3" aria-hidden />
+                                </a>
+                            </p>
+                        </div>
 
-                <div className="rounded-2xl border border-amber-200/80 bg-amber-50/50 p-1">
+                        <section className="space-y-3">
+                            <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                ステップ①
+                            </p>
+                            <h3 className="text-sm font-black text-navy-secondary md:text-base">アプリのホーム画面</h3>
+                            <GuideStepScreenshot
+                                src={LINE_APP_GUIDE_IMAGES.step1}
+                                alt="LINE公式アカウントアプリのホーム。右下に友だちを増やすボタンがある画面"
+                            />
+                            <p className="text-sm font-medium leading-relaxed text-slate-700">
+                                「LINE公式アカウント」アプリを開き、右下の{' '}
+                                <strong className="text-navy-secondary">『友だちを増やす』</strong> ボタンをタップします。
+                            </p>
+                        </section>
+
+                        <section className="space-y-3">
+                            <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                ステップ②
+                            </p>
+                            <h3 className="text-sm font-black text-navy-secondary md:text-base">増やす方法の選択</h3>
+                            <GuideStepScreenshot
+                                src={LINE_APP_GUIDE_IMAGES.step2}
+                                alt="友だちを増やす画面。右下にURLを作成パネルがある画面"
+                            />
+                            <p className="text-sm font-medium leading-relaxed text-slate-700">
+                                右下にある <strong className="text-navy-secondary">『URLを作成』</strong> パネルをタップします。
+                            </p>
+                        </section>
+
+                        <section className="space-y-3">
+                            <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                ステップ③
+                            </p>
+                            <h3 className="text-sm font-black text-navy-secondary md:text-base">URLのコピー</h3>
+                            <GuideStepScreenshot
+                                src={LINE_APP_GUIDE_IMAGES.step3}
+                                alt="作成されたURLと緑色のURLをコピーボタンがある画面"
+                            />
+                            <p className="text-sm font-medium leading-relaxed text-slate-700">
+                                表示されたURLを確認し、緑色の{' '}
+                                <strong className="text-navy-secondary">『URLをコピー』</strong> ボタンをタップします。
+                            </p>
+                        </section>
+                    </div>
+
+                    <div className="min-w-0 lg:sticky lg:top-24">
+                        <div className="rounded-[1.75rem] border-2 border-navy-primary/15 bg-gradient-to-b from-white via-slate-50/90 to-white p-6 shadow-xl md:p-8">
+                            <div className="flex flex-col items-center gap-1 text-center">
+                                <ArrowBigDown className="h-12 w-12 shrink-0 text-[#06C755]" strokeWidth={1.25} aria-hidden />
+                                <p className="text-lg font-black leading-snug text-navy-secondary">
+                                    ここに貼り付けて保存してください
+                                </p>
+                                <p className="text-xs font-medium text-slate-500">コピーしたURLをそのまま貼り付けてください</p>
+                            </div>
+
+                            <div className="mt-8 space-y-4">
+                                <label htmlFor="line-official-account-url" className="block text-sm font-black text-navy-secondary">
+                                    LINE公式アカウントのURL
+                                </label>
+                                <p className="text-xs font-medium text-slate-500">
+                                    <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px]">https://lin.ee/...</code> または{' '}
+                                    <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px]">https://line.me/...</code>{' '}
+                                    で始まる形式です。
+                                </p>
+                                <div className="relative">
+                                    <input
+                                        id="line-official-account-url"
+                                        type="text"
+                                        inputMode="url"
+                                        value={lineFriendAddUrl}
+                                        onChange={(e) => {
+                                            setLineFriendAddUrl(e.target.value)
+                                            setCelebrate(false)
+                                        }}
+                                        className={clsx(
+                                            'w-full rounded-xl border bg-slate-50 py-3 pl-4 pr-12 text-sm outline-none transition focus:ring-2',
+                                            urlFormatOk
+                                                ? 'border-emerald-400 ring-navy-primary/0 focus:border-emerald-500 focus:ring-emerald-500/20'
+                                                : 'border-slate-200 ring-navy-primary/0 focus:ring-navy-primary/30'
+                                        )}
+                                        placeholder="https://lin.ee/xxxxxxxx"
+                                        autoComplete="off"
+                                        aria-invalid={lineFriendAddUrl.trim().length > 0 && !urlFormatOk}
+                                    />
+                                    {urlFormatOk ? (
+                                        <>
+                                            <span
+                                                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600"
+                                                title="URLの形式を確認しました"
+                                            >
+                                                <CheckCircle2 className="h-6 w-6" strokeWidth={2.25} aria-hidden />
+                                            </span>
+                                            <span className="sr-only" aria-live="polite">
+                                                連携準備が整いました。
+                                            </span>
+                                        </>
+                                    ) : null}
+                                </div>
+
+                                {urlFormatOk ? (
+                                    <div
+                                        className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-900 shadow-sm"
+                                        aria-live="polite"
+                                    >
+                                        <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
+                                        連携準備が整いました！
+                                    </div>
+                                ) : null}
+
+                                {lineFriendAddUrl.trim().length > 0 && !urlFormatOk ? (
+                                    <p className="text-[11px] font-medium text-amber-800/90">
+                                        URLは <code className="rounded bg-amber-100/80 px-1">https://lin.ee/</code> または{' '}
+                                        <code className="rounded bg-amber-100/80 px-1">https://line.me/</code>{' '}
+                                        で始まる必要があります（https必須）。
+                                    </p>
+                                ) : null}
+                            </div>
+
+                            <div className="mt-8 rounded-2xl border border-amber-200/80 bg-amber-50/50 p-1">
                     <button
                         type="button"
                         onClick={() => setAdvancedOpen((o) => !o)}
@@ -670,17 +724,20 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                             </div>
                         </div>
                     ) : null}
-                </div>
+                            </div>
 
-                <div className="flex justify-end pt-2">
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-[#06C755] px-10 py-4 text-sm font-black text-white shadow-lg transition hover:bg-[#05a649] disabled:opacity-50"
-                    >
-                        {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-                        設定を保存する
-                    </button>
+                            <div className="mt-8 flex justify-end border-t border-slate-200/80 pt-6">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#06C755] py-4 text-sm font-black text-white shadow-lg transition hover:bg-[#05a649] disabled:opacity-50 sm:w-auto sm:px-12"
+                                >
+                                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                                    設定を保存する
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
 
