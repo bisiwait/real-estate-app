@@ -109,6 +109,19 @@ async function fetchBotInfoBasicId(accessToken: string): Promise<string | null> 
   }
 }
 
+/** サーバー専用。Messaging API の bot/info から @Basic ID を取得（友だち追加 URL から ID が取れないときのフォールバック）。 */
+export async function tryResolveOfficialBasicIdViaMessagingApi(
+  hostname?: string | null
+): Promise<string | null> {
+  const host = resolveDataPlaneHostname(hostname ?? null)
+  const token = getLineOfficialChannelAccessTokenForHostname(host)
+  if (!token) return null
+  const bid = await fetchBotInfoBasicId(token)
+  if (!bid) return null
+  const x = bid.trim()
+  return x.startsWith('@') ? x : `@${x.replace(/^@+/, '')}`
+}
+
 async function fetchAddFriendUrlFromMessagingApi(
   accessToken: string
 ): Promise<string | null> {

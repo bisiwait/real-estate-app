@@ -7,7 +7,7 @@ import { createStaticClientForHostname } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { basicIdOrUrlToAddFriendUrl, resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
-import { expandShortLineFriendUrlServer } from '@/lib/expand-line-friend-url'
+import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry-url'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 
 export const revalidate = 60
@@ -118,7 +118,7 @@ export default async function Page({
 }: {
     params: Promise<{ locale: string; id: string }>
 }) {
-    const { id } = await params
+    const { id, locale } = await params
     const hdrs = await headers()
     const hostname = hostHeaderFromHeaders(hdrs)
     const property = await fetchProperty(id, hostname)
@@ -141,7 +141,12 @@ export default async function Page({
         }
     }
 
-    officialLineAddFriendUrl = await expandShortLineFriendUrlServer(officialLineAddFriendUrl)
+    officialLineAddFriendUrl = await buildPropertyLineInquiryUrlServer(
+        officialLineAddFriendUrl,
+        property,
+        locale,
+        hostname
+    )
 
     return (
         <Suspense

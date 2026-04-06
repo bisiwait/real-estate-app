@@ -16,11 +16,15 @@ import {
     ExternalLink,
     Wrench,
     ArrowBigDown,
+    Smartphone,
 } from 'lucide-react'
 import Dialog from '@/components/ui/Dialog'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { getOfficialLineAddFriendUrl, LINE_OFFICIAL_ACCOUNT_APP_IOS, LINE_OFFICIAL_ACCOUNT_APP_ANDROID } from '@/lib/line-official'
-import { isLineOfficialConnectionUrl } from '@/lib/line-official-account-url'
+import {
+    isLineOfficialAccountAddFriendUrl,
+    isLineOfficialConnectionUrl,
+} from '@/lib/line-official-account-url'
 import { clsx } from 'clsx'
 
 type GuideStep = 1 | 2 | 3
@@ -292,13 +296,45 @@ export default function LineConnectClient({ locale }: { locale: string }) {
     const [lineChannelAccessToken, setLineChannelAccessToken] = useState('')
     const [guideOpen, setGuideOpen] = useState<GuideStep | null>(null)
     const [advancedOpen, setAdvancedOpen] = useState(false)
+    const [deviceTestUrl, setDeviceTestUrl] = useState<string | null>(null)
+    const [deviceTestErr, setDeviceTestErr] = useState<string | null>(null)
+    const [deviceTestLoading, setDeviceTestLoading] = useState(false)
     const successRef = useRef<HTMLDivElement>(null)
     const operationsLineUrl = getOperationsSupportLineUrl()
 
-    const urlFormatOk = useMemo(
-        () => isLineOfficialConnectionUrl(lineFriendAddUrl),
-        [lineFriendAddUrl]
-    )
+    const urlFormatOk = useMemo(() => {
+        const raw = lineFriendAddUrl.trim()
+        if (!raw) return false
+        if (/^@[A-Za-z0-9._-]{2,128}$/.test(raw)) return true
+        return isLineOfficialConnectionUrl(raw) || isLineOfficialAccountAddFriendUrl(raw)
+    }, [lineFriendAddUrl])
+
+    const runDeviceOaMessageTest = async () => {
+        const raw = lineFriendAddUrl.trim()
+        if (!urlFormatOk) return
+        setDeviceTestLoading(true)
+        setDeviceTestErr(null)
+        try {
+            const res = await fetch('/api/line/preview-oa-message-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rawUrl: raw }),
+            })
+            const data = (await res.json()) as { url?: string; error?: string }
+            if (!res.ok || !data.url) {
+                setDeviceTestErr(data.error || 'プレビューに失敗しました')
+                setDeviceTestUrl(null)
+                return
+            }
+            setDeviceTestUrl(data.url)
+            window.open(data.url, '_blank', 'noopener,noreferrer')
+        } catch {
+            setDeviceTestErr('通信に失敗しました')
+            setDeviceTestUrl(null)
+        } finally {
+            setDeviceTestLoading(false)
+        }
+    }
 
     useEffect(() => {
         const run = async () => {
@@ -450,7 +486,7 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                         </p>
                         <p className="text-sm font-bold text-emerald-800/90 flex items-center gap-2">
                             <CheckCircle2 className="h-5 w-5 shrink-0" />
-                            設定は保存済みです。物件ページの「LINE問い合わせ」から友だち追加ページへ進めます。
+                            設定は保存済みです。物件ページの「LINE問い合わせ」は oaMessage 形式で開き、物件名入りの下書き付きトークになります。
                         </p>
                     </div>
                 </div>
@@ -465,7 +501,7 @@ export default function LineConnectClient({ locale }: { locale: string }) {
             <div className="mb-6 flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5">
                 <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
                 <p className="text-xs font-bold leading-relaxed text-emerald-900">
-                    かんたん連携では API キーは不要です。下の公式アカウント用URLを1つ貼るだけで、物件ページからお客様をあなたのLINEへ案内できます。
+                    かんたん連携では API キーは不要です。貼ったURL（lin.ee 等）はサイト側で @Basic ID に解決し、物件ページでは下書き付きトーク（oaMessage）で開きます。
                 </p>
             </div>
 
@@ -555,7 +591,10 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                 <p className="text-lg font-black leading-snug text-navy-secondary">
                                     ここに貼り付けて保存してください
                                 </p>
-                                <p className="text-xs font-medium text-slate-500">コピーしたURLをそのまま貼り付けてください</p>
+                                <p className="text-xs font-medium text-slate-500">
+                                    コピーしたURL（または <code className="rounded bg-slate-100 px-1">@BasicID</code>
+                                    ）を貼り付けてください
+                                </p>
                             </div>
 
                             <div className="mt-8 space-y-4">
@@ -612,11 +651,63 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                     </div>
                                 ) : null}
 
+                                {urlFormatOk ? (
+                                    <div className="space-y-3 rounded-2xl border border-navy-primary/15 bg-white p-4 shadow-sm">
+                                        <p className="text-xs font-bold leading-relaxed text-navy-secondary">
+                                            <Smartphone className="mr-1.5 inline-block h-4 w-4 align-text-bottom text-[#06C755]" aria-hidden />
+                                            自分のスマホで動作確認（iPhone / Android）
+                                        </p>
+                                        <p className="text-[11px] font-medium leading-relaxed text-slate-600">
+                                            ボタンで<strong>物件ページと同じ方式</strong>のリンクを新しいタブで開きます。LINE
+                                            アプリに切り替わり、<strong>下書き付きのトーク画面</strong>
+                                            が表示されれば成功です。公式アカウント未友だちの場合は、先に友だち追加が出ることがあります（LINE
+                                            側の仕様です）。
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => void runDeviceOaMessageTest()}
+                                            disabled={deviceTestLoading}
+                                            className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white py-3 text-sm font-black text-[#047c3d] transition hover:bg-[#06C755]/10 disabled:opacity-50"
+                                        >
+                                            {deviceTestLoading ? (
+                                                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                                            ) : (
+                                                <Smartphone className="h-5 w-5" aria-hidden />
+                                            )}
+                                            自分のスマホで動作確認
+                                        </button>
+                                        {deviceTestErr ? (
+                                            <p className="text-[11px] font-bold text-red-600">{deviceTestErr}</p>
+                                        ) : null}
+                                        {deviceTestUrl ? (
+                                            <div className="flex flex-col items-center gap-2 border-t border-slate-100 pt-3">
+                                                <p className="text-[10px] font-bold text-slate-500">スマホのカメラで読み取り（同一URL）</p>
+                                                {/* eslint-disable-next-line @next/next/no-img-element -- 外部QR API・動的URL */}
+                                                <img
+                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=1&data=${encodeURIComponent(deviceTestUrl)}`}
+                                                    alt=""
+                                                    className="rounded-xl border border-slate-200 bg-white p-1"
+                                                    width={180}
+                                                    height={180}
+                                                />
+                                                <a
+                                                    href={deviceTestUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-[11px] font-black text-[#047c3d] underline"
+                                                >
+                                                    リンクをもう一度開く
+                                                </a>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+
                                 {lineFriendAddUrl.trim().length > 0 && !urlFormatOk ? (
                                     <p className="text-[11px] font-medium text-amber-800/90">
-                                        URLは <code className="rounded bg-amber-100/80 px-1">https://lin.ee/</code> または{' '}
-                                        <code className="rounded bg-amber-100/80 px-1">https://line.me/</code>{' '}
-                                        で始まる必要があります（https必須）。
+                                        <code className="rounded bg-amber-100/80 px-1">https://lin.ee/...</code> または{' '}
+                                        <code className="rounded bg-amber-100/80 px-1">https://line.me/...</code>（https必須）、または{' '}
+                                        <code className="rounded bg-amber-100/80 px-1">@BasicID</code> を入力してください。
                                     </p>
                                 ) : null}
                             </div>
