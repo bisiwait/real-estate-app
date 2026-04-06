@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   lineAddFriendLinkHref,
   isLineInAppBrowser,
@@ -9,9 +9,10 @@ import {
 } from '@/lib/line-contact-url'
 import { Loader2 } from 'lucide-react'
 
-const LAUNCH_DELAY_MS = 420
-
-/** LINE 内蔵ブラウザの assign ワークアラウンドを踏まえて遷移する */
+/**
+ * LINE 内蔵ブラウザの assign ワークアラウンドを踏まえて遷移する。
+ * 必ずユーザークリックと同一の同期スタックで呼ぶこと（setTimeout 後だと iOS / LINE WebView でブロックされやすい）。
+ */
 export function navigateToLineInquiry(officialUrl: string) {
   const raw = normalizeLineFriendUrlInput(officialUrl)
   const go = lineAddFriendLinkHref(raw)
@@ -19,7 +20,7 @@ export function navigateToLineInquiry(officialUrl: string) {
     window.location.assign(go)
     return
   }
-  window.location.href = go
+  window.location.assign(go)
 }
 
 export function LineOaLaunchOverlay({ open, message }: { open: boolean; message: string }) {
@@ -37,15 +38,34 @@ export function LineOaLaunchOverlay({ open, message }: { open: boolean; message:
   )
 }
 
+const OVERLAY_FAILSAFE_MS = 2800
+
 export function useLineOaLaunch(officialLineUrl: string | undefined) {
   const [launching, setLaunching] = useState(false)
+  const failSafeRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (failSafeRef.current) {
+        clearTimeout(failSafeRef.current)
+        failSafeRef.current = null
+      }
+    }
+  }, [])
 
   const launch = useCallback(() => {
     if (!officialLineUrl?.trim()) return
+    if (failSafeRef.current) {
+      clearTimeout(failSafeRef.current)
+      failSafeRef.current = null
+    }
     setLaunching(true)
-    window.setTimeout(() => {
-      navigateToLineInquiry(officialLineUrl)
-    }, LAUNCH_DELAY_MS)
+    // 遅延なしで遷移（遅延するとユーザージスチャーが切れて LINE 起動が無視される）
+    navigateToLineInquiry(officialLineUrl)
+    failSafeRef.current = window.setTimeout(() => {
+      failSafeRef.current = null
+      setLaunching(false)
+    }, OVERLAY_FAILSAFE_MS)
   }, [officialLineUrl])
 
   return { launching, launch }
