@@ -51,15 +51,50 @@ export function buildLineAgentReplyUrls(
   }
 }
 
-function lineAppUrlFromHttps(httpsUrl: string): string | null {
+/** https の line.me URL から LINE アプリ用 line:// を生成（ホストが line.me 系のみ） */
+export function lineAppUrlFromHttps(httpsUrl: string): string | null {
   try {
     const u = new URL(httpsUrl)
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null
     if (u.hostname !== 'line.me' && !u.hostname.endsWith('.line.me')) return null
     const path = `${u.pathname.replace(/^\//, '')}${u.search}${u.hash}`
     return path ? `line://${path}` : null
   } catch {
     return null
   }
+}
+
+const ZERO_WIDTH_RE = /[\u200B-\u200D\uFEFF]/g
+
+/** 友だち追加URLのコピペ用（前後空白・ゼロ幅文字を除去） */
+export function normalizeLineFriendUrlInput(raw: string): string {
+  return (raw ?? '').trim().replace(ZERO_WIDTH_RE, '')
+}
+
+/**
+ * 物件ページ等の「LINEで友だち追加」リンク用 href。
+ * line.me の https URL は line:// に寄せると、LINE 内蔵ブラウザや別タブで https を開いたときの 404 を避けやすい。
+ * lin.ee 等は https のまま。
+ */
+export function lineAddFriendLinkHref(publicUrl: string): string {
+  const clean = normalizeLineFriendUrlInput(publicUrl)
+  if (!clean) return clean
+  let normalized = clean
+  try {
+    const u = new URL(clean)
+    if (u.protocol === 'http:') {
+      normalized = clean.replace(/^http:/i, 'https:')
+    }
+  } catch {
+    return clean
+  }
+  return lineAppUrlFromHttps(normalized) ?? clean
+}
+
+/** LINE アプリ内 WebView かどうか（ユーザーエージェント簡易判定） */
+export function isLineInAppBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /\bLine\//i.test(navigator.userAgent)
 }
 
 /**

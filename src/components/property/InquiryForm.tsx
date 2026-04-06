@@ -20,6 +20,11 @@ import {
 import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cookie'
 import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
 import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
+import {
+  lineAddFriendLinkHref,
+  isLineInAppBrowser,
+  normalizeLineFriendUrlInput,
+} from '@/lib/line-contact-url'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -1231,9 +1236,16 @@ export default function InquiryForm({
         {officialLineAddFriendUrl ? (
           <div className="mb-5 rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm">
             <a
-              href={officialLineAddFriendUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={lineAddFriendLinkHref(officialLineAddFriendUrl)}
+              rel="noopener"
+              onClick={(e) => {
+                const raw = normalizeLineFriendUrlInput(officialLineAddFriendUrl)
+                const go = lineAddFriendLinkHref(raw)
+                if (!go.startsWith('http')) return
+                if (!isLineInAppBrowser()) return
+                e.preventDefault()
+                window.location.assign(go)
+              }}
               className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05a649]"
             >
               <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
