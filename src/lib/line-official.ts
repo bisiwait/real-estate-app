@@ -8,6 +8,7 @@ import {
 } from '@/lib/env/line-data-plane'
 import { resolveDataPlaneHostname } from '@/lib/env/deployment-target'
 import { expandShortLineFriendUrlServer } from '@/lib/expand-line-friend-url'
+import { repairMistypedLinEeOnLineMeHost } from '@/lib/repair-line-friend-host'
 
 /**
  * サイト共通の公式 LINE（友だち追加）URL。
@@ -27,7 +28,7 @@ const DEFAULT_OFFICIAL_LINE_ID = '@chonburihome'
 /** Basic ID（@xxx）または既存の line.me URL から友だち追加 URL を返す */
 export function basicIdOrUrlToAddFriendUrl(idOrUrl: string): string {
   const raw = idOrUrl.trim()
-  if (/^https?:\/\//i.test(raw)) return raw
+  if (/^https?:\/\//i.test(raw)) return repairMistypedLinEeOnLineMeHost(raw)
 
   const pathId = raw.startsWith('@') ? raw : `@${raw.replace(/^@+/g, '')}`
   const segment =

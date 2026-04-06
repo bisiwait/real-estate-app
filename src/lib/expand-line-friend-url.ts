@@ -11,6 +11,23 @@ function isLineMeFamilyHost(hostname: string): boolean {
   return h === 'line.me' || h.endsWith('.line.me')
 }
 
+/** LINE が 301 で付ける oat_content / ts 等はリクエストごとに変わる。パスが同じなら同一友だち追加なのでクエリを落とす。 */
+function canonicalLineMeFriendUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    const host = u.hostname.toLowerCase()
+    if (host !== 'line.me' && host !== 'www.line.me') return url
+    if (!/^\/R\/ti\/p\//.test(u.pathname) && !/^\/R\/oaMessage\//.test(u.pathname)) {
+      return url
+    }
+    u.search = ''
+    u.hash = ''
+    return u.toString()
+  } catch {
+    return url
+  }
+}
+
 async function expandLinEeOnce(startUrl: string): Promise<string> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
@@ -31,8 +48,7 @@ async function expandLinEeOnce(startUrl: string): Promise<string> {
       console.warn('[expandLineFriendUrl] unexpected host after redirect', fu.hostname)
       return startUrl
     }
-    fu.hash = ''
-    return fu.toString()
+    return canonicalLineMeFriendUrl(fu.toString())
   } catch (e) {
     clearTimeout(timeout)
     console.warn('[expandLineFriendUrl] fetch failed', e)
@@ -43,7 +59,7 @@ async function expandLinEeOnce(startUrl: string): Promise<string> {
 /**
  * 友だち追加用 `https://lin.ee/...` をサーバーでリダイレクト追跡し、`https://line.me/R/ti/p/...` へ展開する。
  * LINE 内蔵ブラウザでは短縮 URL のままだと「URLを確認してください」になりやすい。
- * それ以外の URL はそのまま返す（同一入力は unstable_cache で 24h）。
+ * それ以外の URL はそのまま返す（同一入力は unstable_cache で 1h）。
  */
 export async function expandShortLineFriendUrlServer(url: string): Promise<string> {
   const trimmed = url.trim()
@@ -60,6 +76,6 @@ export async function expandShortLineFriendUrlServer(url: string): Promise<strin
   return unstable_cache(
     async () => expandLinEeOnce(repaired),
     ['expand-lin-ee-friend', repaired],
-    { revalidate: 86_400 }
+    { revalidate: 3600 }
   )()
 }

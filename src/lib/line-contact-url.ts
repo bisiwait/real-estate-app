@@ -22,9 +22,12 @@ export function normalizeStoredLineContact(raw: string | null | undefined): stri
 export function buildLineContactUrl(lineIdRaw: string | null | undefined): string | null {
   const normalized = normalizeStoredLineContact(lineIdRaw ?? '')
   if (!normalized) return null
-  if (/^https?:\/\//i.test(normalized)) return normalized
+  if (/^https?:\/\//i.test(normalized)) {
+    return repairMistypedLinEeOnLineMeHost(normalized)
+  }
   if (/^line\.me\//i.test(normalized) || /^www\.line\.me\//i.test(normalized)) {
-    return `https://${normalized.replace(/^https?:\/\//i, '').trim()}`
+    const full = `https://${normalized.replace(/^https?:\/\//i, '').trim()}`
+    return repairMistypedLinEeOnLineMeHost(full)
   }
   const pathCore = normalized.startsWith('~') ? normalized : `~${normalized}`
   return `https://line.me/R/ti/p/${encodeURIComponent(pathCore)}`
