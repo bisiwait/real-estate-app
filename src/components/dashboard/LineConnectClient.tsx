@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -15,10 +15,13 @@ import {
     ChevronUp,
     ExternalLink,
     Wrench,
+    Smartphone,
 } from 'lucide-react'
 import Dialog from '@/components/ui/Dialog'
 import { getErrorMessage } from '@/lib/utils/errors'
-import { getOfficialLineAddFriendUrl } from '@/lib/line-official'
+import { getOfficialLineAddFriendUrl, LINE_OFFICIAL_ACCOUNT_APP_IOS, LINE_OFFICIAL_ACCOUNT_APP_ANDROID } from '@/lib/line-official'
+import { isLineOfficialAccountAddFriendUrl } from '@/lib/line-official-account-url'
+import { clsx } from 'clsx'
 
 type GuideStep = 1 | 2 | 3
 
@@ -251,8 +254,14 @@ export default function LineConnectClient({ locale }: { locale: string }) {
     const [lineChannelAccessToken, setLineChannelAccessToken] = useState('')
     const [guideOpen, setGuideOpen] = useState<GuideStep | null>(null)
     const [advancedOpen, setAdvancedOpen] = useState(false)
+    const [createAccountGuideOpen, setCreateAccountGuideOpen] = useState(false)
     const successRef = useRef<HTMLDivElement>(null)
     const operationsLineUrl = getOperationsSupportLineUrl()
+
+    const urlFormatOk = useMemo(
+        () => isLineOfficialAccountAddFriendUrl(lineFriendAddUrl),
+        [lineFriendAddUrl]
+    )
 
     useEffect(() => {
         const run = async () => {
@@ -372,15 +381,22 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                 href={operationsLineUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mb-8 flex flex-col gap-2 rounded-2xl border-2 border-[#06C755] bg-gradient-to-br from-[#06C755]/12 via-white to-emerald-50/80 p-5 shadow-md transition hover:border-[#05a649] hover:shadow-lg md:flex-row md:items-center md:justify-between"
+                className="mb-8 block overflow-hidden rounded-[1.75rem] border-[3px] border-[#06C755] bg-gradient-to-br from-[#06C755]/20 via-white to-emerald-50 p-6 shadow-xl shadow-[#06C755]/15 transition hover:border-[#049948] hover:shadow-2xl md:p-8"
             >
-                <p className="text-sm font-black leading-snug text-navy-secondary md:max-w-[calc(100%-8rem)]">
-                    設定がわからない方は、運営が無料で代行します。こちらからお問い合わせください
-                </p>
-                <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#06C755] px-5 py-3 text-xs font-black text-white shadow-md">
-                    公式LINEを開く
-                    <ExternalLink className="h-4 w-4" aria-hidden />
-                </span>
+                <div className="flex flex-col items-stretch gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
+                    <div className="min-w-0 space-y-2">
+                        <p className="text-base font-black leading-snug text-navy-secondary md:text-lg md:leading-relaxed">
+                            作成方法がわからない場合は、運営のLINEが画面越しにサポートします
+                        </p>
+                        <p className="text-xs font-bold text-emerald-900/80">
+                            無料でご案内します。お気軽にトークでお声がけください。
+                        </p>
+                    </div>
+                    <span className="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#06C755] px-8 py-4 text-sm font-black text-white shadow-lg shadow-[#06C755]/35">
+                        運営の公式LINEを開く
+                        <ExternalLink className="h-5 w-5" aria-hidden />
+                    </span>
+                </div>
             </a>
 
             {celebrate && (
@@ -412,33 +428,142 @@ export default function LineConnectClient({ locale }: { locale: string }) {
             <div className="mb-6 flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5">
                 <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
                 <p className="text-xs font-bold leading-relaxed text-emerald-900">
-                    かんたん連携では API キーは不要です。LINE公式アカウントの
-                    <strong>友だち追加用URL</strong>を1つ貼るだけで、物件ページからお客様をあなたのLINEへ案内できます。
+                    かんたん連携では API キーは不要です。下の公式アカウント用URLを1つ貼るだけで、物件ページからお客様をあなたのLINEへ案内できます。
                 </p>
+            </div>
+
+            <div className="mb-6 rounded-2xl border-2 border-navy-primary/15 bg-gradient-to-br from-slate-50 to-white p-1 shadow-sm">
+                <button
+                    type="button"
+                    onClick={() => setCreateAccountGuideOpen((o) => !o)}
+                    className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-4 text-left transition hover:bg-white/80"
+                >
+                    <span className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#06C755]/15 text-[#047c3d]">
+                            <Smartphone className="h-6 w-6" aria-hidden />
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block text-sm font-black leading-snug text-navy-secondary md:text-base">
+                                LINE公式アカウントをお持ちでない方はこちら（3分で作成）
+                            </span>
+                            <span className="mt-0.5 block text-[11px] font-medium text-slate-500">
+                                スマホアプリだけで作成〜友だち追加URLの取得まで
+                            </span>
+                        </span>
+                    </span>
+                    {createAccountGuideOpen ? (
+                        <ChevronUp className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />
+                    ) : (
+                        <ChevronDown className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />
+                    )}
+                </button>
+                {createAccountGuideOpen ? (
+                    <div className="space-y-4 border-t border-slate-200/80 px-4 py-5 md:px-5">
+                        <ol className="list-none space-y-4 text-sm font-medium text-slate-700">
+                            <li className="flex gap-3">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-xs font-black text-white">
+                                    1
+                                </span>
+                                <div className="min-w-0 pt-0.5 leading-relaxed">
+                                    スマホで「LINE公式アカウント」アプリ（<strong>L字型のアイコン</strong>
+                                    ）をインストールしてください。
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        <a
+                                            href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black text-navy-secondary transition hover:bg-slate-50"
+                                        >
+                                            App Store
+                                            <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
+                                        </a>
+                                        <a
+                                            href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black text-navy-secondary transition hover:bg-slate-50"
+                                        >
+                                            Google Play
+                                            <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            <li className="flex gap-3">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-xs font-black text-white">
+                                    2
+                                </span>
+                                <p className="min-w-0 pt-0.5 leading-relaxed">
+                                    アプリを開き、<strong>「LINEアプリでログイン」</strong>
+                                    を選び、画面の案内に沿ってアカウント名（屋号）を入力して作成します。
+                                </p>
+                            </li>
+                            <li className="flex gap-3">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-xs font-black text-white">
+                                    3
+                                </span>
+                                <p className="min-w-0 pt-0.5 leading-relaxed">
+                                    ホーム画面の<strong>「友だちを増やす」</strong>→
+                                    <strong>「URLを作成」</strong>
+                                    で表示されたURLをコピーし、下の入力欄に貼り付けて保存してください。
+                                </p>
+                            </li>
+                        </ol>
+                    </div>
+                ) : null}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm space-y-3">
                     <div className="space-y-2">
-                        <label className="block text-sm font-black text-navy-secondary">あなたのLINE友だち追加URL</label>
+                        <label htmlFor="line-official-account-url" className="block text-sm font-black text-navy-secondary">
+                            LINE公式アカウントのURL
+                        </label>
                         <p className="text-xs font-medium text-slate-500">
-                            LINE Official Account Manager の「友だち追加」やトークのメニューからコピーできる
-                            <code className="mx-0.5 rounded bg-slate-100 px-1 py-0.5 text-[10px]">https://line.me/R/ti/p/@...</code>
-                            形式のURLを貼り付けてください。従来どおり <code className="mx-0.5 rounded bg-slate-100 px-1 py-0.5 text-[10px]">@あなたのID</code>{' '}
-                            だけでも保存できます。
+                            例：{' '}
+                            <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px]">https://line.me/R/ti/p/@あなたのID</code>
+                            。入力中に形式が正しければ緑のチェックが表示されます。
                         </p>
-                        <input
-                            type="text"
-                            inputMode="url"
-                            value={lineFriendAddUrl}
-                            onChange={(e) => {
-                                setLineFriendAddUrl(e.target.value)
-                                setCelebrate(false)
-                            }}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none ring-navy-primary/0 transition focus:ring-2"
-                            placeholder="https://line.me/R/ti/p/@your_basic_id"
-                            autoComplete="off"
-                        />
+                        <div className="relative">
+                            <input
+                                id="line-official-account-url"
+                                type="text"
+                                inputMode="url"
+                                value={lineFriendAddUrl}
+                                onChange={(e) => {
+                                    setLineFriendAddUrl(e.target.value)
+                                    setCelebrate(false)
+                                }}
+                                className={clsx(
+                                    'w-full rounded-xl border bg-slate-50 py-3 pl-4 pr-12 text-sm outline-none transition focus:ring-2',
+                                    urlFormatOk
+                                        ? 'border-emerald-400 ring-navy-primary/0 focus:border-emerald-500 focus:ring-emerald-500/20'
+                                        : 'border-slate-200 ring-navy-primary/0 focus:ring-navy-primary/30'
+                                )}
+                                placeholder="https://line.me/R/ti/p/@your_basic_id"
+                                autoComplete="off"
+                                aria-invalid={lineFriendAddUrl.trim().length > 0 && !urlFormatOk}
+                            />
+                            {urlFormatOk ? (
+                                <>
+                                    <span
+                                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600"
+                                        title="URLの形式を確認しました"
+                                    >
+                                        <CheckCircle2 className="h-6 w-6" strokeWidth={2.25} aria-hidden />
+                                    </span>
+                                    <span className="sr-only" aria-live="polite">
+                                        LINE公式アカウントのURLの形式は正しく見えます。
+                                    </span>
+                                </>
+                            ) : null}
+                        </div>
+                        {lineFriendAddUrl.trim().length > 0 && !urlFormatOk ? (
+                            <p className="text-[11px] font-medium text-amber-800/90">
+                                URLは <code className="rounded bg-amber-100/80 px-1">https://line.me/R/ti/p/@</code>{' '}
+                                で始まる形式かご確認ください（https必須）。
+                            </p>
+                        ) : null}
                     </div>
                 </div>
 
