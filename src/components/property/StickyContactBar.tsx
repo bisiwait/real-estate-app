@@ -2,7 +2,12 @@
 
 import React from 'react'
 import { Phone, Mail, MessageCircle } from 'lucide-react'
-import { lineAddFriendLinkHref, isLineInAppBrowser, normalizeLineFriendUrlInput } from '@/lib/line-contact-url'
+import {
+  lineAddFriendLinkHref,
+  isLineInAppBrowser,
+  normalizeLineFriendUrlInput,
+  shouldUseLineInAppAssignWorkaround,
+} from '@/lib/line-contact-url'
 
 interface StickyContactBarProps {
     phoneNumber?: string
@@ -68,11 +73,11 @@ export default function StickyContactBar({
                             href={lineAddFriendLinkHref(lineInquiryUrl)}
                             rel="noopener"
                             onClick={(e) => {
-                                // LINE 内蔵ブラウザで target=_blank や別タブ経由の https 遷移が 404 になることがあるため、https のときは同一タブで開く
                                 const raw = normalizeLineFriendUrlInput(lineInquiryUrl)
                                 const go = lineAddFriendLinkHref(raw)
                                 if (!go.startsWith('http')) return
                                 if (!isLineInAppBrowser()) return
+                                if (!shouldUseLineInAppAssignWorkaround(go)) return
                                 e.preventDefault()
                                 window.location.assign(go)
                             }}

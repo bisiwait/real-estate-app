@@ -98,6 +98,22 @@ export function isLineInAppBrowser(): boolean {
 }
 
 /**
+ * LINE 内蔵ブラウザで `location.assign(https://…)` すると、lin.ee の友だち追加短縮URLが
+ * 「LINEを最新バージョンに…／URLを確認」で失敗しやすい。通常のアンカークリックに任せる。
+ */
+export function shouldUseLineInAppAssignWorkaround(href: string): boolean {
+  const clean = normalizeLineFriendUrlInput(href)
+  if (!clean.startsWith('http')) return false
+  try {
+    const u = new URL(clean)
+    if (u.hostname === 'lin.ee' || u.hostname.endsWith('.lin.ee')) return false
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
  * リード詳細の「LINEで返信」用。プロフィールの `line_id` に ID または友だち追加 URL を保存する想定。
  * - http(s) で始まる → そのまま href
  * - line.me のパス形式（スキームなし）→ https を付与

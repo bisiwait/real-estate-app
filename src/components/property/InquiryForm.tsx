@@ -23,6 +23,7 @@ import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
 import {
   lineAddFriendLinkHref,
   isLineInAppBrowser,
+  shouldUseLineInAppAssignWorkaround,
   normalizeLineFriendUrlInput,
 } from '@/lib/line-contact-url'
 
@@ -1243,6 +1244,7 @@ export default function InquiryForm({
                 const go = lineAddFriendLinkHref(raw)
                 if (!go.startsWith('http')) return
                 if (!isLineInAppBrowser()) return
+                if (!shouldUseLineInAppAssignWorkaround(go)) return
                 e.preventDefault()
                 window.location.assign(go)
               }}
