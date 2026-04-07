@@ -17,6 +17,9 @@ import {
     Wrench,
     ArrowBigDown,
     Smartphone,
+    Settings,
+    MessageCircle,
+    AlertTriangle,
 } from 'lucide-react'
 import Dialog from '@/components/ui/Dialog'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -71,6 +74,62 @@ function getOperationsSupportLineUrl(): string {
     const env = process.env.NEXT_PUBLIC_OPERATIONS_SUPPORT_LINE_URL?.trim()
     if (env) return env
     return getOfficialLineAddFriendUrl()
+}
+
+/** 設定 → 応答設定 → チャットモード の流れ（概念図） */
+function SvgChatModeSettingsFlow() {
+    const id = useId().replace(/:/g, '')
+    return (
+        <svg viewBox="0 0 520 200" className="h-auto w-full max-w-[520px]" role="img" aria-label="設定から応答設定へ進み、チャットモードを選ぶ流れ">
+            <defs>
+                <linearGradient id={`cm-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fef2f2" />
+                    <stop offset="100%" stopColor="#f1f5f9" />
+                </linearGradient>
+            </defs>
+            <rect width="520" height="200" rx="12" fill={`url(#cm-${id})`} stroke="#fecaca" strokeWidth="1" />
+            <text x="260" y="28" textAnchor="middle" fontSize="12" fill="#991b1b" fontWeight="700" fontFamily="system-ui,sans-serif">
+                LINE公式アカウントアプリ内のイメージ
+            </text>
+            {/* ホーム */}
+            <rect x="24" y="52" width="100" height="72" rx="10" fill="#fff" stroke="#cbd5e1" />
+            <text x="74" y="82" textAnchor="middle" fontSize="10" fill="#64748b" fontFamily="system-ui,sans-serif">
+                ホーム
+            </text>
+            <circle cx="74" cy="108" r="14" fill="#e2e8f0" stroke="#94a3b8" />
+            <text x="74" y="112" textAnchor="middle" fontSize="12" fill="#475569">
+                ⚙
+            </text>
+            <text x="74" y="128" textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="system-ui,sans-serif">
+                設定
+            </text>
+            <text x="140" y="92" fontSize="18" fill="#94a3b8">
+                →
+            </text>
+            {/* 応答設定 */}
+            <rect x="164" y="52" width="120" height="72" rx="10" fill="#fff" stroke="#06C755" strokeWidth="2" />
+            <text x="224" y="82" textAnchor="middle" fontSize="11" fill="#0f172a" fontWeight="700" fontFamily="system-ui,sans-serif">
+                応答設定
+            </text>
+            <text x="224" y="100" textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="system-ui,sans-serif">
+                応答モード
+            </text>
+            <text x="300" y="92" fontSize="18" fill="#94a3b8">
+                →
+            </text>
+            {/* チャット選択 */}
+            <rect x="324" y="52" width="172" height="72" rx="10" fill="#ecfdf5" stroke="#06C755" strokeWidth="2" />
+            <text x="410" y="80" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="system-ui,sans-serif">
+                「ボット」ではなく
+            </text>
+            <text x="410" y="100" textAnchor="middle" fontSize="12" fill="#047857" fontWeight="800" fontFamily="system-ui,sans-serif">
+                「チャット」を選択
+            </text>
+            <text x="260" y="178" textAnchor="middle" fontSize="10" fill="#b91c1c" fontWeight="700" fontFamily="system-ui,sans-serif">
+                ※ アプリの表示はバージョンにより異なる場合があります
+            </text>
+        </svg>
+    )
 }
 
 function SvgGuideStep1() {
@@ -299,6 +358,7 @@ export default function LineConnectClient({ locale }: { locale: string }) {
     const [deviceTestUrl, setDeviceTestUrl] = useState<string | null>(null)
     const [deviceTestErr, setDeviceTestErr] = useState<string | null>(null)
     const [deviceTestLoading, setDeviceTestLoading] = useState(false)
+    const [chatModeAcknowledged, setChatModeAcknowledged] = useState(false)
     const successRef = useRef<HTMLDivElement>(null)
     const operationsLineUrl = getOperationsSupportLineUrl()
 
@@ -380,6 +440,14 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                 data: { user },
             } = await supabase.auth.getUser()
             if (!user) throw new Error('ログインが必要です。')
+
+            if (urlFormatOk && !chatModeAcknowledged) {
+                setError(
+                    'お客様からのメッセージに返信できるよう、下の「チャットモードをONにしました」にチェックを入れてから保存してください。'
+                )
+                setSaving(false)
+                return
+            }
 
             const { error: upErr } = await supabase
                 .from('profiles')
@@ -582,6 +650,39 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                 <strong className="text-navy-secondary">『URLをコピー』</strong> ボタンをタップします。
                             </p>
                         </section>
+
+                        <section className="space-y-4 rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50/90 to-white p-5 shadow-sm">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <p className="inline-flex rounded-full bg-red-600 px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                    ステップ④
+                                </p>
+                                <h3 className="text-base font-black text-red-900 md:text-lg">重要：チャット機能をONにする</h3>
+                            </div>
+                            <p className="flex items-start gap-2 text-sm font-black leading-snug text-red-700">
+                                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden />
+                                ここを忘れると、お客様からメッセージが届いても返信ができません！
+                            </p>
+                            <ol className="list-decimal space-y-2.5 pl-5 text-sm font-medium leading-relaxed text-slate-800">
+                                <li>
+                                    <span className="inline-flex items-center gap-1.5 font-bold text-navy-secondary">
+                                        <Settings className="h-4 w-4 text-slate-500" aria-hidden />
+                                        LINE公式アカウントアプリの<strong>ホーム画面</strong>から「
+                                        <strong>設定（歯車マーク）</strong>」をタップ。
+                                    </span>
+                                </li>
+                                <li>
+                                    <strong className="text-navy-secondary">「応答設定」</strong>をタップ。
+                                </li>
+                                <li>
+                                    応答モードを「<strong>ボット</strong>」から「
+                                    <strong className="text-[#047c3d]">チャット</strong>」に切り替える。
+                                    <MessageCircle className="ml-1 inline h-4 w-4 text-[#06C755] align-text-bottom" aria-hidden />
+                                </li>
+                            </ol>
+                            <div className="overflow-hidden rounded-xl border border-red-100 bg-white p-2">
+                                <SvgChatModeSettingsFlow />
+                            </div>
+                        </section>
                     </div>
 
                     <div className="min-w-0 lg:sticky lg:top-24">
@@ -615,6 +716,7 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                         onChange={(e) => {
                                             setLineFriendAddUrl(e.target.value)
                                             setCelebrate(false)
+                                            setChatModeAcknowledged(false)
                                         }}
                                         className={clsx(
                                             'w-full rounded-xl border bg-slate-50 py-3 pl-4 pr-12 text-sm outline-none transition focus:ring-2',
@@ -817,15 +919,38 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                     ) : null}
                             </div>
 
-                            <div className="mt-8 flex justify-end border-t border-slate-200/80 pt-6">
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#06C755] py-4 text-sm font-black text-white shadow-lg transition hover:bg-[#05a649] disabled:opacity-50 sm:w-auto sm:px-12"
-                                >
-                                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-                                    設定を保存する
-                                </button>
+                            <div className="mt-8 flex flex-col gap-4 border-t border-slate-200/80 pt-6">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+                                    {urlFormatOk ? (
+                                        <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-2xl border-2 border-amber-200 bg-amber-50/80 p-3 text-left shadow-sm transition hover:border-amber-300 sm:max-w-md">
+                                            <input
+                                                type="checkbox"
+                                                checked={chatModeAcknowledged}
+                                                onChange={(e) => setChatModeAcknowledged(e.target.checked)}
+                                                className="mt-1 h-4 w-4 shrink-0 rounded border-amber-400 text-[#06C755] focus:ring-[#06C755]"
+                                            />
+                                            <span className="text-sm font-bold leading-snug text-amber-950">
+                                                チャットモードをONにしました
+                                                <span className="mt-1 block text-xs font-medium text-amber-900/80">
+                                                    （応答モードを「チャット」に切り替え済み）
+                                                </span>
+                                            </span>
+                                        </label>
+                                    ) : null}
+                                    <button
+                                        type="submit"
+                                        disabled={saving || (urlFormatOk && !chatModeAcknowledged)}
+                                        title={
+                                            urlFormatOk && !chatModeAcknowledged
+                                                ? 'チャットモード確認のチェックが必要です'
+                                                : undefined
+                                        }
+                                        className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#06C755] py-4 text-sm font-black text-white shadow-lg transition hover:bg-[#05a649] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-10"
+                                    >
+                                        {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                                        設定を保存する
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
