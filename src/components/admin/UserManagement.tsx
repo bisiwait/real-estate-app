@@ -16,7 +16,8 @@ import {
     Eye,
     EyeOff,
     X,
-    ExternalLink
+    ExternalLink,
+    MessageCircle,
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { adminResetPassword } from '@/app/actions/adminAuth'
@@ -28,10 +29,13 @@ export type AdminUserManagementVariant = 'agent' | 'general'
 export default function AdminUserManagement({
     locale,
     variant,
+    lineInquiryClicksByAgent = {},
 }: {
     locale: string
     /** 管理者ダッシュボードのタブごとに固定（エージェント / 一般ユーザー） */
     variant: AdminUserManagementVariant
+    /** variant=agent のとき、今月の LINE 問い合わせボタンクリック数（日本時間の月初から） */
+    lineInquiryClicksByAgent?: Record<string, number>
 }) {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -255,6 +259,11 @@ export default function AdminUserManagement({
                         <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
                             {variant === 'agent' ? 'Agent accounts' : 'End-user accounts'}
                         </p>
+                        {variant === 'agent' ? (
+                            <p className="mt-1 max-w-xl text-[9px] font-medium leading-snug text-slate-500">
+                                LINE問い合わせクリック数は、物件ページの LINE ボタン押下を日本時間の今月1日0時から集計した件数です。
+                            </p>
+                        ) : null}
                     </div>
 
                     <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
@@ -338,6 +347,16 @@ export default function AdminUserManagement({
                                             <div className="flex items-center gap-1">
                                                 <span className="text-[10px] font-bold text-navy-primary">{user.property_count || 0}</span>
                                                 <span className="text-[10px] text-slate-400">物件</span>
+                                            </div>
+                                            <div
+                                                className="flex items-center gap-1 rounded-lg border border-[#06C755]/25 bg-[#06C755]/5 px-2 py-0.5"
+                                                title="日本時間の今月1日0時以降のクリック"
+                                            >
+                                                <MessageCircle className="h-3 w-3 shrink-0 text-[#06C755]" aria-hidden />
+                                                <span className="text-[10px] font-black text-[#047c3d] tabular-nums">
+                                                    {lineInquiryClicksByAgent[user.id] ?? 0}
+                                                </span>
+                                                <span className="text-[9px] font-bold text-slate-600">LINE問い合わせクリック（今月）</span>
                                             </div>
                                             {/* Plan selector inline */}
                                             <select

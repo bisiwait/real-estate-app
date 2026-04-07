@@ -379,6 +379,7 @@ export default function PropertyDetailClient({
             </div>
             <StickyContactBar
                 phoneNumber={stickyPhone}
+                propertyId={property.id}
                 lineInquiryUrl={officialLineAddFriendUrl}
                 dict={dict}
                 isLoggedIn={!!user}

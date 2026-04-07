@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { normalizeLineFriendUrlInput } from '@/lib/line-contact-url'
+import { postLineInquiryClick, type LineInquiryClickSource } from '@/lib/line-inquiry-click-client'
 
 /** 描画を1フレーム進めてから叩くまでの待ち（ms） */
 const ASSIGN_DELAY_MS = 100
@@ -20,7 +21,11 @@ export function assignLineMeOaMessageUrl(officialUrl: string) {
 
 export type LineOaLaunchPhase = 'idle' | 'sending' | 'fallback'
 
-export function useLineOaLaunch(officialLineUrl: string | undefined) {
+export function useLineOaLaunch(
+  officialLineUrl: string | undefined,
+  lineClickPropertyId?: string,
+  lineClickSource?: LineInquiryClickSource
+) {
   const [phase, setPhase] = useState<LineOaLaunchPhase>('idle')
   const assignTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -45,6 +50,9 @@ export function useLineOaLaunch(officialLineUrl: string | undefined) {
     clearTimers()
     startHrefRef.current = window.location.href
     setPhase('sending')
+    if (lineClickPropertyId?.trim() && lineClickSource) {
+      postLineInquiryClick({ propertyId: lineClickPropertyId.trim(), source: lineClickSource })
+    }
     assignTimerRef.current = window.setTimeout(() => {
       assignTimerRef.current = null
       assignLineMeOaMessageUrl(url)
@@ -64,7 +72,7 @@ export function useLineOaLaunch(officialLineUrl: string | undefined) {
         setPhase('idle')
       }
     }, FALLBACK_CHECK_MS)
-  }, [officialLineUrl, clearTimers])
+  }, [officialLineUrl, clearTimers, lineClickPropertyId, lineClickSource])
 
   const directUrl = officialLineUrl?.trim() ?? ''
 

@@ -48,6 +48,8 @@ interface Props {
     locale: string
     mailInquiries: AdminMailInquiryRow[]
     lineLeads: AdminLineLeadRow[]
+    /** エージェントID → 今月（日本時間の月初から）の LINE 問い合わせボタンクリック数 */
+    lineInquiryClicksByAgent: Record<string, number>
 }
 
 export default function AdminDashboardClient({
@@ -59,6 +61,7 @@ export default function AdminDashboardClient({
     locale,
     mailInquiries,
     lineLeads,
+    lineInquiryClicksByAgent,
 }: Props) {
     const router = useRouter()
     const pathname = usePathname()
@@ -267,7 +270,11 @@ export default function AdminDashboardClient({
                             <AgentInsights agentId={detailAgentId} />
                         </div>
                     ) : (
-                        <AdminUserManagement locale={locale} variant="agent" />
+                        <AdminUserManagement
+                            locale={locale}
+                            variant="agent"
+                            lineInquiryClicksByAgent={lineInquiryClicksByAgent}
+                        />
                     ))}
                 {tab === 'general_users' && <AdminUserManagement locale={locale} variant="general" />}
                 {tab === 'inquiries' && (

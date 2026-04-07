@@ -8,6 +8,7 @@ import {
     fetchAdminLineLeads,
 } from '@/lib/supabase/fetch-admin-inquiries'
 import { resolveAdminDashboardTab } from '@/lib/admin-dashboard-url'
+import { startOfCurrentMonthJstIso } from '@/lib/datetime/jst-month-start'
 
 export default async function AdminSecretDashboard({
     params,
@@ -30,10 +31,23 @@ export default async function AdminSecretDashboard({
     const supabaseAdmin = await createAdminClient()
 
     // RLS の差・is_admin() 判定のずれで inquiries が空になることがあるため、管理者画面は service role で集計する
-    const [mailInquiries, lineLeads] = await Promise.all([
+    const monthStartJst = startOfCurrentMonthJstIso()
+
+    const [mailInquiries, lineLeads, lineClickRows] = await Promise.all([
         fetchAdminMailInquiries(supabaseAdmin),
         fetchAdminLineLeads(supabaseAdmin),
+        supabaseAdmin.from('line_inquiry_click_logs').select('agent_id').gte('clicked_at', monthStartJst),
     ])
+
+    const lineInquiryClicksByAgent: Record<string, number> = {}
+    if (!lineClickRows.error && lineClickRows.data) {
+        for (const row of lineClickRows.data) {
+            const aid = row.agent_id as string
+            lineInquiryClicksByAgent[aid] = (lineInquiryClicksByAgent[aid] ?? 0) + 1
+        }
+    } else if (lineClickRows.error) {
+        console.warn('[admin-secret] line_inquiry_click_logs:', lineClickRows.error.message)
+    }
 
     const { data: properties } = await supabaseAdmin.from('properties').select('status, is_approved')
     const { data: contacts } = await supabaseAdmin.from('inquiries').select('id, created_at')
@@ -64,6 +78,7 @@ export default async function AdminSecretDashboard({
                         locale={locale}
                         mailInquiries={mailInquiries}
                         lineLeads={lineLeads}
+                        lineInquiryClicksByAgent={lineInquiryClicksByAgent}
                         urlInitialTab={urlInitialTab}
                     />
                 </Suspense>

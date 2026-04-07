@@ -21,6 +21,7 @@ import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cooki
 import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
 import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
 import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
+import { postLineInquiryClick } from '@/lib/line-inquiry-click-client'
 
 const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
 const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
@@ -420,7 +421,11 @@ export default function InquiryForm({
   /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
   const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
   const [portalReady, setPortalReady] = useState(false)
-  const lineOaLaunch = useLineOaLaunch(officialLineAddFriendUrl || undefined)
+  const lineOaLaunch = useLineOaLaunch(
+    officialLineAddFriendUrl || undefined,
+    propertyId,
+    'inquiry_form'
+  )
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -1251,6 +1256,7 @@ export default function InquiryForm({
             {lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
               <a
                 href={lineOaLaunch.directUrl}
+                onClick={() => postLineInquiryClick({ propertyId, source: 'inquiry_form' })}
                 className="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-[#06C755] bg-white py-2.5 text-center text-sm font-black text-[#047c3d] underline-offset-2 hover:bg-[#06C755]/5"
                 rel="noopener noreferrer"
               >

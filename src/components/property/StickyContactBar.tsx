@@ -3,11 +3,14 @@
 import React from 'react'
 import { Phone, Mail, MessageCircle } from 'lucide-react'
 import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
+import { postLineInquiryClick } from '@/lib/line-inquiry-click-client'
 
 interface StickyContactBarProps {
     phoneNumber?: string
     /** false のとき電話ボタンを出さない（エージェント設定） */
     showPhoneInquiry?: boolean
+    /** クリック計測用（物件詳細の UUID） */
+    propertyId?: string
     /** 物件オーナー／サイト既定の友だち追加URL。あればスティッキーに LINE ショートカットを表示 */
     lineInquiryUrl?: string
     dict: any
@@ -18,12 +21,17 @@ interface StickyContactBarProps {
 export default function StickyContactBar({
     phoneNumber,
     showPhoneInquiry = true,
+    propertyId,
     lineInquiryUrl,
     dict,
     isLoggedIn = true,
     onRequireAuth,
 }: StickyContactBarProps) {
-    const lineOaLaunch = useLineOaLaunch(lineInquiryUrl)
+    const lineOaLaunch = useLineOaLaunch(
+        lineInquiryUrl,
+        propertyId,
+        propertyId ? 'sticky_bar' : undefined
+    )
 
     const scrollToInquiry = () => {
         if (!isLoggedIn) {
@@ -99,6 +107,11 @@ export default function StickyContactBar({
                         {lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
                             <a
                                 href={lineOaLaunch.directUrl}
+                                onClick={() => {
+                                    if (propertyId) {
+                                        postLineInquiryClick({ propertyId, source: 'sticky_bar' })
+                                    }
+                                }}
                                 className="mb-1 inline-block text-[10px] font-black text-[#047c3d] underline"
                                 rel="noopener noreferrer"
                             >
