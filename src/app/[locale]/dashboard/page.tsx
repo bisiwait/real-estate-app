@@ -88,31 +88,6 @@ export default async function DashboardPage({
                 replies: allReplies?.filter(r => r.inquiry_id === inq.id) || []
             }))
         }
-
-        const { data: linePushLogs, error: linePushLogsError } = await supabase
-            .from('inquiry_logs')
-            .select('inquiry_id, metadata')
-            .in('inquiry_id', inquiryIds)
-            .in('inquiry_type', ['agent_reply', 'admin_reply'])
-
-        if (linePushLogsError) {
-            console.error('Error fetching inquiry_logs (LINE push flags):', linePushLogsError)
-        }
-        const linePushSentIds = new Set<string>()
-        for (const log of linePushLogs || []) {
-            const m = log.metadata as { sent_via?: string } | null
-            if (log.inquiry_id && m?.sent_via === 'line') {
-                linePushSentIds.add(log.inquiry_id)
-            }
-        }
-        inquiries = inquiries.map((inq) => {
-            const row = inq as { id: string; first_reply_sent?: boolean | null }
-            const fromColumn = row.first_reply_sent === true
-            return {
-                ...inq,
-                line_push_already_sent: fromColumn || linePushSentIds.has(inq.id),
-            }
-        })
     }
 
 

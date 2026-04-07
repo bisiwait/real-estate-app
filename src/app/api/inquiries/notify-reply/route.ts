@@ -8,12 +8,9 @@ import {
   resendErrorInvalidFrom,
   resendErrorNeedsVerifiedDomain,
 } from '@/lib/resend-from'
-import { lineOfficialPushText } from '@/lib/line-official-push'
-import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
-import { isPremiumActive } from '@/lib/utils/plan'
+import { normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
 import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
 import { getSupabaseServiceRoleConfig } from '@/lib/env/supabase-data-plane'
-import { fetchAgentLineAccessToken } from '@/lib/line-agent-credentials'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -49,21 +46,6 @@ type InquiryNotifyRow = {
   preferred_reply_channel: string | null
   line_user_id: string | null
   first_reply_sent?: boolean | null
-}
-
-/** 成功したエージェント返信の LINE Push が既に記録されているか（失敗時はログが残らないため再送可） */
-async function hasSuccessfulAgentLinePush(admin: Awaited<ReturnType<typeof createAdminClient>>, inquiryId: string) {
-  const { data, error } = await admin
-    .from('inquiry_logs')
-    .select('metadata')
-    .eq('inquiry_id', inquiryId)
-    .eq('inquiry_type', 'agent_reply')
-    .limit(30)
-  if (error || !data?.length) return false
-  return data.some((row) => {
-    const m = row.metadata as Record<string, unknown> | null
-    return m?.sent_via === 'line'
-  })
 }
 
 async function insertAgentDeliveryLog(params: {
@@ -109,9 +91,8 @@ async function insertAgentDeliveryLog(params: {
 }
 
 /**
- * エージェントがダッシュボードから返信したあと、問い合わせ人へ届ける。
- * preferred_reply_channel が line かつ line_user_id がある場合は LINE Push、それ以外はメール（Resend）。
- * LINE 希望だが line_user_id がない場合は force_email でメールにフォールバック可能。
+ * エージェントがダッシュボードから返信したあと、問い合わせ人へメール（Resend）で届ける。
+ * （Messaging API / LINE Push は廃止）
  */
 export async function POST(req: NextRequest) {
   try {
@@ -222,108 +203,17 @@ export async function POST(req: NextRequest) {
     }
 
     const preferred = normalizeInquiryReplyChannel(row.preferred_reply_channel)
-    const lineUid = row.line_user_id?.trim() || ''
-    let useLine = preferred === 'line' && !forceEmail && Boolean(lineUid)
-
-    if (preferred === 'line' && !forceEmail && !lineUid) {
-      return NextResponse.json(
-        {
-          error:
-            'お客様は LINE 返信を希望されていますが、LINE ユーザーIDが記録されていません。メールでの返信をご利用ください。',
-          code: 'LINE_USER_ID_MISSING',
-          can_use_email_fallback: true,
-        },
-        { status: 422 }
-      )
-    }
-
-    if (preferred === 'line' && !forceEmail && lineUid) {
-      const flagged = row.first_reply_sent === true
-      const alreadyPushed =
-        flagged || (admin ? await hasSuccessfulAgentLinePush(admin, inquiryId) : false)
-      if (alreadyPushed) {
-        return NextResponse.json(
-          {
-            error:
-              'このお問い合わせには既に公式 LINE から Push を送信済みです。続きのやり取りは LINE Official Account Manager（チャット）から、同じ友だち宛に返信してください。',
-            code: 'LINE_PUSH_ALREADY_SENT',
-            can_use_email_fallback: true,
-          },
-          { status: 409 }
-        )
-      }
-    }
 
     const inquirerName = row.inquirer_name?.trim() || 'お客様'
 
     const { data: agentProfile } = await supabase
       .from('profiles')
-      .select('email, full_name, plan, plan_type, current_period_end, is_admin')
+      .select('email, full_name')
       .eq('id', user.id)
       .maybeSingle()
 
     const agentEmail = agentProfile?.email?.trim() || user.email?.trim() || ''
     const agentDisplayName = agentProfile?.full_name?.trim() || '担当エージェント'
-
-    if (useLine && !isPremiumActive(agentProfile)) {
-      useLine = false
-    }
-
-    if (useLine) {
-      const adminForLine = admin ?? (await createAdminClient())
-      const token = await fetchAgentLineAccessToken(adminForLine, row.owner_id)
-      if (!token) {
-        return NextResponse.json(
-          {
-            error:
-              'LINE連携が未設定です。設定画面の「LINE公式アカウント連携」でチャネルアクセストークンを登録してください。',
-          },
-          { status: 503 }
-        )
-      }
-      const pushResult = await lineOfficialPushText(lineUid, message, token)
-      if (!pushResult.ok) {
-        const userMsg = linePushFailureUserMessage(pushResult.status, pushResult.body || '')
-        console.error('[notify-reply] LINE push', pushResult.status, pushResult.body)
-        return NextResponse.json(
-          {
-            error: userMsg,
-            line_status: pushResult.status,
-            sent: false,
-            sent_via: 'line',
-          },
-          { status: 502 }
-        )
-      }
-
-      await insertAgentDeliveryLog({
-        inquiryId,
-        propertyId: row.property_id,
-        agentId: row.owner_id,
-        senderUserId: user.id,
-        message,
-        sentVia: 'line',
-        inquiryReplyId,
-        forcedEmail: false,
-        resendId: null,
-        linePushStatus: pushResult.status,
-      })
-
-      const clientForFr = isOwner ? supabase : admin ?? supabase
-      const { error: frErr } = await clientForFr
-        .from('inquiries')
-        .update({ first_reply_sent: true })
-        .eq('id', inquiryId)
-      if (frErr) {
-        console.warn('[notify-reply] first_reply_sent update', frErr.message)
-      }
-
-      return NextResponse.json({
-        success: true,
-        sent: true,
-        sent_via: 'line',
-      })
-    }
 
     const to = row.inquirer_email?.trim()
     if (!to) {
@@ -390,8 +280,7 @@ export async function POST(req: NextRequest) {
       message,
       sentVia: 'email',
       inquiryReplyId,
-      forcedEmail:
-        preferred === 'line' && (forceEmail || !isPremiumActive(agentProfile)),
+      forcedEmail: preferred === 'line' || forceEmail,
       resendId: sent?.id ?? null,
       linePushStatus: null,
     })
@@ -401,7 +290,7 @@ export async function POST(req: NextRequest) {
       sent: true,
       sent_via: 'email',
       id: sent?.id,
-      used_email_fallback: preferred === 'line' && (forceEmail || !isPremiumActive(agentProfile)),
+      used_email_fallback: preferred === 'line' || forceEmail,
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Unknown error'

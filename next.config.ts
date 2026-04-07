@@ -52,31 +52,10 @@ const nextConfig: NextConfig = {
         destination: `${SITE_ORIGIN}/:path*`,
         permanent: true,
       },
-      // 日本語 URL は ISO の ja ではなく jp（[locale] と一致）。LIFF の誤登録で /ja/... になると 404 になるため寄せる。
+      // 日本語 URL は ISO の ja ではなく jp（[locale] と一致）。旧リンクの /ja/... を正規化する。
       { source: "/ja", destination: "/jp", permanent: true },
       { source: "/ja/", destination: "/jp", permanent: true },
       { source: "/ja/:path*", destination: "/jp/:path*", permanent: true },
-      // LIFF エンドポイントのよくある誤記（ハイフン抜け・スラッシュ末尾）
-      {
-        source: "/:locale/line/inquirybridge",
-        destination: "/:locale/line/inquiry-bridge",
-        permanent: true,
-      },
-      {
-        source: "/:locale/line/inquiry_bridge",
-        destination: "/:locale/line/inquiry-bridge",
-        permanent: true,
-      },
-      {
-        source: "/:locale/line/inquiry-bridge/",
-        destination: "/:locale/line/inquiry-bridge",
-        permanent: true,
-      },
-      {
-        source: "/:locale/line/inquiry-brige",
-        destination: "/:locale/line/inquiry-bridge",
-        permanent: true,
-      },
     ];
   },
   images: {

@@ -1,10 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
-import { LINE_INQUIRY_RETURN_PATH_COOKIE } from '@/lib/inquiry-line-return-cookie'
 
 const locales = ['jp', 'en', 'th']
-const PROPERTY_UUID_IN_PATH =
-    /^\/(jp|en|th)\/properties\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
 const defaultLocale = 'jp'
 
 /** Supabase の signOut が更新した Cookie をリダイレクト応答へ載せる */
@@ -45,18 +42,15 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
 
     const pathname = request.nextUrl.pathname
 
-    // LINE Login のリダイレクトにだけ付くことがある（友だち追加オプション有効時）。Supabase の code と混同しない。
+    // 友だち追加オプション付き LINE リダイレクト等。Supabase の code と混同しない。
     if (request.nextUrl.searchParams.has('friendship_status_changed')) return null
 
-    // ロケールトップ（/jp 等）への ?code= は LINE コールバックであり得る。auth/callback に寄せると交換失敗→トップへ戻り問い合わせが死ぬ。
+    // ロケールトップ（/jp 等）への ?code= は想定外のコールバックであり得る
     const isLocaleHomeOnly = locales.some(
         (locale) => pathname === `/${locale}` || pathname === `/${locale}/`
     )
     if (isLocaleHomeOnly) return null
 
-    // LINE Login / LIFF も ?code= を付ける。Supabase PKCE へ寄せると exchange 失敗→/login になり問い合わせが完了しない。
-    if (pathname.includes('/line/')) return null
-    // liff.login() のリダイレクト先が物件 URL のとき、ここで auth/callback に飛ばさない。
     if (pathname.includes('/properties/')) return null
 
     const alreadyOnCallback = locales.some((locale) => {
@@ -80,7 +74,6 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
 
     const url = request.nextUrl.clone()
     url.pathname = `/${targetLocale}/auth/callback`
-    // LINE の code を誤って渡したときの復帰先（auth/callback が next へ戻せるようにする）
     if (!url.searchParams.has('next')) {
         const returnPath = pathname === '/' ? `/${targetLocale}` : pathname
         url.searchParams.set('next', returnPath)
@@ -88,43 +81,10 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
     return NextResponse.redirect(url)
 }
 
-/**
- * liff.login() 後のコールバックで URL から liff.state が消え、?code= だけになることがある。
- * 問い合わせフローで事前に保存した httpOnly Cookie（物件ページパス）から locale:uuid を復元する。
- */
-function injectLiffStateOnLineInquiryBridgeOAuth(request: NextRequest): NextResponse | null {
-    const pathname = request.nextUrl.pathname.replace(/\/$/, '') || '/'
-    if (!/^\/(jp|en|th)\/line\/inquiry-bridge$/i.test(pathname)) return null
-
-    const code = request.nextUrl.searchParams.get('code')
-    if (!code) return null
-
-    const existing = request.nextUrl.searchParams.get('liff.state')?.trim()
-    if (existing) return null
-
-    const raw = request.cookies.get(LINE_INQUIRY_RETURN_PATH_COOKIE)?.value
-    if (!raw) return null
-
-    let pathDecoded: string
-    try {
-        pathDecoded = decodeURIComponent(raw)
-    } catch {
-        return null
-    }
-    const m = pathDecoded.match(PROPERTY_UUID_IN_PATH)
-    if (!m) return null
-
-    const loc = m[1].toLowerCase()
-    const uuid = m[2].toLowerCase()
-    const url = request.nextUrl.clone()
-    url.searchParams.set('liff.state', `${loc}:${uuid}`)
-    return NextResponse.redirect(url)
-}
-
 export default async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname
 
-    // ISO の ja はルートに無い（日本語は jp）。未処理だと下の「ロケール付与」で /jp/ja/... となり 404（LIFF 誤設定で多い）
+    // ISO の ja はルートに無い（日本語は jp）
     if (pathname === '/ja' || pathname === '/ja/') {
         const url = request.nextUrl.clone()
         url.pathname = '/jp'
@@ -136,40 +96,7 @@ export default async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // LINE 公式: liff.line.me/{liffId}/追加パス はエンドポイント URL に結合される。
-    // ?liff.state= が liff.line.me 上で /jp:UUID のように見えると、実リクエストが
-    // /{locale}/line/inquiry-bridge/jp:UUID となりルートが無く 404。クエリへ戻す。
-    const liffBridgeExtra = pathname.match(/^\/(jp|en|th)\/line\/inquiry-bridge\/(.+)$/)
-    if (liffBridgeExtra) {
-        const loc = liffBridgeExtra[1]
-        let payload = liffBridgeExtra[2]
-        try {
-            payload = decodeURIComponent(payload)
-        } catch {
-            /* そのまま */
-        }
-        const url = request.nextUrl.clone()
-        url.pathname = `/${loc}/line/inquiry-bridge`
-        url.searchParams.set('liff.state', payload)
-        return NextResponse.redirect(url)
-    }
-
-    // /jp/Line/inquiry-bridge 等（line セグメントの大文字）。パスは区別され 404 になりやすい
-    const lineBridgeTypo = pathname.match(/^\/(jp|en|th)\/([^/]+)\/(inquiry-bridge)\/?$/)
-    if (
-        lineBridgeTypo &&
-        lineBridgeTypo[2] !== 'line' &&
-        lineBridgeTypo[2].toLowerCase() === 'line'
-    ) {
-        const url = request.nextUrl.clone()
-        url.pathname = `/${lineBridgeTypo[1]}/line/${lineBridgeTypo[3]}`
-        return NextResponse.redirect(url)
-    }
-
-    const liffOAuthBridge = injectLiffStateOnLineInquiryBridgeOAuth(request)
-    if (liffOAuthBridge) return liffOAuthBridge
-
-    // /JP/ /EN/ /TH/ など大文字ロケールは Next の [locale] と一致せず 404。LINE コンソールのコピペで起きやすい
+    // /JP/ /EN/ /TH/ など大文字ロケールは Next の [locale] と一致せず 404
     if (pathname.length > 1 && pathname.startsWith('/')) {
         const slash2 = pathname.indexOf('/', 1)
         const seg = slash2 === -1 ? pathname.slice(1) : pathname.slice(1, slash2)

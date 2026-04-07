@@ -6,8 +6,11 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * 旧: お気に入りユーザーへ LINE Flex で値下げ通知（Messaging API）。
+ * Messaging API を廃止したため、LINE 送信は行いません。集計のみログして 200 を返します。
+ */
 serve(async (req) => {
-    // CORS プリフライト対応
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -15,20 +18,12 @@ serve(async (req) => {
     try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        const lineAccessToken = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN')!
-        const siteUrlRaw = Deno.env.get('NEXT_PUBLIC_SITE_URL') || Deno.env.get('SITE_URL')
-        if (!siteUrlRaw?.trim()) {
-            throw new Error('Set NEXT_PUBLIC_SITE_URL or SITE_URL for property links in LINE messages')
-        }
-        const siteUrl = siteUrlRaw.trim().replace(/\/$/, '')
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-        // 1. ペイロード取得
-        const { property_id, old_price, new_price, title, new_record } = await req.json()
+        const { property_id, old_price, new_price, title } = await req.json()
         console.log(`[notify-price-drop] Property: ${title} (${property_id}) | ${old_price} -> ${new_price}`)
 
-        // 2. お気に入り登録ユーザーの抽出
         const { data: favorites, error: favError } = await supabase
             .from('favorites')
             .select('user_id')
@@ -42,7 +37,6 @@ serve(async (req) => {
 
         const userIds = favorites.map(f => f.user_id)
 
-        // 3. ユーザーの line_user_id を取得
         const { data: profiles, error: profError } = await supabase
             .from('profiles')
             .select('line_user_id')
@@ -52,192 +46,24 @@ serve(async (req) => {
         if (profError) throw profError
         const lineUserIds = profiles?.map(p => p.line_user_id).filter(id => !!id) as string[]
 
-        if (!lineUserIds || lineUserIds.length === 0) {
-            console.log('[notify-price-drop] No users have line_user_id set.')
-            return new Response(JSON.stringify({ message: 'No line_user_ids found' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-        }
+        console.log(
+            `[notify-price-drop] LINE multicast disabled. favorites=${userIds.length}, profiles_with_line_user_id=${lineUserIds?.length ?? 0}`
+        )
 
-        // 4. Flex Message の生成
-        const flexMessage = generatePriceDropFlexMessage({
-            title,
-            oldPrice: old_price,
-            newPrice: new_price,
-            imageUrl: new_record.images?.[0] || 'https://via.placeholder.com/800x530?text=No+Image',
-            propertyUrl: `${siteUrl}/jp/properties/${property_id}`,
-            area: new_record.area_name || 'パタヤ'
-        })
-
-        // 5. LINE 送信 (Multicast: 最大500人)
-        const lineResponse = await fetch('https://api.line.me/v2/bot/message/multicast', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${lineAccessToken}`,
-            },
-            body: JSON.stringify({
-                to: lineUserIds.slice(0, 500),
-                messages: [flexMessage]
+        return new Response(
+            JSON.stringify({
+                message: 'LINE messaging disabled; no push sent',
+                favorite_count: userIds.length,
+                line_user_id_count: lineUserIds?.length ?? 0,
             }),
-        })
-
-        const lineData = await lineResponse.json()
-        console.log('[notify-price-drop] LINE API Response:', lineData)
-
-        return new Response(JSON.stringify({ status: 'success', sent_count: lineUserIds.length }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-        })
-
-    } catch (error: any) {
-        console.error('[notify-price-drop] Error:', error)
-        return new Response(JSON.stringify({ error: error.message }), {
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 },
+        )
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.error('[notify-price-drop] Error:', message)
+        return new Response(JSON.stringify({ error: message }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400,
         })
     }
 })
-
-function formatCurrency(amount: number) {
-    return amount.toLocaleString() + ' THB'
-}
-
-function generatePriceDropFlexMessage({ title, oldPrice, newPrice, imageUrl, propertyUrl, area }: any) {
-    return {
-        type: "flex",
-        altText: "【値下げ通知】お気に入り物件が安くなりました！",
-        contents: {
-            type: "bubble",
-            hero: {
-                type: "image",
-                url: imageUrl,
-                size: "full",
-                aspectRatio: "1.51:1",
-                aspectMode: "cover",
-                action: {
-                    type: "uri",
-                    uri: propertyUrl
-                }
-            },
-            body: {
-                type: "box",
-                layout: "vertical",
-                contents: [
-                    {
-                        type: "text",
-                        text: "📉 お気に入りが値下げ！",
-                        weight: "bold",
-                        color: "#E63946",
-                        size: "sm"
-                    },
-                    {
-                        type: "text",
-                        text: title,
-                        weight: "bold",
-                        size: "xl",
-                        margin: "md",
-                        wrap: true
-                    },
-                    {
-                        type: "box",
-                        layout: "vertical",
-                        margin: "lg",
-                        spacing: "sm",
-                        contents: [
-                            {
-                                type: "box",
-                                layout: "baseline",
-                                spacing: "sm",
-                                contents: [
-                                    {
-                                        type: "text",
-                                        text: "旧価格",
-                                        color: "#aaaaaa",
-                                        size: "sm",
-                                        flex: 1
-                                    },
-                                    {
-                                        type: "text",
-                                        text: formatCurrency(oldPrice),
-                                        wrap: true,
-                                        color: "#666666",
-                                        size: "sm",
-                                        flex: 4,
-                                        decoration: "line-through"
-                                    }
-                                ]
-                            },
-                            {
-                                type: "box",
-                                layout: "baseline",
-                                spacing: "sm",
-                                contents: [
-                                    {
-                                        type: "text",
-                                        text: "新価格",
-                                        color: "#aaaaaa",
-                                        size: "sm",
-                                        flex: 1
-                                    },
-                                    {
-                                        type: "text",
-                                        text: formatCurrency(newPrice),
-                                        wrap: true,
-                                        color: "#E63946",
-                                        size: "xl",
-                                        flex: 4,
-                                        weight: "bold"
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        type: "box",
-                        layout: "baseline",
-                        spacing: "xs",
-                        margin: "md",
-                        contents: [
-                            {
-                                type: "text",
-                                text: "📍 エリア:",
-                                color: "#aaaaaa",
-                                size: "xs",
-                                flex: 1
-                            },
-                            {
-                                type: "text",
-                                text: area,
-                                color: "#666666",
-                                size: "xs",
-                                flex: 4
-                            }
-                        ]
-                    }
-                ]
-            },
-            footer: {
-                type: "box",
-                layout: "vertical",
-                spacing: "sm",
-                contents: [
-                    {
-                        type: "button",
-                        style: "primary",
-                        height: "sm",
-                        color: "#1a1e2e",
-                        action: {
-                            type: "uri",
-                            label: "詳細を確認する",
-                            uri: propertyUrl
-                        }
-                    },
-                    {
-                        type: "spacer",
-                        size: "sm"
-                    }
-                ],
-                flex: 0
-            }
-        }
-    }
-}

@@ -5,62 +5,11 @@ import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, X, MessageCircle, ExternalLink } from 'lucide-react'
-import { getErrorMessage } from '@/lib/utils/errors'
-import {
-  formatInquirySubmitError,
-  formatLiffError,
-  isLiffAccessTokenRevokedError,
-} from '@/lib/utils/inquiry-errors'
+import { formatInquirySubmitError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
-import { useDeviceType } from '@/hooks/useDeviceType'
-import {
-  postLineInquiryReturnPath,
-  clearLineInquiryPendingCookie,
-} from '@/lib/inquiry-line-return-cookie'
-import type { LineInquiryPendingPayload } from '@/lib/inquiry-line-pending-cookie'
-import { flowStorageGet, flowStorageSet, flowStorageRemove } from '@/lib/inquiry-line-flow-storage'
-import { getBrowserLineLiffId } from '@/lib/env/line-data-plane'
 import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
 import { postLineInquiryClick } from '@/lib/line-inquiry-click-client'
 
-const PENDING_LINE_INQUIRY_KEY = 'inquiry_line_pending_v1'
-const AUTO_SUBMIT_LOCK_PREFIX = 'inquiry_line_auto_'
-/** リロードや LIFF 遷移で非同期が中断すると '1' ロックが残り自動送信が永久停止するため、時刻ベースで失効させる */
-const AUTO_SUBMIT_LOCK_TTL_MS = 120_000
-
-function isAutoSubmitLockHeld(lockKey: string): boolean {
-  try {
-    const v = flowStorageGet(lockKey)
-    if (!v) return false
-    const ts = parseInt(v, 10)
-    if (!Number.isFinite(ts)) {
-      flowStorageRemove(lockKey)
-      return false
-    }
-    if (Date.now() - ts > AUTO_SUBMIT_LOCK_TTL_MS) {
-      flowStorageRemove(lockKey)
-      return false
-    }
-    return true
-  } catch {
-    return false
-  }
-}
-
-function armAutoSubmitLock(lockKey: string): void {
-  flowStorageSet(lockKey, String(Date.now()))
-}
-
-/** LINE 内で liff.login() 直後: ブリッジを通っていなくても自動送信 effect を走らせる */
-const LINE_OAUTH_RESUME_PID_KEY = 'inquiry_line_after_oauth_pid'
-/** LINE 問い合わせ成功時に友だち済み扱いで保存（将来の UI や判定用） */
-const LINE_OFFICIAL_FRIEND_STORAGE_KEY = 'inquiry_line_official_friend_ok_v1'
-const PENDING_LINE_MAX_MS = 15 * 60 * 1000
-
-/** false のとき返信方法 UI を出さず、問い合わせは常にメール希望として保存する（スマホの LINE 問い合わせも無効になる） */
-const SHOW_INQUIRY_REPLY_CHANNEL = true
-
-/** DB 保存後、送信者宛の受付控えメール（Webhook に依存しない。inquiries は RLS で送信者が SELECT できないため内容で送る） */
 async function requestInquiryConfirmationEmail(
   supabase: ReturnType<typeof createClient>,
   payload: {
@@ -94,7 +43,6 @@ async function requestInquiryConfirmationEmail(
   }
 }
 
-/** 画面上で失敗箇所を特定しやすくする（setError に加えて alert） */
 function inquiryDebugAlert(stage: string, message: string) {
   if (typeof window === 'undefined') return
   try {
@@ -104,15 +52,6 @@ function inquiryDebugAlert(stage: string, message: string) {
   }
 }
 
-/** LIFF getProfile().userId を DB 用に正規化（空は null） */
-function normalizeLineMessagingUserId(raw: string | null | undefined): string | null {
-  const t = typeof raw === 'string' ? raw.trim() : ''
-  return t.length > 0 ? t : null
-}
-
-/**
- * inquiries INSERT は RLS で authenticated のみ許可。LIFF 復帰直後にセッションが無いと保存できない。
- */
 async function ensureSupabaseSessionForInquiry(
   sb: ReturnType<typeof createClient>
 ): Promise<{ ok: true } | { ok: false; message: string }> {
@@ -128,237 +67,7 @@ async function ensureSupabaseSessionForInquiry(
   return {
     ok: false,
     message:
-      'ログインセッションが有効ではありません（Supabase）。お手数ですが一度ログアウトして再ログインのうえ、もう一度送信してください。\n\n※LINE 連携のあとセッションが切れていると、データベースへの保存が拒否（RLS）されます。',
-  }
-}
-
-type PendingLineInquiry = LineInquiryPendingPayload
-
-function readPendingLineInquiry(): PendingLineInquiry | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = flowStorageGet(PENDING_LINE_INQUIRY_KEY)
-    if (!raw) return null
-    const o = JSON.parse(raw) as PendingLineInquiry
-    if (o.v !== 1 || !o.propertyId || typeof o.at !== 'number') return null
-    if (Date.now() - o.at > PENDING_LINE_MAX_MS) {
-      flowStorageRemove(PENDING_LINE_INQUIRY_KEY)
-      return null
-    }
-    try {
-      sessionStorage.setItem(PENDING_LINE_INQUIRY_KEY, raw)
-    } catch {
-      /* */
-    }
-    return o
-  } catch {
-    return null
-  }
-}
-
-function clearPendingLineInquiry() {
-  flowStorageRemove(PENDING_LINE_INQUIRY_KEY)
-  void clearLineInquiryPendingCookie()
-}
-
-type ObtainLineUserIdResult =
-  | { ok: true; userId: string }
-  | { ok: false; reason: 'login' }
-  | { ok: false; reason: 'error'; message: string }
-
-type LiffLineProbe =
-  | { kind: 'ok'; userId: string }
-  | { kind: 'need_handoff' }
-  | { kind: 'need_login' }
-  | { kind: 'error'; message: string }
-
-async function clearInvalidLiffSession(liff: { logout?: () => Promise<void> }): Promise<void> {
-  try {
-    if (typeof liff.logout === 'function') await liff.logout()
-  } catch {
-    /* */
-  }
-}
-
-type LiffFriendshipCapable = {
-  isInClient: () => boolean
-  isApiAvailable?: (apiName: string) => boolean
-  getFriendship?: () => Promise<{ friendFlag: boolean }>
-  requestFriendship?: () => Promise<void>
-  getProfile: () => Promise<{ userId?: string | null }>
-}
-
-/**
- * LINE アプリ内 WebView では未友だち時に requestFriendship を先に出し、続けて getProfile する。
- * 外部ブラウザでは友だち追加は LIFF の botPrompt（コンソールで aggressive 推奨）に依存。
- */
-async function getLineUserIdAfterFriendshipIfNeeded(liff: LiffFriendshipCapable): Promise<string> {
-  let calledRequestFriendship = false
-  try {
-    if (typeof liff.isApiAvailable === 'function' && liff.isApiAvailable('getFriendship') && liff.getFriendship) {
-      const { friendFlag } = await liff.getFriendship()
-      if (
-        !friendFlag &&
-        liff.isInClient() &&
-        liff.isApiAvailable('requestFriendship') &&
-        typeof liff.requestFriendship === 'function'
-      ) {
-        try {
-          await liff.requestFriendship()
-          calledRequestFriendship = true
-        } catch {
-          /* キャンセル等 */
-        }
-      }
-    }
-  } catch {
-    /* getFriendship 非対応環境 */
-  }
-  if (calledRequestFriendship) {
-    await new Promise((r) => setTimeout(r, 600))
-  }
-  const maxAttempts = calledRequestFriendship ? 5 : 1
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const profile = await liff.getProfile()
-      const uid = normalizeLineMessagingUserId(profile?.userId)
-      if (uid) return uid
-    } catch (e) {
-      if (attempt === maxAttempts - 1) throw e
-    }
-    if (attempt < maxAttempts - 1) {
-      await new Promise((r) => setTimeout(r, 450))
-    }
-  }
-  throw new Error('LINE_USER_ID_EMPTY')
-}
-
-/**
- * handoff 前に呼ぶ。既に LINE にログイン済みなら userId のみ返し、毎回のブリッジ＆「ログインしました」相当を避ける。
- */
-async function probeLiffLineUserId(liffId: string): Promise<LiffLineProbe> {
-  const liff = (await import('@line/liff')).default
-  try {
-    await liff.init({ liffId, withLoginOnExternalBrowser: false })
-  } catch (e: unknown) {
-    return { kind: 'error', message: formatLiffError(e) || getErrorMessage(e) }
-  }
-  if (liff.isLoggedIn()) {
-    try {
-      const uid = await getLineUserIdAfterFriendshipIfNeeded(liff)
-      return { kind: 'ok', userId: uid }
-    } catch (e: unknown) {
-      if (e instanceof Error && e.message === 'LINE_USER_ID_EMPTY') {
-        return {
-          kind: 'error',
-          message:
-            'LINE ユーザーIDを取得できませんでした。LIFF の profile スコープを確認してください。',
-        }
-      }
-      if (isLiffAccessTokenRevokedError(e)) {
-        await clearInvalidLiffSession(liff)
-        if (liff.isLoggedIn()) {
-          return {
-            kind: 'error',
-            message:
-              'LINE のログイン状態が古くなっています。ブラウザのデータを消せない場合は、しばらく時間をおいてから再度お試しください。',
-          }
-        }
-        if (liff.isInClient()) return { kind: 'need_login' }
-        return { kind: 'need_handoff' }
-      }
-      return { kind: 'error', message: formatLiffError(e) || getErrorMessage(e) }
-    }
-  }
-  if (liff.isInClient()) {
-    return { kind: 'need_login' }
-  }
-  return { kind: 'need_handoff' }
-}
-
-/**
- * ブリッジ通過後（inquiry_liff_ready_pid 済み）に LIFF で userId を取得。
- * 未ログイン時は liff.login()。redirectUri は渡さない（Endpoint URL と不一致で access.line.me が 400 になるため）。
- */
-async function obtainLineUserIdForInquiry(
-  liffId: string,
-  propertyId: string,
-  locale: string,
-  pendingForCookie: PendingLineInquiry | null
-): Promise<ObtainLineUserIdResult> {
-  const liff = (await import('@line/liff')).default
-  try {
-    await liff.init({ liffId, withLoginOnExternalBrowser: false })
-  } catch (firstInit: unknown) {
-    return {
-      ok: false,
-      reason: 'error',
-      message: formatLiffError(firstInit) || getErrorMessage(firstInit),
-    }
-  }
-
-  if (!liff.isLoggedIn()) {
-    /**
-     * 外部ブラウザでも liff.login() で OAuth 復帰できる。ここで handoff へ再度 assign すると
-     * ブリッジ→物件→未ログイン→handoff のループになり、DB 保存まで到達しない。
-     * 初回の「LINEで受け取る」は handleSubmit が handoff へ飛ばす（liff_ready 前のみ）。
-     */
-    await postLineInquiryReturnPath(
-      `/${locale}/properties/${propertyId}`,
-      pendingForCookie ?? undefined
-    )
-    try {
-      flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
-      flowStorageSet(LINE_OAUTH_RESUME_PID_KEY, propertyId)
-    } catch {
-      /* */
-    }
-    liff.login()
-    return { ok: false, reason: 'login' }
-  }
-
-  try {
-    const uid = await getLineUserIdAfterFriendshipIfNeeded(liff)
-    try {
-      flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-    } catch {
-      /* */
-    }
-    return { ok: true, userId: uid }
-  } catch (profileErr: unknown) {
-    if (
-      profileErr instanceof Error &&
-      profileErr.message === 'LINE_USER_ID_EMPTY'
-    ) {
-      return {
-        ok: false,
-        reason: 'error',
-        message:
-          'LINE ユーザーIDを取得できませんでした。LIFF の profile スコープを確認してください。',
-      }
-    }
-    if (isLiffAccessTokenRevokedError(profileErr)) {
-      await clearInvalidLiffSession(liff)
-      if (!liff.isLoggedIn()) {
-        await postLineInquiryReturnPath(
-          `/${locale}/properties/${propertyId}`,
-          pendingForCookie ?? undefined
-        )
-        try {
-          flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
-          flowStorageSet(LINE_OAUTH_RESUME_PID_KEY, propertyId)
-        } catch {
-          /* */
-        }
-        liff.login()
-        return { ok: false, reason: 'login' }
-      }
-    }
-    return {
-      ok: false,
-      reason: 'error',
-      message: formatLiffError(profileErr) || getErrorMessage(profileErr),
-    }
+      'ログインセッションが有効ではありません。お手数ですが一度ログアウトして再ログインのうえ、もう一度送信してください。',
   }
 }
 
@@ -376,9 +85,7 @@ interface InquiryFormProps {
   isLoggedIn: boolean
   onRequireAuth?: () => void
   contactPrefill?: InquiryContactPrefill | null
-  /** 問い合わせ完了後の公式LINE友だち追加URL */
   officialLineAddFriendUrl: string
-  /** false のとき LINE 返信オプションを出さずメールのみ（掲載者がプロプランでない場合／DB: premium） */
   ownerPremiumLineInquiry?: boolean
 }
 
@@ -390,11 +97,10 @@ export default function InquiryForm({
   onRequireAuth,
   contactPrefill,
   officialLineAddFriendUrl,
-  ownerPremiumLineInquiry = false,
 }: InquiryFormProps) {
-  const showLineInquiryUi = SHOW_INQUIRY_REPLY_CHANNEL && ownerPremiumLineInquiry
   const routeParams = useParams()
   const locale = (routeParams?.locale as string) || 'jp'
+  const supabase = createClient()
 
   const defaultMessage =
     dict.property.inquiry_default_message?.replace('{propertyName}', propertyName) ||
@@ -405,9 +111,6 @@ export default function InquiryForm({
     email: '',
     message: defaultMessage,
   })
-  const [preferredReplyChannel, setPreferredReplyChannel] = useState<'email' | 'line'>('email')
-  const { isSmartphone } = useDeviceType()
-  const liffId = getBrowserLineLiffId()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -416,10 +119,6 @@ export default function InquiryForm({
   const [contactSendConsent, setContactSendConsent] = useState(false)
   const [submitPhase, setSubmitPhase] = useState<'idle' | 'armed'>('idle')
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  /** LINE 自動送信の二重実行防止（await 中に別 effect が走る対策） */
-  const lineAutoSubmitInFlightRef = useRef(false)
-  /** タブが LINE 等に隠れてから戻ったあと自動送信を再試行 */
-  const [lineAutoResumeNonce, setLineAutoResumeNonce] = useState(0)
   const [portalReady, setPortalReady] = useState(false)
   const lineOaLaunch = useLineOaLaunch(
     officialLineAddFriendUrl || undefined,
@@ -459,7 +158,7 @@ export default function InquiryForm({
   const armSubmitConfirm = useCallback(() => {
     clearConfirmTimer()
     setSubmitPhase('armed')
-    confirmTimerRef.current = setTimeout(() => {
+    confirmTimerRef.current = window.setTimeout(() => {
       setSubmitPhase('idle')
       confirmTimerRef.current = null
     }, 3000)
@@ -494,378 +193,6 @@ export default function InquiryForm({
     }))
   }, [isLoggedIn, contactPrefill])
 
-  useEffect(() => {
-    if (!showLineInquiryUi) {
-      setPreferredReplyChannel('email')
-      return
-    }
-    if (!isSmartphone) {
-      try {
-        const pending = readPendingLineInquiry()
-        if (pending?.propertyId.toLowerCase() === propertyId.toLowerCase()) return
-        if (flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase())
-          return
-      } catch {
-        /* */
-      }
-      setPreferredReplyChannel('email')
-    }
-  }, [showLineInquiryUi, isSmartphone, propertyId])
-
-  /** sessionStorage 単体では別タブで消えるため、httpOnly からも下書きを戻す */
-  useEffect(() => {
-    if (!showLineInquiryUi) return
-    if (!isLoggedIn) return
-    if (readPendingLineInquiry()) return
-
-    let cancelled = false
-    void (async () => {
-      try {
-        const res = await fetch(`${window.location.origin}/api/inquiry/line-pending-restore`, {
-          credentials: 'same-origin',
-        })
-        if (!res.ok || cancelled) return
-        const data = (await res.json()) as { pending?: PendingLineInquiry | null }
-        const p = data.pending
-        if (!p || p.propertyId.toLowerCase() !== propertyId.toLowerCase()) return
-        try {
-          flowStorageSet(PENDING_LINE_INQUIRY_KEY, JSON.stringify(p))
-        } catch {
-          return
-        }
-        setLineAutoResumeNonce((n) => n + 1)
-      } catch {
-        /* */
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [isLoggedIn, propertyId, showLineInquiryUi])
-
-  /** LINE から liff.line.me 経由で戻ったあと「LINEで受け取る」を復元（スマートフォンのみ） */
-  useEffect(() => {
-    if (!showLineInquiryUi) return
-    if (!isLoggedIn) return
-    if (!isSmartphone) {
-      try {
-        const pending = readPendingLineInquiry()
-        if (pending?.propertyId.toLowerCase() === propertyId.toLowerCase()) return
-        if (flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase())
-          return
-        flowStorageRemove('inquiry_resume_line')
-        flowStorageRemove('inquiry_resume_property_id')
-        flowStorageRemove('inquiry_resume_locale')
-      } catch {
-        /* */
-      }
-      return
-    }
-    try {
-      const flag = flowStorageGet('inquiry_resume_line')
-      const pid = flowStorageGet('inquiry_resume_property_id')
-      if (flag === '1' && pid?.toLowerCase() === propertyId.toLowerCase()) {
-        flowStorageRemove('inquiry_resume_line')
-        flowStorageRemove('inquiry_resume_property_id')
-        flowStorageRemove('inquiry_resume_locale')
-        setPreferredReplyChannel('line')
-        setIsOpen(true)
-        requestAnimationFrame(() => {
-          document.getElementById('inquiry-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        })
-      }
-    } catch {
-      /* private mode 等 */
-    }
-  }, [isLoggedIn, propertyId, isSmartphone, showLineInquiryUi])
-
-  /** LINE 連携後にブラウザへ戻ったタイミングで、保留中の自動送信をもう一度試す */
-  useEffect(() => {
-    if (!showLineInquiryUi || !isLoggedIn) return
-    let wasHidden = document.visibilityState === 'hidden'
-    const bump = () => {
-      const pending = readPendingLineInquiry()
-      if (
-        !pending ||
-        pending.propertyId.toLowerCase() !== propertyId.toLowerCase()
-      )
-        return
-      let ready = false
-      try {
-        ready =
-          flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase()
-      } catch {
-        return
-      }
-      if (!ready) return
-      if (lineAutoSubmitInFlightRef.current) return
-      try {
-        flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
-      } catch {
-        /* */
-      }
-      setLineAutoResumeNonce((n) => n + 1)
-    }
-    const onVis = () => {
-      const hidden = document.visibilityState === 'hidden'
-      if (wasHidden && !hidden) bump()
-      wasHidden = hidden
-    }
-    document.addEventListener('visibilitychange', onVis)
-    return () => document.removeEventListener('visibilitychange', onVis)
-  }, [isLoggedIn, propertyId, showLineInquiryUi])
-
-  useEffect(() => {
-    if (!showLineInquiryUi) return
-    if (preferredReplyChannel !== 'line' || !liffId) return
-    void import('@line/liff').catch(() => {})
-  }, [preferredReplyChannel, liffId, showLineInquiryUi])
-
-  const supabase = createClient()
-  const p = dict.property ?? {}
-  const inquirySuccessCloseLabel = p.contact_auth_close ?? '閉じる'
-
-  /** ブリッジから戻ったあと、保存済みの1回目の確定内容で自動送信（ユーザーに2回押させない） */
-  useEffect(() => {
-    if (!showLineInquiryUi) return
-    if (!isLoggedIn || !liffId) return
-
-    const pending = readPendingLineInquiry()
-    if (!pending || pending.propertyId.toLowerCase() !== propertyId.toLowerCase()) return
-
-    let liffReady = false
-    let oauthResume = false
-    try {
-      liffReady =
-        flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase()
-      oauthResume =
-        flowStorageGet(LINE_OAUTH_RESUME_PID_KEY)?.toLowerCase() === propertyId.toLowerCase()
-    } catch {
-      return
-    }
-    if (!liffReady && !oauthResume) return
-
-    const lockKey = `${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`
-    try {
-      if (isAutoSubmitLockHeld(lockKey)) return
-      armAutoSubmitLock(lockKey)
-    } catch {
-      return
-    }
-
-    if (lineAutoSubmitInFlightRef.current) {
-      try {
-        flowStorageRemove(lockKey)
-      } catch {
-        /* */
-      }
-      return
-    }
-    lineAutoSubmitInFlightRef.current = true
-
-    const liffHint =
-      p.inquiry_liff_endpoint_hint ??
-      'LINE Developers の LIFF で「エンドポイント URL」を、いま表示しているページの URL（https・www の有無・パスまで）と一致させてください。'
-    const liffCallbackHint =
-      p.inquiry_liff_callback_url_hint ??
-      'LINEログインチャネル「コールバック URL」に、いまのページのオリジンを登録してください。'
-    const currentPageUrl =
-      typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : ''
-
-    setPreferredReplyChannel('line')
-    setIsOpen(true)
-    setFormData({
-      name: pending.name,
-      email: pending.email,
-      message: pending.message,
-    })
-    setLoading(true)
-    setError(null)
-
-    ;(async () => {
-      try {
-      await new Promise((r) => setTimeout(r, 450))
-      const sb = createClient()
-      const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
-      if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
-        try {
-          flowStorageRemove(lockKey)
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-        } catch {
-          /* */
-        }
-        clearPendingLineInquiry()
-        const rateMsg = '送信の間隔が短すぎます。しばらく待ってから再度お試しください。'
-        inquiryDebugAlert('送信間隔（自動送信）', rateMsg)
-        setError(rateMsg)
-        setLoading(false)
-        return
-      }
-
-      const isUuid =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyId)
-
-      if (!isUuid) {
-        clearPendingLineInquiry()
-        try {
-          flowStorageRemove(lockKey)
-          flowStorageRemove('inquiry_liff_ready_pid')
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-        } catch {
-          /* */
-        }
-        localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
-        setLoading(false)
-        setSuccess(true)
-        return
-      }
-
-      let lineResult = await obtainLineUserIdForInquiry(
-        liffId,
-        propertyId,
-        pending.locale,
-        pending
-      )
-      if (!lineResult.ok && lineResult.reason === 'error') {
-        await new Promise((r) => setTimeout(r, 1200))
-        lineResult = await obtainLineUserIdForInquiry(
-          liffId,
-          propertyId,
-          pending.locale,
-          pending
-        )
-      }
-      if (!lineResult.ok) {
-        if (lineResult.reason === 'login') {
-          try {
-            flowStorageRemove(lockKey)
-          } catch {
-            /* */
-          }
-          setLoading(false)
-          return
-        }
-        clearPendingLineInquiry()
-        try {
-          flowStorageRemove(lockKey)
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-        } catch {
-          /* */
-        }
-        const errText = `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}`
-        console.error('[InquiryForm] LINE auto-submit obtainLineUserIdForInquiry', lineResult)
-        inquiryDebugAlert('LINE（自動送信）', errText)
-        setError(errText)
-        setLoading(false)
-        return
-      }
-
-      const lineUserIdForDb = lineResult.userId
-
-      const sessionCheck = await ensureSupabaseSessionForInquiry(sb)
-      if (!sessionCheck.ok) {
-        clearPendingLineInquiry()
-        try {
-          flowStorageRemove(lockKey)
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-        } catch {
-          /* */
-        }
-        console.error('[InquiryForm] auto-submit no session', sessionCheck.message)
-        inquiryDebugAlert('認証（RLS・自動送信）', sessionCheck.message)
-        setError(sessionCheck.message)
-        setLoading(false)
-        return
-      }
-
-      const emailTrim = pending.email.trim()
-      const nameTrim = pending.name.trim()
-      const messageTrim = pending.message.trim()
-      const { error: submitError } = await sb.from('inquiries').insert([
-        {
-          property_id: propertyId,
-          inquirer_name: nameTrim,
-          inquirer_email: emailTrim,
-          email: emailTrim,
-          inquirer_phone: null,
-          message: messageTrim,
-          preferred_reply_channel: 'line',
-          line_user_id: lineUserIdForDb,
-        },
-      ])
-
-      if (submitError) {
-        clearPendingLineInquiry()
-        try {
-          flowStorageRemove(lockKey)
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-        } catch {
-          /* */
-        }
-        const formatted = formatInquirySubmitError(submitError)
-        console.error('[InquiryForm] auto-submit insert failed', submitError)
-        inquiryDebugAlert('DB保存（inquiries・自動送信）', formatted)
-        setError(formatted)
-        setLoading(false)
-        return
-      }
-
-      localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
-      clearPendingLineInquiry()
-      try {
-        flowStorageRemove(lockKey)
-          flowStorageRemove('inquiry_liff_ready_pid')
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-      } catch {
-        /* */
-      }
-      try {
-        localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-      } catch {
-        /* */
-      }
-      void requestInquiryConfirmationEmail(sb, {
-        property_id: propertyId,
-        locale,
-        inquirer_email: emailTrim,
-        inquirer_name: nameTrim,
-        message: messageTrim,
-      })
-      setSuccess(true)
-      setLoading(false)
-      } catch (unexpected: unknown) {
-        const formatted = formatInquirySubmitError(unexpected)
-        console.error('[InquiryForm] auto-submit unexpected', unexpected)
-        inquiryDebugAlert('自動送信・例外', formatted)
-        clearPendingLineInquiry()
-        try {
-          flowStorageRemove(lockKey)
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-        } catch {
-          /* */
-        }
-        setError(formatted)
-        setLoading(false)
-      } finally {
-        lineAutoSubmitInFlightRef.current = false
-        try {
-          flowStorageRemove(lockKey)
-        } catch {
-          /* */
-        }
-      }
-    })()
-    return () => {
-      lineAutoSubmitInFlightRef.current = false
-      try {
-        flowStorageRemove(`${AUTO_SUBMIT_LOCK_PREFIX}${propertyId}`)
-      } catch {
-        /* */
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- dict 全体を依存に入れると毎レンダーで再実行される
-  }, [isLoggedIn, propertyId, locale, liffId, lineAutoResumeNonce, showLineInquiryUi])
-
   const innerVisible = !isLoggedIn || isOpen || isDesktop
 
   const fieldLabelClass =
@@ -886,9 +213,6 @@ export default function InquiryForm({
       return
     }
 
-    const effectiveChannel: 'email' | 'line' =
-      showLineInquiryUi && isSmartphone ? preferredReplyChannel : 'email'
-
     const lastInquiry = localStorage.getItem(`last_inquiry_${propertyId}`)
     if (lastInquiry && Date.now() - parseInt(lastInquiry) < 30000) {
       const rateMsg = '送信の間隔が短すぎます。しばらく待ってから再度お試しください。'
@@ -901,178 +225,8 @@ export default function InquiryForm({
 
     setLoading(true)
     setError(null)
-    if (showLineInquiryUi && !isSmartphone && preferredReplyChannel === 'line') {
-      setError(
-        p.inquiry_line_blocked_desktop ??
-          'PC・タブレットでは「LINEで受け取る」はご利用いただけません。メールでの返信のみとなります。'
-      )
-      setPreferredReplyChannel('email')
-      setSubmitPhase('idle')
-      clearConfirmTimer()
-      setLoading(false)
-      return
-    }
-
-    let lineUid: string | null = null
-
-    const liffHint =
-      p.inquiry_liff_endpoint_hint ??
-      'LINE Developers の LIFF で「エンドポイント URL」を、いま表示しているページの URL（https・www の有無・パスまで）と一致させてください。Vercel の本番ドメインと LIFF の登録 URL が違うとこのエラーになります。'
-
-    const liffCallbackHint =
-      p.inquiry_liff_callback_url_hint ??
-      'LINEログインチャネル「チャネル基本設定」の「コールバック URL」に、いまのページのオリジン（例: https://chonburihome.com ）を登録してください。未登録だとログイン後に失敗することがあります。'
-
-    const currentPageUrl =
-      typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : ''
 
     try {
-      if (effectiveChannel === 'line') {
-        if (!liffId) {
-          const msg =
-            p.inquiry_liff_env_required ??
-            '「LINEで受け取る」を利用するには LIFF ID の設定が必要です（本番: NEXT_PUBLIC_LINE_LIFF_ID、開発ホスト用: NEXT_PUBLIC_LINE_LIFF_ID_DEV）。'
-          inquiryDebugAlert('設定', msg)
-          setError(msg)
-          setSubmitPhase('idle')
-          clearConfirmTimer()
-          setLoading(false)
-          return
-        }
-
-        // 未ブリッジ時: 既に LINE ログイン済みなら handoff せず送信へ。外部ブラウザのみ handoff。LINE 内未ログインは pending + liff.login() 後に effect が保存。
-        let liffReady = false
-        try {
-          liffReady =
-            flowStorageGet('inquiry_liff_ready_pid')?.toLowerCase() === propertyId.toLowerCase()
-        } catch {
-          liffReady = false
-        }
-
-        if (!liffReady) {
-          const probe = await probeLiffLineUserId(liffId)
-          if (probe.kind === 'ok') {
-            lineUid = probe.userId
-            try {
-              flowStorageSet('inquiry_liff_ready_pid', propertyId)
-            } catch {
-              /* */
-            }
-          } else if (probe.kind === 'need_login') {
-            const linePayload: PendingLineInquiry = {
-              v: 1,
-              propertyId,
-              locale,
-              name: formData.name.trim(),
-              email: formData.email.trim(),
-              message: formData.message.trim(),
-              at: Date.now(),
-            }
-            try {
-              flowStorageSet(PENDING_LINE_INQUIRY_KEY, JSON.stringify(linePayload))
-              flowStorageSet('inquiry_resume_line', '1')
-              flowStorageSet('inquiry_resume_property_id', propertyId)
-              flowStorageSet('inquiry_resume_locale', locale)
-            } catch {
-              /* */
-            }
-            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`, linePayload)
-            const res = await obtainLineUserIdForInquiry(
-              liffId,
-              propertyId,
-              locale,
-              linePayload
-            )
-            if (!res.ok) {
-              if (res.reason === 'login') {
-                setLoading(false)
-                return
-              }
-              const errText = `${res.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}${p.inquiry_liff_profile_scope_hint ? `\n\n${p.inquiry_liff_profile_scope_hint}` : ''}`
-              console.error('[InquiryForm] obtainLineUserIdForInquiry (need_login)', res)
-              inquiryDebugAlert('LINE（手動送信）', errText)
-              setError(errText)
-              setSubmitPhase('idle')
-              clearConfirmTimer()
-              setLoading(false)
-              return
-            }
-            lineUid = res.userId
-          } else if (probe.kind === 'error') {
-            inquiryDebugAlert('LINE（確認）', probe.message)
-            setError(probe.message)
-            setSubmitPhase('idle')
-            clearConfirmTimer()
-            setLoading(false)
-            return
-          } else {
-            try {
-              flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-            } catch {
-              /* */
-            }
-            const handoffPayload: PendingLineInquiry = {
-              v: 1,
-              propertyId,
-              locale,
-              name: formData.name.trim(),
-              email: formData.email.trim(),
-              message: formData.message.trim(),
-              at: Date.now(),
-            }
-            try {
-              flowStorageSet(PENDING_LINE_INQUIRY_KEY, JSON.stringify(handoffPayload))
-              flowStorageSet('inquiry_resume_line', '1')
-              flowStorageSet('inquiry_resume_property_id', propertyId)
-              flowStorageSet('inquiry_resume_locale', locale)
-            } catch {
-              /* ignore */
-            }
-            await postLineInquiryReturnPath(`/${locale}/properties/${propertyId}`, handoffPayload)
-            window.location.assign(
-              `/api/liff-handoff?locale=${encodeURIComponent(locale)}&propertyId=${encodeURIComponent(propertyId)}`
-            )
-            return
-          }
-        }
-
-        if (lineUid === null) {
-          const lineResult = await obtainLineUserIdForInquiry(liffId, propertyId, locale, null)
-          if (!lineResult.ok) {
-            if (lineResult.reason === 'login') {
-              setLoading(false)
-              return
-            }
-            const profileScopeHint = p.inquiry_liff_profile_scope_hint
-            const errText = `${lineResult.message}\n\n${liffHint}${currentPageUrl ? `\n\n現在のページ: ${currentPageUrl}` : ''}\n\n${liffCallbackHint}${profileScopeHint ? `\n\n${profileScopeHint}` : ''}`
-            console.error('[InquiryForm] obtainLineUserIdForInquiry', lineResult)
-            inquiryDebugAlert('LINE（手動送信）', errText)
-            setError(errText)
-            setSubmitPhase('idle')
-            clearConfirmTimer()
-            setLoading(false)
-            return
-          }
-          lineUid = lineResult.userId
-        }
-      }
-
-      if (effectiveChannel === 'line') {
-        const normalized = normalizeLineMessagingUserId(lineUid)
-        if (!normalized) {
-          const msg =
-            'LINE ユーザーID（liff.getProfile().userId）を取得できませんでした。保存を中断しました。'
-          console.error('[InquiryForm]', msg)
-          inquiryDebugAlert('LINE userId', msg)
-          setError(msg)
-          setSubmitPhase('idle')
-          clearConfirmTimer()
-          setLoading(false)
-          return
-        }
-        lineUid = normalized
-      }
-
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyId)
 
@@ -1106,8 +260,8 @@ export default function InquiryForm({
           email: emailTrim,
           inquirer_phone: null,
           message: messageTrim,
-          preferred_reply_channel: effectiveChannel,
-          line_user_id: effectiveChannel === 'line' ? lineUid : null,
+          preferred_reply_channel: 'email',
+          line_user_id: null,
         },
       ])
 
@@ -1122,20 +276,6 @@ export default function InquiryForm({
       }
 
       localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
-      if (effectiveChannel === 'line') {
-        clearPendingLineInquiry()
-        try {
-          flowStorageRemove('inquiry_liff_ready_pid')
-          flowStorageRemove(LINE_OAUTH_RESUME_PID_KEY)
-        } catch {
-          /* ignore */
-        }
-        try {
-          localStorage.setItem(LINE_OFFICIAL_FRIEND_STORAGE_KEY, '1')
-        } catch {
-          /* */
-        }
-      }
       void requestInquiryConfirmationEmail(supabase, {
         property_id: propertyId,
         locale,
@@ -1155,6 +295,9 @@ export default function InquiryForm({
       setLoading(false)
     }
   }
+
+  const p = dict.property ?? {}
+  const inquirySuccessCloseLabel = p.contact_auth_close ?? '閉じる'
 
   if (success) {
     if (!portalReady || typeof document === 'undefined') {
@@ -1338,120 +481,6 @@ export default function InquiryForm({
               />
             </div>
 
-            {SHOW_INQUIRY_REPLY_CHANNEL ? (
-              <fieldset className="rounded-2xl border border-slate-200 bg-white p-4">
-                <legend className={clsx(fieldLabelClass, 'mb-2 px-1')}>
-                  {p.inquiry_reply_channel_heading ?? '返信方法'}
-                </legend>
-                {!ownerPremiumLineInquiry ? (
-                  <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-4">
-                    <p className="text-sm font-bold leading-relaxed text-navy-secondary">
-                      {p.inquiry_owner_standard_line_notice ??
-                        (locale === 'en'
-                          ? 'This listing agent replies by email only. The “by LINE” option is available with Pro listing agents.'
-                          : locale === 'th'
-                            ? 'ตัวแทนประกาศนี้ตอบกลับทางอีเมลเท่านั้น การเลือกรับทาง LINE มีเฉพาะตัวแทนแพ็กเกียมพรีเมียม'
-                            : 'この掲載エージェントはメールでの返信のみ対応しています。LINEでの返信を選べるのはプロプラン掲載エージェントのみです。')}
-                    </p>
-                    <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2">
-                      <p className="text-xs font-bold text-slate-500">
-                        {p.inquiry_reply_desktop_notice ?? '返信はメールにて差し上げます。'}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 opacity-60">
-                      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-400 line-through">
-                        LINE
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">
-                        {p.inquiry_line_premium_only_badge ??
-                          (locale === 'en'
-                            ? 'Pro listings only'
-                            : locale === 'th'
-                              ? 'เฉพาะแพ็กเกียมพรีเมียม'
-                              : 'プロ掲載のみ')}
-                      </span>
-                    </div>
-                  </div>
-                ) : isSmartphone ? (
-                  <>
-                    <p className="mb-3 text-[11px] leading-relaxed text-slate-500">
-                      {p.inquiry_reply_channel_intro_v2 ??
-                        p.inquiry_reply_channel_intro ??
-                        '担当からの返信の受け取り方を選びます。メールアドレスはどちらの場合も記録されます。'}
-                    </p>
-                    <div className="space-y-3">
-                      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
-                        <input
-                          type="radio"
-                          name="preferred_reply_channel"
-                          className="mt-1 h-4 w-4 text-navy-primary"
-                          checked={preferredReplyChannel === 'email'}
-                          onChange={() => setPreferredReplyChannel('email')}
-                        />
-                        <span>
-                          <span className="block text-sm font-bold text-navy-secondary">
-                            {p.inquiry_reply_by_email ?? p.inquiry_reply_email_only ?? 'メールで受け取る'}
-                          </span>
-                          <span className="mt-0.5 block text-[11px] text-slate-500">
-                            {p.inquiry_reply_by_email_desc ??
-                              p.inquiry_reply_email_only_desc ??
-                              '返信はメールで受け取ります。'}
-                          </span>
-                        </span>
-                      </label>
-                      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 has-[:checked]:border-navy-primary/40 has-[:checked]:bg-navy-primary/5">
-                        <input
-                          type="radio"
-                          name="preferred_reply_channel"
-                          className="mt-1 h-4 w-4 text-navy-primary"
-                          checked={preferredReplyChannel === 'line'}
-                          onChange={() => setPreferredReplyChannel('line')}
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-bold text-navy-secondary">
-                            {p.inquiry_reply_by_line ?? 'LINEで受け取る'}
-                          </span>
-                          <span className="mt-0.5 block text-[11px] text-slate-500">
-                            {p.inquiry_reply_by_line_desc ??
-                              '公式LINEのトークで返信を受け取るには友だち追加が必要です。入力内容を担当へ届けるには送信後の LINE ログイン（連携）も必要です。'}
-                          </span>
-                        </span>
-                      </label>
-                    </div>
-                  </>
-                ) : (
-                  <div className="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-                    <p className="text-[11px] leading-relaxed text-slate-500">
-                      {p.inquiry_reply_channel_intro_desktop ??
-                        p.inquiry_reply_channel_intro_v2 ??
-                        'メールアドレス宛に担当からご返信いたします。'}
-                    </p>
-                    <p className="mt-2 text-sm font-bold text-navy-secondary">
-                      {p.inquiry_reply_desktop_notice ?? '返信はメールにて差し上げます。'}
-                    </p>
-                    {officialLineAddFriendUrl ? (
-                      <div className="mt-4 border-t border-slate-200/80 pt-4">
-                        <p className="text-[10px] leading-relaxed text-slate-500">
-                          {p.inquiry_pc_line_qr_hint ??
-                            'LINEでのやり取りをご希望の方は、スマートフォンで下のQRコードを読み取り、公式アカウントからお問い合わせください。'}
-                        </p>
-                        <div className="mt-3 flex justify-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element -- 外部QR APIの動的URLのため */}
-                          <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=1&data=${encodeURIComponent(officialLineAddFriendUrl)}`}
-                            alt=""
-                            width={120}
-                            height={120}
-                            className="rounded-lg border border-slate-200 bg-white p-1"
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              </fieldset>
-            ) : null}
-
             {error && (
               <div className="whitespace-pre-line px-1 text-xs font-normal text-red-500">{error}</div>
             )}
@@ -1509,13 +538,7 @@ export default function InquiryForm({
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    <span className="text-center leading-tight">
-                      {showLineInquiryUi &&
-                      isSmartphone &&
-                      preferredReplyChannel === 'line'
-                        ? (p.inquiry_send_btn_confirm_line ?? p.inquiry_send_btn_confirm)
-                        : p.inquiry_send_btn_confirm}
-                    </span>
+                    <span className="text-center leading-tight">{p.inquiry_send_btn_confirm}</span>
                     <Send className="h-4 w-4 shrink-0" />
                   </>
                 )}

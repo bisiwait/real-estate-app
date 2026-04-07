@@ -33,9 +33,6 @@ namespace NodeJS {
          */
         NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL?: string;
         NEXT_PUBLIC_LINE_OFFICIAL_MANAGER_CHAT_URL_DEV?: string;
-        /** LIFF（本番 / 開発ホスト用） */
-        NEXT_PUBLIC_LINE_LIFF_ID?: string;
-        NEXT_PUBLIC_LINE_LIFF_ID_DEV?: string;
         /** 友だち追加 URL・Basic ID（開発ホスト用オーバーライド） */
         NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL?: string;
         NEXT_PUBLIC_OFFICIAL_LINE_ADD_URL_DEV?: string;
@@ -43,11 +40,6 @@ namespace NodeJS {
         NEXT_PUBLIC_OPERATIONS_SUPPORT_LINE_URL?: string;
         NEXT_PUBLIC_LINE_OFFICIAL_ID?: string;
         NEXT_PUBLIC_LINE_OFFICIAL_ID_DEV?: string;
-        /** Messaging API（サーバーのみ）。開発ホスト用 */
-        LINE_OFFICIAL_CHANNEL_SECRET?: string;
-        LINE_OFFICIAL_CHANNEL_SECRET_DEV?: string;
-        LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN?: string;
-        LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN_DEV?: string;
         /** Supabase Custom OAuth（LINE ログイン）のプロバイダー識別子 */
         NEXT_PUBLIC_SUPABASE_LINE_PROVIDER?: string;
     }

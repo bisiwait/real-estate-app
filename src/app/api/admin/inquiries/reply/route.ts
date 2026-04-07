@@ -9,9 +9,6 @@ import {
   resendErrorInvalidFrom,
   resendErrorNeedsVerifiedDomain,
 } from '@/lib/resend-from'
-import { lineOfficialPushText } from '@/lib/line-official-push'
-import { linePushFailureUserMessage, normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
-import { fetchAgentLineAccessToken } from '@/lib/line-agent-credentials'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -35,7 +32,7 @@ type InquiryRow = {
 }
 
 /**
- * 管理者が inquiries に対しメールまたは LINE Push で返信する。
+ * 管理者が inquiries に対しメールで返信する（Messaging API / LINE Push は廃止）。
  * inquiry_replies 記録・inquiry_logs（admin_reply）・is_read 更新まで一括。
  */
 export async function POST(req: NextRequest) {
@@ -67,8 +64,11 @@ export async function POST(req: NextRequest) {
     if (!inquiryId || !UUID_RE.test(inquiryId)) {
       return NextResponse.json({ error: 'Invalid inquiry_id' }, { status: 400 })
     }
-    if (channelRaw !== 'email' && channelRaw !== 'line') {
-      return NextResponse.json({ error: 'channel は email または line です。' }, { status: 400 })
+    if (channelRaw !== 'email') {
+      return NextResponse.json(
+        { error: '返信はメールのみです。channel に email を指定してください。' },
+        { status: 400 }
+      )
     }
     if (!message) {
       return NextResponse.json({ error: 'message が必要です。' }, { status: 400 })
@@ -92,39 +92,6 @@ export async function POST(req: NextRequest) {
     }
 
     const row = inquiry as InquiryRow
-    const preferred = normalizeInquiryReplyChannel(row.preferred_reply_channel)
-
-    if (channelRaw === 'email' && preferred !== 'email') {
-      return NextResponse.json(
-        { error: 'このお問い合わせはメール返信の希望ではありません。' },
-        { status: 400 }
-      )
-    }
-    if (channelRaw === 'line') {
-      if (preferred !== 'line') {
-        return NextResponse.json(
-          { error: 'このお問い合わせは LINE 返信の希望ではありません。' },
-          { status: 400 }
-        )
-      }
-      const uid = row.line_user_id?.trim()
-      if (!uid) {
-        return NextResponse.json(
-          { error: 'LINE ユーザーIDが記録されていません。メールでの連絡をご検討ください。' },
-          { status: 422 }
-        )
-      }
-      if (row.first_reply_sent === true) {
-        return NextResponse.json(
-          {
-            error:
-              'このお問い合わせには既に公式 LINE から初回 Push を送信済みです。続きは LINE Official Account Manager のチャットから行ってください。',
-            code: 'LINE_PUSH_ALREADY_SENT',
-          },
-          { status: 409 }
-        )
-      }
-    }
 
     const { data: property } = await admin
       .from('properties')
@@ -146,39 +113,36 @@ export async function POST(req: NextRequest) {
 
     let resendId: string | null = null
 
-    if (channelRaw === 'email') {
-      const to = row.inquirer_email?.trim()
-      if (!to) {
-        return NextResponse.json({ error: '問い合わせ者のメールアドレスがありません。' }, { status: 422 })
-      }
+    const to = row.inquirer_email?.trim()
+    if (!to) {
+      return NextResponse.json({ error: '問い合わせ者のメールアドレスがありません。' }, { status: 422 })
+    }
 
-      const apiKey = process.env.RESEND_API_KEY
-      if (!apiKey) {
-        return NextResponse.json(
-          { error: 'メール送信が設定されていません（RESEND_API_KEY）。' },
-          { status: 503 }
-        )
-      }
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'メール送信が設定されていません（RESEND_API_KEY）。' },
+        { status: 503 }
+      )
+    }
 
-      const subject =
-        subjectRaw ||
-        `【返信】「${propertyTitle}」についてのお問い合わせ`
+    const subject = subjectRaw || `【返信】「${propertyTitle}」についてのお問い合わせ`
 
-      const safeMessage = escapeHtml(message)
-      const safeTitle = escapeHtml(propertyTitle)
-      const safeAgentName = escapeHtml(agentDisplayName)
-      const safeAgentEmail = escapeHtml(agentEmail)
-      const safeInquirer = escapeHtml(inquirerName)
-      const safeMailSubject = escapeHtml(subject)
+    const safeMessage = escapeHtml(message)
+    const safeTitle = escapeHtml(propertyTitle)
+    const safeAgentName = escapeHtml(agentDisplayName)
+    const safeAgentEmail = escapeHtml(agentEmail)
+    const safeInquirer = escapeHtml(inquirerName)
+    const safeMailSubject = escapeHtml(subject)
 
-      const from = getResendFromAddress()
-      const resend = new Resend(apiKey)
-      const { data: sent, error: sendErr } = await resend.emails.send({
-        from,
-        to: [to],
-        ...(agentEmail ? { replyTo: agentEmail } : {}),
-        subject,
-        html: `
+    const from = getResendFromAddress()
+    const resend = new Resend(apiKey)
+    const { data: sent, error: sendErr } = await resend.emails.send({
+      from,
+      to: [to],
+      ...(agentEmail ? { replyTo: agentEmail } : {}),
+      subject,
+      html: `
         <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
           <h2>${safeInquirer} 様</h2>
           <p>お問い合わせいただいた物件「<strong>${safeTitle}</strong>」について、担当より返信です。</p>
@@ -197,58 +161,19 @@ export async function POST(req: NextRequest) {
           <p style="font-size: 12px; color: #999;">Chonburi Home（管理画面から送信）</p>
         </div>
       `,
-      })
+    })
 
-      if (sendErr) {
-        const msg = sendErr.message || String(sendErr)
-        console.error('[admin/inquiries/reply] Resend', sendErr)
-        let hint: string | undefined
-        if (resendErrorNeedsVerifiedDomain(msg)) hint = RESEND_DOMAIN_HINT_JA
-        else if (resendErrorInvalidFrom(msg)) hint = RESEND_FROM_FORMAT_HINT_JA
-        return NextResponse.json({ error: msg, hint, sent: false }, { status: 502 })
-      }
-      resendId = sent?.id ?? null
-    } else {
-      const token = await fetchAgentLineAccessToken(admin, row.owner_id)
-      if (!token) {
-        return NextResponse.json(
-          {
-            error:
-              'LINE連携が未設定です。該当エージェントのプロフィール設定でチャネルアクセストークンを登録してください。',
-          },
-          { status: 503 }
-        )
-      }
-      const toUser = row.line_user_id!.trim()
-      const pushResult = await lineOfficialPushText(toUser, message, token)
-      if (!pushResult.ok) {
-        const userMsg = linePushFailureUserMessage(pushResult.status, pushResult.body || '')
-        console.error('[admin/inquiries/reply] LINE push', pushResult.status, pushResult.body)
-        return NextResponse.json(
-          {
-            error: userMsg,
-            line_status: pushResult.status,
-            sent: false,
-          },
-          { status: 502 }
-        )
-      }
-
-      const { error: frErr } = await admin
-        .from('inquiries')
-        .update({ first_reply_sent: true })
-        .eq('id', inquiryId)
-      if (frErr) {
-        console.warn('[admin/inquiries/reply] first_reply_sent update', frErr.message)
-      }
+    if (sendErr) {
+      const msg = sendErr.message || String(sendErr)
+      console.error('[admin/inquiries/reply] Resend', sendErr)
+      let hint: string | undefined
+      if (resendErrorNeedsVerifiedDomain(msg)) hint = RESEND_DOMAIN_HINT_JA
+      else if (resendErrorInvalidFrom(msg)) hint = RESEND_FROM_FORMAT_HINT_JA
+      return NextResponse.json({ error: msg, hint, sent: false }, { status: 502 })
     }
+    resendId = sent?.id ?? null
 
-    const replyMessage =
-      channelRaw === 'email' && subjectRaw
-        ? `【${subjectRaw}】\n\n${message}`
-        : channelRaw === 'email' && !subjectRaw
-          ? message
-          : message
+    const replyMessage = subjectRaw ? `【${subjectRaw}】\n\n${message}` : message
 
     const { data: insertedReply, error: replyErr } = await admin
       .from('inquiry_replies')
@@ -269,15 +194,13 @@ export async function POST(req: NextRequest) {
     }
 
     const metadata: Record<string, unknown> = {
-      sent_via: channelRaw,
+      sent_via: 'email',
       message_content: message,
       admin_sender_id: user.id,
       inquiry_reply_id: insertedReply?.id ?? null,
     }
-    if (channelRaw === 'email') {
-      metadata.email_subject = subjectRaw || `【返信】「${propertyTitle}」についてのお問い合わせ`
-      if (resendId) metadata.resend_id = resendId
-    }
+    metadata.email_subject = subjectRaw || `【返信】「${propertyTitle}」についてのお問い合わせ`
+    if (resendId) metadata.resend_id = resendId
 
     const { error: logErr } = await admin.from('inquiry_logs').insert({
       inquiry_id: inquiryId,

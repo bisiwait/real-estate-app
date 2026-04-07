@@ -134,9 +134,8 @@ serve(async (req) => {
         // 4. Batch Processing (50 users per batch)
         const BATCH_SIZE = 50
         const resendApiKey = Deno.env.get('RESEND_API_KEY')
-        const lineAccessToken = Deno.env.get('LINE_CHANNEL_ACCESS_TOKEN')
 
-        console.log(`[process-broadcast] API Keys: Resend=${!!resendApiKey}, LINE=${!!lineAccessToken}`)
+        console.log(`[process-broadcast] Resend configured: ${!!resendApiKey}`)
 
         for (let i = 0; i < targetUsers.length; i += BATCH_SIZE) {
             const batch = targetUsers.slice(i, i + BATCH_SIZE)
@@ -171,33 +170,6 @@ serve(async (req) => {
                     } catch (e) {
                         console.error(`[process-broadcast] Resend exception for ${user.email}:`, e)
                         results.push({ method: 'email', status: 'failed', user_id: user.id, error: e.message })
-                    }
-                }
-
-                // B. Send LINE Flex Message
-                if (user.line_id && lineAccessToken) {
-                    try {
-                        const lineRes = await fetch('https://api.line.me/v2/bot/message/push', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${lineAccessToken}`,
-                            },
-                            body: JSON.stringify({
-                                to: user.line_id,
-                                messages: [generateLineFlexMessage(log, properties, getSiteOrigin())]
-                            }),
-                        })
-                        if (lineRes.ok) {
-                            results.push({ method: 'line', status: 'sent', user_id: user.id })
-                        } else {
-                            const errText = await lineRes.text()
-                            console.error(`[process-broadcast] LINE error for ${user.line_id}:`, errText)
-                            results.push({ method: 'line', status: 'failed', user_id: user.id, error: errText })
-                        }
-                    } catch (e) {
-                        console.error(`[process-broadcast] LINE exception for ${user.line_id}:`, e)
-                        results.push({ method: 'line', status: 'failed', user_id: user.id, error: e.message })
                     }
                 }
 
@@ -277,78 +249,4 @@ function generateEmailHtml(user: any, log: any, properties: any[]) {
             </div>
         </div>
     `
-}
-
-function generateLineFlexMessage(log: any, properties: any[], siteOrigin: string) {
-    const bubbles = properties.slice(0, 10).map(p => ({
-        type: "bubble",
-        hero: {
-            type: "image",
-            url: p.images?.[0] || "https://example.com/no-image.jpg",
-            size: "full",
-            aspectRatio: "20:13",
-            aspectMode: "cover"
-        },
-        body: {
-            type: "box",
-            layout: "vertical",
-            contents: [
-                {
-                    type: "text",
-                    text: p.title,
-                    weight: "bold",
-                    size: "md",
-                    wrap: true
-                },
-                {
-                    type: "box",
-                    layout: "baseline",
-                    margin: "md",
-                    contents: [
-                        {
-                            type: "text",
-                            text: `${p.price?.toLocaleString()} THB`,
-                            weight: "bold",
-                            size: "lg",
-                            color: "#0066ff",
-                            flex: 0
-                        },
-                        {
-                            type: "text",
-                            text: p.area?.name || "",
-                            size: "xs",
-                            color: "#999999",
-                            align: "end"
-                        }
-                    ]
-                }
-            ]
-        },
-        footer: {
-            type: "box",
-            layout: "vertical",
-            spacing: "sm",
-            contents: [
-                {
-                    type: "button",
-                    style: "link",
-                    height: "sm",
-                    action: {
-                        type: "uri",
-                        label: "詳細を見る",
-                        uri: `${siteOrigin}/jp/properties/${p.id}`
-                    }
-                }
-            ]
-        }
-    }))
-
-    return {
-        type: "flex",
-        altText: `${log.title} | Chonburi Home`,
-        contents: {
-            type: "carousel",
-            contents: bubbles
-        }
-    }
 }

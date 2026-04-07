@@ -1,7 +1,7 @@
 import { normalizeLineFriendUrlInput } from '@/lib/line-contact-url'
 import { expandShortLineFriendUrlServer } from '@/lib/expand-line-friend-url'
 import { repairMistypedLinEeOnLineMeHost } from '@/lib/repair-line-friend-host'
-import { basicIdOrUrlToAddFriendUrl, tryResolveOfficialBasicIdViaMessagingApi } from '@/lib/line-official'
+import { basicIdOrUrlToAddFriendUrl } from '@/lib/line-official'
 
 export type LinePropertyTitleFields = {
   id?: string | null
@@ -40,11 +40,11 @@ function isLinEeHostname(hostname: string): boolean {
 
 /**
  * lin.ee / line.me 友だち追加 URL または @Basic ID から oaMessage 用の @ID を解決する。
- * 展開が必要なときはサーバーで fetch し、取れなければ Messaging API bot/info にフォールバック。
+ * 短縮 URL はサーバーで fetch 展開する。取れない場合は null。
  */
 export async function resolveLineOfficialBasicIdForOaMessage(
   rawInput: string,
-  hostname?: string | null
+  _hostname?: string | null
 ): Promise<string | null> {
   const t = normalizeLineFriendUrlInput(rawInput).trim()
   if (!t) return null
@@ -72,7 +72,7 @@ export async function resolveLineOfficialBasicIdForOaMessage(
   const fromExpanded = extractAtBasicIdFromLineFriendOrOaHttpsUrl(expanded)
   if (fromExpanded) return fromExpanded
 
-  return tryResolveOfficialBasicIdViaMessagingApi(hostname ?? null)
+  return null
 }
 
 /**

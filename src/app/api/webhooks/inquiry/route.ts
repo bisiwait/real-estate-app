@@ -3,10 +3,6 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { NextRequest, NextResponse } from 'next/server'
 import { getResendFromAddress } from '@/lib/resend-from'
-import { lineOfficialPushText } from '@/lib/line-official-push'
-import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
-import { getLineOfficialChannelAccessTokenForHostname } from '@/lib/env/line-data-plane'
-import { fetchAgentLineAccessToken } from '@/lib/line-agent-credentials'
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'dummy_key_for_build')
 
@@ -154,31 +150,9 @@ export async function POST(req: NextRequest) {
 
     /** 問い合わせ者への控えメールは /api/inquiries/confirm-email（フォーム送信直後）で送る */
 
-    const ownerToken = property.user_id
-      ? await fetchAgentLineAccessToken(supabase, property.user_id as string)
-      : null
-    const lineToken =
-      ownerToken || getLineOfficialChannelAccessTokenForHostname(hostHeaderFromRequest(req))
-    let linePushOk = false
-    let linePushError: string | null = null
-
-    if (replyMethod === 'line' && lineUid && lineToken) {
-      const pushBody =
-        process.env.LINE_INQUIRY_THANK_YOU_MESSAGE?.trim() || 'お問い合わせありがとうございます。担当よりご連絡いたします。'
-      const pushResult = await lineOfficialPushText(lineUid, pushBody, lineToken)
-      linePushOk = pushResult.ok
-      if (!pushResult.ok) {
-        linePushError = `${pushResult.status} ${pushResult.body || ''}`
-        console.error('[inquiry-webhook] LINE push failed', linePushError)
-      }
-    }
-
     const notificationsMeta = {
       email_sent: true,
       resend_email_id: data?.id ?? null,
-      line_push_attempted: replyMethod === 'line' && Boolean(lineUid && lineToken),
-      line_push_ok: linePushOk,
-      line_push_error: linePushError,
     }
 
     if (record.id) {

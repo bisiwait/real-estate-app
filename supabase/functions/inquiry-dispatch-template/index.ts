@@ -3,12 +3,7 @@
  *
  * 本番の実装は Next.js の `src/app/api/webhooks/inquiry/route.ts` にあります。
  *
- * 分岐:
- * - 常にエージェントへメール（Resend）
- * - preferred_reply_channel === 'line' かつ line_user_id あり → 問い合わせ主へ Push（お礼文）
- * - 'email' のときは Push しない
- *
- * inquiry_logs.metadata に reply_method: 'email' | 'line' を残すと管理画面で判別しやすいです。
+ * Messaging API / LINE Push は廃止。メール通知のみを想定します。
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
@@ -37,40 +32,15 @@ serve(async (req) => {
     }
 
     const replyMethod = normalizeReplyChannel(record.preferred_reply_channel)
-    const lineUid = (record.line_user_id || '').trim()
 
-    // 1) エージェントへメール（常に）
-    // await fetch('https://api.resend.com/emails', { ... })
-
-    // 2) LINE 返信希望かつ userId あり → Push
-    if (replyMethod === 'line' && lineUid) {
-      const token = Deno.env.get('LINE_OFFICIAL_CHANNEL_ACCESS_TOKEN')?.trim()
-      if (token) {
-        const text =
-          Deno.env.get('LINE_INQUIRY_THANK_YOU_MESSAGE')?.trim() ||
-          'お問い合わせありがとうございます。担当よりご連絡いたします。'
-        const pushRes = await fetch('https://api.line.me/v2/bot/message/push', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            to: lineUid,
-            messages: [{ type: 'text', text }],
-          }),
-        })
-        console.log('[inquiry-dispatch-template] LINE push status', pushRes.status)
-      }
-    }
-
-    // 3) inquiry_logs: metadata: { reply_method: replyMethod, ... }
+    // 1) エージェントへメール（常に）— Resend 等は別途実装
+    // 2) inquiry_logs: metadata: { reply_method: replyMethod, ... }
 
     return new Response(
       JSON.stringify({
         ok: true,
         reply_method: replyMethod,
-        line_push_skipped: replyMethod !== 'line' || !lineUid,
+        note: 'LINE Push removed; use Next.js webhook for email delivery.',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
