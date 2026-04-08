@@ -18,6 +18,11 @@ import StickyContactBar from '@/components/property/StickyContactBar'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
 import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
+import {
+    buildPropertyLineInquiryPrefillMessageForParts,
+    replaceLineInquiryUrlPrefill,
+    resolveLinePropertyTitle,
+} from '@/lib/line-oa-message-inquiry-url'
 import { isPremium, isPremiumActive } from '@/lib/utils/plan'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
@@ -61,11 +66,14 @@ const getFeatureIcon = (featureName: string) => {
 interface PropertyDetailClientProps {
     initialProperty: any
     officialLineAddFriendUrl: string
+    /** 物件詳細の正規 URL（サーバー推定）。クライアントでは window.location.href で上書き */
+    propertyDetailPageUrl: string
 }
 
 export default function PropertyDetailClient({
     initialProperty,
     officialLineAddFriendUrl,
+    propertyDetailPageUrl,
 }: PropertyDetailClientProps) {
     const params = useParams()
     const pathname = usePathname()
@@ -112,6 +120,12 @@ export default function PropertyDetailClient({
         const raw = getPropertyOwnerLineInquiryRawInput(agent)
         return raw ? trimmed : ''
     }, [agent, officialLineAddFriendUrl])
+
+    const [clientPageHref, setClientPageHref] = useState<string | null>(null)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        setClientPageHref(window.location.href)
+    }, [id, pathname])
 
     useEffect(() => {
         titleTranslateAttemptKey.current = ''
@@ -234,6 +248,33 @@ export default function PropertyDetailClient({
         if (activeLang === 'th' && property.title_th) return property.title_th
         return property.title_ja || property.title || ''
     }, [property, activeLang])
+
+    /** 下書きに表示中の絶対 URL（クエリ・ハッシュ含む）を載せ、QR / 起動で共通利用 */
+    const resolvedLineInquiryUrl = useMemo(() => {
+        const base = effectiveLineInquiryUrl.trim()
+        if (!base) return ''
+        const pageUrl =
+            (clientPageHref && clientPageHref.trim()) ||
+            (propertyDetailPageUrl && propertyDetailPageUrl.trim()) ||
+            ''
+        if (!pageUrl) return base
+        const titleForMsg =
+            displayTitle.trim() ||
+            (property ? resolveLinePropertyTitle(property, activeLang) : '')
+        const body = buildPropertyLineInquiryPrefillMessageForParts(
+            activeLang,
+            pageUrl,
+            titleForMsg
+        )
+        return replaceLineInquiryUrlPrefill(base, body)
+    }, [
+        effectiveLineInquiryUrl,
+        clientPageHref,
+        propertyDetailPageUrl,
+        displayTitle,
+        activeLang,
+        property,
+    ])
 
     const mapSearchHint = useMemo(() => {
         if (!property) return null
@@ -375,7 +416,7 @@ export default function PropertyDetailClient({
                                 isLoggedIn={!!user}
                                 onRequireAuth={() => setContactAuthOpen(true)}
                                 contactPrefill={contactPrefill}
-                                officialLineAddFriendUrl={effectiveLineInquiryUrl}
+                                officialLineAddFriendUrl={resolvedLineInquiryUrl}
                                 ownerPremiumLineInquiry={ownerPremiumLineInquiry}
                             />
                         </div>
@@ -390,7 +431,7 @@ export default function PropertyDetailClient({
             <StickyContactBar
                 phoneNumber={stickyPhone}
                 propertyId={property.id}
-                lineInquiryUrl={effectiveLineInquiryUrl}
+                lineInquiryUrl={resolvedLineInquiryUrl}
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}

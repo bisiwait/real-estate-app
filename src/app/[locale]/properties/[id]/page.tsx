@@ -8,6 +8,7 @@ import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry-url'
 import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
+import { buildPropertyDetailAbsoluteUrl } from '@/lib/property-page-canonical-url'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 
 export const revalidate = 60
@@ -127,6 +128,8 @@ export default async function Page({
         notFound()
     }
 
+    const propertyDetailPageUrl = buildPropertyDetailAbsoluteUrl(hdrs, locale, id)
+
     /** サイト既定の公式 LINE には誘導しない。オーナーが line_basic_id / line_id を設定している場合のみ組み立てる */
     let officialLineAddFriendUrl = ''
     if (property.user_id) {
@@ -142,7 +145,8 @@ export default async function Page({
                 raw,
                 property,
                 locale,
-                hostname
+                hostname,
+                propertyDetailPageUrl
             )
         }
     }
@@ -158,6 +162,7 @@ export default async function Page({
             <PropertyDetailClient
                 initialProperty={property}
                 officialLineAddFriendUrl={officialLineAddFriendUrl}
+                propertyDetailPageUrl={propertyDetailPageUrl}
             />
         </Suspense>
     )

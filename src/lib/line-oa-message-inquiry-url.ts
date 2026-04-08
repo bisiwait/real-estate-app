@@ -95,11 +95,7 @@ export function buildLineOaMessageUrl(atBasicId: string, text: string): string {
 
 const LINE_INQUIRY_SITE_NAME = 'ChonburiHome'
 
-/**
- * LINE 問い合わせの下書き本文（改行あり）。
- * URL 組み立て時は `encodeURIComponent` により改行は %0A としてエンコードされる。`?text=` は使わない。
- */
-export function buildPropertyLineInquiryPrefillMessage(
+export function resolveLinePropertyTitle(
   property: LinePropertyTitleFields,
   locale: string
 ): string {
@@ -109,32 +105,93 @@ export function buildPropertyLineInquiryPrefillMessage(
       : locale === 'th'
         ? (property.title_th || property.title_en || property.title_ja || property.title || '').trim()
         : (property.title_ja || property.title_en || property.title || '').trim()
-  const name =
+  return (
     title ||
     (locale === 'jp' ? '物件' : locale === 'th' ? 'ประกาศ' : 'this listing')
+  )
+}
 
-  if (locale === 'en') {
+/**
+ * 表示中タイトル・ページ URL から下書き本文を組み立てる（クライアント用）。
+ * 改行で URL を独立行にし、スマホでタップしやすくする。
+ */
+export function buildPropertyLineInquiryPrefillMessageForParts(
+  lang: string,
+  propertyPageUrl: string,
+  propertyTitle: string
+): string {
+  const name =
+    propertyTitle.trim() ||
+    (lang === 'en' ? 'this listing' : lang === 'th' ? 'ประกาศ' : '物件')
+  const url = propertyPageUrl.trim()
+
+  if (lang === 'en') {
     return [
       `I found you through ${LINE_INQUIRY_SITE_NAME}.`,
-      `Could you please check the vacancy status for "${name}"?`,
+      '',
+      name,
+      url,
+      '',
+      'Could you please check the vacancy status for this property?',
       'Thank you.',
     ].join('\n')
   }
 
-  if (locale === 'th') {
+  if (lang === 'th') {
     return [
       `ติดต่อผ่าน ${LINE_INQUIRY_SITE_NAME} ค่ะ`,
-      `รบกวนขอทราบสถานะห้องว่างของ「${name}」ด้วยค่ะ`,
+      '',
+      name,
+      url,
+      '',
+      'รบกวนขอทราบสถานะห้องว่างของประกาศนี้ด้วยค่ะ',
       'ขอบคุณค่ะ',
     ].join('\n')
   }
 
-  // jp およびその他ロケールは日本語テンプレート
   return [
     `${LINE_INQUIRY_SITE_NAME}を見て連絡しました。`,
-    `${name} の空室状況を確認していただけますか？`,
+    '',
+    name,
+    url,
+    '',
+    'この物件の空室状況を確認していただけますか？',
     'よろしくお願いします。',
   ].join('\n')
+}
+
+/**
+ * LINE 問い合わせの下書き本文（改行あり・物件詳細 URL 付き）。
+ * 全体を `encodeURIComponent` してクエリに載せる。`?text=` は使わない。
+ */
+export function buildPropertyLineInquiryPrefillMessage(
+  property: LinePropertyTitleFields,
+  locale: string,
+  propertyPageUrl: string
+): string {
+  const name = resolveLinePropertyTitle(property, locale)
+  return buildPropertyLineInquiryPrefillMessageForParts(locale, propertyPageUrl, name)
+}
+
+/**
+ * 既存の line.me 問い合わせ URL の下書き部分だけ差し替える（クライアントで href を最新化する用）。
+ */
+export function replaceLineInquiryUrlPrefill(
+  officialUrl: string,
+  newPrefillBody: string
+): string {
+  try {
+    const u = new URL(officialUrl)
+    const body = newPrefillBody.trim()
+    if (body) {
+      u.search = encodeURIComponent(body)
+    } else {
+      u.search = ''
+    }
+    return u.toString()
+  } catch {
+    return officialUrl
+  }
 }
 
 /**
@@ -144,9 +201,10 @@ export async function buildPropertyLineInquiryUrlServer(
   rawInput: string,
   property: LinePropertyTitleFields,
   locale: string,
-  hostname?: string | null
+  hostname: string | null | undefined,
+  propertyPageUrl: string
 ): Promise<string> {
-  const msg = buildPropertyLineInquiryPrefillMessage(property, locale)
+  const msg = buildPropertyLineInquiryPrefillMessage(property, locale, propertyPageUrl)
   const basicId = await resolveLineOfficialBasicIdForOaMessage(rawInput, hostname)
   if (basicId) {
     return buildLineOaMessageUrl(basicId, msg)
