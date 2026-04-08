@@ -11,7 +11,8 @@ import {
     Mail,
     Clock,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    MessageCircle,
 } from 'lucide-react'
 import PremiumPromoCard from '@/components/dashboard/PremiumPromoCard'
 import PlanExpiredNotice from '@/components/dashboard/PlanExpiredNotice'
@@ -26,6 +27,7 @@ import {
   LINE_OFFICIAL_ACCOUNT_APP_ANDROID,
 } from '@/lib/line-official'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
+import { startOfCurrentMonthJstIso } from '@/lib/datetime/jst-month-start'
 
 export default async function DashboardPage({
     searchParams,
@@ -94,6 +96,19 @@ export default async function DashboardPage({
     const { leads, error: leadsError } = await fetchAgentInquiryLeads(supabase, user.id)
     if (leadsError) {
         console.error('Error fetching inquiry_logs (leads):', leadsError)
+    }
+
+    const monthStartJst = startOfCurrentMonthJstIso()
+    let lineInquiryLogsThisMonth = 0
+    const { count: lineInquiryLogCount, error: lineInquiryLogErr } = await supabase
+        .from('line_inquiry_logs')
+        .select('id', { count: 'exact', head: true })
+        .eq('agent_id', user.id)
+        .gte('created_at', monthStartJst)
+    if (lineInquiryLogErr) {
+        console.warn('[dashboard] line_inquiry_logs count:', lineInquiryLogErr.message)
+    } else {
+        lineInquiryLogsThisMonth = lineInquiryLogCount ?? 0
     }
 
     const hdrs = await headers()
@@ -183,6 +198,16 @@ export default async function DashboardPage({
                                         <span className="text-sm font-bold">新着お問い合わせ</span>
                                     </div>
                                     <span className="text-lg font-black">{stats.unreadInquiries}</span>
+                                </div>
+                                <div
+                                    className="flex items-center justify-between p-3 rounded-2xl border border-[#06C755]/20 bg-[#06C755]/5 text-[#047c3d]"
+                                    title="日本時間の今月1日0時以降。物件ページでLINEに進んだ回数（スマホは起動前、PCはQR表示時）です。"
+                                >
+                                    <div className="flex items-center space-x-3 min-w-0">
+                                        <MessageCircle className="w-5 h-5 shrink-0" aria-hidden />
+                                        <span className="text-sm font-bold leading-tight">LINE問い合わせ（今月）</span>
+                                    </div>
+                                    <span className="text-lg font-black tabular-nums shrink-0">{lineInquiryLogsThisMonth}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-50 text-amber-600">
                                     <div className="flex items-center space-x-3">
