@@ -93,7 +93,12 @@ export function buildLineOaMessageUrl(atBasicId: string, text: string): string {
   return u.toString()
 }
 
-/** oaMessage の下書き本文（物件名＋空室の一文） */
+const LINE_INQUIRY_SITE_NAME = 'ChonburiHome'
+
+/**
+ * LINE 問い合わせの下書き本文（改行あり）。
+ * URL 組み立て時は `encodeURIComponent` により改行は %0A としてエンコードされる。`?text=` は使わない。
+ */
 export function buildPropertyLineInquiryPrefillMessage(
   property: LinePropertyTitleFields,
   locale: string
@@ -106,14 +111,30 @@ export function buildPropertyLineInquiryPrefillMessage(
         : (property.title_ja || property.title_en || property.title || '').trim()
   const name =
     title ||
-    (locale === 'jp' ? '物件' : locale === 'th' ? 'ประกาศ' : 'Property')
+    (locale === 'jp' ? '物件' : locale === 'th' ? 'ประกาศ' : 'this listing')
+
   if (locale === 'en') {
-    return `Please let me know the vacancy status for "${name}".`
+    return [
+      `I found you through ${LINE_INQUIRY_SITE_NAME}.`,
+      `Could you please check the vacancy status for "${name}"?`,
+      'Thank you.',
+    ].join('\n')
   }
+
   if (locale === 'th') {
-    return `ขอสอบถามสถานะห้องว่างของ「${name}」`
+    return [
+      `ติดต่อผ่าน ${LINE_INQUIRY_SITE_NAME} ค่ะ`,
+      `รบกวนขอทราบสถานะห้องว่างของ「${name}」ด้วยค่ะ`,
+      'ขอบคุณค่ะ',
+    ].join('\n')
   }
-  return `${name}の空室状況を教えてください`
+
+  // jp およびその他ロケールは日本語テンプレート
+  return [
+    `${LINE_INQUIRY_SITE_NAME}を見て連絡しました。`,
+    `${name} の空室状況を確認していただけますか？`,
+    'よろしくお願いします。',
+  ].join('\n')
 }
 
 /**
