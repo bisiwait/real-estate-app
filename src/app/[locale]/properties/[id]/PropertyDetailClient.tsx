@@ -17,6 +17,7 @@ import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
+import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
 import { isPremium, isPremiumActive } from '@/lib/utils/plan'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
@@ -103,6 +104,15 @@ export default function PropertyDetailClient({
         })
     }, [agent])
 
+    /** サーバー URL とクライアント取得の profiles を突き合わせ、連携オフ／未設定ならボタンを出さない */
+    const effectiveLineInquiryUrl = useMemo(() => {
+        const trimmed = officialLineAddFriendUrl?.trim() ?? ''
+        if (!trimmed) return ''
+        if (!agent) return trimmed
+        const raw = getPropertyOwnerLineInquiryRawInput(agent)
+        return raw ? trimmed : ''
+    }, [agent, officialLineAddFriendUrl])
+
     useEffect(() => {
         titleTranslateAttemptKey.current = ''
     }, [property?.id, activeLang])
@@ -129,7 +139,7 @@ export default function PropertyDetailClient({
                     const { data: aData } = await supabase
                         .from('profiles')
                         .select(
-                            'phone, full_name, line_id, show_line_in_inquiry, plan, plan_type, current_period_end, is_admin'
+                            'phone, full_name, line_id, line_basic_id, show_line_in_inquiry, plan, plan_type, current_period_end, is_admin'
                         )
                         .eq('id', initialProperty.user_id)
                         .maybeSingle()
@@ -365,7 +375,7 @@ export default function PropertyDetailClient({
                                 isLoggedIn={!!user}
                                 onRequireAuth={() => setContactAuthOpen(true)}
                                 contactPrefill={contactPrefill}
-                                officialLineAddFriendUrl={officialLineAddFriendUrl}
+                                officialLineAddFriendUrl={effectiveLineInquiryUrl}
                                 ownerPremiumLineInquiry={ownerPremiumLineInquiry}
                             />
                         </div>
@@ -380,7 +390,7 @@ export default function PropertyDetailClient({
             <StickyContactBar
                 phoneNumber={stickyPhone}
                 propertyId={property.id}
-                lineInquiryUrl={officialLineAddFriendUrl}
+                lineInquiryUrl={effectiveLineInquiryUrl}
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}

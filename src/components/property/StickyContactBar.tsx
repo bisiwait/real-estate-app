@@ -11,7 +11,7 @@ interface StickyContactBarProps {
     showPhoneInquiry?: boolean
     /** クリック計測用（物件詳細の UUID） */
     propertyId?: string
-    /** 物件オーナー／サイト既定の友だち追加URL。あればスティッキーに LINE ショートカットを表示 */
+    /** 物件オーナー設定に基づく問い合わせ用 LINE URL（空なら非表示） */
     lineInquiryUrl?: string
     dict: any
     isLoggedIn?: boolean

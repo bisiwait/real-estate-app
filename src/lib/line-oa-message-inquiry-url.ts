@@ -3,6 +3,8 @@ import { expandShortLineFriendUrlServer } from '@/lib/expand-line-friend-url'
 import { repairMistypedLinEeOnLineMeHost } from '@/lib/repair-line-friend-host'
 import { basicIdOrUrlToAddFriendUrl } from '@/lib/line-official'
 
+export { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
+
 export type LinePropertyTitleFields = {
   id?: string | null
   title?: string | null

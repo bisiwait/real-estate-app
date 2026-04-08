@@ -446,7 +446,7 @@
         "inquiry_contact_send_consent": "ข้าพเจ้ายินยอมให้ส่งคำถามไปยังตัวแทนโดยใช้ข้อมูลติดต่อที่ลงทะเบียนไว้ (LINE / อีเมล)",
         "inquiry_send_btn_primary": "ส่งคำถาม",
         "inquiry_send_btn_confirm": "ยืนยันอีกครั้ง? (คลิกอีกครั้งเพื่อส่ง)",
-        "line_inquiry_btn": "เช็กห้องว่างทาง LINE",
+        "line_inquiry_btn": "สอบถามทาง LINE",
         "line_inquiry_sending_btn": "กำลังส่ง…",
         "line_inquiry_sending_short": "กำลังส่ง",
         "line_inquiry_sticky_short": "ห้องว่าง",

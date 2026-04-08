@@ -6,8 +6,8 @@ import { Loader2 } from 'lucide-react'
 import { createStaticClientForHostname } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
-import { basicIdOrUrlToAddFriendUrl, resolveOfficialLineAddFriendUrl } from '@/lib/line-official'
 import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry-url'
+import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 
 export const revalidate = 60
@@ -127,26 +127,25 @@ export default async function Page({
         notFound()
     }
 
-    let officialLineAddFriendUrl = await resolveOfficialLineAddFriendUrl(hostname)
+    /** サイト既定の公式 LINE には誘導しない。オーナーが line_basic_id / line_id を設定している場合のみ組み立てる */
+    let officialLineAddFriendUrl = ''
     if (property.user_id) {
         const supabase = createStaticClientForHostname(hostname)
         const { data: ownerProfile } = await supabase
             .from('profiles')
-            .select('line_basic_id')
+            .select('line_basic_id, line_id, show_line_in_inquiry')
             .eq('id', property.user_id as string)
             .maybeSingle()
-        const bid = ownerProfile?.line_basic_id?.trim()
-        if (bid) {
-            officialLineAddFriendUrl = basicIdOrUrlToAddFriendUrl(bid)
+        const raw = getPropertyOwnerLineInquiryRawInput(ownerProfile)
+        if (raw) {
+            officialLineAddFriendUrl = await buildPropertyLineInquiryUrlServer(
+                raw,
+                property,
+                locale,
+                hostname
+            )
         }
     }
-
-    officialLineAddFriendUrl = await buildPropertyLineInquiryUrlServer(
-        officialLineAddFriendUrl,
-        property,
-        locale,
-        hostname
-    )
 
     return (
         <Suspense

@@ -447,7 +447,7 @@
         "inquiry_contact_send_consent": "I agree to send this inquiry to the agent using my registered contact (LINE / email).",
         "inquiry_send_btn_primary": "Send inquiry",
         "inquiry_send_btn_confirm": "Are you sure? (Click again to confirm)",
-        "line_inquiry_btn": "Check vacancy on LINE",
+        "line_inquiry_btn": "Inquiry via LINE",
         "line_inquiry_sending_btn": "Sending…",
         "line_inquiry_sending_short": "Sending",
         "line_inquiry_sticky_short": "Vacancy",

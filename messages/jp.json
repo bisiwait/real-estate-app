@@ -473,7 +473,7 @@
         "inquiry_contact_send_consent": "登録済みの連絡先（LINE/メール）でエージェントに送信することに同意します",
         "inquiry_send_btn_primary": "問い合わせを送信する",
         "inquiry_send_btn_confirm": "本当によろしいですか？（クリックで確定）",
-        "line_inquiry_btn": "LINEで空室を確認する",
+        "line_inquiry_btn": "LINEで問合わせ",
         "line_inquiry_sending_btn": "送信中…",
         "line_inquiry_sending_short": "送信中",
         "line_inquiry_sticky_short": "空室確認",
