@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +15,7 @@ import {
   MessageCircle,
   ExternalLink,
   Mail,
+  ClipboardCopy,
 } from 'lucide-react'
 import { formatInquirySubmitError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
@@ -22,6 +23,8 @@ import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
 import { LineInquiryQrModal } from '@/components/property/LineInquiryQrModal'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { postLineInquiryClick } from '@/lib/line-inquiry-click-client'
+import { decodeLineInquiryPrefillBodyFromUrl } from '@/lib/line-oa-message-inquiry-url'
+import { copyTextToClipboard } from '@/lib/clipboard-copy'
 
 async function requestInquiryConfirmationEmail(
   supabase: ReturnType<typeof createClient>,
@@ -138,6 +141,11 @@ export default function InquiryForm({
   const [inquiryChannel, setInquiryChannel] = useState<'mail' | 'line'>('mail')
   const lineAddFriendUrl = officialLineAddFriendUrl?.trim() ?? ''
   const hasOfficialLine = Boolean(lineAddFriendUrl)
+  const linePrefillPlain = useMemo(
+    () => decodeLineInquiryPrefillBodyFromUrl(lineAddFriendUrl),
+    [lineAddFriendUrl]
+  )
+  const [lineCopyToast, setLineCopyToast] = useState(false)
   const { isSmartphone: isSmartphoneDevice } = useDeviceType()
   const lineOaLaunch = useLineOaLaunch(
     hasOfficialLine ? lineAddFriendUrl : undefined,
@@ -154,6 +162,16 @@ export default function InquiryForm({
       setLineQrModalOpen(true)
     }
   }, [hasOfficialLine, isSmartphoneDevice, lineOaLaunch.launch, propertyId])
+
+  const handleCopyThenOpenLine = useCallback(async () => {
+    if (!hasOfficialLine) return
+    const ok = await copyTextToClipboard(linePrefillPlain)
+    if (ok) {
+      setLineCopyToast(true)
+      window.setTimeout(() => setLineCopyToast(false), 2500)
+    }
+    lineOaLaunch.launch()
+  }, [hasOfficialLine, linePrefillPlain, lineOaLaunch.launch])
 
   useEffect(() => {
     if (!hasOfficialLine) setInquiryChannel('mail')
@@ -626,8 +644,49 @@ export default function InquiryForm({
             id="inquiry-panel-line"
             role="tabpanel"
             aria-labelledby="inquiry-tab-line"
-            className="rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm"
+            className="relative rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm"
           >
+            {lineCopyToast ? (
+              <div
+                className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full bg-navy-primary px-4 py-1.5 text-[11px] font-black text-white shadow-md"
+                role="status"
+              >
+                {p.line_inquiry_copy_toast ?? 'コピーしました！'}
+              </div>
+            ) : null}
+
+            {isSmartphoneDevice ? (
+              <div className="mb-3 rounded-xl border border-[#06C755]/25 bg-white/80 p-3">
+                <p className="text-center text-[10px] font-black uppercase tracking-wider text-[#047c3d]">
+                  {p.line_inquiry_mobile_flow_title ?? '手順'}
+                </p>
+                <ol className="mt-2 space-y-2 text-left text-[11px] font-medium leading-snug text-slate-700">
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-[10px] font-black text-white">
+                      1
+                    </span>
+                    <span>
+                      {p.line_inquiry_flow_step_add_mobile ??
+                        p.line_inquiry_flow_step_add ??
+                        'LINEを開いて友だちを追加'}
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-[10px] font-black text-white">
+                      2
+                    </span>
+                    <span>{p.line_inquiry_flow_step_paste ?? 'トーク画面に文章を貼り付け'}</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-[10px] font-black text-white">
+                      3
+                    </span>
+                    <span>{p.line_inquiry_flow_step_send ?? '送信'}</span>
+                  </li>
+                </ol>
+              </div>
+            ) : null}
+
             <button
               type="button"
               onClick={handleLineInquiryClick}
@@ -644,6 +703,20 @@ export default function InquiryForm({
                 <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
               ) : null}
             </button>
+
+            {isSmartphoneDevice && Boolean(linePrefillPlain.trim()) ? (
+              <button
+                type="button"
+                onClick={handleCopyThenOpenLine}
+                disabled={lineOaLaunch.isSending}
+                title={p.line_inquiry_copy_then_open_hint}
+                className="mt-2 flex w-full min-h-10 items-center justify-center gap-2 rounded-lg border border-dashed border-[#06C755]/50 bg-white/90 py-2 text-center text-[11px] font-black text-[#047c3d] transition hover:bg-[#06C755]/10 disabled:opacity-60"
+              >
+                <ClipboardCopy className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {p.line_inquiry_copy_then_open ?? '文章をコピーしてからLINEを開く'}
+              </button>
+            ) : null}
+
             {isSmartphoneDevice && lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
               <a
                 href={lineOaLaunch.directUrl}
@@ -661,6 +734,11 @@ export default function InquiryForm({
                 : (p.line_inquiry_desktop_qr_sub ??
                   'クリックするとQRコードが表示されます。スマホで読み取って問い合わせください。')}
             </p>
+            {isSmartphoneDevice ? (
+              <p className="mt-1.5 text-center text-[10px] font-medium leading-snug text-slate-500">
+                {p.line_inquiry_qr_first_time_note}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -669,10 +747,17 @@ export default function InquiryForm({
       isOpen={lineQrModalOpen}
       onClose={() => setLineQrModalOpen(false)}
       url={lineAddFriendUrl}
+      prefillBody={linePrefillPlain}
       dict={{
         line_inquiry_qr_modal_title: p.line_inquiry_qr_modal_title,
         line_inquiry_qr_modal_hint: p.line_inquiry_qr_modal_hint,
         line_inquiry_qr_modal_close: p.line_inquiry_qr_modal_close,
+        line_inquiry_flow_step_add: p.line_inquiry_flow_step_add,
+        line_inquiry_flow_step_paste: p.line_inquiry_flow_step_paste,
+        line_inquiry_flow_step_send: p.line_inquiry_flow_step_send,
+        line_inquiry_copy_prefill_btn: p.line_inquiry_copy_prefill_btn,
+        line_inquiry_copy_toast: p.line_inquiry_copy_toast,
+        line_inquiry_qr_first_time_note: p.line_inquiry_qr_first_time_note,
       }}
     />
     </>

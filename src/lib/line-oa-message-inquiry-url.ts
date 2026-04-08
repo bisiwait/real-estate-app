@@ -195,6 +195,21 @@ export function replaceLineInquiryUrlPrefill(
 }
 
 /**
+ * line.me 問い合わせ URL のクエリ（`encodeURIComponent(本文)` のみ）から下書き本文を復元する。
+ */
+export function decodeLineInquiryPrefillBodyFromUrl(lineHttpsUrl: string): string {
+  try {
+    const u = new URL(lineHttpsUrl.trim())
+    const s = u.search
+    if (!s || s === '?') return ''
+    const raw = s.startsWith('?') ? s.slice(1) : s
+    return decodeURIComponent(raw)
+  } catch {
+    return ''
+  }
+}
+
+/**
  * 物件ページの LINE 問い合わせボタン用 URL。lin.ee 等は内部で @ID に寄せ oaMessage + 下書き文に統一。
  */
 export async function buildPropertyLineInquiryUrlServer(
