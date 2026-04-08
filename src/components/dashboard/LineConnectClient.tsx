@@ -16,6 +16,8 @@ import {
     Settings,
     MessageCircle,
     AlertTriangle,
+    User,
+    Building2,
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { getOfficialLineAddFriendUrl, LINE_OFFICIAL_ACCOUNT_APP_IOS, LINE_OFFICIAL_ACCOUNT_APP_ANDROID } from '@/lib/line-official'
@@ -24,6 +26,7 @@ import {
     isLineOfficialConnectionUrl,
 } from '@/lib/line-official-account-url'
 import { clsx } from 'clsx'
+import type { LineConnectUiMessages } from '@/lib/i18n/line-connect-messages'
 
 /**
  * 提供スクリーンショット（Screenshot_2026-04-06-13-34-08-16… 等）を次のファイル名で配置してください:
@@ -37,17 +40,25 @@ const LINE_APP_GUIDE_IMAGES = {
     step3: '/images/line-official-app-guide/step-3-copy-url.png',
 } as const
 
-function GuideStepScreenshot({ src, alt }: { src: string; alt: string }) {
+function GuideStepScreenshot({
+    src,
+    alt,
+    missingTitle,
+    missingHelp,
+}: {
+    src: string
+    alt: string
+    missingTitle: string
+    missingHelp: string
+}) {
     const [failed, setFailed] = useState(false)
     if (failed) {
         return (
             <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
                 <ImageIcon className="h-10 w-10 text-slate-400" aria-hidden />
-                <p className="text-xs font-black text-slate-600">スクリーンショット画像を配置してください</p>
+                <p className="text-xs font-black text-slate-600">{missingTitle}</p>
                 <code className="max-w-full break-all rounded-lg bg-white px-2 py-1 text-[10px] text-slate-600">{src}</code>
-                <p className="text-[10px] font-medium leading-relaxed text-slate-500">
-                    ご提供の画像（Screenshot_2026-04-06-13-34-08-16… / 13-34-16-20… / 13-34-22-86…）を上記パスに保存してください。
-                </p>
+                <p className="text-[10px] font-medium leading-relaxed text-slate-500">{missingHelp}</p>
             </div>
         )
     }
@@ -84,7 +95,6 @@ function SvgChatModeSettingsFlow() {
             <text x="260" y="28" textAnchor="middle" fontSize="12" fill="#991b1b" fontWeight="700" fontFamily="system-ui,sans-serif">
                 LINE公式アカウントアプリ内のイメージ
             </text>
-            {/* ホーム */}
             <rect x="24" y="52" width="100" height="72" rx="10" fill="#fff" stroke="#cbd5e1" />
             <text x="74" y="82" textAnchor="middle" fontSize="10" fill="#64748b" fontFamily="system-ui,sans-serif">
                 ホーム
@@ -99,7 +109,6 @@ function SvgChatModeSettingsFlow() {
             <text x="140" y="92" fontSize="18" fill="#94a3b8">
                 →
             </text>
-            {/* 応答設定 */}
             <rect x="164" y="52" width="120" height="72" rx="10" fill="#fff" stroke="#06C755" strokeWidth="2" />
             <text x="224" y="82" textAnchor="middle" fontSize="11" fill="#0f172a" fontWeight="700" fontFamily="system-ui,sans-serif">
                 応答設定
@@ -110,7 +119,6 @@ function SvgChatModeSettingsFlow() {
             <text x="300" y="92" fontSize="18" fill="#94a3b8">
                 →
             </text>
-            {/* チャット選択 */}
             <rect x="324" y="52" width="172" height="72" rx="10" fill="#ecfdf5" stroke="#06C755" strokeWidth="2" />
             <text x="410" y="80" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="system-ui,sans-serif">
                 「ボット」ではなく
@@ -125,12 +133,15 @@ function SvgChatModeSettingsFlow() {
     )
 }
 
-export default function LineConnectClient({ locale }: { locale: string }) {
+type LineSourceMode = 'personal' | 'official'
+
+export default function LineConnectClient({ locale, ui }: { locale: string; ui: LineConnectUiMessages }) {
     const supabase = createClient()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [celebrate, setCelebrate] = useState(false)
+    const [lineMode, setLineMode] = useState<LineSourceMode>('personal')
     /** profiles.line_basic_id（https URL または @xxx どちらも可） */
     const [lineFriendAddUrl, setLineFriendAddUrl] = useState('')
     const [deviceTestUrl, setDeviceTestUrl] = useState<string | null>(null)
@@ -147,6 +158,8 @@ export default function LineConnectClient({ locale }: { locale: string }) {
         return isLineOfficialConnectionUrl(raw) || isLineOfficialAccountAddFriendUrl(raw)
     }, [lineFriendAddUrl])
 
+    const needsChatAck = lineMode === 'official' && urlFormatOk
+
     const runDeviceOaMessageTest = async () => {
         const raw = lineFriendAddUrl.trim()
         if (!urlFormatOk) return
@@ -160,14 +173,14 @@ export default function LineConnectClient({ locale }: { locale: string }) {
             })
             const data = (await res.json()) as { url?: string; error?: string }
             if (!res.ok || !data.url) {
-                setDeviceTestErr(data.error || 'プレビューに失敗しました')
+                setDeviceTestErr(data.error || ui.device_test_fail)
                 setDeviceTestUrl(null)
                 return
             }
             setDeviceTestUrl(data.url)
             window.open(data.url, '_blank', 'noopener,noreferrer')
         } catch {
-            setDeviceTestErr('通信に失敗しました')
+            setDeviceTestErr(ui.device_test_network)
             setDeviceTestUrl(null)
         } finally {
             setDeviceTestLoading(false)
@@ -205,12 +218,10 @@ export default function LineConnectClient({ locale }: { locale: string }) {
             const {
                 data: { user },
             } = await supabase.auth.getUser()
-            if (!user) throw new Error('ログインが必要です。')
+            if (!user) throw new Error(ui.error_login)
 
-            if (urlFormatOk && !chatModeAcknowledged) {
-                setError(
-                    'お客様からのメッセージに返信できるよう、下の「チャットモードをONにしました」にチェックを入れてから保存してください。'
-                )
+            if (needsChatAck && !chatModeAcknowledged) {
+                setError(ui.error_chat_mode)
                 setSaving(false)
                 return
             }
@@ -248,7 +259,7 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                     className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-navy-primary"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    プロフィール設定に戻る
+                    {ui.back_link}
                 </Link>
             </div>
 
@@ -260,15 +271,11 @@ export default function LineConnectClient({ locale }: { locale: string }) {
             >
                 <div className="flex flex-col items-stretch gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
                     <div className="min-w-0 space-y-2">
-                        <p className="text-base font-black leading-snug text-navy-secondary md:text-lg md:leading-relaxed">
-                            作成方法がわからない場合は、運営のLINEが画面越しにサポートします
-                        </p>
-                        <p className="text-xs font-bold text-emerald-900/80">
-                            無料でご案内します。お気軽にトークでお声がけください。
-                        </p>
+                        <p className="text-base font-black leading-snug text-navy-secondary md:text-lg md:leading-relaxed">{ui.operations_title}</p>
+                        <p className="text-xs font-bold text-emerald-900/80">{ui.operations_sub}</p>
                     </div>
                     <span className="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#06C755] px-8 py-4 text-sm font-black text-white shadow-lg shadow-[#06C755]/35">
-                        運営の公式LINEを開く
+                        {ui.operations_cta}
                         <ExternalLink className="h-5 w-5" aria-hidden />
                     </span>
                 </div>
@@ -283,167 +290,254 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-200">
                             <Sparkles className="h-9 w-9" strokeWidth={2.2} />
                         </div>
-                        <p className="text-xl md:text-2xl font-black text-emerald-900 leading-snug max-w-xl">
-                            おめでとうございます！これであなたのLINEでお客様と繋がれるようになりました
-                        </p>
+                        <p className="text-xl md:text-2xl font-black text-emerald-900 leading-snug max-w-xl">{ui.celebrate_title}</p>
                         <p className="text-sm font-bold text-emerald-800/90 flex items-center gap-2">
                             <CheckCircle2 className="h-5 w-5 shrink-0" />
-                            設定は保存済みです。物件ページの「LINE問い合わせ」は oaMessage 形式で開き、物件名入りの下書き付きトークになります。
+                            {ui.celebrate_body}
                         </p>
                     </div>
                 </div>
             )}
 
             {error && (
-                <div className="mb-6 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
-                    {error}
-                </div>
+                <div className="mb-6 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">{error}</div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 md:p-6">
+                    <p className="text-sm font-black leading-relaxed text-navy-secondary md:text-base">{ui.intro_both}</p>
+                    <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600 md:text-sm">{ui.intro_personal_hint}</p>
+                </div>
+
+                <div
+                    className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                    role="radiogroup"
+                    aria-label={ui.intro_both}
+                >
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={lineMode === 'personal'}
+                        onClick={() => {
+                            setLineMode('personal')
+                            setCelebrate(false)
+                        }}
+                        className={clsx(
+                            'flex w-full flex-col gap-3 rounded-2xl border-2 p-5 text-left shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#06C755] focus-visible:ring-offset-2',
+                            lineMode === 'personal'
+                                ? 'border-[#06C755] bg-gradient-to-br from-[#06C755]/10 via-white to-emerald-50/80'
+                                : 'border-slate-200 bg-white hover:border-slate-300'
+                        )}
+                    >
+                        <span className="flex items-center gap-3">
+                            <span
+                                className={clsx(
+                                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2',
+                                    lineMode === 'personal' ? 'border-[#06C755] bg-white text-[#047c3d]' : 'border-slate-200 bg-slate-50 text-slate-500'
+                                )}
+                            >
+                                <User className="h-6 w-6" aria-hidden />
+                            </span>
+                            <span className="min-w-0">
+                                <span className="block text-base font-black text-navy-secondary">{ui.mode_personal_title}</span>
+                                <span className="mt-0.5 block text-xs font-medium text-slate-600">{ui.mode_personal_desc}</span>
+                            </span>
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={lineMode === 'official'}
+                        onClick={() => {
+                            setLineMode('official')
+                            setCelebrate(false)
+                        }}
+                        className={clsx(
+                            'flex w-full flex-col gap-3 rounded-2xl border-2 p-5 text-left shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#06C755] focus-visible:ring-offset-2',
+                            lineMode === 'official'
+                                ? 'border-[#06C755] bg-gradient-to-br from-[#06C755]/10 via-white to-emerald-50/80'
+                                : 'border-slate-200 bg-white hover:border-slate-300'
+                        )}
+                    >
+                        <span className="flex items-center gap-3">
+                            <span
+                                className={clsx(
+                                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2',
+                                    lineMode === 'official' ? 'border-[#06C755] bg-white text-[#047c3d]' : 'border-slate-200 bg-slate-50 text-slate-500'
+                                )}
+                            >
+                                <Building2 className="h-6 w-6" aria-hidden />
+                            </span>
+                            <span className="min-w-0">
+                                <span className="block text-base font-black text-navy-secondary">{ui.mode_official_title}</span>
+                                <span className="mt-0.5 block text-xs font-medium text-slate-600">{ui.mode_official_desc}</span>
+                            </span>
+                        </span>
+                    </button>
+                </div>
+
                 <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
                     <div className="min-w-0 space-y-10">
-                        <div>
-                            <h2 className="text-lg font-black tracking-tight text-navy-secondary md:text-xl">
-                                アプリからURLをコピーするだけ
-                            </h2>
-                            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">
-                                左の画面どおりに進め、最後にコピーしたURLを右の欄に貼って保存してください。
-                            </p>
-                            <div className="mt-5 rounded-2xl border-2 border-[#06C755]/40 bg-gradient-to-br from-[#06C755]/12 via-white to-[#06C755]/5 p-5 shadow-md md:p-6">
-                                <p className="text-[11px] font-black uppercase tracking-wider text-[#047c3d]">
-                                    導入の前提（必須）
-                                </p>
-                                <p className="mt-2 text-base font-black leading-snug text-navy-secondary md:text-lg">
-                                    アプリをまだ入れていない方
-                                </p>
-                                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                                    <a
-                                        href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white px-6 py-3.5 text-base font-black text-[#047c3d] shadow-sm transition hover:bg-[#06C755]/10 active:scale-[0.99] sm:min-w-[200px]"
-                                    >
-                                        App Store
-                                        <ExternalLink className="h-5 w-5 shrink-0" aria-hidden />
-                                    </a>
-                                    <a
-                                        href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white px-6 py-3.5 text-base font-black text-[#047c3d] shadow-sm transition hover:bg-[#06C755]/10 active:scale-[0.99] sm:min-w-[200px]"
-                                    >
-                                        Google Play
-                                        <ExternalLink className="h-5 w-5 shrink-0" aria-hidden />
-                                    </a>
+                        {lineMode === 'personal' ? (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-lg font-black tracking-tight text-navy-secondary md:text-xl">{ui.personal_guide_title}</h2>
                                 </div>
-                            </div>
-                        </div>
-
-                        <section className="space-y-3">
-                            <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
-                                ステップ①
-                            </p>
-                            <h3 className="text-sm font-black text-navy-secondary md:text-base">アプリのホーム画面</h3>
-                            <GuideStepScreenshot
-                                src={LINE_APP_GUIDE_IMAGES.step1}
-                                alt="LINE公式アカウントアプリのホーム。右下に友だちを増やすボタンがある画面"
-                            />
-                            <p className="text-sm font-medium leading-relaxed text-slate-700">
-                                「LINE公式アカウント」アプリを開き、右下の{' '}
-                                <strong className="text-navy-secondary">『友だちを増やす』</strong> ボタンをタップします。
-                            </p>
-                        </section>
-
-                        <section className="space-y-3">
-                            <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
-                                ステップ②
-                            </p>
-                            <h3 className="text-sm font-black text-navy-secondary md:text-base">増やす方法の選択</h3>
-                            <GuideStepScreenshot
-                                src={LINE_APP_GUIDE_IMAGES.step2}
-                                alt="友だちを増やす画面。右下にURLを作成パネルがある画面"
-                            />
-                            <p className="text-sm font-medium leading-relaxed text-slate-700">
-                                右下にある <strong className="text-navy-secondary">『URLを作成』</strong> パネルをタップします。
-                            </p>
-                        </section>
-
-                        <section className="space-y-3">
-                            <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
-                                ステップ③
-                            </p>
-                            <h3 className="text-sm font-black text-navy-secondary md:text-base">URLのコピー</h3>
-                            <GuideStepScreenshot
-                                src={LINE_APP_GUIDE_IMAGES.step3}
-                                alt="作成されたURLと緑色のURLをコピーボタンがある画面"
-                            />
-                            <p className="text-sm font-medium leading-relaxed text-slate-700">
-                                表示されたURLを確認し、緑色の{' '}
-                                <strong className="text-navy-secondary">『URLをコピー』</strong> ボタンをタップします。
-                            </p>
-                        </section>
-
-                        <section className="space-y-4 rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50/90 to-white p-5 shadow-sm">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <p className="inline-flex rounded-full bg-red-600 px-3 py-1 text-[11px] font-black text-white shadow-sm">
-                                    ステップ④
-                                </p>
-                                <h3 className="text-base font-black text-red-900 md:text-lg">重要：チャット機能をONにする</h3>
-                            </div>
-                            <p className="flex items-start gap-2 text-sm font-black leading-snug text-red-700">
-                                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden />
-                                ここを忘れると、お客様からメッセージが届いても返信ができません！
-                            </p>
-                            <ol className="list-decimal space-y-2.5 pl-5 text-sm font-medium leading-relaxed text-slate-800">
-                                <li>
-                                    <span className="flex gap-2.5">
-                                        <Settings
-                                            className="mt-0.5 h-4 w-4 shrink-0 text-slate-500"
+                                {(
+                                    [
+                                        {
+                                            num: ui.personal_step1_num,
+                                            title: ui.personal_step1_title,
+                                            body: ui.personal_step1_body,
+                                        },
+                                        {
+                                            num: ui.personal_step2_num,
+                                            title: ui.personal_step2_title,
+                                            body: ui.personal_step2_body,
+                                        },
+                                        {
+                                            num: ui.personal_step3_num,
+                                            title: ui.personal_step3_title,
+                                            body: ui.personal_step3_body,
+                                        },
+                                    ] as const
+                                ).map((step) => (
+                                    <section
+                                        key={step.num}
+                                        className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5"
+                                    >
+                                        <div
+                                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#06C755] text-sm font-black text-white shadow-md"
                                             aria-hidden
-                                        />
-                                        <span className="min-w-0 flex-1 font-bold leading-relaxed text-navy-secondary">
-                                            LINE公式アカウントアプリの<strong>ホーム画面</strong>から「<strong>設定（歯車マーク）</strong>」をタップ。
-                                        </span>
-                                    </span>
-                                </li>
-                                <li>
-                                    <strong className="text-navy-secondary">「応答設定」</strong>をタップ。
-                                </li>
-                                <li>
-                                    応答モードを「<strong>ボット</strong>」から「
-                                    <strong className="text-[#047c3d]">チャット</strong>」に切り替える。
-                                    <MessageCircle className="ml-1 inline h-4 w-4 text-[#06C755] align-text-bottom" aria-hidden />
-                                </li>
-                            </ol>
-                            <div className="overflow-hidden rounded-xl border border-red-100 bg-white p-2">
-                                <SvgChatModeSettingsFlow />
+                                        >
+                                            {step.num}
+                                        </div>
+                                        <div className="min-w-0 space-y-2">
+                                            <h3 className="text-sm font-black text-navy-secondary md:text-base">{step.title}</h3>
+                                            <p className="text-sm font-medium leading-relaxed text-slate-700">{step.body}</p>
+                                        </div>
+                                    </section>
+                                ))}
                             </div>
-                        </section>
+                        ) : (
+                            <>
+                                <div>
+                                    <h2 className="text-lg font-black tracking-tight text-navy-secondary md:text-xl">{ui.official_left_title}</h2>
+                                    <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">{ui.official_left_lead}</p>
+                                    <div className="mt-5 rounded-2xl border-2 border-[#06C755]/40 bg-gradient-to-br from-[#06C755]/12 via-white to-[#06C755]/5 p-5 shadow-md md:p-6">
+                                        <p className="text-[11px] font-black uppercase tracking-wider text-[#047c3d]">{ui.official_prereq_badge}</p>
+                                        <p className="mt-2 text-base font-black leading-snug text-navy-secondary md:text-lg">{ui.official_prereq_title}</p>
+                                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                                            <a
+                                                href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white px-6 py-3.5 text-base font-black text-[#047c3d] shadow-sm transition hover:bg-[#06C755]/10 active:scale-[0.99] sm:min-w-[200px]"
+                                            >
+                                                App Store
+                                                <ExternalLink className="h-5 w-5 shrink-0" aria-hidden />
+                                            </a>
+                                            <a
+                                                href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white px-6 py-3.5 text-base font-black text-[#047c3d] shadow-sm transition hover:bg-[#06C755]/10 active:scale-[0.99] sm:min-w-[200px]"
+                                            >
+                                                Google Play
+                                                <ExternalLink className="h-5 w-5 shrink-0" aria-hidden />
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <section className="space-y-3">
+                                    <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                        {ui.official_step1_badge}
+                                    </p>
+                                    <h3 className="text-sm font-black text-navy-secondary md:text-base">{ui.official_step1_title}</h3>
+                                    <GuideStepScreenshot
+                                        src={LINE_APP_GUIDE_IMAGES.step1}
+                                        alt={ui.official_step1_img_alt}
+                                        missingTitle={ui.guide_image_missing_title}
+                                        missingHelp={ui.guide_image_missing_help}
+                                    />
+                                    <p className="text-sm font-medium leading-relaxed text-slate-700">{ui.official_step1_body}</p>
+                                </section>
+
+                                <section className="space-y-3">
+                                    <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                        {ui.official_step2_badge}
+                                    </p>
+                                    <h3 className="text-sm font-black text-navy-secondary md:text-base">{ui.official_step2_title}</h3>
+                                    <GuideStepScreenshot
+                                        src={LINE_APP_GUIDE_IMAGES.step2}
+                                        alt={ui.official_step2_img_alt}
+                                        missingTitle={ui.guide_image_missing_title}
+                                        missingHelp={ui.guide_image_missing_help}
+                                    />
+                                    <p className="text-sm font-medium leading-relaxed text-slate-700">{ui.official_step2_body}</p>
+                                </section>
+
+                                <section className="space-y-3">
+                                    <p className="inline-flex rounded-full bg-[#06C755] px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                        {ui.official_step3_badge}
+                                    </p>
+                                    <h3 className="text-sm font-black text-navy-secondary md:text-base">{ui.official_step3_title}</h3>
+                                    <GuideStepScreenshot
+                                        src={LINE_APP_GUIDE_IMAGES.step3}
+                                        alt={ui.official_step3_img_alt}
+                                        missingTitle={ui.guide_image_missing_title}
+                                        missingHelp={ui.guide_image_missing_help}
+                                    />
+                                    <p className="text-sm font-medium leading-relaxed text-slate-700">{ui.official_step3_body}</p>
+                                </section>
+
+                                <section className="space-y-4 rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50/90 to-white p-5 shadow-sm">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="inline-flex rounded-full bg-red-600 px-3 py-1 text-[11px] font-black text-white shadow-sm">
+                                            {ui.official_step4_badge}
+                                        </p>
+                                        <h3 className="text-base font-black text-red-900 md:text-lg">{ui.official_step4_title}</h3>
+                                    </div>
+                                    <p className="flex items-start gap-2 text-sm font-black leading-snug text-red-700">
+                                        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden />
+                                        {ui.official_step4_warning}
+                                    </p>
+                                    <ol className="list-decimal space-y-2.5 pl-5 text-sm font-medium leading-relaxed text-slate-800">
+                                        <li>
+                                            <span className="flex gap-2.5">
+                                                <Settings className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                                                <span className="min-w-0 flex-1 font-bold leading-relaxed text-navy-secondary">{ui.official_step4_li1}</span>
+                                            </span>
+                                        </li>
+                                        <li>{ui.official_step4_li2}</li>
+                                        <li>
+                                            {ui.official_step4_li3}
+                                            <MessageCircle className="ml-1 inline h-4 w-4 text-[#06C755] align-text-bottom" aria-hidden />
+                                        </li>
+                                    </ol>
+                                    <div className="overflow-hidden rounded-xl border border-red-100 bg-white p-2">
+                                        <SvgChatModeSettingsFlow />
+                                    </div>
+                                </section>
+                            </>
+                        )}
                     </div>
 
                     <div className="min-w-0 lg:sticky lg:top-24">
                         <div className="rounded-[1.75rem] border-2 border-navy-primary/15 bg-gradient-to-b from-white via-slate-50/90 to-white p-6 shadow-xl md:p-8">
                             <div className="flex flex-col items-center gap-1 text-center">
                                 <ArrowBigDown className="h-12 w-12 shrink-0 text-[#06C755]" strokeWidth={1.25} aria-hidden />
-                                <p className="text-lg font-black leading-snug text-navy-secondary">
-                                    ここに貼り付けて保存してください
-                                </p>
-                                <p className="text-xs font-medium text-slate-500">
-                                    コピーしたURL（または <code className="rounded bg-slate-100 px-1">@BasicID</code>
-                                    ）を貼り付けてください
-                                </p>
+                                <p className="text-lg font-black leading-snug text-navy-secondary">{ui.paste_title}</p>
+                                <p className="text-xs font-medium text-slate-500">{ui.paste_hint}</p>
                             </div>
 
                             <div className="mt-8 space-y-4">
                                 <label htmlFor="line-official-account-url" className="block text-sm font-black text-navy-secondary">
-                                    LINE公式アカウントのURL
+                                    {ui.url_label}
                                 </label>
-                                <p className="text-xs font-medium text-slate-500">
-                                    <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px]">https://lin.ee/...</code> または{' '}
-                                    <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px]">https://line.me/...</code>{' '}
-                                    で始まる形式です。
-                                </p>
+                                <p className="text-xs font-medium text-slate-500">{ui.url_help}</p>
                                 <div className="relative">
                                     <input
                                         id="line-official-account-url"
@@ -461,7 +555,7 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                                 ? 'border-emerald-400 ring-navy-primary/0 focus:border-emerald-500 focus:ring-emerald-500/20'
                                                 : 'border-slate-200 ring-navy-primary/0 focus:ring-navy-primary/30'
                                         )}
-                                        placeholder="https://lin.ee/xxxxxxxx"
+                                        placeholder={ui.url_placeholder}
                                         autoComplete="off"
                                         aria-invalid={lineFriendAddUrl.trim().length > 0 && !urlFormatOk}
                                     />
@@ -469,24 +563,27 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                         <>
                                             <span
                                                 className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600"
-                                                title="URLの形式を確認しました"
+                                                title={ui.preview_valid_sr}
                                             >
                                                 <CheckCircle2 className="h-6 w-6" strokeWidth={2.25} aria-hidden />
                                             </span>
                                             <span className="sr-only" aria-live="polite">
-                                                連携準備が整いました。
+                                                {ui.preview_valid_sr}
                                             </span>
                                         </>
                                     ) : null}
                                 </div>
 
                                 {urlFormatOk ? (
-                                    <div
-                                        className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-900 shadow-sm"
-                                        aria-live="polite"
-                                    >
-                                        <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
-                                        連携準備が整いました！
+                                    <div className="space-y-2" aria-live="polite">
+                                        <div className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-900 shadow-sm">
+                                            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
+                                            <span>{ui.preview_valid_title}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-4 py-2.5 text-xs font-bold text-emerald-800">
+                                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                                            {ui.preview_valid_ready}
+                                        </div>
                                     </div>
                                 ) : null}
 
@@ -494,14 +591,9 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                     <div className="space-y-3 rounded-2xl border border-navy-primary/15 bg-white p-4 shadow-sm">
                                         <p className="text-xs font-bold leading-relaxed text-navy-secondary">
                                             <Smartphone className="mr-1.5 inline-block h-4 w-4 align-text-bottom text-[#06C755]" aria-hidden />
-                                            自分のスマホで動作確認（iPhone / Android）
+                                            {ui.device_test_title}
                                         </p>
-                                        <p className="text-[11px] font-medium leading-relaxed text-slate-600">
-                                            ボタンで<strong>物件ページと同じ方式</strong>のリンクを新しいタブで開きます。LINE
-                                            アプリに切り替わり、<strong>下書き付きのトーク画面</strong>
-                                            が表示されれば成功です。公式アカウント未友だちの場合は、先に友だち追加が出ることがあります（LINE
-                                            側の仕様です）。
-                                        </p>
+                                        <p className="text-[11px] font-medium leading-relaxed text-slate-600">{ui.device_test_body}</p>
                                         <button
                                             type="button"
                                             onClick={() => void runDeviceOaMessageTest()}
@@ -513,14 +605,12 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                             ) : (
                                                 <Smartphone className="h-5 w-5" aria-hidden />
                                             )}
-                                            自分のスマホで動作確認
+                                            {ui.device_test_cta}
                                         </button>
-                                        {deviceTestErr ? (
-                                            <p className="text-[11px] font-bold text-red-600">{deviceTestErr}</p>
-                                        ) : null}
+                                        {deviceTestErr ? <p className="text-[11px] font-bold text-red-600">{deviceTestErr}</p> : null}
                                         {deviceTestUrl ? (
                                             <div className="flex flex-col items-center gap-2 border-t border-slate-100 pt-3">
-                                                <p className="text-[10px] font-bold text-slate-500">スマホのカメラで読み取り（同一URL）</p>
+                                                <p className="text-[10px] font-bold text-slate-500">{ui.device_test_qr_label}</p>
                                                 {/* eslint-disable-next-line @next/next/no-img-element -- 外部QR API・動的URL */}
                                                 <img
                                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=1&data=${encodeURIComponent(deviceTestUrl)}`}
@@ -535,7 +625,7 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                                     rel="noopener noreferrer"
                                                     className="text-[11px] font-black text-[#047c3d] underline"
                                                 >
-                                                    リンクをもう一度開く
+                                                    {ui.device_test_open_again}
                                                 </a>
                                             </div>
                                         ) : null}
@@ -543,17 +633,13 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                 ) : null}
 
                                 {lineFriendAddUrl.trim().length > 0 && !urlFormatOk ? (
-                                    <p className="text-[11px] font-medium text-amber-800/90">
-                                        <code className="rounded bg-amber-100/80 px-1">https://lin.ee/...</code> または{' '}
-                                        <code className="rounded bg-amber-100/80 px-1">https://line.me/...</code>（https必須）、または{' '}
-                                        <code className="rounded bg-amber-100/80 px-1">@BasicID</code> を入力してください。
-                                    </p>
+                                    <p className="text-[11px] font-medium text-amber-800/90">{ui.url_invalid_hint}</p>
                                 ) : null}
                             </div>
 
                             <div className="mt-8 flex flex-col gap-4 border-t border-slate-200/80 pt-6">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
-                                    {urlFormatOk ? (
+                                    {needsChatAck ? (
                                         <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-2xl border-2 border-amber-200 bg-amber-50/80 p-3 text-left shadow-sm transition hover:border-amber-300 sm:max-w-md">
                                             <input
                                                 type="checkbox"
@@ -562,25 +648,19 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                                                 className="mt-1 h-4 w-4 shrink-0 rounded border-amber-400 text-[#06C755] focus:ring-[#06C755]"
                                             />
                                             <span className="text-sm font-bold leading-snug text-amber-950">
-                                                チャットモードをONにしました
-                                                <span className="mt-1 block text-xs font-medium text-amber-900/80">
-                                                    （応答モードを「チャット」に切り替え済み）
-                                                </span>
+                                                {ui.chat_mode_checkbox}
+                                                <span className="mt-1 block text-xs font-medium text-amber-900/80">{ui.chat_mode_checkbox_sub}</span>
                                             </span>
                                         </label>
                                     ) : null}
                                     <button
                                         type="submit"
-                                        disabled={saving || (urlFormatOk && !chatModeAcknowledged)}
-                                        title={
-                                            urlFormatOk && !chatModeAcknowledged
-                                                ? 'チャットモード確認のチェックが必要です'
-                                                : undefined
-                                        }
+                                        disabled={saving || (needsChatAck && !chatModeAcknowledged)}
+                                        title={needsChatAck && !chatModeAcknowledged ? ui.save_needs_chat_title : undefined}
                                         className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#06C755] py-4 text-sm font-black text-white shadow-lg transition hover:bg-[#05a649] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-10"
                                     >
                                         {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-                                        設定を保存する
+                                        {ui.save}
                                     </button>
                                 </div>
                             </div>
