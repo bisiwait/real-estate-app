@@ -8,6 +8,8 @@ import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, X, MessageCir
 import { formatInquirySubmitError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
+import { LineInquiryQrModal } from '@/components/property/LineInquiryQrModal'
+import { useDeviceType } from '@/hooks/useDeviceType'
 import { postLineInquiryClick } from '@/lib/line-inquiry-click-client'
 
 async function requestInquiryConfirmationEmail(
@@ -120,11 +122,25 @@ export default function InquiryForm({
   const [submitPhase, setSubmitPhase] = useState<'idle' | 'armed'>('idle')
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [portalReady, setPortalReady] = useState(false)
+  const [lineQrModalOpen, setLineQrModalOpen] = useState(false)
+  const lineAddFriendUrl = officialLineAddFriendUrl?.trim() ?? ''
+  const hasOfficialLine = Boolean(lineAddFriendUrl)
+  const { isSmartphone: isSmartphoneDevice } = useDeviceType()
   const lineOaLaunch = useLineOaLaunch(
-    officialLineAddFriendUrl || undefined,
+    hasOfficialLine ? lineAddFriendUrl : undefined,
     propertyId,
     'inquiry_form'
   )
+
+  const handleLineInquiryClick = useCallback(() => {
+    if (!hasOfficialLine) return
+    if (isSmartphoneDevice) {
+      lineOaLaunch.launch()
+    } else {
+      postLineInquiryClick({ propertyId, source: 'inquiry_form' })
+      setLineQrModalOpen(true)
+    }
+  }, [hasOfficialLine, isSmartphoneDevice, lineOaLaunch.launch, propertyId])
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -345,6 +361,7 @@ export default function InquiryForm({
   }
 
   return (
+    <>
     <div id="inquiry-form-section" className="relative overflow-visible scroll-mt-24">
       <button
         type="button"
@@ -378,25 +395,25 @@ export default function InquiryForm({
             : 'max-h-0 overflow-hidden opacity-0 lg:max-h-none lg:overflow-visible lg:opacity-100'
         )}
       >
-        {officialLineAddFriendUrl ? (
+        {hasOfficialLine ? (
           <div className="mb-5 rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm">
             <button
               type="button"
-              onClick={lineOaLaunch.launch}
-              disabled={lineOaLaunch.isSending}
+              onClick={handleLineInquiryClick}
+              disabled={isSmartphoneDevice && lineOaLaunch.isSending}
               className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05a649] disabled:opacity-85"
             >
               <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
               <span>
-                {lineOaLaunch.isSending
+                {isSmartphoneDevice && lineOaLaunch.isSending
                   ? (p.line_inquiry_sending_btn ?? '送信中…')
                   : (p.line_inquiry_btn ?? 'LINEで空室を確認する')}
               </span>
-              {!lineOaLaunch.isSending ? (
+              {!(isSmartphoneDevice && lineOaLaunch.isSending) ? (
                 <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
               ) : null}
             </button>
-            {lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
+            {isSmartphoneDevice && lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
               <a
                 href={lineOaLaunch.directUrl}
                 onClick={() => postLineInquiryClick({ propertyId, source: 'inquiry_form' })}
@@ -407,8 +424,11 @@ export default function InquiryForm({
               </a>
             ) : null}
             <p className="mt-2 text-center text-[10px] font-medium leading-relaxed text-slate-600">
-              {p.inquiry_line_vacancy_sub ??
-                '※自動で物件名が入力された状態でLINEが開きます'}
+              {isSmartphoneDevice
+                ? (p.inquiry_line_vacancy_sub ??
+                  '※自動で物件名が入力された状態でLINEが開きます')
+                : (p.line_inquiry_desktop_qr_sub ??
+                  'クリックするとQRコードが表示されます。スマホで読み取って問い合わせください。')}
             </p>
           </div>
         ) : null}
@@ -552,5 +572,16 @@ export default function InquiryForm({
         )}
       </div>
     </div>
+    <LineInquiryQrModal
+      isOpen={lineQrModalOpen}
+      onClose={() => setLineQrModalOpen(false)}
+      url={lineAddFriendUrl}
+      dict={{
+        line_inquiry_qr_modal_title: p.line_inquiry_qr_modal_title,
+        line_inquiry_qr_modal_hint: p.line_inquiry_qr_modal_hint,
+        line_inquiry_qr_modal_close: p.line_inquiry_qr_modal_close,
+      }}
+    />
+    </>
   )
 }

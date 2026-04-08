@@ -27,8 +27,10 @@ export default function StickyContactBar({
     isLoggedIn = true,
     onRequireAuth,
 }: StickyContactBarProps) {
+    const lineUrl = lineInquiryUrl?.trim() ?? ''
+    const hasLineInquiry = Boolean(lineUrl)
     const lineOaLaunch = useLineOaLaunch(
-        lineInquiryUrl,
+        hasLineInquiry ? lineUrl : undefined,
         propertyId,
         propertyId ? 'sticky_bar' : undefined
     )
@@ -73,7 +75,7 @@ export default function StickyContactBar({
                         </a>
                     ) : null}
 
-                    {lineInquiryUrl ? (
+                    {hasLineInquiry ? (
                         <button
                             type="button"
                             onClick={lineOaLaunch.launch}
@@ -102,7 +104,7 @@ export default function StickyContactBar({
                     </button>
                 </div>
 
-                {lineInquiryUrl ? (
+                {hasLineInquiry ? (
                     <div className="mx-auto mt-1.5 max-w-md px-2 text-center">
                         {lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
                             <a
