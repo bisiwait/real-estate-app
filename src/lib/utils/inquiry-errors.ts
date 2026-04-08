@@ -15,22 +15,3 @@ export function formatInquirySubmitError(err: unknown): string {
   if (o.hint) lines.push(`hint: ${o.hint}`)
   return lines.length ? `${base}\n\n${lines.join('\n')}` : base
 }
-
-/** LIFF が投げるオブジェクトからメッセージを取り出す */
-export function formatLiffError(err: unknown): string {
-  if (!err) return 'LIFF エラー'
-  if (typeof err === 'string') return err
-  if (err instanceof Error) return err.message
-  const m = (err as { message?: string }).message
-  return m || String(err)
-}
-
-/** 期限切れ・連携解除などでローカルに残ったトークンが無効なとき（getProfile が英語メッセージで失敗しがち） */
-export function isLiffAccessTokenRevokedError(err: unknown): boolean {
-  const msg = formatLiffError(err).toLowerCase()
-  return (
-    msg.includes('access token revoked') ||
-    msg.includes('token has expired') ||
-    msg.includes('invalid access token')
-  )
-}
