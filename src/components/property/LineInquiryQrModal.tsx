@@ -53,7 +53,7 @@ export function LineInquiryQrModal({
   const closeLabel = dict.line_inquiry_qr_modal_close ?? '閉じる'
   const friendNote =
     dict.line_inquiry_qr_modal_friend_register_note ??
-    '初めての方は友達登録をしてから再度お問い合わせください'
+    '初めての方は友達登録をしてから再度QRコードを読み込んでください'
 
   return createPortal(
     <div
