@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import {
     Loader2,
     Save,
-    ShieldCheck,
     Sparkles,
     ImageIcon,
     ArrowLeft,
@@ -300,13 +299,6 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                     {error}
                 </div>
             )}
-
-            <div className="mb-6 flex gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
-                <p className="text-xs font-bold leading-relaxed text-emerald-900">
-                    かんたん連携では API キーは不要です。貼ったURL（lin.ee 等）はサイト側で @Basic ID に解決し、物件ページでは下書き付きトーク（oaMessage）で開きます。
-                </p>
-            </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
