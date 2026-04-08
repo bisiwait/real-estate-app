@@ -399,10 +399,14 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                             </p>
                             <ol className="list-decimal space-y-2.5 pl-5 text-sm font-medium leading-relaxed text-slate-800">
                                 <li>
-                                    <span className="inline-flex items-center gap-1.5 font-bold text-navy-secondary">
-                                        <Settings className="h-4 w-4 text-slate-500" aria-hidden />
-                                        LINE公式アカウントアプリの<strong>ホーム画面</strong>から「
-                                        <strong>設定（歯車マーク）</strong>」をタップ。
+                                    <span className="flex gap-2.5">
+                                        <Settings
+                                            className="mt-0.5 h-4 w-4 shrink-0 text-slate-500"
+                                            aria-hidden
+                                        />
+                                        <span className="min-w-0 flex-1 font-bold leading-relaxed text-navy-secondary">
+                                            LINE公式アカウントアプリの<strong>ホーム画面</strong>から「<strong>設定（歯車マーク）</strong>」をタップ。
+                                        </span>
                                     </span>
                                 </li>
                                 <li>
