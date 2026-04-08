@@ -747,17 +747,11 @@ export default function InquiryForm({
       isOpen={lineQrModalOpen}
       onClose={() => setLineQrModalOpen(false)}
       url={lineAddFriendUrl}
-      prefillBody={linePrefillPlain}
       dict={{
         line_inquiry_qr_modal_title: p.line_inquiry_qr_modal_title,
         line_inquiry_qr_modal_hint: p.line_inquiry_qr_modal_hint,
         line_inquiry_qr_modal_close: p.line_inquiry_qr_modal_close,
-        line_inquiry_flow_step_add: p.line_inquiry_flow_step_add,
-        line_inquiry_flow_step_paste: p.line_inquiry_flow_step_paste,
-        line_inquiry_flow_step_send: p.line_inquiry_flow_step_send,
-        line_inquiry_copy_prefill_btn: p.line_inquiry_copy_prefill_btn,
-        line_inquiry_copy_toast: p.line_inquiry_copy_toast,
-        line_inquiry_qr_first_time_note: p.line_inquiry_qr_first_time_note,
+        line_inquiry_qr_modal_friend_register_note: p.line_inquiry_qr_modal_friend_register_note,
       }}
     />
     </>
