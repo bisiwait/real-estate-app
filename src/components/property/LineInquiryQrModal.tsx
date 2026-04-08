@@ -46,7 +46,8 @@ export function LineInquiryQrModal({
   const title =
     dict.line_inquiry_qr_modal_title ?? 'LINEで問い合わせ'
   const hint =
-    dict.line_inquiry_qr_modal_hint ?? 'スマホで読み取って問い合わせ'
+    dict.line_inquiry_qr_modal_hint ??
+    'スマホのカメラで読み取るとLINEでお問い合わせいただけます'
   const closeLabel = dict.line_inquiry_qr_modal_close ?? '閉じる'
 
   return createPortal(

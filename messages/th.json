@@ -452,7 +452,7 @@
         "line_inquiry_sticky_short": "ห้องว่าง",
         "line_open_line_direct_link": "เปิด LINE โดยตรง",
         "line_inquiry_qr_modal_title": "ติดต่อทาง LINE",
-        "line_inquiry_qr_modal_hint": "สแกน QR ด้วยมือถือเพื่อสอบถามทาง LINE",
+        "line_inquiry_qr_modal_hint": "สแกน QR ด้วยกล้องมือถือเพื่อสอบถามทาง LINE ได้ทันที",
         "line_inquiry_qr_modal_close": "ปิด",
         "line_inquiry_desktop_qr_sub": "คลิกเพื่อแสดง QR แล้วสแกนด้วยมือถือเพื่อสอบถามทาง LINE",
         "inquiry_line_vacancy_sub": "※LINE จะเปิดพร้อมชื่อประกาศที่กรอกให้อัตโนมัติ",

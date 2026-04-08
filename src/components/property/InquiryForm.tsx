@@ -407,7 +407,7 @@ export default function InquiryForm({
               <span>
                 {isSmartphoneDevice && lineOaLaunch.isSending
                   ? (p.line_inquiry_sending_btn ?? '送信中…')
-                  : (p.line_inquiry_btn ?? 'LINEで空室を確認する')}
+                  : (p.line_inquiry_btn ?? 'LINEで問合わせ')}
               </span>
               {!(isSmartphoneDevice && lineOaLaunch.isSending) ? (
                 <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />

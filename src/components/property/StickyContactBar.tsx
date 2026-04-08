@@ -81,13 +81,13 @@ export default function StickyContactBar({
                             onClick={lineOaLaunch.launch}
                             disabled={lineOaLaunch.isSending}
                             className="flex min-h-14 min-w-[3.75rem] flex-col items-center justify-center gap-0.5 rounded-xl border border-[#06C755]/40 bg-[#06C755] px-1 py-1 text-white shadow-md shadow-[#06C755]/20 transition-all active:scale-95 flex-shrink-0 disabled:opacity-85"
-                            aria-label={dict.property?.line_inquiry_btn ?? 'LINEで空室を確認する'}
+                            aria-label={dict.property?.line_inquiry_btn ?? 'LINEで問合わせ'}
                         >
                             <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
-                            <span className="max-w-[4.25rem] text-center text-[8px] font-black leading-tight">
+                            <span className="max-w-[5rem] text-center text-[7px] font-black leading-tight">
                                 {lineOaLaunch.isSending
                                     ? (dict.property?.line_inquiry_sending_short ?? '送信中')
-                                    : (dict.property?.line_inquiry_sticky_short ?? '空室')}
+                                    : (dict.property?.line_inquiry_btn ?? 'LINEで問合わせ')}
                             </span>
                         </button>
                     ) : null}

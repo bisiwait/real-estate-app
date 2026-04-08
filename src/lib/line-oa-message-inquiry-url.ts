@@ -78,14 +78,19 @@ export async function resolveLineOfficialBasicIdForOaMessage(
 }
 
 /**
- * 直通: `https://line.me/R/oaMessage/@BasicId/?text=...`（公式 oaMessage・下書き付きトーク）
+ * 公式 oaMessage ＋下書き本文。
+ * `?text=` 形式は LINE 入力欄に「text=…」が混入することがあるため、
+ * query にはキー名を付けず `encodeURIComponent(本文)` のみを付与する（/R/msg/text/ と同様の扱い）。
  */
 export function buildLineOaMessageUrl(atBasicId: string, text: string): string {
   const raw = atBasicId.trim()
   const id = raw.startsWith('@') ? raw : `@${raw.replace(/^@+/, '')}`
+  const u = new URL(`https://line.me/R/oaMessage/${id}/`)
   const body = text.trim()
-  const q = body ? `?text=${encodeURIComponent(body)}` : ''
-  return `https://line.me/R/oaMessage/${id}/${q}`
+  if (body) {
+    u.search = encodeURIComponent(body)
+  }
+  return u.toString()
 }
 
 /** oaMessage の下書き本文（物件名＋空室の一文） */
@@ -102,6 +107,12 @@ export function buildPropertyLineInquiryPrefillMessage(
   const name =
     title ||
     (locale === 'jp' ? '物件' : locale === 'th' ? 'ประกาศ' : 'Property')
+  if (locale === 'en') {
+    return `Please let me know the vacancy status for "${name}".`
+  }
+  if (locale === 'th') {
+    return `ขอสอบถามสถานะห้องว่างของ「${name}」`
+  }
   return `${name}の空室状況を教えてください`
 }
 
@@ -129,7 +140,12 @@ export async function buildPropertyLineInquiryUrlServer(
   const expanded = await expandShortLineFriendUrlServer(httpsUrl)
   try {
     const u = new URL(expanded)
-    u.searchParams.set('text', msg)
+    const body = msg.trim()
+    if (body) {
+      u.search = encodeURIComponent(body)
+    } else {
+      u.search = ''
+    }
     return u.toString()
   } catch {
     return expanded
