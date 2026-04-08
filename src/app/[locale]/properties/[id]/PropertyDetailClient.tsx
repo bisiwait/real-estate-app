@@ -411,6 +411,7 @@ export default function PropertyDetailClient({
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
                             <InquiryForm
                                 propertyId={id}
+                                agentId={property.user_id}
                                 propertyName={displayTitle}
                                 dict={dict}
                                 isLoggedIn={!!user}

@@ -100,16 +100,15 @@ export default async function DashboardPage({
 
     const monthStartJst = startOfCurrentMonthJstIso()
     let lineInquiryLogsThisMonth = 0
-    // line_inquiry_logs は RLS/GRANT 未整備の環境で 0 件になることがあるため、
-    // セッションで確定した user.id のみを条件に service role で件数取得する（管理者画面と同じテーブル・同じ agent_id）。
+    // セッションで確定した user.id のみを条件に service role で件数取得（line_inquiry_counts = 物件別イベントの合計）。
     const supabaseAdmin = await createAdminClient()
     const { count: lineInquiryLogCount, error: lineInquiryLogErr } = await supabaseAdmin
-        .from('line_inquiry_logs')
+        .from('line_inquiry_counts')
         .select('id', { count: 'exact', head: true })
         .eq('agent_id', user.id)
         .gte('created_at', monthStartJst)
     if (lineInquiryLogErr) {
-        console.warn('[dashboard] line_inquiry_logs count:', lineInquiryLogErr.message)
+        console.warn('[dashboard] line_inquiry_counts count:', lineInquiryLogErr.message)
     } else {
         lineInquiryLogsThisMonth = lineInquiryLogCount ?? 0
     }

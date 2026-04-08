@@ -96,6 +96,8 @@ export type InquiryContactPrefill = {
 
 interface InquiryFormProps {
   propertyId: string
+  /** 掲載オーナー（エージェント）の auth user id。LINE 計測の agent_id 突合に使用 */
+  agentId?: string
   propertyName: string
   dict: any
   isLoggedIn: boolean
@@ -107,6 +109,7 @@ interface InquiryFormProps {
 
 export default function InquiryForm({
   propertyId,
+  agentId,
   propertyName,
   dict,
   isLoggedIn,
@@ -147,7 +150,11 @@ export default function InquiryForm({
   )
   const [lineCopyToast, setLineCopyToast] = useState(false)
   const { isSmartphone: isSmartphoneDevice } = useDeviceType()
-  const lineOaLaunch = useLineOaLaunch(hasOfficialLine ? lineAddFriendUrl : undefined, propertyId)
+  const lineOaLaunch = useLineOaLaunch(
+    hasOfficialLine ? lineAddFriendUrl : undefined,
+    propertyId,
+    agentId
+  )
 
   const handleLineInquiryClick = useCallback(() => {
     if (!hasOfficialLine) return
@@ -160,8 +167,8 @@ export default function InquiryForm({
 
   useEffect(() => {
     if (!lineQrModalOpen) return
-    postLineInquiryLog({ propertyId })
-  }, [lineQrModalOpen, propertyId])
+    postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'qr-modal' })
+  }, [lineQrModalOpen, propertyId, agentId])
 
   const handleCopyThenOpenLine = useCallback(async () => {
     if (!hasOfficialLine) return
@@ -720,7 +727,9 @@ export default function InquiryForm({
             {isSmartphoneDevice && lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
               <a
                 href={lineOaLaunch.directUrl}
-                onClick={() => postLineInquiryLog({ propertyId })}
+                onClick={() =>
+                  postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'line-direct-link' })
+                }
                 className="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-[#06C755] bg-white py-2.5 text-center text-sm font-black text-[#047c3d] underline-offset-2 hover:bg-[#06C755]/5"
                 rel="noopener noreferrer"
               >

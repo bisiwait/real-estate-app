@@ -12,10 +12,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const property_id =
-    typeof (body as { property_id?: string }).property_id === 'string'
-      ? (body as { property_id: string }).property_id.trim()
-      : ''
+  const b = body as { property_id?: string; agent_id?: string }
+  const property_id = typeof b.property_id === 'string' ? b.property_id.trim() : ''
+  const agent_id_client =
+    typeof b.agent_id === 'string' && UUID_RE.test(b.agent_id.trim()) ? b.agent_id.trim() : ''
 
   if (!UUID_RE.test(property_id)) {
     return NextResponse.json({ error: 'Invalid property_id' }, { status: 400 })
@@ -37,13 +37,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false }, { status: 404 })
     }
 
-    const { error: iErr } = await admin.from('line_inquiry_logs').insert({
+    if (agent_id_client && agent_id_client !== prop.user_id) {
+      return NextResponse.json({ error: 'agent_id mismatch' }, { status: 403 })
+    }
+
+    const { error: iErr } = await admin.from('line_inquiry_counts').insert({
       agent_id: prop.user_id,
       property_id: prop.id,
     })
 
     if (iErr) {
-      console.error('[line/inquiry-log] insert', iErr)
+      console.error('[line/inquiry-log] insert line_inquiry_counts', iErr)
       return NextResponse.json({ error: 'Failed to log' }, { status: 500 })
     }
 

@@ -261,7 +261,7 @@ export default function AdminUserManagement({
                         </p>
                         {variant === 'agent' ? (
                             <p className="mt-1 max-w-xl text-[9px] font-medium leading-snug text-slate-500">
-                                LINE問い合わせクリック数は、物件ページの LINE ボタン押下を日本時間の今月1日0時から集計した件数です。
+                                LINE問い合わせクリック数は、物件ページの LINE 導線（スマホ起動・PCのQR表示など）を line_inquiry_counts から、日本時間の今月1日0時以降に集計した件数です。
                             </p>
                         ) : null}
                     </div>
