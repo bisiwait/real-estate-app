@@ -36,7 +36,7 @@ export default async function AdminSecretDashboard({
     const [mailInquiries, lineLeads, lineClickRows] = await Promise.all([
         fetchAdminMailInquiries(supabaseAdmin),
         fetchAdminLineLeads(supabaseAdmin),
-        supabaseAdmin.from('line_inquiry_click_logs').select('agent_id').gte('clicked_at', monthStartJst),
+        supabaseAdmin.from('line_inquiry_logs').select('agent_id').gte('created_at', monthStartJst),
     ])
 
     const lineInquiryClicksByAgent: Record<string, number> = {}
@@ -46,7 +46,7 @@ export default async function AdminSecretDashboard({
             lineInquiryClicksByAgent[aid] = (lineInquiryClicksByAgent[aid] ?? 0) + 1
         }
     } else if (lineClickRows.error) {
-        console.warn('[admin-secret] line_inquiry_click_logs:', lineClickRows.error.message)
+        console.warn('[admin-secret] line_inquiry_logs:', lineClickRows.error.message)
     }
 
     const { data: properties } = await supabaseAdmin.from('properties').select('status, is_approved')

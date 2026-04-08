@@ -22,7 +22,7 @@ import { clsx } from 'clsx'
 import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
 import { LineInquiryQrModal } from '@/components/property/LineInquiryQrModal'
 import { useDeviceType } from '@/hooks/useDeviceType'
-import { postLineInquiryClick } from '@/lib/line-inquiry-click-client'
+import { postLineInquiryLog } from '@/lib/line-inquiry-log-client'
 import { decodeLineInquiryPrefillBodyFromUrl } from '@/lib/line-oa-message-inquiry-url'
 import { copyTextToClipboard } from '@/lib/clipboard-copy'
 
@@ -147,21 +147,21 @@ export default function InquiryForm({
   )
   const [lineCopyToast, setLineCopyToast] = useState(false)
   const { isSmartphone: isSmartphoneDevice } = useDeviceType()
-  const lineOaLaunch = useLineOaLaunch(
-    hasOfficialLine ? lineAddFriendUrl : undefined,
-    propertyId,
-    'inquiry_form'
-  )
+  const lineOaLaunch = useLineOaLaunch(hasOfficialLine ? lineAddFriendUrl : undefined, propertyId)
 
   const handleLineInquiryClick = useCallback(() => {
     if (!hasOfficialLine) return
     if (isSmartphoneDevice) {
       lineOaLaunch.launch()
     } else {
-      postLineInquiryClick({ propertyId, source: 'inquiry_form' })
       setLineQrModalOpen(true)
     }
-  }, [hasOfficialLine, isSmartphoneDevice, lineOaLaunch.launch, propertyId])
+  }, [hasOfficialLine, isSmartphoneDevice, lineOaLaunch.launch])
+
+  useEffect(() => {
+    if (!lineQrModalOpen) return
+    postLineInquiryLog({ propertyId })
+  }, [lineQrModalOpen, propertyId])
 
   const handleCopyThenOpenLine = useCallback(async () => {
     if (!hasOfficialLine) return
@@ -720,7 +720,7 @@ export default function InquiryForm({
             {isSmartphoneDevice && lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
               <a
                 href={lineOaLaunch.directUrl}
-                onClick={() => postLineInquiryClick({ propertyId, source: 'inquiry_form' })}
+                onClick={() => postLineInquiryLog({ propertyId })}
                 className="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-[#06C755] bg-white py-2.5 text-center text-sm font-black text-[#047c3d] underline-offset-2 hover:bg-[#06C755]/5"
                 rel="noopener noreferrer"
               >
