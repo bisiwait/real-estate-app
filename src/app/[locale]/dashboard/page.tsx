@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -100,7 +100,10 @@ export default async function DashboardPage({
 
     const monthStartJst = startOfCurrentMonthJstIso()
     let lineInquiryLogsThisMonth = 0
-    const { count: lineInquiryLogCount, error: lineInquiryLogErr } = await supabase
+    // line_inquiry_logs は RLS/GRANT 未整備の環境で 0 件になることがあるため、
+    // セッションで確定した user.id のみを条件に service role で件数取得する（管理者画面と同じテーブル・同じ agent_id）。
+    const supabaseAdmin = await createAdminClient()
+    const { count: lineInquiryLogCount, error: lineInquiryLogErr } = await supabaseAdmin
         .from('line_inquiry_logs')
         .select('id', { count: 'exact', head: true })
         .eq('agent_id', user.id)
