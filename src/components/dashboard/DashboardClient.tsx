@@ -8,6 +8,7 @@ import {
     ChevronRight,
     LayoutDashboard,
     PlusCircle,
+    MessageCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 import LeadsView from '@/components/dashboard/LeadsView'
@@ -18,6 +19,24 @@ import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
 import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
 import DashboardActions from '@/components/dashboard/DashboardActions'
 import InquiryList from '@/components/dashboard/InquiryList'
+
+function PropertyLineInquiryBadge({ count, className = '' }: { count: number; className?: string }) {
+    const active = count > 0
+    return (
+        <span
+            className={`inline-flex items-center gap-0.5 rounded-lg border px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black tabular-nums ${
+                active
+                    ? 'border-[#06C755]/35 bg-[#06C755]/10 text-[#047c3d]'
+                    : 'border-slate-200 bg-slate-50 text-slate-400'
+            } ${className}`}
+            title="この物件のLINE問い合わせ導線の件数（今月・日本時間）"
+        >
+            <MessageCircle className="h-3 w-3 shrink-0" aria-hidden />
+            <span>{count}</span>
+            <span className="sr-only">LINE問い合わせ 今月</span>
+        </span>
+    )
+}
 
 interface DashboardClientProps {
     initialTab: string
@@ -33,6 +52,8 @@ interface DashboardClientProps {
     lineOfficialManagerChatUrl: string
     lineOfficialAccountAppIosUrl: string
     lineOfficialAccountAppAndroidUrl: string
+    /** 日本時間・今月1日0時以降の line_inquiry_counts を物件 id ごとに集計 */
+    lineInquiryCountsByPropertyThisMonth: Record<string, number>
 }
 
 export default function DashboardClient({
@@ -49,6 +70,7 @@ export default function DashboardClient({
     lineOfficialManagerChatUrl,
     lineOfficialAccountAppIosUrl,
     lineOfficialAccountAppAndroidUrl,
+    lineInquiryCountsByPropertyThisMonth,
 }: DashboardClientProps) {
     const [tab, setTab] = useState(initialTab)
     const [filter, setFilter] = useState(initialFilter)
@@ -154,6 +176,9 @@ export default function DashboardClient({
                         <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex flex-col gap-1">
                                 <h3 className="text-lg sm:text-xl font-black text-navy-secondary">登録物件一覧</h3>
+                                <p className="text-[10px] font-medium leading-snug text-slate-500 max-w-xl">
+                                    各行の LINE バッジは、その物件の問い合わせ導線の「今月」（日本時間・1日0時以降）の件数です。
+                                </p>
                                 <BulkConfirmButton
                                     propertyIds={filteredProperties
                                         .filter(p => p.status === 'published')
@@ -205,7 +230,12 @@ export default function DashboardClient({
                                                     {!property.is_presale && property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded text-[9px] font-black border border-orange-100">SALE</span>}
                                                     <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
                                                 </div>
-                                                <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2">{property.title}</p>
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2 min-w-0">{property.title}</p>
+                                                    <PropertyLineInquiryBadge
+                                                        count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0}
+                                                    />
+                                                </div>
                                                 <p className="text-[11px] text-slate-400 mt-0.5">{property.area?.name || '—'}</p>
                                                 <div className="text-[13px] font-black text-navy-primary mt-1 tabular-nums">
                                                     {property.is_for_rent && <span className="mr-3">{property.rent_price?.toLocaleString()} ฿/月</span>}
@@ -265,7 +295,13 @@ export default function DashboardClient({
                                                         <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
                                                         <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
                                                     </div>
-                                                    <h4 className="text-sm lg:text-lg font-bold text-navy-secondary mb-1 truncate">{property.title}</h4>
+                                                    <div className="flex items-center gap-2 mb-1 min-w-0">
+                                                        <h4 className="text-sm lg:text-lg font-bold text-navy-secondary truncate min-w-0 flex-1">{property.title}</h4>
+                                                        <PropertyLineInquiryBadge
+                                                            count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0}
+                                                            className="shrink-0"
+                                                        />
+                                                    </div>
                                                     <div className="flex flex-wrap items-center gap-x-3 text-xs lg:text-sm font-medium">
                                                         <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
                                                         {property.is_for_rent && <span className="text-navy-primary font-bold tabular-nums"><span className="text-[9px] opacity-50 uppercase mr-1">Rent</span>{property.rent_price?.toLocaleString()}</span>}

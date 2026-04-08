@@ -100,17 +100,24 @@ export default async function DashboardPage({
 
     const monthStartJst = startOfCurrentMonthJstIso()
     let lineInquiryLogsThisMonth = 0
-    // セッションで確定した user.id のみを条件に service role で件数取得（line_inquiry_counts = 物件別イベントの合計）。
+    const lineInquiryCountsByPropertyThisMonth: Record<string, number> = {}
     const supabaseAdmin = await createAdminClient()
-    const { count: lineInquiryLogCount, error: lineInquiryLogErr } = await supabaseAdmin
+    const { data: lineCountRows, error: lineInquiryCountErr } = await supabaseAdmin
         .from('line_inquiry_counts')
-        .select('id', { count: 'exact', head: true })
+        .select('property_id')
         .eq('agent_id', user.id)
         .gte('created_at', monthStartJst)
-    if (lineInquiryLogErr) {
-        console.warn('[dashboard] line_inquiry_counts count:', lineInquiryLogErr.message)
-    } else {
-        lineInquiryLogsThisMonth = lineInquiryLogCount ?? 0
+    if (lineInquiryCountErr) {
+        console.warn('[dashboard] line_inquiry_counts:', lineInquiryCountErr.message)
+    } else if (lineCountRows) {
+        lineInquiryLogsThisMonth = lineCountRows.length
+        for (const row of lineCountRows) {
+            const pid = row.property_id as string
+            if (pid) {
+                lineInquiryCountsByPropertyThisMonth[pid] =
+                    (lineInquiryCountsByPropertyThisMonth[pid] ?? 0) + 1
+            }
+        }
     }
 
     const hdrs = await headers()
@@ -203,7 +210,7 @@ export default async function DashboardPage({
                                 </div>
                                 <div
                                     className="flex items-center justify-between p-3 rounded-2xl border border-[#06C755]/20 bg-[#06C755]/5 text-[#047c3d]"
-                                    title="日本時間の今月1日0時以降。物件ページでLINEに進んだ回数（スマホは起動前、PCはQR表示時）です。"
+                                    title="日本時間の今月1日0時以降の合計。物件ごとの内訳は「物件」タブの一覧各行のLINEバッジを参照してください。"
                                 >
                                     <div className="flex items-center space-x-3 min-w-0">
                                         <MessageCircle className="w-5 h-5 shrink-0" aria-hidden />
@@ -249,6 +256,7 @@ export default async function DashboardPage({
                             lineOfficialManagerChatUrl={lineOfficialManagerChatUrl}
                             lineOfficialAccountAppIosUrl={LINE_OFFICIAL_ACCOUNT_APP_IOS}
                             lineOfficialAccountAppAndroidUrl={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
+                            lineInquiryCountsByPropertyThisMonth={lineInquiryCountsByPropertyThisMonth}
                         />
                     </div>
 
