@@ -13,12 +13,9 @@ import {
   Reply,
   Send,
   Loader2,
-  MessageCircle,
   Sparkles,
   Eraser,
-  ExternalLink,
 } from 'lucide-react'
-import { normalizeInquiryReplyChannel } from '@/lib/inquiry-channel'
 import { getInquiryReplyTemplates } from '@/lib/inquiry-reply-templates'
 
 interface Inquiry {
@@ -30,8 +27,6 @@ interface Inquiry {
   message: string
   is_read: boolean
   created_at: string
-  preferred_reply_channel?: string | null
-  line_user_id?: string | null
   property?: {
     title: string
   }
@@ -45,25 +40,11 @@ interface Inquiry {
 interface InquiryListProps {
   initialInquiries: any[]
   agentDisplayName?: string | null
-  lineOfficialManagerChatUrl: string
-  lineOfficialAccountAppIosUrl: string
-  lineOfficialAccountAppAndroidUrl: string
-}
-
-function replyPreferenceLabel(inquiry: Inquiry): { mode: 'line' | 'email'; channelLabel: string } {
-  const mode = normalizeInquiryReplyChannel(inquiry.preferred_reply_channel)
-  return {
-    mode,
-    channelLabel: mode === 'line' ? 'LINE希望（履歴）' : 'メール問い合わせ',
-  }
 }
 
 export default function InquiryList({
   initialInquiries,
   agentDisplayName,
-  lineOfficialManagerChatUrl,
-  lineOfficialAccountAppIosUrl,
-  lineOfficialAccountAppAndroidUrl,
 }: InquiryListProps) {
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries)
   const replyTemplates = useMemo(
@@ -73,21 +54,17 @@ export default function InquiryList({
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
   const [isSubmittingReply, setIsSubmittingReply] = useState(false)
-  const [channelFilter, setChannelFilter] = useState<'all' | 'email' | 'line'>('all')
   const [replyFilter, setReplyFilter] = useState<'all' | 'pending' | 'replied'>('all')
   const supabase = createClient()
 
   const filteredInquiries = useMemo(() => {
     return inquiries.filter((inq) => {
-      const mode = normalizeInquiryReplyChannel(inq.preferred_reply_channel)
-      if (channelFilter === 'email' && mode !== 'email') return false
-      if (channelFilter === 'line' && mode !== 'line') return false
       const hasReplies = (inq.replies?.length ?? 0) > 0
       if (replyFilter === 'pending' && hasReplies) return false
       if (replyFilter === 'replied' && !hasReplies) return false
       return true
     })
-  }, [inquiries, channelFilter, replyFilter])
+  }, [inquiries, replyFilter])
 
   const handleToggleRead = async (id: string, currentReadStatus: boolean) => {
     if (currentReadStatus) return
@@ -226,30 +203,6 @@ export default function InquiryList({
       <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-6 space-y-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
-            種別
-          </span>
-          <div className="flex min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
-            <button type="button" onClick={() => setChannelFilter('all')} className={filterChip(channelFilter === 'all')}>
-              すべて
-            </button>
-            <button
-              type="button"
-              onClick={() => setChannelFilter('email')}
-              className={`${filterChip(channelFilter === 'email')} flex items-center justify-center gap-1`}
-            >
-              <Mail className="h-3.5 w-3.5 shrink-0 opacity-70" />
-              メール
-            </button>
-            <button
-              type="button"
-              onClick={() => setChannelFilter('line')}
-              className={`${filterChip(channelFilter === 'line')} flex items-center justify-center gap-1`}
-            >
-              <MessageCircle className="h-3.5 w-3.5 shrink-0 opacity-70" />
-              LINE希望
-            </button>
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
             対応
           </span>
           <div className="flex min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
@@ -274,10 +227,7 @@ export default function InquiryList({
           <p className="text-slate-500 font-medium text-sm">条件に一致するお問い合わせはありません</p>
           <button
             type="button"
-            onClick={() => {
-              setChannelFilter('all')
-              setReplyFilter('all')
-            }}
+            onClick={() => setReplyFilter('all')}
             className="text-xs font-black text-navy-primary underline decoration-navy-primary/30 hover:text-navy-secondary"
           >
             フィルターをリセット
@@ -287,9 +237,6 @@ export default function InquiryList({
 
       <div className={`divide-y divide-slate-50 ${filteredInquiries.length === 0 ? 'hidden' : ''}`}>
         {filteredInquiries.map((inquiry) => {
-          const pref = replyPreferenceLabel(inquiry)
-          const lineUid = inquiry.line_user_id?.trim()
-          const lineMissing = pref.mode === 'line' && !lineUid
           const expanded = expandedId === inquiry.id
 
           return (
@@ -306,11 +253,7 @@ export default function InquiryList({
                         : 'bg-slate-100 text-slate-400'
                     }`}
                   >
-                    {pref.mode === 'line' ? (
-                      <MessageCircle className="w-6 h-6" />
-                    ) : (
-                      <Mail className="w-6 h-6" />
-                    )}
+                    <Mail className="w-6 h-6" />
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -319,15 +262,6 @@ export default function InquiryList({
                           New
                         </span>
                       )}
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-black ${
-                          pref.mode === 'line'
-                            ? 'bg-[#06C755]/15 text-[#047c3d]'
-                            : 'bg-sky-100 text-sky-800'
-                        }`}
-                      >
-                        {pref.channelLabel}
-                      </span>
                       {inquiry.replies && inquiry.replies.length > 0 ? (
                         <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold">
                           返信済み
@@ -374,68 +308,6 @@ export default function InquiryList({
 
               {expanded && (
                 <div className="mt-8 pt-8 border-t border-slate-100 animate-in slide-in-from-top-4 duration-300">
-                  <div className="mb-6 flex flex-wrap items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
-                        pref.mode === 'line'
-                          ? 'bg-[#06C755]/15 text-[#047c3d]'
-                          : 'bg-sky-100 text-sky-800'
-                      }`}
-                    >
-                      {pref.mode === 'line' ? <MessageCircle className="w-3.5 h-3.5" /> : <Mail className="w-3.5 h-3.5" />}
-                      {pref.channelLabel}
-                    </span>
-                  </div>
-
-                  {lineMissing ? (
-                    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
-                      <p>
-                        お客様は <strong>LINE</strong> での返信を希望されていますが、
-                        <strong>LINE ユーザーID が記録されていません</strong>。下のフォームから送信すると、
-                        <strong>メール</strong>で通知されます。
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {pref.mode === 'line' && lineUid ? (
-                    <div className="mb-6 space-y-3 rounded-2xl border border-emerald-100 bg-emerald-50/90 px-4 py-3 text-sm text-slate-800">
-                      <p>
-                        お客様は <strong>LINE</strong> を希望した記録があります。ダッシュボードからの通知は
-                        <strong>メール</strong>のみです。LINE 上で続けてやり取りする場合は、LINE Official Account
-                        Manager のチャットから対応してください。
-                      </p>
-                      <a
-                        href={lineOfficialManagerChatUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-xs font-black text-navy-primary underline decoration-navy-primary/40 hover:text-navy-secondary"
-                      >
-                        チャット管理を開く
-                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                      </a>
-                      <div className="flex flex-wrap items-center gap-2 border-t border-emerald-100/80 pt-3 text-[10px] font-bold text-slate-600">
-                        <span className="font-black text-emerald-900">LINE公式アプリ:</span>
-                        <a
-                          href={lineOfficialAccountAppIosUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-navy-primary underline"
-                        >
-                          App Store
-                        </a>
-                        <span className="text-slate-300">|</span>
-                        <a
-                          href={lineOfficialAccountAppAndroidUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-navy-primary underline"
-                        >
-                          Google Play
-                        </a>
-                      </div>
-                    </div>
-                  ) : null}
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     <div className="space-y-4">
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -450,14 +322,6 @@ export default function InquiryList({
                         </p>
                         <p className="text-sm font-bold text-navy-secondary select-all">{inquiry.inquirer_email}</p>
                       </div>
-                      {pref.mode === 'line' && lineUid ? (
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
-                            <MessageCircle className="w-3 h-3 mr-1.5" /> LINE ユーザーID（参照用）
-                          </p>
-                          <p className="break-all font-mono text-xs text-navy-secondary select-all">{lineUid}</p>
-                        </div>
-                      ) : null}
                       {inquiry.inquirer_phone && (
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
@@ -518,10 +382,10 @@ export default function InquiryList({
                     <div>
                       <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
                         <Send className="w-4 h-4 mr-2" />
-                        返信メールの本文
+                        返信本文
                       </h5>
                       <label className="sr-only" htmlFor={`inquiry-reply-${inquiry.id}`}>
-                        返信メールの本文
+                        返信本文
                       </label>
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
@@ -556,17 +420,17 @@ export default function InquiryList({
                           id={`inquiry-reply-${inquiry.id}`}
                           rows={6}
                           className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
-                          placeholder="返信メール本文を入力…"
+                          placeholder="返信を入力…"
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
-                          aria-label="返信メールの本文"
+                          aria-label="返信本文"
                         />
                         <button
                           type="button"
                           onClick={() => handleSendReply(inquiry)}
                           disabled={isSubmittingReply || !replyText.trim()}
                           className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                          title="メールで送信"
+                          title="送信"
                         >
                           {isSubmittingReply ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -576,7 +440,7 @@ export default function InquiryList({
                         </button>
                       </div>
                       <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
-                        ※送信するとお客様のメール宛に届きます。内容は返信履歴にも保存されます。
+                        ※送信するとお客様に届き、返信履歴にも保存されます。
                       </p>
                     </div>
 

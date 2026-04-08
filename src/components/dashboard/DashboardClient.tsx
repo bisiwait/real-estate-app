@@ -49,9 +49,6 @@ interface DashboardClientProps {
     leadsCount: number
     locale: string
     activePlan: string
-    lineOfficialManagerChatUrl: string
-    lineOfficialAccountAppIosUrl: string
-    lineOfficialAccountAppAndroidUrl: string
     /** 日本時間・今月1日0時以降の line_inquiry_counts を物件 id ごとに集計 */
     lineInquiryCountsByPropertyThisMonth: Record<string, number>
 }
@@ -67,9 +64,6 @@ export default function DashboardClient({
     leadsCount,
     locale,
     activePlan,
-    lineOfficialManagerChatUrl,
-    lineOfficialAccountAppIosUrl,
-    lineOfficialAccountAppAndroidUrl,
     lineInquiryCountsByPropertyThisMonth,
 }: DashboardClientProps) {
     const [tab, setTab] = useState(initialTab)
@@ -342,9 +336,6 @@ export default function DashboardClient({
                     <InquiryList
                         initialInquiries={inquiries || []}
                         agentDisplayName={profile?.full_name ?? ''}
-                        lineOfficialManagerChatUrl={lineOfficialManagerChatUrl}
-                        lineOfficialAccountAppIosUrl={lineOfficialAccountAppIosUrl}
-                        lineOfficialAccountAppAndroidUrl={lineOfficialAccountAppAndroidUrl}
                     />
                 )}
             </div>

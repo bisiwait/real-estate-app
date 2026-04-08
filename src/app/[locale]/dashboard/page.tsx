@@ -1,5 +1,4 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import CreditSection from '@/components/dashboard/CreditSection'
@@ -21,12 +20,6 @@ import { getEffectivePlan, isPremiumSubscriptionExpired } from '@/lib/utils/plan
 import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
-import {
-  resolveLineOfficialManagerChatUrl,
-  LINE_OFFICIAL_ACCOUNT_APP_IOS,
-  LINE_OFFICIAL_ACCOUNT_APP_ANDROID,
-} from '@/lib/line-official'
-import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 import { startOfCurrentMonthJstIso } from '@/lib/datetime/jst-month-start'
 
 export default async function DashboardPage({
@@ -119,9 +112,6 @@ export default async function DashboardPage({
             }
         }
     }
-
-    const hdrs = await headers()
-    const lineOfficialManagerChatUrl = await resolveLineOfficialManagerChatUrl(hostHeaderFromHeaders(hdrs))
 
     const stats = {
         total: properties?.length || 0,
@@ -253,9 +243,6 @@ export default async function DashboardPage({
                             initialLeads={leads}
                             locale={locale}
                             activePlan={activePlan}
-                            lineOfficialManagerChatUrl={lineOfficialManagerChatUrl}
-                            lineOfficialAccountAppIosUrl={LINE_OFFICIAL_ACCOUNT_APP_IOS}
-                            lineOfficialAccountAppAndroidUrl={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
                             lineInquiryCountsByPropertyThisMonth={lineInquiryCountsByPropertyThisMonth}
                         />
                     </div>
