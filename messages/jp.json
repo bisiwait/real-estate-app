@@ -852,7 +852,7 @@
         "personal_step1_body": "スマートフォンのLINEアプリを起動します。",
         "personal_step2_num": "2",
         "personal_step2_title": "友だち追加の画面へ",
-        "personal_step2_body": "「ホーム」右上の友だちアイコン、「友だちを追加」、または「設定」→「QRコード」などから、自分の招待用リンクやQRコードの画面を開きます。（バージョンにより表示が異なる場合があります）",
+        "personal_step2_body": "「ホーム」右上の友だちアイコン→「友だち追加」画面から「マイQRコード」を開きます",
         "personal_step3_num": "3",
         "personal_step3_title": "リンクをコピー",
         "personal_step3_body": "「リンクをコピー」や表示されたURLをコピーし、右の入力欄に貼り付けます。",
