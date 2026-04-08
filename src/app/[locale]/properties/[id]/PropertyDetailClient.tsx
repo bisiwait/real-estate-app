@@ -430,8 +430,6 @@ export default function PropertyDetailClient({
             </div>
             <StickyContactBar
                 phoneNumber={stickyPhone}
-                propertyId={property.id}
-                lineInquiryUrl={resolvedLineInquiryUrl}
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}
