@@ -318,28 +318,34 @@ export default function LineConnectClient({ locale }: { locale: string }) {
                             <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">
                                 左の画面どおりに進め、最後にコピーしたURLを右の欄に貼って保存してください。
                             </p>
-                            <p className="mt-3 text-[11px] font-bold text-slate-500">
-                                アプリをまだ入れていない方：
-                                <a
-                                    href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="ml-2 inline-flex items-center gap-0.5 font-black text-[#047c3d] underline decoration-[#06C755]/40 underline-offset-2 hover:text-[#035c2e]"
-                                >
-                                    App Store
-                                    <ExternalLink className="h-3 w-3" aria-hidden />
-                                </a>
-                                <span className="mx-1.5 text-slate-300">|</span>
-                                <a
-                                    href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-0.5 font-black text-[#047c3d] underline decoration-[#06C755]/40 underline-offset-2 hover:text-[#035c2e]"
-                                >
-                                    Google Play
-                                    <ExternalLink className="h-3 w-3" aria-hidden />
-                                </a>
-                            </p>
+                            <div className="mt-5 rounded-2xl border-2 border-[#06C755]/40 bg-gradient-to-br from-[#06C755]/12 via-white to-[#06C755]/5 p-5 shadow-md md:p-6">
+                                <p className="text-[11px] font-black uppercase tracking-wider text-[#047c3d]">
+                                    導入の前提（必須）
+                                </p>
+                                <p className="mt-2 text-base font-black leading-snug text-navy-secondary md:text-lg">
+                                    アプリをまだ入れていない方
+                                </p>
+                                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                                    <a
+                                        href={LINE_OFFICIAL_ACCOUNT_APP_IOS}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white px-6 py-3.5 text-base font-black text-[#047c3d] shadow-sm transition hover:bg-[#06C755]/10 active:scale-[0.99] sm:min-w-[200px]"
+                                    >
+                                        App Store
+                                        <ExternalLink className="h-5 w-5 shrink-0" aria-hidden />
+                                    </a>
+                                    <a
+                                        href={LINE_OFFICIAL_ACCOUNT_APP_ANDROID}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white px-6 py-3.5 text-base font-black text-[#047c3d] shadow-sm transition hover:bg-[#06C755]/10 active:scale-[0.99] sm:min-w-[200px]"
+                                    >
+                                        Google Play
+                                        <ExternalLink className="h-5 w-5 shrink-0" aria-hidden />
+                                    </a>
+                                </div>
+                            </div>
                         </div>
 
                         <section className="space-y-3">
