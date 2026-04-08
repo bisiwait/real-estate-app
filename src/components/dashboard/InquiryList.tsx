@@ -217,6 +217,11 @@ export default function InquiryList({
             </button>
           </div>
         </div>
+        <p className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[11px] font-medium leading-relaxed text-slate-600">
+          ここではメールでの問い合わせのみ表示されます。
+          <br />
+          LINEの問い合わせは直接こちらのシステムを通さないため表示されません。
+        </p>
         <p className="text-[10px] font-bold text-slate-400">
           表示 {filteredInquiries.length} / 全 {inquiries.length} 件
         </p>
