@@ -3,7 +3,6 @@ import en from '../../../messages/en.json'
 import th from '../../../messages/th.json'
 
 type ListPropertyPlans = (typeof jp)['list_property_plans']
-type AgentSettingsLine = (typeof jp)['agent_settings_line']
 
 function pickLocale(locale: string): 'jp' | 'en' | 'th' {
   if (locale === 'en') return 'en'
@@ -15,12 +14,6 @@ export function getListPropertyPlansCopy(locale: string): ListPropertyPlans {
   const key = pickLocale(locale)
   const packs = { jp, en, th }
   return packs[key].list_property_plans
-}
-
-export function getAgentSettingsLineCopy(locale: string): AgentSettingsLine {
-  const key = pickLocale(locale)
-  const packs = { jp, en, th }
-  return packs[key].agent_settings_line
 }
 
 /** エージェント公開プロフィール：スタンダード時の LINE 非表示メッセージ */

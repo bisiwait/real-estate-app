@@ -30,7 +30,6 @@ import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
 import { isPremiumActive } from '@/lib/utils/plan'
-import { getAgentSettingsLineCopy } from '@/lib/i18n/locale-plans-copy'
 interface ProfileData {
     full_name: string
     company_name: string
@@ -248,8 +247,6 @@ export default function ProfileForm() {
         is_admin: formData.is_admin,
     })
 
-    const lineSection = getAgentSettingsLineCopy(locale)
-
     return (
         <div className="space-y-12">
             {/* メッセージ表示 */}
@@ -364,46 +361,14 @@ export default function ProfileForm() {
                     </div>
                 </section>
 
-                <section
-                    className={`rounded-[2.5rem] border p-6 md:p-8 ${
-                        isPremium
-                            ? 'border-emerald-200/80 bg-emerald-50/40'
-                            : 'border-[#06C755]/25 bg-[#06C755]/5'
-                    }`}
-                >
-                    <h3 className="text-sm font-black text-navy-secondary mb-3 flex items-center gap-2">
-                        <MessageCircle className={`h-5 w-5 ${isPremium ? 'text-[#06C755]' : 'text-[#047c3d]'}`} />
-                        {lineSection.title}
-                    </h3>
-                    {isPremium ? (
-                        <p className="text-sm font-medium leading-relaxed text-slate-600 whitespace-pre-line">
-                            {lineSection.premium_body}
-                        </p>
-                    ) : (
-                        <div className="space-y-4">
-                            <p className="text-sm font-bold leading-relaxed text-navy-secondary whitespace-pre-line">
-                                {lineSection.standard_lead}
-                            </p>
-                            <p className="text-xs font-medium leading-relaxed text-slate-600 whitespace-pre-line">
-                                {lineSection.standard_body}
-                            </p>
-                            <Link
-                                href={`/${locale}/pricing`}
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary px-6 py-3 text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
-                            >
-                                {lineSection.upgrade_cta}
-                            </Link>
-                        </div>
-                    )}
-                </section>
-
                 <section className="rounded-[2.5rem] border border-[#06C755]/25 bg-[#06C755]/5 p-6 md:p-8 shadow-sm">
                     <h3 className="text-sm font-black text-navy-secondary flex items-center gap-2">
                         <MessageCircle className="h-5 w-5 text-[#06C755]" />
-                        LINE公式アカウント連携の設定
+                        LINE問い合わせ（LINE公式アカウント連携の設定）
                     </h3>
                     <p className="mt-3 text-xs font-medium leading-relaxed text-slate-600">
-                        まずは<strong>LINE公式アカウントの友だち追加URL</strong>だけで物件ページからお客様をLINEへ案内できます（API設定は不要）。アプリでアカウントを作る手順も同ページにあります。管理画面からPushで初回返信を送りたい上級者向けの設定は「上級者向け」から行えます。
+                        <strong>LINE公式アカウントの友だち追加URL</strong>
+                        だけで物件ページからお客様をLINEへ案内できます（API設定は不要）。アプリでアカウントを作る手順も同ページにあります。管理画面からPushで初回返信を送りたい上級者向けの設定は「上級者向け」から行えます。
                     </p>
                     <Link
                         href={`/${locale}/dashboard/line-connect`}
