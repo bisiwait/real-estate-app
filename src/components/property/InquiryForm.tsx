@@ -4,7 +4,18 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Loader2, CheckCircle, ChevronDown, ChevronUp, Lock, X, MessageCircle, ExternalLink } from 'lucide-react'
+import {
+  Send,
+  Loader2,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Lock,
+  X,
+  MessageCircle,
+  ExternalLink,
+  Mail,
+} from 'lucide-react'
 import { formatInquirySubmitError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
@@ -418,13 +429,14 @@ export default function InquiryForm({
                 tabIndex={inquiryChannel === 'mail' ? 0 : -1}
                 onClick={() => setInquiryChannel('mail')}
                 className={clsx(
-                  'relative flex min-h-12 flex-1 items-center justify-center rounded-xl px-2 py-2.5 text-center text-xs font-black transition-all sm:text-sm',
+                  'relative flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-center text-xs font-black transition-all sm:text-sm',
                   inquiryChannel === 'mail'
                     ? 'bg-white text-navy-primary shadow-md shadow-slate-200/80 ring-1 ring-slate-200/60'
                     : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
                 )}
               >
-                {p.inquiry_channel_tab_mail ?? 'メールで問合わせ'}
+                <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                <span>{p.inquiry_channel_tab_mail ?? 'メール'}</span>
               </button>
               <button
                 type="button"
@@ -436,14 +448,15 @@ export default function InquiryForm({
                 title={p.inquiry_channel_line_badge_hint}
                 onClick={() => setInquiryChannel('line')}
                 className={clsx(
-                  'relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-2 text-center transition-all sm:flex-row sm:gap-2 sm:py-2.5',
+                  'relative flex min-h-12 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-all sm:flex-row sm:gap-2 sm:py-2.5',
                   inquiryChannel === 'line'
                     ? 'bg-white text-[#047c3d] shadow-md shadow-[#06C755]/15 ring-1 ring-[#06C755]/25'
                     : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
                 )}
               >
-                <span className="text-xs font-black sm:text-sm">
-                  {p.inquiry_channel_tab_line ?? 'LINEで問合わせ'}
+                <span className="flex items-center gap-2 text-xs font-black sm:text-sm">
+                  <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
+                  <span>{p.inquiry_channel_tab_line ?? 'LINE'}</span>
                 </span>
                 <span
                   className="inline-flex max-w-full items-center rounded-full bg-[#06C755]/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#047c3d] ring-1 ring-[#06C755]/20"
