@@ -123,6 +123,8 @@ export default function InquiryForm({
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [portalReady, setPortalReady] = useState(false)
   const [lineQrModalOpen, setLineQrModalOpen] = useState(false)
+  /** LINE 連携ありのときのみ使用。メール / LINE のセグメント切替 */
+  const [inquiryChannel, setInquiryChannel] = useState<'mail' | 'line'>('mail')
   const lineAddFriendUrl = officialLineAddFriendUrl?.trim() ?? ''
   const hasOfficialLine = Boolean(lineAddFriendUrl)
   const { isSmartphone: isSmartphoneDevice } = useDeviceType()
@@ -141,6 +143,10 @@ export default function InquiryForm({
       setLineQrModalOpen(true)
     }
   }, [hasOfficialLine, isSmartphoneDevice, lineOaLaunch.launch, propertyId])
+
+  useEffect(() => {
+    if (!hasOfficialLine) setInquiryChannel('mail')
+  }, [hasOfficialLine])
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -186,6 +192,7 @@ export default function InquiryForm({
     window.addEventListener('resize', handleResize)
 
     const handleOpenEvent = () => {
+      setInquiryChannel('mail')
       if (!isLoggedIn) {
         onRequireAuth?.()
         return
@@ -396,44 +403,66 @@ export default function InquiryForm({
         )}
       >
         {hasOfficialLine ? (
-          <div className="mb-5 rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm">
-            <button
-              type="button"
-              onClick={handleLineInquiryClick}
-              disabled={isSmartphoneDevice && lineOaLaunch.isSending}
-              className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05a649] disabled:opacity-85"
-            >
-              <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
-              <span>
-                {isSmartphoneDevice && lineOaLaunch.isSending
-                  ? (p.line_inquiry_sending_btn ?? '送信中…')
-                  : (p.line_inquiry_btn ?? 'LINEで問合わせ')}
-              </span>
-              {!(isSmartphoneDevice && lineOaLaunch.isSending) ? (
-                <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-              ) : null}
-            </button>
-            {isSmartphoneDevice && lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
-              <a
-                href={lineOaLaunch.directUrl}
-                onClick={() => postLineInquiryClick({ propertyId, source: 'inquiry_form' })}
-                className="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-[#06C755] bg-white py-2.5 text-center text-sm font-black text-[#047c3d] underline-offset-2 hover:bg-[#06C755]/5"
-                rel="noopener noreferrer"
+          <div
+            className="mb-5"
+            role="tablist"
+            aria-label={p.inquiry_title ?? 'お問い合わせ'}
+          >
+            <div className="flex rounded-2xl border border-slate-200/90 bg-slate-100/95 p-1 shadow-inner">
+              <button
+                type="button"
+                role="tab"
+                id="inquiry-tab-mail"
+                aria-selected={inquiryChannel === 'mail'}
+                aria-controls="inquiry-panel-mail"
+                tabIndex={inquiryChannel === 'mail' ? 0 : -1}
+                onClick={() => setInquiryChannel('mail')}
+                className={clsx(
+                  'relative flex min-h-12 flex-1 items-center justify-center rounded-xl px-2 py-2.5 text-center text-xs font-black transition-all sm:text-sm',
+                  inquiryChannel === 'mail'
+                    ? 'bg-white text-navy-primary shadow-md shadow-slate-200/80 ring-1 ring-slate-200/60'
+                    : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
+                )}
               >
-                {p.line_open_line_direct_link ?? 'LINEを直接開く'}
-              </a>
-            ) : null}
-            <p className="mt-2 text-center text-[10px] font-medium leading-relaxed text-slate-600">
-              {isSmartphoneDevice
-                ? (p.inquiry_line_vacancy_sub ??
-                  '※自動で物件名が入力された状態でLINEが開きます')
-                : (p.line_inquiry_desktop_qr_sub ??
-                  'クリックするとQRコードが表示されます。スマホで読み取って問い合わせください。')}
-            </p>
+                {p.inquiry_channel_tab_mail ?? 'メールで問合わせ'}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="inquiry-tab-line"
+                aria-selected={inquiryChannel === 'line'}
+                aria-controls="inquiry-panel-line"
+                tabIndex={inquiryChannel === 'line' ? 0 : -1}
+                title={p.inquiry_channel_line_badge_hint}
+                onClick={() => setInquiryChannel('line')}
+                className={clsx(
+                  'relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-2 text-center transition-all sm:flex-row sm:gap-2 sm:py-2.5',
+                  inquiryChannel === 'line'
+                    ? 'bg-white text-[#047c3d] shadow-md shadow-[#06C755]/15 ring-1 ring-[#06C755]/25'
+                    : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
+                )}
+              >
+                <span className="text-xs font-black sm:text-sm">
+                  {p.inquiry_channel_tab_line ?? 'LINEで問合わせ'}
+                </span>
+                <span
+                  className="inline-flex max-w-full items-center rounded-full bg-[#06C755]/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#047c3d] ring-1 ring-[#06C755]/20"
+                  aria-hidden
+                >
+                  {p.inquiry_channel_line_badge ?? 'おすすめ'}
+                </span>
+              </button>
+            </div>
           </div>
         ) : null}
-        {!isLoggedIn ? (
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/90 to-white p-6 text-center shadow-sm">
+
+        {(!hasOfficialLine || inquiryChannel === 'mail') && !isLoggedIn ? (
+          <div
+            id={hasOfficialLine ? 'inquiry-panel-mail' : undefined}
+            role={hasOfficialLine ? 'tabpanel' : undefined}
+            aria-labelledby={hasOfficialLine ? 'inquiry-tab-mail' : undefined}
+            className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/90 to-white p-6 text-center shadow-sm"
+          >
             <p className="text-sm font-black text-navy-secondary">{p.contact_gate_title}</p>
             <p className="mt-3 whitespace-pre-line text-left text-xs font-medium leading-relaxed text-slate-600">
               {p.contact_auth_modal_body}
@@ -446,8 +475,16 @@ export default function InquiryForm({
               {p.contact_gate_cta}
             </button>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+        ) : null}
+
+        {(!hasOfficialLine || inquiryChannel === 'mail') && isLoggedIn ? (
+          <form
+            id={hasOfficialLine ? 'inquiry-panel-mail' : undefined}
+            role={hasOfficialLine ? 'tabpanel' : undefined}
+            aria-labelledby={hasOfficialLine ? 'inquiry-tab-mail' : undefined}
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
             <p className="text-[10px] font-medium text-slate-500">{p.contact_prefill_note}</p>
 
             <div>
@@ -569,7 +606,50 @@ export default function InquiryForm({
               {dict.property.inquiry_footer_note}
             </p>
           </form>
-        )}
+        ) : null}
+
+        {hasOfficialLine && inquiryChannel === 'line' ? (
+          <div
+            id="inquiry-panel-line"
+            role="tabpanel"
+            aria-labelledby="inquiry-tab-line"
+            className="rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm"
+          >
+            <button
+              type="button"
+              onClick={handleLineInquiryClick}
+              disabled={isSmartphoneDevice && lineOaLaunch.isSending}
+              className="flex w-full min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#06C755] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#05a649] disabled:opacity-85"
+            >
+              <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
+              <span>
+                {isSmartphoneDevice && lineOaLaunch.isSending
+                  ? (p.line_inquiry_sending_btn ?? '送信中…')
+                  : (p.line_inquiry_btn ?? 'LINEで問合わせ')}
+              </span>
+              {!(isSmartphoneDevice && lineOaLaunch.isSending) ? (
+                <ExternalLink className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+              ) : null}
+            </button>
+            {isSmartphoneDevice && lineOaLaunch.showFallback && lineOaLaunch.directUrl ? (
+              <a
+                href={lineOaLaunch.directUrl}
+                onClick={() => postLineInquiryClick({ propertyId, source: 'inquiry_form' })}
+                className="mt-3 flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-[#06C755] bg-white py-2.5 text-center text-sm font-black text-[#047c3d] underline-offset-2 hover:bg-[#06C755]/5"
+                rel="noopener noreferrer"
+              >
+                {p.line_open_line_direct_link ?? 'LINEを直接開く'}
+              </a>
+            ) : null}
+            <p className="mt-2 text-center text-[10px] font-medium leading-relaxed text-slate-600">
+              {isSmartphoneDevice
+                ? (p.inquiry_line_vacancy_sub ??
+                  '※自動で物件名が入力された状態でLINEが開きます')
+                : (p.line_inquiry_desktop_qr_sub ??
+                  'クリックするとQRコードが表示されます。スマホで読み取って問い合わせください。')}
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
     <LineInquiryQrModal
