@@ -472,6 +472,7 @@
         "line_inquiry_desktop_qr_sub": "Click to show a QR code. Scan it with your phone to inquire on LINE.",
         "line_inquiry_main_btn": "Contact on LINE (open app)",
         "line_inquiry_paste_after_friend_note": "※ First time? After adding the agent as a friend, paste in the chat and send.",
+        "line_inquiry_already_friend_note": "※ If you’re already friends, LINE may not auto-fill the message. The text was copied when you tapped the button—paste it into the chat and send.",
         "line_inquiry_share_text_template": "I found this on ChonburiHome and would like to inquire.\n{propertyName}\n{propertyUrl}\nCould you please confirm availability?\nThank you.",
         "inquiry_line_vacancy_sub": "※LINE opens with the property name filled in automatically.",
         "inquiry_default_message": "I'm interested in \"{propertyName}\". Please provide more details.",

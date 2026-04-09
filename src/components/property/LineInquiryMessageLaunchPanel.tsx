@@ -5,6 +5,8 @@ import { MessageCircle, ExternalLink, Loader2 } from 'lucide-react'
 export type LineInquiryMessageLaunchPanelDict = {
     line_inquiry_main_btn: string
     line_inquiry_paste_after_friend_note: string
+    /** 友だち済みで下書きが空になりやすい旨（クリップボード保険の案内） */
+    line_inquiry_already_friend_note: string
     line_inquiry_desktop_qr_sub: string
     line_open_line_direct_link: string
     line_inquiry_sending_btn?: string
@@ -49,6 +51,9 @@ export function LineInquiryMessageLaunchPanel({
 
             <p className="text-center text-[11px] font-bold leading-relaxed text-slate-700">
                 {dict.line_inquiry_paste_after_friend_note}
+            </p>
+            <p className="text-center text-[10px] font-medium leading-relaxed text-slate-600">
+                {dict.line_inquiry_already_friend_note}
             </p>
 
             {!isSmartphone ? (

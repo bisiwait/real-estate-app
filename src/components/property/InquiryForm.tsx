@@ -677,6 +677,9 @@ export default function InquiryForm({
                 line_inquiry_paste_after_friend_note:
                   p.line_inquiry_paste_after_friend_note ??
                   '※初めての方は、友だち追加後にトーク画面で『貼り付け』をして送信してください',
+                line_inquiry_already_friend_note:
+                  p.line_inquiry_already_friend_note ??
+                  '※すでに友だちの場合、LINEの仕様で入力欄に文面が入らないことがあります。上のボタンを押したときにクリップボードへコピーした文章を『貼り付け』して送信してください。',
                 line_inquiry_desktop_qr_sub:
                   p.line_inquiry_desktop_qr_sub ??
                   'クリックするとQRコードが表示されます。スマホで読み取って問い合わせください。',

@@ -471,6 +471,7 @@
         "line_inquiry_desktop_qr_sub": "คลิกเพื่อแสดง QR แล้วสแกนด้วยมือถือเพื่อสอบถามทาง LINE",
         "line_inquiry_main_btn": "สอบถามทาง LINE (เปิดแอป)",
         "line_inquiry_paste_after_friend_note": "※ ครั้งแรก หลังเพิ่มเพื่อนแล้วให้วางในห้องแชทแล้วส่ง",
+        "line_inquiry_already_friend_note": "※ หากเป็นเพื่อนแล้ว LINE อาจไม่ใส่ข้อความให้อัตโนมัติ ระบบคัดลอกข้อความไว้ตอนกดปุ่มแล้ว—ให้วางในห้องแชทแล้วส่ง",
         "line_inquiry_share_text_template": "ติดต่อจาก ChonburiHome ครับ/ค่ะ\n{propertyName}\n{propertyUrl}\nรบกวนตรวจสอบสถานะห้องว่างให้ด้วยครับ/ค่ะ\nขอบคุณครับ/ค่ะ",
         "inquiry_line_vacancy_sub": "※LINE จะเปิดพร้อมชื่อประกาศที่กรอกให้อัตโนมัติ",
         "inquiry_default_message": "สนใจยูนิต \"{propertyName}\" ขอรายละเอียดเพิ่มเติมด้วยครับ/ค่ะ",
