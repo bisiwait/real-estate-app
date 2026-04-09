@@ -115,11 +115,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || [])
 
-    // AI Import states
-    const [importHtml, setImportHtml] = useState('')
-    const [isImporting, setIsImporting] = useState(false)
-    const [importError, setImportError] = useState<string | null>(null)
-    const [importErrorDetails, setImportErrorDetails] = useState<string | null>(null)
     const [submitStatus, setSubmitStatus] = useState<'pending' | 'draft'>('pending')
     const [isGeneratingAI, setIsGeneratingAI] = useState(false)
     const [activeTab, setActiveTab] = useState<'jp' | 'en' | 'th'>('jp')
@@ -350,167 +345,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         }
 
         return uploadedUrls
-    }
-
-    const handleImport = async () => {
-        if (!importHtml) return
-        setIsImporting(true)
-        setImportError(null)
-        setImportErrorDetails(null)
-        try {
-            const res = await fetch('/api/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'extract', html: importHtml })
-            })
-
-            const data = await res.json()
-            if (!res.ok) {
-                setImportErrorDetails(data.details || null)
-                throw new Error(data.error || 'インポートに失敗しました')
-            }
-
-            let matchedProjectId = ''
-            let matchedAreaId = ''
-            let matchedBuildingName = ''
-            let needsNewProject = false
-            let matchedNewAreaId = ''
-
-            if (data.building_name) {
-                // Try to find existing project
-                const p = projects.find(p => p.name.toLowerCase().includes(data.building_name.toLowerCase()) || data.building_name.toLowerCase().includes(p.name.toLowerCase()))
-
-                if (p) {
-                    matchedProjectId = p.id
-                    matchedAreaId = p.area_id
-                    matchedBuildingName = p.name
-                    setShowNewProjectForm(false)
-                } else {
-                    needsNewProject = true
-                    matchedProjectId = 'new'
-                    matchedBuildingName = data.building_name
-
-                    // Try to guess area
-                    if (data.area) {
-                        const a = areas.find(a => a.name.toLowerCase().includes(data.area.toLowerCase()) || data.area.toLowerCase().includes(a.name.toLowerCase()) || (a.region?.name && a.region.name.toLowerCase().includes(data.area.toLowerCase())))
-                        if (a) matchedNewAreaId = a.id
-                    }
-
-                    setShowNewProjectForm(true)
-                    setProjectForm(pf => ({
-                        ...pf,
-                        name: data.building_name,
-                        area_id: matchedNewAreaId,
-                        latitude: data.latitude || pf.latitude,
-                        longitude: data.longitude || pf.longitude
-                    }))
-                }
-            }
-
-            setFormData(prev => {
-                const cleanValue = (val: any) => (typeof val === 'string' && val.trim() === '要確認') ? undefined : val;
-                const cleanDescription = (text: string) => text ? text.replace(/<br\s*\/?>/gi, '\n') : '';
-                const extractedDesc = cleanDescription(cleanValue(data.description) || '');
-
-                const extractedFeatures = (Array.isArray(data.features) ? data.features : [])
-                    .concat(Array.isArray(data.amenities) ? data.amenities : []);
-                const featuresText = extractedFeatures.join(' ');
-
-                const updated = {
-                    ...prev,
-                    title: cleanValue(data.title) || prev.title,
-                    description: extractedDesc ? (prev.description ? prev.description + '\n\n' + extractedDesc : extractedDesc) : prev.description,
-                    rent_price: cleanValue(data.rent_price) ? String(cleanValue(data.rent_price)) : prev.rent_price,
-                    sale_price: cleanValue(data.sale_price) ? String(cleanValue(data.sale_price)) : prev.sale_price,
-                    sqm: cleanValue(data.sqm) ? String(cleanValue(data.sqm)) : prev.sqm,
-                    floor: cleanValue(data.floor) ? String(cleanValue(data.floor)) : prev.floor,
-                    bedrooms: cleanValue(data.bedrooms) !== undefined ? String(cleanValue(data.bedrooms)) : prev.bedrooms,
-                    is_for_rent: data.is_for_rent !== undefined ? data.is_for_rent : prev.is_for_rent,
-                    is_for_sale: data.is_for_sale !== undefined ? data.is_for_sale : prev.is_for_sale,
-                    project_facilities: cleanValue(data.facilities) || prev.project_facilities,
-                    tags: extractedFeatures.length > 0 ? extractedFeatures : prev.tags,
-                    has_bathtub: featuresText.includes('バスタブ') || false,
-                    has_washlet: featuresText.includes('ウォシュレット') || false,
-                    allows_pets: featuresText.includes('ペット可') || false,
-                    has_japanese_tv: featuresText.includes('日本語TV') || false,
-                    has_ev_charger: featuresText.includes('EV充電') || false,
-                }
-
-                if (matchedProjectId) {
-                    updated.project_id = matchedProjectId
-                    updated.area_id = matchedProjectId === 'new' ? matchedNewAreaId : matchedAreaId
-                    updated.building_name = matchedBuildingName
-                    updated.project_name = matchedBuildingName
-                    if (!data.title) updated.title = matchedBuildingName
-                }
-
-                // Add layout info to description if found and parse bedrooms/bathrooms
-                if (data.layout) {
-                    updated.description = `【間取り】${data.layout}\n` + (updated.description || '')
-
-                    const layoutLower = data.layout.toLowerCase();
-                    if (layoutLower.includes('studio') || layoutLower.includes('スタジオ')) {
-                        updated.bedrooms = '0';
-                        updated.bathrooms = '1';
-                    } else if (layoutLower.includes('1') || layoutLower.match(/one/i)) {
-                        updated.bedrooms = '1';
-                        updated.bathrooms = '1';
-                    } else if (layoutLower.includes('2') || layoutLower.match(/two/i)) {
-                        updated.bedrooms = '2';
-                        updated.bathrooms = '2';
-                    } else if (layoutLower.includes('3') || layoutLower.match(/three/i)) {
-                        updated.bedrooms = '3';
-                        updated.bathrooms = '3';
-                    } else if (layoutLower.includes('4') || layoutLower.match(/four/i)) {
-                        updated.bedrooms = '4';
-                        updated.bathrooms = '4';
-                    } else if (layoutLower.includes('5') || layoutLower.match(/five/i)) {
-                        updated.bedrooms = '5';
-                        updated.bathrooms = '5';
-                    }
-                }
-
-                return updated
-            })
-
-            if (data.amenities && Array.isArray(data.amenities)) {
-                const newTags = new Set(formData.tags)
-                data.amenities.forEach((am: string) => {
-                    // Simple matching for known tags
-                    JA_TAGS.forEach(t => {
-                        if (am.includes(t) || t.includes(am) || (am.toLowerCase().includes('pet') && t === 'ペット可')) {
-                            newTags.add(t)
-                        }
-                    })
-                })
-                setFormData(prev => ({
-                    ...prev,
-                    tags: Array.from(newTags),
-                    allows_pets: newTags.has('ペット可'),
-                    has_bathtub: newTags.has('バスタブあり'),
-                    has_washlet: newTags.has('ウォシュレット完備'),
-                    has_ev_charger: newTags.has('EV充電器あり'),
-                    has_japanese_tv: newTags.has('テレビ')
-                }))
-            }
-            if (data.image_urls && Array.isArray(data.image_urls) && data.image_urls.length > 0) {
-                setExistingImages(prev => {
-                    const newUrls = data.image_urls.filter((url: string) => !prev.includes(url))
-                    return [...newUrls, ...prev]
-                })
-            } else if (data.main_image_url) {
-                setExistingImages(prev => {
-                    if (!prev.includes(data.main_image_url)) {
-                        return [data.main_image_url, ...prev]
-                    }
-                    return prev
-                })
-            }
-        } catch (err: any) {
-            setImportError(err.message)
-        } finally {
-            setIsImporting(false)
-        }
     }
 
     const handleGenerateAI = async () => {
@@ -821,56 +655,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl flex items-center space-x-3 text-sm font-bold">
                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
                         <span>{error}</span>
-                    </div>
-                )}
-
-                {/* AI Import Section (Admin Only) */}
-                {isAdmin && (
-                    <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-3xl shadow-lg p-8 border border-indigo-100 space-y-4">
-                        <div className="flex items-center space-x-3 mb-2">
-                            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
-                            <h3 className="text-lg font-black text-indigo-900">AI 物件インポーター</h3>
-                        </div>
-                        <p className="text-indigo-700 text-sm font-medium">外部サイトのブロックを回避するため、取得したい不動産ページの「HTMLソースコード」を全てコピーして以下に貼り付けてください。</p>
-                        <div className="flex flex-col space-y-4">
-                            <textarea
-                                placeholder="<html>...</html>"
-                                value={importHtml}
-                                onChange={(e) => setImportHtml(e.target.value)}
-                                className="w-full h-32 px-5 py-3 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-mono"
-                                disabled={isImporting}
-                            />
-                            <button
-                                type="button"
-                                onClick={handleImport}
-                                disabled={isImporting || !importHtml}
-                                className="self-end bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all flex items-center space-x-2 disabled:opacity-50"
-                            >
-                                {isImporting ? <Loader2 className="animate-spin w-5 h-5" /> : <span>インポート開始</span>}
-                            </button>
-                        </div>
-                        {isImporting && (
-                            <div className="text-indigo-600 text-sm font-bold flex items-center animate-pulse">
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                HTMLを解析・翻訳中... ワクワクしながらお待ちください！✨
-                            </div>
-                        )}
-                        {importError && (
-                            <div className="space-y-2 mt-2">
-                                <div className="text-red-500 text-sm font-bold flex items-center">
-                                    <AlertCircle className="w-4 h-4 mr-1" /> {importError}
-                                </div>
-                                {importErrorDetails && (
-                                    <div className="bg-red-50/50 p-3 rounded-xl border border-red-100/50 text-[11px] text-red-400 font-mono break-all leading-relaxed">
-                                        <div className="font-black mb-1 flex items-center gap-1">
-                                            <Loader2 className="w-3 h-3" />
-                                            SYSTEM DETAILS:
-                                        </div>
-                                        {importErrorDetails}
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
                 )}
 
@@ -1334,7 +1118,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         </div>
 
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイトル (キャッチコピー) <span className="text-[10px] text-navy-primary font-bold">(AIインポートで自動入力されます)</span></label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイトル (キャッチコピー)</label>
                             <input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" placeholder="（例）オーシャンビューが魅力の〇〇コンドミニアム" />
                         </div>
 

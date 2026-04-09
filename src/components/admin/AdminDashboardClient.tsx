@@ -140,10 +140,6 @@ export default function AdminDashboardClient({
                         <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-navy-primary" />
                         <span>一斉通知</span>
                     </Link>
-                    <Link href={`/${locale}/list-property`} className="col-span-2 flex items-center justify-center space-x-2 bg-navy-primary hover:bg-blue-600 text-white px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-xl font-bold text-[10px] sm:text-sm transition-all shadow-md">
-                        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />
-                        <span>AIで物件を取り込む</span>
-                    </Link>
                 </div>
             </div>
 
