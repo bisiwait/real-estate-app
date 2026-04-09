@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import PropertyThumbnail from '@/components/property/PropertyThumbnail'
+import { resolvePropertyImageUrl } from '@/lib/property-image-url'
 import { createPortal } from 'react-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination, Autoplay, Zoom } from 'swiper/modules'
@@ -85,17 +86,18 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
           className="w-full h-full cursor-zoom-in"
         >
           {safeImages.map((image, index) => (
-            <SwiperSlide key={`${image}-${index}`}>
+            <SwiperSlide key={`gallery-main-${index}`}>
               <div
                 className="relative w-full h-full min-h-[280px] sm:min-h-[360px] cursor-pointer"
                 onClick={() => openFullscreen(index)}
               >
-                <Image
-                  src={image}
+                <PropertyThumbnail
+                  src={resolvePropertyImageUrl(image)}
                   alt={`Property image ${index + 1}`}
                   fill
                   sizes={MAIN_GALLERY_SIZES}
                   priority={priority && index === 0}
+                  loading="eager"
                   className="object-cover"
                 />
               </div>
@@ -178,13 +180,14 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
                 className="w-full h-full"
               >
                 {safeImages.map((image, index) => (
-                  <SwiperSlide key={`fs-${image}-${index}`} className="flex items-center justify-center">
+                  <SwiperSlide key={`gallery-fs-${index}`} className="flex items-center justify-center">
                     <div className="swiper-zoom-container relative flex items-center justify-center w-full h-full min-h-[50vh]">
-                      <Image
-                        src={image}
+                      <PropertyThumbnail
+                        src={resolvePropertyImageUrl(image)}
                         alt={`Fullscreen ${index + 1}`}
                         fill
                         sizes="100vw"
+                        loading="eager"
                         className="object-contain"
                       />
                     </div>

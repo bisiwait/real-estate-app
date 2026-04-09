@@ -12,6 +12,8 @@ type PropertyThumbnailProps = {
     height?: number
     sizes?: string
     priority?: boolean
+    /** Swiper 等「非表示スライド」では lazy が効かず読み込まれないことがあるため eager を指定可能 */
+    loading?: 'eager' | 'lazy'
     className?: string
 }
 
@@ -26,6 +28,7 @@ export default function PropertyThumbnail({
     height,
     sizes,
     priority,
+    loading,
     className,
 }: PropertyThumbnailProps) {
     const initial = normalizePropertyImageSrc(src)
@@ -41,6 +44,7 @@ export default function PropertyThumbnail({
         className,
         sizes,
         priority,
+        loading,
         onError: () => setImgSrc(PROPERTY_PLACEHOLDER_IMAGE),
     } as const
 
