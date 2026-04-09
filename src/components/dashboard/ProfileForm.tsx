@@ -73,6 +73,8 @@ export default function ProfileForm() {
     })
     const [togglingPhoneVisibility, setTogglingPhoneVisibility] = useState(false)
     const [togglingLineVisibility, setTogglingLineVisibility] = useState(false)
+    /** LINE連携ページで保存した友だち追加URL等（表示のみ・このフォームでは編集しない） */
+    const [lineConnectStoredValue, setLineConnectStoredValue] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -113,6 +115,12 @@ export default function ProfileForm() {
                     show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
                     show_line_in_inquiry: data.show_line_in_inquiry !== false,
                 })
+                const lineBasic = (data as { line_basic_id?: string | null }).line_basic_id?.trim() ?? ''
+                const lineLegacy =
+                    (data as { line_id?: string | null }).line_id != null
+                        ? String((data as { line_id?: string | null }).line_id).trim()
+                        : ''
+                setLineConnectStoredValue(lineBasic || lineLegacy)
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
                 }
@@ -583,6 +591,32 @@ export default function ProfileForm() {
                                 />
                                 <Phone className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             </div>
+                        </div>
+
+                        <div className="rounded-xl border border-[#06C755]/25 bg-gradient-to-br from-[#06C755]/6 to-white p-4 shadow-sm">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[#047c3d] flex items-center gap-2">
+                                <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                LINE（連携設定で登録した値）
+                            </p>
+                            {lineConnectStoredValue ? (
+                                <p className="mt-2 break-all text-xs font-semibold leading-relaxed text-navy-secondary">
+                                    {lineConnectStoredValue}
+                                </p>
+                            ) : (
+                                <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">
+                                    未設定です。{' '}
+                                    <Link
+                                        href={`/${locale}/dashboard/line-connect`}
+                                        className="font-black text-[#047c3d] underline decoration-[#06C755]/40 underline-offset-2 hover:text-[#035c2f]"
+                                    >
+                                        LINE連携の設定
+                                    </Link>
+                                    から友だち追加URLなどを登録できます。
+                                </p>
+                            )}
+                            <p className="mt-2 text-[10px] font-medium text-slate-500">
+                                ※ 編集は「LINE連携の設定」ページから行えます。ここでは参照のみです。
+                            </p>
                         </div>
 
                         <div className="rounded-2xl border border-navy-primary/15 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm">
