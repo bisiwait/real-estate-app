@@ -65,7 +65,6 @@ export default async function SettingsPage() {
                                 は、物件一覧・比較画面など、サイト内の<strong className="font-black">表形式で表示される画面</strong>
                                 にも掲載される場合があります。公開して問題ない番号をご登録ください。
                             </span>
-                            LINE でのやり取りは公式アカウント（Chonburi Home）経由です。個人の LINE ID の登録は不要です。
                         </p>
                     </div>
                 </div>
