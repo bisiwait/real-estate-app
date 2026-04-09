@@ -673,7 +673,7 @@ export default function InquiryForm({
                 postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'line-direct-link' })
               }
               dict={{
-                line_inquiry_main_btn: p.line_inquiry_main_btn ?? 'LINEで問い合わせる（アプリ起動）',
+                line_inquiry_main_btn: p.line_inquiry_main_btn ?? 'LINEで問い合わせる',
                 line_inquiry_paste_after_friend_note:
                   p.line_inquiry_paste_after_friend_note ??
                   '※初めての方は、友だち追加後にトーク画面で『貼り付け』をして送信してください',
