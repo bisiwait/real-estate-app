@@ -44,6 +44,17 @@ const LINE_PERSONAL_FRIEND_URL_IMAGES = {
     step3CopyLink: '/images/line-personal-friend-url-guide/step-3-my-qr-copy-link.png',
 } as const
 
+/**
+ * public の PNG を同じファイル名で差し替えても、ブラウザ・CDN が古い内容を返し続けることがある。
+ * 挿絵を更新したらこの数字だけ +1 してデプロイすると確実に新画像が読み込まれる。
+ */
+const LINE_GUIDE_SCREENSHOT_CACHE = '2'
+
+function guideScreenshotSrc(path: string): string {
+    const base = path.split('?')[0]
+    return `${base}?v=${LINE_GUIDE_SCREENSHOT_CACHE}`
+}
+
 function GuideStepScreenshot({
     src,
     alt,
@@ -56,12 +67,14 @@ function GuideStepScreenshot({
     missingHelp: string
 }) {
     const [failed, setFailed] = useState(false)
+    const basePath = src.split('?')[0]
+    const resolvedSrc = guideScreenshotSrc(src)
     if (failed) {
         return (
             <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center">
                 <ImageIcon className="h-10 w-10 text-slate-400" aria-hidden />
                 <p className="text-xs font-black text-slate-600">{missingTitle}</p>
-                <code className="max-w-full break-all rounded-lg bg-white px-2 py-1 text-[10px] text-slate-600">{src}</code>
+                <code className="max-w-full break-all rounded-lg bg-white px-2 py-1 text-[10px] text-slate-600">{basePath}</code>
                 <p className="text-[10px] font-medium leading-relaxed text-slate-500">{missingHelp}</p>
             </div>
         )
@@ -69,7 +82,7 @@ function GuideStepScreenshot({
     return (
         // eslint-disable-next-line @next/next/no-img-element -- 動的パス・配置漏れ時の onError 表示のため
         <img
-            src={src}
+            src={resolvedSrc}
             alt={alt}
             className="mx-auto max-h-[min(52vh,460px)] w-full max-w-[300px] rounded-2xl border border-slate-200 bg-slate-900/5 object-contain shadow-lg"
             loading="lazy"
