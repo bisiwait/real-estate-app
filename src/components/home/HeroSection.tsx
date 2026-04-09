@@ -144,26 +144,6 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                             </Link>
                         </div>
                     </div>
-
-                    {/* Partner Ads Area */}
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Ad Placeholder 1 */}
-                        <div className="h-24 bg-white/80 backdrop-blur border border-white/50 rounded-xl overflow-hidden flex items-center justify-center relative group cursor-pointer shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 active:scale-[0.98] active:translate-y-0">
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none" />
-                            <div className="text-center">
-                                <p className="text-xs text-gray-500 font-semibold mb-1 tracking-wider uppercase">{dict.home.partner_ad}</p>
-                                <p className="text-navy-primary font-bold">{dict.home.visa_support}</p>
-                            </div>
-                        </div>
-                        {/* Ad Placeholder 2 */}
-                        <div className="h-24 bg-white/80 backdrop-blur border border-white/50 rounded-xl overflow-hidden flex items-center justify-center relative group cursor-pointer shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 active:scale-[0.98] active:translate-y-0">
-                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none" />
-                            <div className="text-center">
-                                <p className="text-xs text-gray-500 font-semibold mb-1 tracking-wider uppercase">{dict.home.partner_ad}</p>
-                                <p className="text-navy-primary font-bold">{dict.home.moving_service}</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
