@@ -27,15 +27,21 @@ import { clsx } from 'clsx'
 import type { LineConnectUiMessages } from '@/lib/i18n/line-connect-messages'
 
 /**
- * 提供スクリーンショット（Screenshot_2026-04-06-13-34-08-16… 等）を次のファイル名で配置してください:
- * public/images/line-official-app-guide/step-1-home.png
- * public/images/line-official-app-guide/step-2-url-create.png
- * public/images/line-official-app-guide/step-3-copy-url.png
+ * 公式アカウントアプリ手順の画像:
+ * public/images/line-official-app-guide/step-1-home.png など
  */
 const LINE_APP_GUIDE_IMAGES = {
     step1: '/images/line-official-app-guide/step-1-home.png',
     step2: '/images/line-official-app-guide/step-2-url-create.png',
     step3: '/images/line-official-app-guide/step-3-copy-url.png',
+} as const
+
+/** 個人LINE・友だち追加URL取得手順の挿絵 */
+const LINE_PERSONAL_FRIEND_URL_IMAGES = {
+    step1OpenApp: '/images/line-personal-friend-url-guide/step-1-open-line-app.png',
+    step2LineHome: '/images/line-personal-friend-url-guide/step-2-line-home.png',
+    step2AddFriend: '/images/line-personal-friend-url-guide/step-2-add-friend-screen.png',
+    step3CopyLink: '/images/line-personal-friend-url-guide/step-3-my-qr-copy-link.png',
 } as const
 
 function GuideStepScreenshot({
@@ -147,6 +153,53 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
     }, [lineFriendAddUrl])
 
     const needsChatAck = lineMode === 'official' && urlFormatOk
+
+    const personalLineGuideSteps = useMemo(
+        () =>
+            [
+                {
+                    key: 'personal-1',
+                    num: ui.personal_step1_num,
+                    title: ui.personal_step1_title,
+                    body: ui.personal_step1_body,
+                    images: [
+                        {
+                            src: LINE_PERSONAL_FRIEND_URL_IMAGES.step1OpenApp,
+                            alt: ui.personal_step1_img_alt,
+                        },
+                    ],
+                },
+                {
+                    key: 'personal-2',
+                    num: ui.personal_step2_num,
+                    title: ui.personal_step2_title,
+                    body: ui.personal_step2_body,
+                    images: [
+                        {
+                            src: LINE_PERSONAL_FRIEND_URL_IMAGES.step2LineHome,
+                            alt: ui.personal_step2_img_alt_home,
+                        },
+                        {
+                            src: LINE_PERSONAL_FRIEND_URL_IMAGES.step2AddFriend,
+                            alt: ui.personal_step2_img_alt_add_friend,
+                        },
+                    ],
+                },
+                {
+                    key: 'personal-3',
+                    num: ui.personal_step3_num,
+                    title: ui.personal_step3_title,
+                    body: ui.personal_step3_body,
+                    images: [
+                        {
+                            src: LINE_PERSONAL_FRIEND_URL_IMAGES.step3CopyLink,
+                            alt: ui.personal_step3_img_alt,
+                        },
+                    ],
+                },
+            ] as const,
+        [ui]
+    )
 
     useEffect(() => {
         const run = async () => {
@@ -327,27 +380,9 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
                                 <div>
                                     <h2 className="text-lg font-black tracking-tight text-navy-secondary md:text-xl">{ui.personal_guide_title}</h2>
                                 </div>
-                                {(
-                                    [
-                                        {
-                                            num: ui.personal_step1_num,
-                                            title: ui.personal_step1_title,
-                                            body: ui.personal_step1_body,
-                                        },
-                                        {
-                                            num: ui.personal_step2_num,
-                                            title: ui.personal_step2_title,
-                                            body: ui.personal_step2_body,
-                                        },
-                                        {
-                                            num: ui.personal_step3_num,
-                                            title: ui.personal_step3_title,
-                                            body: ui.personal_step3_body,
-                                        },
-                                    ] as const
-                                ).map((step) => (
+                                {personalLineGuideSteps.map((step) => (
                                     <section
-                                        key={step.num}
+                                        key={step.key}
                                         className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5"
                                     >
                                         <div
@@ -356,9 +391,22 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
                                         >
                                             {step.num}
                                         </div>
-                                        <div className="min-w-0 space-y-2">
-                                            <h3 className="text-sm font-black text-navy-secondary md:text-base">{step.title}</h3>
-                                            <p className="text-sm font-medium leading-relaxed text-slate-700">{step.body}</p>
+                                        <div className="min-w-0 flex-1 space-y-4">
+                                            <div className="space-y-2">
+                                                <h3 className="text-sm font-black text-navy-secondary md:text-base">{step.title}</h3>
+                                                <p className="text-sm font-medium leading-relaxed text-slate-700">{step.body}</p>
+                                            </div>
+                                            <div className="space-y-3 border-t border-slate-100 pt-4">
+                                                {step.images.map((img) => (
+                                                    <GuideStepScreenshot
+                                                        key={img.src}
+                                                        src={img.src}
+                                                        alt={img.alt}
+                                                        missingTitle={ui.guide_image_missing_title}
+                                                        missingHelp={ui.guide_image_missing_help}
+                                                    />
+                                                ))}
+                                            </div>
                                         </div>
                                     </section>
                                 ))}
