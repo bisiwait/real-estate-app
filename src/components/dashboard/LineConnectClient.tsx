@@ -48,7 +48,7 @@ const LINE_PERSONAL_FRIEND_URL_IMAGES = {
  * public の PNG を同じファイル名で差し替えても、ブラウザ・CDN が古い内容を返し続けることがある。
  * 挿絵を更新したらこの数字だけ +1 してデプロイすると確実に新画像が読み込まれる。
  */
-const LINE_GUIDE_SCREENSHOT_CACHE = '2'
+const LINE_GUIDE_SCREENSHOT_CACHE = '3'
 
 function guideScreenshotSrc(path: string): string {
     const base = path.split('?')[0]
