@@ -17,11 +17,13 @@ import {
 } from 'lucide-react'
 import { formatInquirySubmitError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
-import { useLineOaLaunch } from '@/components/property/LineOaLaunch'
 import { LineInquiryQrModal } from '@/components/property/LineInquiryQrModal'
+import { LineInquiryMessageLaunchPanel } from '@/components/property/LineInquiryMessageLaunchPanel'
+import { useLineTextShareLaunch } from '@/components/property/useLineTextShareLaunch'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { postLineInquiryLog } from '@/lib/line-inquiry-log-client'
-import { LineInquiryTwoStepGuide } from '@/components/property/LineInquiryTwoStepGuide'
+import { buildLineInquiryShareText } from '@/lib/line-inquiry-share-text'
+import { copyTextToClipboard } from '@/lib/clipboard-copy'
 
 async function requestInquiryConfirmationEmail(
   supabase: ReturnType<typeof createClient>,
@@ -145,25 +147,39 @@ export default function InquiryForm({
   const lineAddFriendUrl = officialLineAddFriendUrl?.trim() ?? ''
   const hasOfficialLine = Boolean(lineAddFriendUrl)
   const { isSmartphone: isSmartphoneDevice } = useDeviceType()
-  const lineOaLaunch = useLineOaLaunch(
-    hasOfficialLine ? lineAddFriendUrl : undefined,
-    propertyId,
-    agentId
-  )
 
-  const handleLineInquiryClick = useCallback(() => {
+  const shareText = useMemo(() => {
+    const tpl =
+      dict.property?.line_inquiry_share_text_template ??
+      'ChonburiHomeを見て連絡しました。\n{propertyName}\n{propertyUrl}\nの空室状況を確認していただけますか？\nよろしくお願いします。'
+    return buildLineInquiryShareText(tpl, propertyName, propertyPageUrl.trim())
+  }, [dict.property?.line_inquiry_share_text_template, propertyName, propertyPageUrl])
+
+  const lineTextLaunch = useLineTextShareLaunch(shareText)
+
+  /**
+   * 自動入力（line.me/R/msg/text/）＋クリップボード保険を同時に行い、line_inquiry_counts を記録する。
+   * await せず copy を先に走らせ、遷移で失われにくくする。
+   */
+  const handleLineInquiryMain = useCallback(() => {
     if (!hasOfficialLine) return
+    const text = shareText.trim()
+    if (!text) return
+    void copyTextToClipboard(text)
+    postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'line-launch' })
     if (isSmartphoneDevice) {
-      lineOaLaunch.launch()
+      lineTextLaunch.launchAssign()
     } else {
       setLineQrModalOpen(true)
     }
-  }, [hasOfficialLine, isSmartphoneDevice, lineOaLaunch.launch])
-
-  useEffect(() => {
-    if (!lineQrModalOpen) return
-    postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'qr-modal' })
-  }, [lineQrModalOpen, propertyId, agentId])
+  }, [
+    hasOfficialLine,
+    shareText,
+    propertyId,
+    agentId,
+    isSmartphoneDevice,
+    lineTextLaunch.launchAssign,
+  ])
 
   useEffect(() => {
     if (!hasOfficialLine) setInquiryChannel('mail')
@@ -638,28 +654,22 @@ export default function InquiryForm({
             aria-labelledby="inquiry-tab-line"
             className="rounded-2xl border-2 border-[#06C755]/35 bg-gradient-to-br from-[#06C755]/10 to-white p-4 shadow-sm"
           >
-            <LineInquiryTwoStepGuide
-              propertyName={propertyName}
-              propertyPageUrl={propertyPageUrl.trim()}
-              shareTextTemplate={
-                p.line_inquiry_share_text_template ??
-                'ChonburiHomeを見て連絡しました。\n{propertyName}\n{propertyUrl}\nの空室状況を確認していただけますか？\nよろしくお願いします。'
-              }
+            <LineInquiryMessageLaunchPanel
               isSmartphone={isSmartphoneDevice}
-              isLineLaunching={lineOaLaunch.isSending}
-              onLaunchLine={handleLineInquiryClick}
-              showDirectLineFallback={Boolean(isSmartphoneDevice && lineOaLaunch.showFallback && lineOaLaunch.directUrl)}
-              directLineUrl={lineOaLaunch.directUrl}
-              onDirectLineClick={() =>
+              isSending={lineTextLaunch.isSending}
+              onMainClick={handleLineInquiryMain}
+              showDirectLineFallback={Boolean(
+                isSmartphoneDevice && lineTextLaunch.showFallback && lineTextLaunch.textShareUrl
+              )}
+              fallbackUrl={lineTextLaunch.textShareUrl}
+              onFallbackClick={() =>
                 postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'line-direct-link' })
               }
               dict={{
-                line_inquiry_two_step_note:
-                  p.line_inquiry_two_step_note ??
-                  '初めての方は、友だち追加後にコピーした文章を貼り付けて送信してください。',
-                line_inquiry_step1_btn: p.line_inquiry_step1_btn ?? 'LINEアプリを起動',
-                line_inquiry_step2_btn: p.line_inquiry_step2_btn ?? '物件情報をコピー',
-                line_inquiry_copy_toast: p.line_inquiry_copy_toast ?? 'コピーしました！',
+                line_inquiry_main_btn: p.line_inquiry_main_btn ?? 'LINEで問い合わせる（アプリ起動）',
+                line_inquiry_paste_after_friend_note:
+                  p.line_inquiry_paste_after_friend_note ??
+                  '※初めての方は、友だち追加後にトーク画面で『貼り付け』をして送信してください',
                 line_inquiry_desktop_qr_sub:
                   p.line_inquiry_desktop_qr_sub ??
                   'クリックするとQRコードが表示されます。スマホで読み取って問い合わせください。',
@@ -674,12 +684,15 @@ export default function InquiryForm({
     <LineInquiryQrModal
       isOpen={lineQrModalOpen}
       onClose={() => setLineQrModalOpen(false)}
-      url={lineAddFriendUrl}
+      url={lineTextLaunch.textShareUrl || lineAddFriendUrl}
+      shareText={shareText}
       dict={{
         line_inquiry_qr_modal_title: p.line_inquiry_qr_modal_title,
         line_inquiry_qr_modal_hint: p.line_inquiry_qr_modal_hint,
         line_inquiry_qr_modal_close: p.line_inquiry_qr_modal_close,
         line_inquiry_qr_modal_friend_register_note: p.line_inquiry_qr_modal_friend_register_note,
+        line_inquiry_qr_modal_copy_btn: p.line_inquiry_qr_modal_copy_btn,
+        line_inquiry_copy_toast: p.line_inquiry_copy_toast,
       }}
     />
     </>
