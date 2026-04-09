@@ -11,8 +11,6 @@ import {
     ArrowLeft,
     CheckCircle2,
     ExternalLink,
-    ArrowBigDown,
-    Smartphone,
     Settings,
     MessageCircle,
     AlertTriangle,
@@ -20,7 +18,7 @@ import {
     Building2,
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
-import { getOfficialLineAddFriendUrl, LINE_OFFICIAL_ACCOUNT_APP_IOS, LINE_OFFICIAL_ACCOUNT_APP_ANDROID } from '@/lib/line-official'
+import { LINE_OFFICIAL_ACCOUNT_APP_IOS, LINE_OFFICIAL_ACCOUNT_APP_ANDROID } from '@/lib/line-official'
 import {
     isLineOfficialAccountAddFriendUrl,
     isLineOfficialConnectionUrl,
@@ -72,12 +70,6 @@ function GuideStepScreenshot({
             onError={() => setFailed(true)}
         />
     )
-}
-
-function getOperationsSupportLineUrl(): string {
-    const env = process.env.NEXT_PUBLIC_OPERATIONS_SUPPORT_LINE_URL?.trim()
-    if (env) return env
-    return getOfficialLineAddFriendUrl()
 }
 
 /** 設定 → 応答設定 → チャットモード の流れ（概念図） */
@@ -144,12 +136,8 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
     const [lineMode, setLineMode] = useState<LineSourceMode>('personal')
     /** profiles.line_basic_id（https URL または @xxx どちらも可） */
     const [lineFriendAddUrl, setLineFriendAddUrl] = useState('')
-    const [deviceTestUrl, setDeviceTestUrl] = useState<string | null>(null)
-    const [deviceTestErr, setDeviceTestErr] = useState<string | null>(null)
-    const [deviceTestLoading, setDeviceTestLoading] = useState(false)
     const [chatModeAcknowledged, setChatModeAcknowledged] = useState(false)
     const successRef = useRef<HTMLDivElement>(null)
-    const operationsLineUrl = getOperationsSupportLineUrl()
 
     const urlFormatOk = useMemo(() => {
         const raw = lineFriendAddUrl.trim()
@@ -159,33 +147,6 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
     }, [lineFriendAddUrl])
 
     const needsChatAck = lineMode === 'official' && urlFormatOk
-
-    const runDeviceOaMessageTest = async () => {
-        const raw = lineFriendAddUrl.trim()
-        if (!urlFormatOk) return
-        setDeviceTestLoading(true)
-        setDeviceTestErr(null)
-        try {
-            const res = await fetch('/api/line/preview-oa-message-url', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rawUrl: raw }),
-            })
-            const data = (await res.json()) as { url?: string; error?: string }
-            if (!res.ok || !data.url) {
-                setDeviceTestErr(data.error || ui.device_test_fail)
-                setDeviceTestUrl(null)
-                return
-            }
-            setDeviceTestUrl(data.url)
-            window.open(data.url, '_blank', 'noopener,noreferrer')
-        } catch {
-            setDeviceTestErr(ui.device_test_network)
-            setDeviceTestUrl(null)
-        } finally {
-            setDeviceTestLoading(false)
-        }
-    }
 
     useEffect(() => {
         const run = async () => {
@@ -262,24 +223,6 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
                     {ui.back_link}
                 </Link>
             </div>
-
-            <a
-                href={operationsLineUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mb-8 block overflow-hidden rounded-[1.75rem] border-[3px] border-[#06C755] bg-gradient-to-br from-[#06C755]/20 via-white to-emerald-50 p-6 shadow-xl shadow-[#06C755]/15 transition hover:border-[#049948] hover:shadow-2xl md:p-8"
-            >
-                <div className="flex flex-col items-stretch gap-5 md:flex-row md:items-center md:justify-between md:gap-8">
-                    <div className="min-w-0 space-y-2">
-                        <p className="text-base font-black leading-snug text-navy-secondary md:text-lg md:leading-relaxed">{ui.operations_title}</p>
-                        <p className="text-xs font-bold text-emerald-900/80">{ui.operations_sub}</p>
-                    </div>
-                    <span className="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#06C755] px-8 py-4 text-sm font-black text-white shadow-lg shadow-[#06C755]/35">
-                        {ui.operations_cta}
-                        <ExternalLink className="h-5 w-5" aria-hidden />
-                    </span>
-                </div>
-            </a>
 
             {celebrate && (
                 <div
@@ -527,13 +470,7 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
 
                     <div className="min-w-0 lg:sticky lg:top-24">
                         <div className="rounded-[1.75rem] border-2 border-navy-primary/15 bg-gradient-to-b from-white via-slate-50/90 to-white p-6 shadow-xl md:p-8">
-                            <div className="flex flex-col items-center gap-1 text-center">
-                                <ArrowBigDown className="h-12 w-12 shrink-0 text-[#06C755]" strokeWidth={1.25} aria-hidden />
-                                <p className="text-lg font-black leading-snug text-navy-secondary">{ui.paste_title}</p>
-                                <p className="text-xs font-medium text-slate-500">{ui.paste_hint}</p>
-                            </div>
-
-                            <div className="mt-8 space-y-4">
+                            <div className="space-y-4">
                                 <label htmlFor="line-official-account-url" className="block text-sm font-black text-navy-secondary">
                                     {ui.url_label}
                                 </label>
@@ -584,51 +521,6 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
                                             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
                                             {ui.preview_valid_ready}
                                         </div>
-                                    </div>
-                                ) : null}
-
-                                {urlFormatOk ? (
-                                    <div className="space-y-3 rounded-2xl border border-navy-primary/15 bg-white p-4 shadow-sm">
-                                        <p className="text-xs font-bold leading-relaxed text-navy-secondary">
-                                            <Smartphone className="mr-1.5 inline-block h-4 w-4 align-text-bottom text-[#06C755]" aria-hidden />
-                                            {ui.device_test_title}
-                                        </p>
-                                        <p className="text-[11px] font-medium leading-relaxed text-slate-600">{ui.device_test_body}</p>
-                                        <button
-                                            type="button"
-                                            onClick={() => void runDeviceOaMessageTest()}
-                                            disabled={deviceTestLoading}
-                                            className="flex w-full min-h-[48px] items-center justify-center gap-2 rounded-xl border-2 border-[#06C755] bg-white py-3 text-sm font-black text-[#047c3d] transition hover:bg-[#06C755]/10 disabled:opacity-50"
-                                        >
-                                            {deviceTestLoading ? (
-                                                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-                                            ) : (
-                                                <Smartphone className="h-5 w-5" aria-hidden />
-                                            )}
-                                            {ui.device_test_cta}
-                                        </button>
-                                        {deviceTestErr ? <p className="text-[11px] font-bold text-red-600">{deviceTestErr}</p> : null}
-                                        {deviceTestUrl ? (
-                                            <div className="flex flex-col items-center gap-2 border-t border-slate-100 pt-3">
-                                                <p className="text-[10px] font-bold text-slate-500">{ui.device_test_qr_label}</p>
-                                                {/* eslint-disable-next-line @next/next/no-img-element -- 外部QR API・動的URL */}
-                                                <img
-                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=1&data=${encodeURIComponent(deviceTestUrl)}`}
-                                                    alt=""
-                                                    className="rounded-xl border border-slate-200 bg-white p-1"
-                                                    width={180}
-                                                    height={180}
-                                                />
-                                                <a
-                                                    href={deviceTestUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-[11px] font-black text-[#047c3d] underline"
-                                                >
-                                                    {ui.device_test_open_again}
-                                                </a>
-                                            </div>
-                                        ) : null}
                                     </div>
                                 ) : null}
 
