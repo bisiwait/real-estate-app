@@ -695,14 +695,11 @@ export default function InquiryForm({
       isOpen={lineQrModalOpen}
       onClose={() => setLineQrModalOpen(false)}
       url={lineLaunch.launchUrl || lineAddFriendUrl}
-      shareText={shareText}
       dict={{
         line_inquiry_qr_modal_title: p.line_inquiry_qr_modal_title,
         line_inquiry_qr_modal_hint: p.line_inquiry_qr_modal_hint,
         line_inquiry_qr_modal_close: p.line_inquiry_qr_modal_close,
         line_inquiry_qr_modal_friend_register_note: p.line_inquiry_qr_modal_friend_register_note,
-        line_inquiry_qr_modal_copy_btn: p.line_inquiry_qr_modal_copy_btn,
-        line_inquiry_copy_toast: p.line_inquiry_copy_toast,
       }}
     />
     </>

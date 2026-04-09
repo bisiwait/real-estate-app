@@ -1,18 +1,15 @@
 'use client'
 
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ClipboardCopy } from 'lucide-react'
+import { X } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { copyTextToClipboard } from '@/lib/clipboard-copy'
 
 export type LineInquiryQrModalDict = {
   line_inquiry_qr_modal_title?: string
   line_inquiry_qr_modal_hint?: string
   line_inquiry_qr_modal_close?: string
   line_inquiry_qr_modal_friend_register_note?: string
-  line_inquiry_qr_modal_copy_btn?: string
-  line_inquiry_copy_toast?: string
 }
 
 type LineInquiryQrModalProps = {
@@ -20,8 +17,6 @@ type LineInquiryQrModalProps = {
   onClose: () => void
   /** QR に埋め込む line.me URL（メッセージ入り line.me/R/msg/text/ など） */
   url: string
-  /** 念のための手動コピー用テキスト */
-  shareText?: string
   dict: LineInquiryQrModalDict
 }
 
@@ -29,15 +24,8 @@ export function LineInquiryQrModal({
   isOpen,
   onClose,
   url,
-  shareText,
   dict,
 }: LineInquiryQrModalProps) {
-  const [copyOk, setCopyOk] = useState(false)
-
-  useEffect(() => {
-    if (!isOpen) setCopyOk(false)
-  }, [isOpen])
-
   const onKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -66,18 +54,6 @@ export function LineInquiryQrModal({
   const friendNote =
     dict.line_inquiry_qr_modal_friend_register_note ??
     '初めての方は友達登録をしてから再度QRコードを読み込んでください'
-  const copyBtnLabel = dict.line_inquiry_qr_modal_copy_btn ?? '文章をコピーする'
-  const copyToast = dict.line_inquiry_copy_toast ?? 'コピーしました！'
-
-  const handleCopy = async () => {
-    const t = shareText?.trim() ?? ''
-    if (!t) return
-    const ok = await copyTextToClipboard(t)
-    if (ok) {
-      setCopyOk(true)
-      window.setTimeout(() => setCopyOk(false), 2200)
-    }
-  }
 
   return createPortal(
     <div
@@ -113,24 +89,6 @@ export function LineInquiryQrModal({
           <div className="mt-5 flex justify-center rounded-xl border border-slate-100 bg-white p-4">
             <QRCodeSVG value={url} size={200} level="M" includeMargin />
           </div>
-
-          {shareText?.trim() ? (
-            <div className="mt-4 space-y-2">
-              <button
-                type="button"
-                onClick={() => void handleCopy()}
-                className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl border-2 border-navy-primary/25 bg-slate-50 py-2.5 text-sm font-black text-navy-primary transition hover:bg-white"
-              >
-                <ClipboardCopy className="h-4 w-4 shrink-0" aria-hidden />
-                {copyBtnLabel}
-              </button>
-              {copyOk ? (
-                <p className="text-center text-xs font-black text-emerald-600" role="status">
-                  {copyToast}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
 
           <p className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2.5 text-center text-[13px] font-semibold leading-snug text-slate-800">
             {friendNote}
