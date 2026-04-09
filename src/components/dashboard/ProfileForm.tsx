@@ -368,7 +368,7 @@ export default function ProfileForm() {
                     </h3>
                     <p className="mt-3 text-xs font-medium leading-relaxed text-slate-600">
                         <strong>LINE公式アカウントの友だち追加URL</strong>
-                        だけで物件ページからお客様をLINEへ案内できます（API設定は不要）。アプリでアカウントを作る手順も同ページにあります。管理画面からPushで初回返信を送りたい上級者向けの設定は「上級者向け」から行えます。
+                        だけで物件ページからお客様をLINEへ案内できます（API設定は不要）。アプリでアカウントを作る手順も同ページにあります。
                     </p>
                     <Link
                         href={`/${locale}/dashboard/line-connect`}
