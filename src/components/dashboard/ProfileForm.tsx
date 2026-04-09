@@ -21,6 +21,7 @@ import {
     Crown,
     Check,
     MessageCircle,
+    Eye,
 } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -29,6 +30,7 @@ import Image from 'next/image'
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
+import { clsx } from 'clsx'
 import { isPremiumActive } from '@/lib/utils/plan'
 interface ProfileData {
     full_name: string
@@ -43,6 +45,10 @@ interface ProfileData {
     current_period_end: string | null
     auto_renew: boolean
     is_admin: boolean
+    /** 物件ページ等で電話ボタンを出すか（DB: show_phone_in_inquiry） */
+    show_phone_in_inquiry: boolean
+    /** 物件ページ等でLINE導線を出すか（DB: show_line_in_inquiry） */
+    show_line_in_inquiry: boolean
 }
 
 export default function ProfileForm() {
@@ -62,7 +68,11 @@ export default function ProfileForm() {
         current_period_end: null,
         auto_renew: true,
         is_admin: false,
+        show_phone_in_inquiry: true,
+        show_line_in_inquiry: true,
     })
+    const [togglingPhoneVisibility, setTogglingPhoneVisibility] = useState(false)
+    const [togglingLineVisibility, setTogglingLineVisibility] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -100,6 +110,8 @@ export default function ProfileForm() {
                     current_period_end: data.current_period_end || null,
                     auto_renew: data.auto_renew ?? true,
                     is_admin: data.is_admin === true,
+                    show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
+                    show_line_in_inquiry: data.show_line_in_inquiry !== false,
                 })
                 if (data.avatar_url) {
                     setAvatarPreview(data.avatar_url)
@@ -160,6 +172,58 @@ export default function ProfileForm() {
         }
     }
 
+    const persistInquiryVisibility = async (patch: {
+        show_phone_in_inquiry?: boolean
+        show_line_in_inquiry?: boolean
+    }) => {
+        setError(null)
+        setSuccess(null)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Authentication required')
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+                ...patch,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id)
+        if (updateError) throw updateError
+    }
+
+    const toggleShowPhoneInInquiry = async () => {
+        if (togglingPhoneVisibility) return
+        const next = !formData.show_phone_in_inquiry
+        const prev = formData.show_phone_in_inquiry
+        setFormData((f) => ({ ...f, show_phone_in_inquiry: next }))
+        setTogglingPhoneVisibility(true)
+        try {
+            await persistInquiryVisibility({ show_phone_in_inquiry: next })
+            setSuccess('物件ページの電話表示を更新しました。')
+        } catch (err: unknown) {
+            setFormData((f) => ({ ...f, show_phone_in_inquiry: prev }))
+            setError(getErrorMessage(err))
+        } finally {
+            setTogglingPhoneVisibility(false)
+        }
+    }
+
+    const toggleShowLineInInquiry = async () => {
+        if (togglingLineVisibility) return
+        const next = !formData.show_line_in_inquiry
+        const prev = formData.show_line_in_inquiry
+        setFormData((f) => ({ ...f, show_line_in_inquiry: next }))
+        setTogglingLineVisibility(true)
+        try {
+            await persistInquiryVisibility({ show_line_in_inquiry: next })
+            setSuccess('物件ページのLINE表示を更新しました。')
+        } catch (err: unknown) {
+            setFormData((f) => ({ ...f, show_line_in_inquiry: prev }))
+            setError(getErrorMessage(err))
+        } finally {
+            setTogglingLineVisibility(false)
+        }
+    }
+
     const toggleAutoRenew = async () => {
         setUpdatingSubscription(true)
         setError(null)
@@ -206,7 +270,7 @@ export default function ProfileForm() {
                 finalAvatarUrl = await uploadAvatar(user.id)
             }
 
-            // 2. Update profile（LINE 連絡先・問い合わせ表示 ON/OFF はダッシュボードでは扱わない）
+            // 2. Update profile（電話/LINE の物件ページ表示は別トグルで即時保存）
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -518,6 +582,93 @@ export default function ProfileForm() {
                                     placeholder="090-0000-0000"
                                 />
                                 <Phone className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-navy-primary/15 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-navy-primary flex items-center gap-2">
+                                <Eye className="h-3.5 w-3.5" aria-hidden />
+                                物件ページでの連絡先表示
+                            </h4>
+                            <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">
+                                メールでの問い合わせフォームは<strong className="text-navy-secondary">常に表示</strong>されます（非表示にできません）。
+                            </p>
+                            <div className="mt-4 space-y-3">
+                                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-sm font-black text-navy-secondary">電話番号を物件ページに表示</span>
+                                        <span className="mt-1 block text-[11px] font-medium leading-relaxed text-slate-500">
+                                            OFFにすると、物件ページ下部の「電話」ボタンが出なくなります。電話番号を未登録のときは、ONでも表示されません。
+                                        </span>
+                                    </span>
+                                    <span className="relative flex shrink-0 items-center gap-2 pt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            role="switch"
+                                            className="sr-only"
+                                            checked={formData.show_phone_in_inquiry}
+                                            disabled={togglingPhoneVisibility}
+                                            onChange={() => void toggleShowPhoneInInquiry()}
+                                            aria-label="電話番号を物件ページに表示"
+                                        />
+                                        <span
+                                            className={clsx(
+                                                'flex h-7 w-12 items-center rounded-full p-0.5 transition',
+                                                formData.show_phone_in_inquiry ? 'bg-emerald-500' : 'bg-slate-300',
+                                                togglingPhoneVisibility && 'opacity-50'
+                                            )}
+                                            aria-hidden
+                                        >
+                                            <span
+                                                className={clsx(
+                                                    'block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200',
+                                                    formData.show_phone_in_inquiry ? 'translate-x-[1.25rem]' : 'translate-x-0'
+                                                )}
+                                            />
+                                        </span>
+                                        {togglingPhoneVisibility ? (
+                                            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-navy-primary" aria-hidden />
+                                        ) : null}
+                                    </span>
+                                </label>
+
+                                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-sm font-black text-navy-secondary">LINEを物件ページに表示</span>
+                                        <span className="mt-1 block text-[11px] font-medium leading-relaxed text-slate-500">
+                                            OFFにすると、問い合わせのLINEタブ・ボタンが出なくなります。LINE連携を未設定のときは、ONでも表示されません。
+                                        </span>
+                                    </span>
+                                    <span className="relative flex shrink-0 items-center gap-2 pt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            role="switch"
+                                            className="sr-only"
+                                            checked={formData.show_line_in_inquiry}
+                                            disabled={togglingLineVisibility}
+                                            onChange={() => void toggleShowLineInInquiry()}
+                                            aria-label="LINEを物件ページに表示"
+                                        />
+                                        <span
+                                            className={clsx(
+                                                'flex h-7 w-12 items-center rounded-full p-0.5 transition',
+                                                formData.show_line_in_inquiry ? 'bg-emerald-500' : 'bg-slate-300',
+                                                togglingLineVisibility && 'opacity-50'
+                                            )}
+                                            aria-hidden
+                                        >
+                                            <span
+                                                className={clsx(
+                                                    'block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200',
+                                                    formData.show_line_in_inquiry ? 'translate-x-[1.25rem]' : 'translate-x-0'
+                                                )}
+                                            />
+                                        </span>
+                                        {togglingLineVisibility ? (
+                                            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-navy-primary" aria-hidden />
+                                        ) : null}
+                                    </span>
+                                </label>
                             </div>
                         </div>
                     </div>

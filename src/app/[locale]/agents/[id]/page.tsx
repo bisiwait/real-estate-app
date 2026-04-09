@@ -139,7 +139,7 @@ export default function AgentProfilePage() {
                                         {getAgentsPageLineGateCopy(locale)}
                                     </div>
                                 ) : null}
-                                {agent.phone ? (
+                                {agent.phone && agent.show_phone_in_inquiry !== false ? (
                                     <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />
                                 ) : null}
                                 <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />

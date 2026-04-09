@@ -153,7 +153,7 @@ export default function PropertyDetailClient({
                     const { data: aData } = await supabase
                         .from('profiles')
                         .select(
-                            'phone, full_name, line_id, line_basic_id, show_line_in_inquiry, plan, plan_type, current_period_end, is_admin'
+                            'phone, full_name, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, plan, plan_type, current_period_end, is_admin'
                         )
                         .eq('id', initialProperty.user_id)
                         .maybeSingle()
@@ -306,8 +306,9 @@ export default function PropertyDetailClient({
     }
 
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
-    /** ダッシュボードの「問い合わせに表示」トグルは廃止。電話があれば表示する */
-    const stickyPhone = agent?.phone || undefined
+    const phoneTrimmed = typeof agent?.phone === 'string' ? agent.phone.trim() : ''
+    const stickyPhone =
+        phoneTrimmed && agent?.show_phone_in_inquiry !== false ? phoneTrimmed : undefined
     const translateTag = (tag: string) => (dict.property?.tags as any)?.[tag] || tag;
     const translateArea = (areaName: string) => (dict.property?.db_locations as any)?.[areaName] || areaName;
 
