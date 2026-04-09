@@ -418,6 +418,7 @@ export default function PropertyDetailClient({
                                 onRequireAuth={() => setContactAuthOpen(true)}
                                 contactPrefill={contactPrefill}
                                 officialLineAddFriendUrl={resolvedLineInquiryUrl}
+                                propertyPageUrl={clientPageHref ?? propertyDetailPageUrl}
                                 ownerPremiumLineInquiry={ownerPremiumLineInquiry}
                             />
                         </div>
