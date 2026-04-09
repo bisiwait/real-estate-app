@@ -8,8 +8,3 @@ export function buildLineInquiryShareText(
 ): string {
     return template.replace(/\{propertyName\}/g, propertyName).replace(/\{propertyUrl\}/g, propertyPageUrl)
 }
-
-/** LINE 起動用: トーク入力に文言を載せた line.me 共有 URL */
-export function buildLineMeTextShareUrl(message: string): string {
-    return `https://line.me/R/msg/text/?${encodeURIComponent(message)}`
-}

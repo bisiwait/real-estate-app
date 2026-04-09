@@ -19,10 +19,11 @@ import { formatInquirySubmitError } from '@/lib/utils/inquiry-errors'
 import { clsx } from 'clsx'
 import { LineInquiryQrModal } from '@/components/property/LineInquiryQrModal'
 import { LineInquiryMessageLaunchPanel } from '@/components/property/LineInquiryMessageLaunchPanel'
-import { useLineTextShareLaunch } from '@/components/property/useLineTextShareLaunch'
+import { useLineAssignLaunch } from '@/components/property/useLineAssignLaunch'
 import { useDeviceType } from '@/hooks/useDeviceType'
 import { postLineInquiryLog } from '@/lib/line-inquiry-log-client'
 import { buildLineInquiryShareText } from '@/lib/line-inquiry-share-text'
+import { replaceLineInquiryUrlPrefill } from '@/lib/line-oa-message-inquiry-url'
 import { copyTextToClipboard } from '@/lib/clipboard-copy'
 
 async function requestInquiryConfirmationEmail(
@@ -155,10 +156,16 @@ export default function InquiryForm({
     return buildLineInquiryShareText(tpl, propertyName, propertyPageUrl.trim())
   }, [dict.property?.line_inquiry_share_text_template, propertyName, propertyPageUrl])
 
-  const lineTextLaunch = useLineTextShareLaunch(shareText)
+  /** oaMessage で送信先を固定し、下書きだけ定型文に差し替え（/R/msg/text は送信先選択になるため使わない） */
+  const lineChatLaunchUrl = useMemo(
+    () => replaceLineInquiryUrlPrefill(lineAddFriendUrl, shareText.trim()),
+    [lineAddFriendUrl, shareText]
+  )
+
+  const lineLaunch = useLineAssignLaunch(lineChatLaunchUrl)
 
   /**
-   * 自動入力（line.me/R/msg/text/）＋クリップボード保険を同時に行い、line_inquiry_counts を記録する。
+   * 公式アカウント宛 oaMessage（下書き＝定型文）で起動 ＋ クリップボード保険。
    * await せず copy を先に走らせ、遷移で失われにくくする。
    */
   const handleLineInquiryMain = useCallback(() => {
@@ -168,7 +175,7 @@ export default function InquiryForm({
     void copyTextToClipboard(text)
     postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'line-launch' })
     if (isSmartphoneDevice) {
-      lineTextLaunch.launchAssign()
+      lineLaunch.launchAssign()
     } else {
       setLineQrModalOpen(true)
     }
@@ -178,7 +185,7 @@ export default function InquiryForm({
     propertyId,
     agentId,
     isSmartphoneDevice,
-    lineTextLaunch.launchAssign,
+    lineLaunch.launchAssign,
   ])
 
   useEffect(() => {
@@ -656,12 +663,12 @@ export default function InquiryForm({
           >
             <LineInquiryMessageLaunchPanel
               isSmartphone={isSmartphoneDevice}
-              isSending={lineTextLaunch.isSending}
+              isSending={lineLaunch.isSending}
               onMainClick={handleLineInquiryMain}
               showDirectLineFallback={Boolean(
-                isSmartphoneDevice && lineTextLaunch.showFallback && lineTextLaunch.textShareUrl
+                isSmartphoneDevice && lineLaunch.showFallback && lineLaunch.launchUrl
               )}
-              fallbackUrl={lineTextLaunch.textShareUrl}
+              fallbackUrl={lineLaunch.launchUrl}
               onFallbackClick={() =>
                 postLineInquiryLog({ propertyId, agentId }, { throttleScope: 'line-direct-link' })
               }
@@ -684,7 +691,7 @@ export default function InquiryForm({
     <LineInquiryQrModal
       isOpen={lineQrModalOpen}
       onClose={() => setLineQrModalOpen(false)}
-      url={lineTextLaunch.textShareUrl || lineAddFriendUrl}
+      url={lineLaunch.launchUrl || lineAddFriendUrl}
       shareText={shareText}
       dict={{
         line_inquiry_qr_modal_title: p.line_inquiry_qr_modal_title,
