@@ -1,6 +1,6 @@
 'use client'
 import Link from "next/link";
-import Image from "next/image";
+import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 import { Building2, MapPin, Calendar, ArrowRight } from "lucide-react";
 import { useParams } from 'next/navigation'
 
@@ -36,8 +36,8 @@ export default function PresaleCard({
             <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-gray-100 flex flex-col h-full group-hover:-translate-y-1">
                 {/* Image Section */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                        src={project.imageUrl || '/images/placeholder-property.jpg'}
+                    <PropertyThumbnail
+                        src={project.imageUrl}
                         alt={project.name}
                         fill
                         sizes="(max-width: 768px) 85vw, (max-width: 1024px) 400px, 33vw"

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import PropertyThumbnail from "@/components/property/PropertyThumbnail";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { clsx } from "clsx";
@@ -331,8 +331,8 @@ function PropertySwipeColumn({
                     href={`/${locale}/properties/${p.id}`}
                     className="relative block h-32 w-full shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-navy-primary/10"
                 >
-                    <Image
-                        src={p.images?.[0] || "/images/placeholder-property.jpg"}
+                    <PropertyThumbnail
+                        src={p.images?.[0]}
                         alt=""
                         fill
                         className="object-cover"

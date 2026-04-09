@@ -1,9 +1,9 @@
 'use client'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { MapPin, Bath, Dog, BedDouble } from 'lucide-react'
 import FavoriteButton from './FavoriteButton'
+import PropertyThumbnail from './PropertyThumbnail'
 import { useParams } from 'next/navigation'
 
 interface PropertyCardProps {
@@ -64,8 +64,8 @@ export default function PropertyCard({
 
     const imageSection = (
         <>
-            <Image
-                src={property.images?.[0] || '/images/placeholder-property.jpg'}
+            <PropertyThumbnail
+                src={property.images?.[0]}
                 alt={property.title}
                 fill
                 sizes={CARD_IMAGE_SIZES}

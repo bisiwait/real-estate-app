@@ -64,7 +64,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
         port: '',
-        pathname: '/storage/v1/object/public/**',
+        // public / sign / render など Storage 配下のパスをまとめて許可
+        pathname: '/storage/v1/object/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/**',
       },
       {
         protocol: 'https',

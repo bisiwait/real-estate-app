@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import PropertyThumbnail from "@/components/property/PropertyThumbnail";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -348,8 +348,8 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
                                                     href={`/${locale}/properties/${p.id}`}
                                                     className="relative block aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-100"
                                                 >
-                                                    <Image
-                                                        src={p.images?.[0] || "/images/placeholder-property.jpg"}
+                                                    <PropertyThumbnail
+                                                        src={p.images?.[0]}
                                                         alt=""
                                                         fill
                                                         className="object-cover"
