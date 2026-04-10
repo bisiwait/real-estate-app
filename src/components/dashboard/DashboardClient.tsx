@@ -1,42 +1,18 @@
 'use client'
 
-import React, { useState } from 'react'
-import { 
-    Building2,
-    Mail,
-    Users,
-    ChevronRight,
-    LayoutDashboard,
-    PlusCircle,
-    MessageCircle,
-} from 'lucide-react'
+import React, { useState, useEffect, useCallback, Fragment } from 'react'
+import { Building2, Mail, Users, PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 import LeadsView from '@/components/dashboard/LeadsView'
 import BulkConfirmButton from '@/components/dashboard/BulkConfirmButton'
 import StatusFilter from '@/components/dashboard/StatusFilter'
-import PropertyEndListingButton from '@/components/dashboard/PropertyEndListingButton'
-import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
-import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
-import DashboardActions from '@/components/dashboard/DashboardActions'
 import InquiryList from '@/components/dashboard/InquiryList'
+import {
+    DashboardMobilePropertyRow,
+    DashboardDesktopPropertyRow,
+} from '@/components/dashboard/DashboardPropertyRows'
 
-function PropertyLineInquiryBadge({ count, className = '' }: { count: number; className?: string }) {
-    const active = count > 0
-    return (
-        <span
-            className={`inline-flex items-center gap-0.5 rounded-lg border px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black tabular-nums ${
-                active
-                    ? 'border-[#06C755]/35 bg-[#06C755]/10 text-[#047c3d]'
-                    : 'border-slate-200 bg-slate-50 text-slate-400'
-            } ${className}`}
-            title="この物件のLINE問い合わせ導線の件数（今月・日本時間）"
-        >
-            <MessageCircle className="h-3 w-3 shrink-0" aria-hidden />
-            <span>{count}</span>
-            <span className="sr-only">LINE問い合わせ 今月</span>
-        </span>
-    )
-}
+const SITE_VISIBLE_STATUSES = ['published', 'under_negotiation', 'contracted'] as const
 
 interface DashboardClientProps {
     initialTab: string
@@ -69,9 +45,17 @@ export default function DashboardClient({
     const [tab, setTab] = useState(initialTab)
     const [filter, setFilter] = useState(initialFilter)
     const [status, setStatus] = useState(initialStatus)
-    const [properties] = useState(initialProperties)
+    const [properties, setProperties] = useState(initialProperties)
     const [inquiries] = useState(initialInquiries)
     const [leads] = useState(initialLeads || [])
+
+    useEffect(() => {
+        setProperties(initialProperties)
+    }, [initialProperties])
+
+    const patchProperty = useCallback((id: string, patch: Record<string, unknown>) => {
+        setProperties((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
+    }, [])
 
     // フィルタリング処理（クライアント側で行う）
     const getFilteredProperties = () => {
@@ -91,6 +75,36 @@ export default function DashboardClient({
     }
 
     const filteredProperties = getFilteredProperties()
+    const liveFiltered = filteredProperties.filter((p) =>
+        SITE_VISIBLE_STATUSES.includes(p.status as (typeof SITE_VISIBLE_STATUSES)[number])
+    )
+    const otherFiltered = filteredProperties.filter(
+        (p) => !SITE_VISIBLE_STATUSES.includes(p.status as (typeof SITE_VISIBLE_STATUSES)[number])
+    )
+    const showSectionTitles = status === 'all'
+
+    const propertySections = [
+        {
+            key: 'live',
+            items: liveFiltered,
+            title: 'サイトに掲載中',
+            subtitle: '公開・商談中・成約済の物件です。掲載終了で下のエリアへ移動します。',
+            headClass: 'border-b border-slate-100 bg-slate-50',
+        },
+        {
+            key: 'other',
+            items: otherFiltered,
+            title: '下書き・承認待ち・その他',
+            subtitle: '下書きは「再公開する」でサイト掲載に戻せます。',
+            headClass: `${liveFiltered.length > 0 ? 'border-t-2 border-slate-200 ' : ''}border-b border-slate-100 bg-slate-50/95`,
+        },
+    ] as const
+
+    const rowProps = {
+        profile,
+        lineInquiryCountsByPropertyThisMonth,
+        patchProperty,
+    }
 
     const stats = {
         total: properties?.length || 0,
@@ -174,9 +188,9 @@ export default function DashboardClient({
                                     各行の LINE バッジは、その物件の問い合わせ導線の「今月」（日本時間・1日0時以降）の件数です。
                                 </p>
                                 <BulkConfirmButton
-                                    propertyIds={filteredProperties
-                                        .filter(p => p.status === 'published')
-                                        .map(p => p.id)}
+                                    propertyIds={liveFiltered
+                                        .filter((p) => p.status === 'published')
+                                        .map((p) => p.id)}
                                 />
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -194,139 +208,44 @@ export default function DashboardClient({
                             <span className="text-xs font-bold text-slate-400 whitespace-nowrap">表示: {filteredProperties.length} / 全: {stats.total} 件</span>
                         </div>
 
-                        {filteredProperties && filteredProperties.length > 0 ? (<>
-                            {/* ── MOBILE LIST (< sm) ── */}
-                            <div className="sm:hidden divide-y divide-slate-200">
-                                {filteredProperties.map((property) => (
-                                    <div key={property.id} className="p-3 active:bg-slate-50 transition-colors">
-                                        <div className="flex gap-3">
-                                            <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0 shadow-sm">
-                                                {property.images?.[0] ? (
-                                                    <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                        <LayoutDashboard className="w-6 h-6" />
-                                                    </div>
-                                                )}
-                                                <div className="absolute top-1 left-1">
-                                                    {property.status === 'published' && <span className="bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">公開</span>}
-                                                    {property.status === 'pending' && <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">待ち</span>}
-                                                    {property.status === 'draft' && <span className="bg-slate-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">下書</span>}
-                                                    {property.status === 'under_negotiation' && <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">商談</span>}
-                                                    {property.status === 'contracted' && <span className="bg-purple-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">成約</span>}
-                                                    {property.status === 'expired' && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">期限切</span>}
+                        {filteredProperties.length > 0 ? (
+                            <>
+                                {propertySections.map((section) =>
+                                    section.items.length === 0 ? null : (
+                                        <Fragment key={section.key}>
+                                            {showSectionTitles && (
+                                                <div className={`px-4 py-3 sm:px-8 ${section.headClass}`}>
+                                                    <h4 className="text-xs font-black text-navy-secondary sm:text-sm">{section.title}</h4>
+                                                    <p className="mt-0.5 text-[10px] font-medium leading-snug text-slate-500 max-w-xl">
+                                                        {section.subtitle}
+                                                    </p>
                                                 </div>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-1.5 mb-1">
-                                                    {property.is_presale && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[9px] font-black border border-amber-200">PRESALE</span>}
-                                                    {!property.is_presale && property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-black border border-indigo-100">RENT</span>}
-                                                    {!property.is_presale && property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded text-[9px] font-black border border-orange-100">SALE</span>}
-                                                    <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
-                                                </div>
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2 min-w-0">{property.title}</p>
-                                                    <PropertyLineInquiryBadge
-                                                        count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0}
+                                            )}
+                                            <div className="sm:hidden divide-y divide-slate-200">
+                                                {section.items.map((property) => (
+                                                    <DashboardMobilePropertyRow
+                                                        key={property.id}
+                                                        property={property}
+                                                        {...rowProps}
                                                     />
-                                                </div>
-                                                <p className="text-[11px] text-slate-400 mt-0.5">{property.area?.name || '—'}</p>
-                                                <div className="text-[13px] font-black text-navy-primary mt-1 tabular-nums">
-                                                    {property.is_for_rent && <span className="mr-3">{property.rent_price?.toLocaleString()} ฿/月</span>}
-                                                    {property.is_for_sale && <span>{property.sale_price?.toLocaleString()} ฿</span>}
-                                                </div>
+                                                ))}
                                             </div>
-                                        </div>
-                                        <div className="mt-2 flex items-stretch bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                                            <div className="flex-1 flex items-center justify-center">
-                                                <DashboardActions
-                                                    propertyId={property.id}
-                                                    propertyTitle={property.title}
-                                                    profile={profile}
-                                                    property={property}
-                                                    agent={{ full_name: profile?.full_name, phone: profile?.phone }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mt-2 flex items-center gap-2 px-1">
-                                            <PropertyEndListingButton
-                                                propertyId={property.id}
-                                                currentStatus={property.status}
-                                                className="flex-1"
-                                            />
-                                            <div className="flex-1 flex">
-                                                <PropertyConfirmButton propertyId={property.id} title={property.title} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* ── DESKTOP ROW LIST (sm+) ── */}
-                            <div className="hidden sm:block overflow-x-hidden pb-4">
-                                <div className="divide-y divide-slate-200 w-full">
-                                    {filteredProperties.map((property) => (
-                                        <div key={property.id} className="p-4 lg:p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 lg:gap-6">
-                                            <div className="flex items-center space-x-4 lg:space-x-6 min-w-0 flex-1">
-                                                <div className="w-16 h-16 lg:w-24 lg:h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                                                    {property.images?.[0] ? (
-                                                        <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                            <LayoutDashboard className="w-6 h-6 lg:w-8 lg:h-8" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                        {property.status === 'published' && <span className="bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded text-[10px] font-bold">公開中</span>}
-                                                        {property.status === 'pending' && <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[10px] font-bold">承認待ち</span>}
-                                                        {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">下書き</span>}
-                                                        {property.status === 'under_negotiation' && <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold">商談中</span>}
-                                                        {property.status === 'contracted' && <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px] font-bold">成約済</span>}
-                                                        {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold">期限切れ</span>}
-                                                        <span className="text-[10px] text-slate-400 font-medium hidden lg:inline">#{property.id.slice(0, 8)}</span>
-                                                        <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
-                                                        <PropertyEndListingButton propertyId={property.id} currentStatus={property.status} />
-                                                    </div>
-                                                    <div className="flex items-center gap-2 mb-1 min-w-0">
-                                                        <h4 className="text-sm lg:text-lg font-bold text-navy-secondary truncate min-w-0 flex-1">{property.title}</h4>
-                                                        <PropertyLineInquiryBadge
-                                                            count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0}
-                                                            className="shrink-0"
+                                            <div className="hidden sm:block overflow-x-hidden pb-4">
+                                                <div className="divide-y divide-slate-200 w-full">
+                                                    {section.items.map((property) => (
+                                                        <DashboardDesktopPropertyRow
+                                                            key={property.id}
+                                                            property={property}
+                                                            {...rowProps}
                                                         />
-                                                    </div>
-                                                    <div className="flex flex-wrap items-center gap-x-3 text-xs lg:text-sm font-medium">
-                                                        <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
-                                                        {property.is_for_rent && <span className="text-navy-primary font-bold tabular-nums"><span className="text-[9px] opacity-50 uppercase mr-1">Rent</span>{property.rent_price?.toLocaleString()}</span>}
-                                                        {property.is_for_sale && <span className="text-navy-primary font-bold tabular-nums"><span className="text-[9px] opacity-50 uppercase mr-1">Sale</span>{property.sale_price?.toLocaleString()}</span>}
-                                                    </div>
+                                                    ))}
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                <div className="flex gap-1">
-                                                    {property.is_presale ? <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[9px] font-black border border-amber-200">PS</span> : <>
-                                                        {property.is_for_rent && <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-indigo-100 uppercase">R</span>}
-                                                        {property.is_for_sale && <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[9px] font-black border border-orange-100 uppercase">S</span>}
-                                                    </>}
-                                                </div>
-                                                <Link href={`/properties/${property.id}`} target="_blank" rel="noopener noreferrer" className="px-2 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center hidden">
-                                                    <span className="hidden lg:inline">詳細</span><ChevronRight className="w-4 h-4" />
-                                                </Link>
-                                                <PropertyConfirmButton propertyId={property.id} title={property.title} />
-                                                <DashboardActions
-                                                    propertyId={property.id}
-                                                    propertyTitle={property.title}
-                                                    profile={profile}
-                                                    property={property}
-                                                    agent={{ full_name: profile?.full_name, phone: profile?.phone }}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </>) : (
+                                        </Fragment>
+                                    )
+                                )}
+                            </>
+                        ) : (
                             <div className="p-20 text-center">
                                 <p className="text-slate-400 font-medium">登録されている物件はありません</p>
                             </div>
