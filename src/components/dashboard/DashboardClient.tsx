@@ -14,7 +14,7 @@ import Link from 'next/link'
 import LeadsView from '@/components/dashboard/LeadsView'
 import BulkConfirmButton from '@/components/dashboard/BulkConfirmButton'
 import StatusFilter from '@/components/dashboard/StatusFilter'
-import AgentStatusToggles from '@/components/dashboard/AgentStatusToggles'
+import PropertyEndListingButton from '@/components/dashboard/PropertyEndListingButton'
 import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
 import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
 import DashboardActions from '@/components/dashboard/DashboardActions'
@@ -249,9 +249,9 @@ export default function DashboardClient({
                                             </div>
                                         </div>
                                         <div className="mt-2 flex items-center gap-2 px-1">
-                                            <AgentStatusToggles 
-                                                propertyId={property.id} 
-                                                currentStatus={property.status} 
+                                            <PropertyEndListingButton
+                                                propertyId={property.id}
+                                                currentStatus={property.status}
                                                 className="flex-1"
                                             />
                                             <div className="flex-1 flex">
@@ -287,7 +287,7 @@ export default function DashboardClient({
                                                         {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold">期限切れ</span>}
                                                         <span className="text-[10px] text-slate-400 font-medium hidden lg:inline">#{property.id.slice(0, 8)}</span>
                                                         <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
-                                                        <AgentStatusToggles propertyId={property.id} currentStatus={property.status} />
+                                                        <PropertyEndListingButton propertyId={property.id} currentStatus={property.status} />
                                                     </div>
                                                     <div className="flex items-center gap-2 mb-1 min-w-0">
                                                         <h4 className="text-sm lg:text-lg font-bold text-navy-secondary truncate min-w-0 flex-1">{property.title}</h4>
