@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import ListingForm from '@/components/property/ListingForm'
-import ListPropertyPlansSection from '@/components/listing/ListPropertyPlansSection'
 
 export default function ListPropertyPage() {
     const [loading, setLoading] = useState(true)
@@ -65,8 +64,6 @@ export default function ListPropertyPage() {
                             <p className="text-slate-500">詳細情報を入力して、物件を公開しましょう。</p>
                         </div>
                     </div>
-
-                    <ListPropertyPlansSection />
 
                     <ListingForm />
                 </div>

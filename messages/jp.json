@@ -805,23 +805,6 @@
         "verified": "認証済み",
         "line_contact_premium_only": "LINEでの直接連絡はプロプラン掲載エージェントのみ表示されます（メール・電話をご利用ください）"
     },
-    "list_property_plans": {
-        "tagline": "タイの成約の鍵",
-        "heading": "選べる2つのプラン",
-        "intro": "日本人・タイ人・欧米のお客様に届く掲載。タイでは LINE が成約につながる重要なチャネルです。プロプランなら公式 LINE 経由の直接問い合わせにも対応できます。",
-        "standard_title": "スタンダード",
-        "standard_price": "無料で掲載開始",
-        "standard_bullet1": "お問い合わせはメールで受け取り・返信",
-        "standard_bullet2": "物件の公開・管理に必要な基本機能",
-        "standard_footer": "物件ページの「LINEで返信を受け取る」オプションはプロプラン掲載エージェントのみに表示されます。",
-        "premium_badge": "おすすめ",
-        "premium_title": "プロプラン",
-        "premium_tagline": "LINE連携・問い合わせはプロプランの機能です。",
-        "premium_bullet1": "LINE での直接問い合わせに対応。顧客の LINE ユーザーID を取得し、公式アカウントから返信しやすい体制が整います。",
-        "premium_bullet2": "メール返信と併用可能",
-        "premium_bullet3": "PDFチラシ・SNSシェアなど上位プラン特典（料金ページで詳細）",
-        "premium_cta": "料金・プロプランの詳細を見る"
-    },
     "agent_settings_line": {
         "title": "物件ページの LINE 問い合わせ",
         "premium_body": "プロプランでは、お客様がスマートフォンから「LINEで返信を受け取る」を選べます。タイでの成約につながる重要なチャネルとして、LINE 経由のスピーディなやり取りが可能です。",
