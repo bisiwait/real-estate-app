@@ -113,11 +113,10 @@ export function DashboardMobilePropertyRow({
                 </div>
             </div>
             <div className="mt-2 flex gap-2 px-1">
-                <div className="flex min-w-0 flex-1 gap-2">
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                     <PropertyEndListingButton
                         propertyId={property.id}
                         currentStatus={property.status}
-                        className="min-w-0 flex-1"
                         onEnded={(id) => patchProperty(id, { status: 'draft' })}
                     />
                     <PropertyRepublishButton

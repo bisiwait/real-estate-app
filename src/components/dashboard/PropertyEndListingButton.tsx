@@ -56,19 +56,19 @@ export default function PropertyEndListingButton({
     }
 
     return (
-        <div className={`flex items-center ${className || ''}`}>
+        <div className={`inline-flex shrink-0 items-center ${className || ''}`}>
             {loading ? (
-                <div className="flex min-h-[2.5rem] w-full items-center justify-center px-3 py-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                </div>
+                <span className="inline-flex items-center justify-center rounded bg-slate-700 px-1.5 py-0.5 ring-1 ring-slate-900/15">
+                    <Loader2 className="h-3 w-3 animate-spin text-white" aria-hidden />
+                </span>
             ) : (
                 <button
                     type="button"
                     onClick={handleEnd}
                     disabled={loading}
-                    className="inline-flex w-full min-h-[2.5rem] items-center justify-center gap-1.5 rounded-xl bg-slate-700 px-4 py-2 text-xs font-bold text-white shadow-md ring-1 ring-slate-900/20 transition hover:bg-slate-800 active:scale-[0.98] sm:text-[11px]"
+                    className="inline-flex items-center gap-0.5 rounded bg-slate-700 px-2 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm ring-1 ring-slate-900/15 transition hover:bg-slate-800 active:scale-[0.98]"
                 >
-                    <CircleStop className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
+                    <CircleStop className="h-2.5 w-2.5 shrink-0 opacity-90" aria-hidden />
                     掲載終了
                 </button>
             )}
