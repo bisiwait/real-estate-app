@@ -52,7 +52,7 @@ export default async function DashboardPage({
         .from('properties')
         .select('*, area:areas(name), project:projects(*, developers(name))')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .order('updated_at', { ascending: false })
 
     // Fetch Inquiries
     const { data: rawInquiries, error: inquiriesError } = await supabase

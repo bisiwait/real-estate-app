@@ -39,7 +39,7 @@ export default function AgentOtherProperties({ agentId, currentPropertyId, agent
                 .eq('user_id', agentId)
                 .in('status', ['published', 'under_negotiation', 'contracted'])
                 .neq('id', currentPropertyId)
-                .order('created_at', { ascending: false })
+                .order('updated_at', { ascending: false })
                 .limit(8)
 
             if (error) {

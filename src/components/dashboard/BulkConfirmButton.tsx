@@ -18,7 +18,9 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
     if (propertyIds.length === 0) return null
 
     const handleBulkConfirm = async () => {
-        const confirmed = window.confirm(`現在公開中の物件（${propertyIds.length}件）をすべて掲載継続にしますか？`)
+        const confirmed = window.confirm(
+            `現在公開中の物件（${propertyIds.length}件）をすべて「掲載更新」しますか？検索一覧では更新日時が新しくなり、先頭付近に並びやすくなります。`
+        )
         if (!confirmed) return
 
         setLoading(true)
@@ -72,7 +74,7 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
                     ? '更新中...'
                     : status === 'success'
                         ? 'すべて更新完了'
-                        : '全ての公開物件を掲載継続'}
+                        : '全ての公開物件を掲載更新'}
             </span>
         </button>
     )

@@ -83,7 +83,7 @@ export async function getRecommendedRentals(limit = 4) {
     .eq('is_approved', true)
     .eq('is_for_rent', true)
     .eq('is_presale', false)
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -116,7 +116,7 @@ export async function getRecommendedSales(limit = 4) {
     .eq('is_approved', true)
     .eq('is_for_sale', true)
     .eq('is_presale', false)
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false })
     .limit(limit);
 
   if (error) {

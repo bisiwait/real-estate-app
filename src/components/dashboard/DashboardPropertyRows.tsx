@@ -31,6 +31,7 @@ export type DashboardPropertyRowProps = {
     profile: any
     lineInquiryCountsByPropertyThisMonth: Record<string, number>
     patchProperty: (id: string, patch: Record<string, unknown>) => void
+    locale: string
 }
 
 export function DashboardMobilePropertyRow({
@@ -38,6 +39,7 @@ export function DashboardMobilePropertyRow({
     profile,
     lineInquiryCountsByPropertyThisMonth,
     patchProperty,
+    locale,
 }: DashboardPropertyRowProps) {
     return (
         <div className="p-3 active:bg-slate-50 transition-colors">
@@ -88,7 +90,7 @@ export function DashboardMobilePropertyRow({
                                 SALE
                             </span>
                         )}
-                        <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
+                        <FreshnessBadge createdAt={property.created_at} locale={locale} />
                     </div>
                     <div className="flex items-start justify-between gap-2">
                         <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2 min-w-0">{property.title}</p>
@@ -140,6 +142,7 @@ export function DashboardDesktopPropertyRow({
     profile,
     lineInquiryCountsByPropertyThisMonth,
     patchProperty,
+    locale,
 }: DashboardPropertyRowProps) {
     return (
         <div className="p-4 lg:p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 lg:gap-6">
@@ -174,7 +177,7 @@ export function DashboardDesktopPropertyRow({
                             <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold">期限切れ</span>
                         )}
                         <span className="text-[10px] text-slate-400 font-medium hidden lg:inline">#{property.id.slice(0, 8)}</span>
-                        <FreshnessBadge lastConfirmedAt={property.last_confirmed_at} createdAt={property.created_at} />
+                        <FreshnessBadge createdAt={property.created_at} locale={locale} />
                         <PropertyEndListingButton
                             propertyId={property.id}
                             currentStatus={property.status}

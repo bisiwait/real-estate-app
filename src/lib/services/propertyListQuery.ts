@@ -149,26 +149,26 @@ function applyPropertyListSort<T extends { order: (...args: any[]) => T }>(query
     const { sort, listingType } = filters
 
     if (sort === 'oldest') {
-        return query.order('created_at', { ascending: true }).order('id', { ascending: true })
+        return query.order('updated_at', { ascending: true }).order('id', { ascending: true })
     }
 
     const wantsPriceSort = sort === 'price_asc' || sort === 'price_desc'
     if (wantsPriceSort && !isPropertyListPriceSortAllowed(listingType)) {
-        return query.order('created_at', { ascending: false }).order('id', { ascending: false })
+        return query.order('updated_at', { ascending: false }).order('id', { ascending: false })
     }
 
     if (wantsPriceSort) {
         const ascending = sort === 'price_asc'
         const o = { ascending }
         if (listingType === 'rent') {
-            return query.order('rent_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
+            return query.order('rent_price', o).order('updated_at', { ascending: false }).order('id', { ascending: false })
         }
         if (listingType === 'sell' || listingType === 'buy') {
-            return query.order('sale_price', o).order('created_at', { ascending: false }).order('id', { ascending: false })
+            return query.order('sale_price', o).order('updated_at', { ascending: false }).order('id', { ascending: false })
         }
     }
 
-    return query.order('created_at', { ascending: false }).order('id', { ascending: false })
+    return query.order('updated_at', { ascending: false }).order('id', { ascending: false })
 }
 
 export async function executePropertyListQuery(

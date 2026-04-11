@@ -72,7 +72,7 @@ export default async function AgentPropertiesPage({ params, searchParams }: { pa
         }
         query = query.order('price', { ascending: false, nullsFirst: false })
     } else {
-        query = query.order('created_at', { ascending: false })
+        query = query.order('updated_at', { ascending: false })
     }
 
     // Temporary Pagination

@@ -1,54 +1,55 @@
 'use client'
 
-import { Clock, CheckCircle2, AlertTriangle, AlertCircle } from 'lucide-react'
-
-interface FreshnessBadgeProps {
-    lastConfirmedAt: string | null
-    createdAt: string
+function dateLocaleForUi(locale: string) {
+    if (locale === 'jp') return 'ja-JP'
+    if (locale === 'th') return 'th-TH'
+    return 'en-US'
 }
 
-export default function FreshnessBadge({ lastConfirmedAt, createdAt }: FreshnessBadgeProps) {
-    const dateToUse = lastConfirmedAt || createdAt
-    const lastDate = new Date(dateToUse)
+const COPY: Record<string, { prefix: string }> = {
+    jp: { prefix: '掲載' },
+    en: { prefix: 'Listed' },
+    th: { prefix: 'ลงประกาศ' },
+}
+
+interface FreshnessBadgeProps {
+    /** 物件レコードの作成日時（掲載開始の目安として表示） */
+    createdAt: string
+    locale?: string
+}
+
+/** 掲載日を表示。掲載から14日以上経過で赤字（掲載更新の促し）。 */
+export default function FreshnessBadge({ createdAt, locale = 'jp' }: FreshnessBadgeProps) {
+    const listing = new Date(createdAt)
     const now = new Date()
-    const diffTime = Math.abs(now.getTime() - lastDate.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const diffMs = now.getTime() - listing.getTime()
+    const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+    const stale = diffDays >= 14
 
-    // 最終更新（確認）から7日以内：「新着/確認済み」（緑色のバッジ）
-    if (diffDays <= 7) {
-        return (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 animate-in fade-in zoom-in duration-300">
-                <CheckCircle2 size={12} />
-                <span className="text-[10px] font-black uppercase tracking-widest">新着/確認済み</span>
-            </div>
-        )
-    }
+    const loc = dateLocaleForUi(locale)
+    const dateLabel = listing.toLocaleDateString(loc, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    })
+    const prefix = COPY[locale]?.prefix ?? COPY.en.prefix
 
-    // 14日以上経過：「要確認」（黄色のバッジ）
-    if (diffDays >= 14 && diffDays < 30) {
-        return (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-100 animate-in fade-in zoom-in duration-300">
-                <AlertTriangle size={12} />
-                <span className="text-[10px] font-black uppercase tracking-widest">要確認</span>
-            </div>
-        )
-    }
-
-    // 30日以上経過：「期限切れ間近/非公開」（赤色のバッジ）
-    if (diffDays >= 30) {
-        return (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 rounded-full border border-red-100 animate-in fade-in zoom-in duration-300">
-                <AlertCircle size={12} />
-                <span className="text-[10px] font-black uppercase tracking-widest">期限切れ間近/非公開</span>
-            </div>
-        )
-    }
-
-    // Between 7 and 14 days - Optional: Stable status or just default badge
     return (
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-500 rounded-full border border-slate-100 animate-in fade-in zoom-in duration-300">
-            <Clock size={12} />
-            <span className="text-[10px] font-black uppercase tracking-widest">掲載中</span>
-        </div>
+        <span
+            className={`inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-widest sm:text-[10px] ${
+                stale
+                    ? 'border-red-200 bg-red-50 text-red-600'
+                    : 'border-slate-200 bg-slate-50 text-slate-600'
+            }`}
+            title={
+                locale === 'jp'
+                    ? '物件の作成日（掲載の目安）です。14日以上経過すると赤字表示になります。'
+                    : undefined
+            }
+        >
+            <span className="truncate normal-case">
+                {prefix} {dateLabel}
+            </span>
+        </span>
     )
 }

@@ -64,7 +64,7 @@ export default function PropertyConfirmButton({ propertyId, title }: PropertyCon
             ) : (
                 <RefreshCw size={16} />
             )}
-            <span>{confirmed ? '更新完了' : '掲載を継続'}</span>
+            <span>{confirmed ? '更新完了' : '掲載更新'}</span>
         </button>
     )
 }

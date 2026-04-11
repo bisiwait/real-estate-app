@@ -54,7 +54,7 @@ export default function AgentProfilePage() {
                     .select('*, area:areas(name, region:regions(name))')
                     .eq('user_id', agentId)
                     .eq('status', 'published')
-                    .order('created_at', { ascending: false })
+                    .order('updated_at', { ascending: false })
                     .limit(4)
                 setProperties(pData || [])
 

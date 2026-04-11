@@ -56,6 +56,8 @@ export default function RelatedProperties({ currentPropertyId, buildingName, pro
                 return
             }
 
+            query = query.order('updated_at', { ascending: false })
+
             const { data, error } = await query
 
             if (error) {
