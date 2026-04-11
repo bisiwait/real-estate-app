@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -36,6 +36,13 @@ const LINE_APP_GUIDE_IMAGES = {
     step3: '/images/line-official-app-guide/step-3-copy-url.png',
 } as const
 
+/** ステップ④：チャット機能ON（設定 → 応答 → チャット）の実画面 */
+const LINE_OFFICIAL_CHAT_MODE_GUIDE_IMAGES = {
+    step1: '/images/line-official-chat-mode-guide/step-1-home-settings.png',
+    step2: '/images/line-official-chat-mode-guide/step-2-settings-response.png',
+    step3: '/images/line-official-chat-mode-guide/step-3-response-chat-on.png',
+} as const
+
 /** 個人LINE・友だち追加URL取得手順の挿絵 */
 const LINE_PERSONAL_FRIEND_URL_IMAGES = {
     step1OpenApp: '/images/line-personal-friend-url-guide/step-1-open-line-app.png',
@@ -48,7 +55,7 @@ const LINE_PERSONAL_FRIEND_URL_IMAGES = {
  * public の PNG を同じファイル名で差し替えても、ブラウザ・CDN が古い内容を返し続けることがある。
  * 挿絵を更新したらこの数字だけ +1 してデプロイすると確実に新画像が読み込まれる。
  */
-const LINE_GUIDE_SCREENSHOT_CACHE = '4'
+const LINE_GUIDE_SCREENSHOT_CACHE = '5'
 
 function guideScreenshotSrc(path: string): string {
     const base = path.split('?')[0]
@@ -88,59 +95,6 @@ function GuideStepScreenshot({
             loading="lazy"
             onError={() => setFailed(true)}
         />
-    )
-}
-
-/** 設定 → 応答設定 → チャットモード の流れ（概念図） */
-function SvgChatModeSettingsFlow() {
-    const id = useId().replace(/:/g, '')
-    return (
-        <svg viewBox="0 0 520 200" className="h-auto w-full max-w-[520px]" role="img" aria-label="設定から応答設定へ進み、チャットモードを選ぶ流れ">
-            <defs>
-                <linearGradient id={`cm-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#fef2f2" />
-                    <stop offset="100%" stopColor="#f1f5f9" />
-                </linearGradient>
-            </defs>
-            <rect width="520" height="200" rx="12" fill={`url(#cm-${id})`} stroke="#fecaca" strokeWidth="1" />
-            <text x="260" y="28" textAnchor="middle" fontSize="12" fill="#991b1b" fontWeight="700" fontFamily="system-ui,sans-serif">
-                LINE公式アカウントアプリ内のイメージ
-            </text>
-            <rect x="24" y="52" width="100" height="72" rx="10" fill="#fff" stroke="#cbd5e1" />
-            <text x="74" y="82" textAnchor="middle" fontSize="10" fill="#64748b" fontFamily="system-ui,sans-serif">
-                ホーム
-            </text>
-            <circle cx="74" cy="108" r="14" fill="#e2e8f0" stroke="#94a3b8" />
-            <text x="74" y="112" textAnchor="middle" fontSize="12" fill="#475569">
-                ⚙
-            </text>
-            <text x="74" y="128" textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="system-ui,sans-serif">
-                設定
-            </text>
-            <text x="140" y="92" fontSize="18" fill="#94a3b8">
-                →
-            </text>
-            <rect x="164" y="52" width="120" height="72" rx="10" fill="#fff" stroke="#06C755" strokeWidth="2" />
-            <text x="224" y="82" textAnchor="middle" fontSize="11" fill="#0f172a" fontWeight="700" fontFamily="system-ui,sans-serif">
-                応答設定
-            </text>
-            <text x="224" y="100" textAnchor="middle" fontSize="8" fill="#64748b" fontFamily="system-ui,sans-serif">
-                応答モード
-            </text>
-            <text x="300" y="92" fontSize="18" fill="#94a3b8">
-                →
-            </text>
-            <rect x="324" y="52" width="172" height="72" rx="10" fill="#ecfdf5" stroke="#06C755" strokeWidth="2" />
-            <text x="410" y="80" textAnchor="middle" fontSize="9" fill="#64748b" fontFamily="system-ui,sans-serif">
-                「ボット」ではなく
-            </text>
-            <text x="410" y="100" textAnchor="middle" fontSize="12" fill="#047857" fontWeight="800" fontFamily="system-ui,sans-serif">
-                「チャット」を選択
-            </text>
-            <text x="260" y="178" textAnchor="middle" fontSize="10" fill="#b91c1c" fontWeight="700" fontFamily="system-ui,sans-serif">
-                ※ アプリの表示はバージョンにより異なる場合があります
-            </text>
-        </svg>
     )
 }
 
@@ -508,22 +462,43 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
                                         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden />
                                         {ui.official_step4_warning}
                                     </p>
-                                    <ol className="list-decimal space-y-2.5 pl-5 text-sm font-medium leading-relaxed text-slate-800">
-                                        <li>
+                                    <ol className="list-decimal space-y-5 pl-5 text-sm font-medium leading-relaxed text-slate-800">
+                                        <li className="space-y-3">
                                             <span className="flex gap-2.5">
                                                 <Settings className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
-                                                <span className="min-w-0 flex-1 font-bold leading-relaxed text-navy-secondary">{ui.official_step4_li1}</span>
+                                                <span className="min-w-0 flex-1 font-bold leading-relaxed text-navy-secondary">
+                                                    {ui.official_step4_li1}
+                                                </span>
                                             </span>
+                                            <GuideStepScreenshot
+                                                src={LINE_OFFICIAL_CHAT_MODE_GUIDE_IMAGES.step1}
+                                                alt={ui.official_step4_img_alt_1}
+                                                missingTitle={ui.guide_image_missing_title}
+                                                missingHelp={ui.guide_image_missing_help}
+                                            />
                                         </li>
-                                        <li>{ui.official_step4_li2}</li>
-                                        <li>
-                                            {ui.official_step4_li3}
-                                            <MessageCircle className="ml-1 inline h-4 w-4 text-[#06C755] align-text-bottom" aria-hidden />
+                                        <li className="space-y-3">
+                                            <span className="font-bold leading-relaxed text-navy-secondary">{ui.official_step4_li2}</span>
+                                            <GuideStepScreenshot
+                                                src={LINE_OFFICIAL_CHAT_MODE_GUIDE_IMAGES.step2}
+                                                alt={ui.official_step4_img_alt_2}
+                                                missingTitle={ui.guide_image_missing_title}
+                                                missingHelp={ui.guide_image_missing_help}
+                                            />
+                                        </li>
+                                        <li className="space-y-3">
+                                            <span className="font-bold leading-relaxed text-navy-secondary">
+                                                {ui.official_step4_li3}
+                                                <MessageCircle className="ml-1 inline h-4 w-4 text-[#06C755] align-text-bottom" aria-hidden />
+                                            </span>
+                                            <GuideStepScreenshot
+                                                src={LINE_OFFICIAL_CHAT_MODE_GUIDE_IMAGES.step3}
+                                                alt={ui.official_step4_img_alt_3}
+                                                missingTitle={ui.guide_image_missing_title}
+                                                missingHelp={ui.guide_image_missing_help}
+                                            />
                                         </li>
                                     </ol>
-                                    <div className="overflow-hidden rounded-xl border border-red-100 bg-white p-2">
-                                        <SvgChatModeSettingsFlow />
-                                    </div>
                                 </section>
                             </>
                         )}

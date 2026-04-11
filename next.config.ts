@@ -54,6 +54,10 @@ const nextConfig: NextConfig = {
         source: "/images/line-personal-friend-url-guide/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
       },
+      {
+        source: "/images/line-official-chat-mode-guide/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
     ];
   },
   async redirects() {
