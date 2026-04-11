@@ -43,6 +43,19 @@ function legacyHostRedirects(): Array<{
 }
 
 const nextConfig: NextConfig = {
+  /** LINE 手順の挿絵は同名差し替えが多いため、CDN の長期キャッシュを避ける */
+  async headers() {
+    return [
+      {
+        source: "/images/line-official-app-guide/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/images/line-personal-friend-url-guide/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+    ];
+  },
   async redirects() {
     return [
       ...legacyHostRedirects(),
