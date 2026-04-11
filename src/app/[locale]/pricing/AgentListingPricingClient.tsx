@@ -226,7 +226,6 @@ export default function AgentListingPricingClient({
     ] as const;
 
     const proHighlights = [
-        { icon: MessageCircle, title: p.pro_benefit_line_title, desc: p.pro_benefit_line_desc },
         { icon: Building2, title: p.pro_benefit_presale_title, desc: p.pro_benefit_presale_desc },
         { icon: Sparkles, title: p.pro_benefit_ai_title, desc: p.pro_benefit_ai_desc },
         { icon: FileText, title: p.pro_benefit_pdf_title, desc: p.pro_benefit_pdf_desc },
@@ -372,12 +371,25 @@ export default function AgentListingPricingClient({
                                 <span className="text-5xl font-black text-navy-secondary">{p.plan_free_price}</span>
                                 <span className="font-bold text-slate-500">（{p.plan_free_price_note}）</span>
                             </div>
+                            <div className="mb-6 rounded-2xl border border-[#06C755]/25 bg-emerald-500/[0.08] p-4 shadow-sm">
+                                <div className="flex gap-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#06C755] text-white shadow-sm">
+                                        <MessageCircle className="h-5 w-5" aria-hidden />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h4 className="text-sm font-black text-navy-secondary">{p.free_benefit_line_title}</h4>
+                                        <p className="mt-1 text-[12px] font-medium leading-relaxed text-slate-600 md:text-[13px]">
+                                            {p.free_benefit_line_desc}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                             <div className="mb-10 flex-1 space-y-4">
                                 <FeatureRow label={p.feat_unlimited_listings} value={p.feat_unlimited_listings_free} />
                                 <FeatureRow label={p.feat_priority} value={p.feat_priority_free} muted />
                                 <FeatureRow label={p.feat_inquiry} value={p.feat_included} />
                                 <FeatureRow label={p.feat_profile} value={p.feat_included} />
-                                <FeatureRow label={p.feat_line} value={p.feat_not_included} muted />
+                                <FeatureRow label={p.feat_line} value={p.feat_included} />
                                 <FeatureRow label={p.feat_ai} value={p.feat_not_included} muted />
                                 <FeatureRow label={p.feat_presale} value={p.feat_not_included} muted />
                                 <FeatureRow label={p.feat_pdf} value={p.feat_not_included} muted />
@@ -552,7 +564,7 @@ export default function AgentListingPricingClient({
                                 />
                                 <CmpRow label={p.row_inquiry} free={true} premium={true} />
                                 <CmpRow label={p.row_profile} free={true} premium={true} />
-                                <CmpRow label={p.row_line} free={false} premium={true} />
+                                <CmpRow label={p.row_line} free={true} premium={true} />
                                 <CmpRow
                                     label={p.row_ai}
                                     labelDesktop={p.row_ai_desktop}

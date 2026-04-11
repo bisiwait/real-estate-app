@@ -1,7 +1,5 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
-import { isPremiumActive } from '@/lib/utils/plan'
-import { getAgentsPageLineGateCopy } from '@/lib/i18n/locale-plans-copy'
 import { notFound, useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
@@ -78,9 +76,7 @@ export default function AgentProfilePage() {
     if (!agent) return notFound()
 
     const agentLineContactVisible =
-        agent.show_line_in_inquiry !== false &&
-        Boolean(agent.line_id?.toString().trim()) &&
-        isPremiumActive(agent)
+        agent.show_line_in_inquiry !== false && Boolean(agent.line_id?.toString().trim())
 
     const languages = ['日本語', 'English', 'ภาษาไทย']
     const areas = ['パタヤ', 'ジョムティエン', 'シラチャ']
@@ -134,10 +130,6 @@ export default function AgentProfilePage() {
                                         icon={MessageCircle}
                                         color="emerald"
                                     />
-                                ) : agent.show_line_in_inquiry !== false && agent.line_id ? (
-                                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-xs font-bold text-slate-500">
-                                        {getAgentsPageLineGateCopy(locale)}
-                                    </div>
                                 ) : null}
                                 {agent.phone && agent.show_phone_in_inquiry !== false ? (
                                     <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />

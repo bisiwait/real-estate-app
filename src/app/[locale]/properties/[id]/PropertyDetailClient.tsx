@@ -23,7 +23,7 @@ import {
     replaceLineInquiryUrlPrefill,
     resolveLinePropertyTitle,
 } from '@/lib/line-oa-message-inquiry-url'
-import { isPremium, isPremiumActive } from '@/lib/utils/plan'
+import { isPremium } from '@/lib/utils/plan'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -101,16 +101,6 @@ export default function PropertyDetailClient({
     const titleTranslateAttemptKey = useRef<string>('')
 
     const viewerHasPremium = isPremium(profile)
-
-    const ownerPremiumLineInquiry = useMemo(() => {
-        if (!agent) return false
-        return isPremiumActive({
-            plan: agent.plan,
-            plan_type: agent.plan_type,
-            current_period_end: agent.current_period_end,
-            is_admin: agent.is_admin,
-        })
-    }, [agent])
 
     /** サーバー URL とクライアント取得の profiles を突き合わせ、連携オフ／未設定ならボタンを出さない */
     const effectiveLineInquiryUrl = useMemo(() => {
@@ -420,7 +410,6 @@ export default function PropertyDetailClient({
                                 contactPrefill={contactPrefill}
                                 officialLineAddFriendUrl={resolvedLineInquiryUrl}
                                 propertyPageUrl={clientPageHref ?? propertyDetailPageUrl}
-                                ownerPremiumLineInquiry={ownerPremiumLineInquiry}
                             />
                         </div>
                     </div>

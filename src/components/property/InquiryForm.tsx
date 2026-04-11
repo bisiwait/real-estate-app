@@ -106,7 +106,6 @@ interface InquiryFormProps {
   officialLineAddFriendUrl: string
   /** クリップボード用テンプレートの {propertyUrl} に使う（正規の物件ページ URL） */
   propertyPageUrl: string
-  ownerPremiumLineInquiry?: boolean
 }
 
 export default function InquiryForm({
