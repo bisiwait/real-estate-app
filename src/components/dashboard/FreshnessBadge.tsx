@@ -28,14 +28,9 @@ interface FreshnessBadgeProps {
     locale?: string
 }
 
-/** 掲載日・更新日を表示。掲載から14日以上経過で赤字（掲載更新の促し）。 */
+/** 掲載日・更新日を表示（周辺の補助テキストと同系色）。 */
 export default function FreshnessBadge({ createdAt, updatedAt, locale = 'jp' }: FreshnessBadgeProps) {
     const listing = new Date(createdAt)
-    const now = new Date()
-    const diffMs = now.getTime() - listing.getTime()
-    const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
-    const stale = diffDays >= 14
-
     const loc = dateLocaleForUi(locale)
     const listedLabel = formatDay(listing, loc)
 
@@ -46,21 +41,17 @@ export default function FreshnessBadge({ createdAt, updatedAt, locale = 'jp' }: 
 
     return (
         <span
-            className={`inline-flex max-w-full flex-col gap-0.5 rounded-lg border px-2 py-1 text-[9px] font-black leading-tight sm:text-[10px] ${
-                stale
-                    ? 'border-red-200 bg-red-50 text-red-600'
-                    : 'border-slate-200 bg-slate-50 text-slate-600'
-            }`}
+            className="inline-flex max-w-full flex-col gap-0.5 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-black leading-tight text-slate-600 sm:text-[10px]"
             title={
                 locale === 'jp'
-                    ? '掲載日は物件作成日の目安です。14日以上経過すると赤字になります。更新日は最終更新（編集・掲載更新など）の日時です。'
+                    ? '掲載日は物件作成日の目安です。更新日は最終更新（編集・掲載更新など）の日時です。'
                     : undefined
             }
         >
             <span className="normal-case">
                 {listed} {listedLabel}
             </span>
-            <span className="normal-case font-bold opacity-90">
+            <span className="normal-case font-bold">
                 {updated} {updatedLabel}
             </span>
         </span>
