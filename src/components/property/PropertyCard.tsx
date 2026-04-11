@@ -75,16 +75,6 @@ export default function PropertyCard({
             <div
                 className={`pointer-events-none absolute top-4 left-4 ${badgeRightClass} flex flex-wrap gap-2 overflow-hidden max-h-[60px]`}
             >
-                {property.status === 'contracted' && (
-                    <span className="bg-purple-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
-                        {dict.property.contracted}
-                    </span>
-                )}
-                {property.status === 'under_negotiation' && (
-                    <span className="bg-blue-600 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-lg tracking-widest uppercase">
-                        {dict.property.under_negotiation}
-                    </span>
-                )}
                 {property.is_presale && (
                     <span className="bg-amber-500 text-white text-[10px] font-normal px-2 py-1 rounded-md shadow-sm tracking-wider shrink-0">
                         {dict.property.presale}

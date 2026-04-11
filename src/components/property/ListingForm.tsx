@@ -1247,16 +1247,13 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                 value={formData.status}
                                 onChange={e => setFormData({ ...formData, status: e.target.value })}
                                 className="w-full md:w-1/2 px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold disabled:opacity-50"
-                                disabled={!isAdmin && !['published', 'under_negotiation', 'contracted'].includes(initialData?.status)}
+                                disabled={!isAdmin && !['published'].includes(initialData?.status)}
                             >
                                 <option value="draft">下書き (Draft)</option>
                                 <option value="pending">承認待ち (Pending)</option>
                                 <option value="published">公開中 (Published)</option>
-                                <option value="under_negotiation">商談中 (Under Negotiation)</option>
-                                <option value="contracted">成約済 (Contracted)</option>
-                                <option value="expired">期限切れ (Expired)</option>
                             </select>
-                            {!isAdmin && !['published', 'under_negotiation', 'contracted'].includes(initialData?.status) && (
+                            {!isAdmin && !['published'].includes(initialData?.status) && (
                                 <p className="text-xs text-amber-500 mt-2 ml-1">承認前のためステータスは変更できません。</p>
                             )}
                         </div>

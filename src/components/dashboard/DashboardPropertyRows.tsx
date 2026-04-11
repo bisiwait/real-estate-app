@@ -62,15 +62,6 @@ export function DashboardMobilePropertyRow({
                         {property.status === 'draft' && (
                             <span className="bg-slate-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">下書</span>
                         )}
-                        {property.status === 'under_negotiation' && (
-                            <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">商談</span>
-                        )}
-                        {property.status === 'contracted' && (
-                            <span className="bg-purple-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">成約</span>
-                        )}
-                        {property.status === 'expired' && (
-                            <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">期限切</span>
-                        )}
                     </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -170,15 +161,6 @@ export function DashboardDesktopPropertyRow({
                         )}
                         {property.status === 'draft' && (
                             <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">下書き</span>
-                        )}
-                        {property.status === 'under_negotiation' && (
-                            <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-bold">商談中</span>
-                        )}
-                        {property.status === 'contracted' && (
-                            <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px] font-bold">成約済</span>
-                        )}
-                        {property.status === 'expired' && (
-                            <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold">期限切れ</span>
                         )}
                         <span className="text-[10px] text-slate-400 font-medium hidden lg:inline">#{property.id.slice(0, 8)}</span>
                         <FreshnessBadge

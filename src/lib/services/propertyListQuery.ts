@@ -90,7 +90,7 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
                 `,
             { count: 'exact' }
         )
-        .in('status', ['published', 'under_negotiation', 'contracted'])
+        .eq('status', 'published')
         .eq('is_approved', true)
 
     if (selectedCity) {

@@ -12,7 +12,7 @@ interface PropertyEndListingButtonProps {
     onEnded?: (propertyId: string) => void
 }
 
-/** 公開中・商談中・成約済の物件をサイト上から非表示（下書き）にする */
+/** 公開中の物件をサイト上から非表示（下書き）にする */
 export default function PropertyEndListingButton({
     propertyId,
     currentStatus,
@@ -23,7 +23,7 @@ export default function PropertyEndListingButton({
     const router = useRouter()
     const supabase = createClient()
 
-    const canEnd = ['published', 'under_negotiation', 'contracted'].includes(currentStatus)
+    const canEnd = currentStatus === 'published'
     if (!canEnd) return null
 
     const handleEnd = async () => {

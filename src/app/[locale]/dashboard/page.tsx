@@ -115,7 +115,7 @@ export default async function DashboardPage({
 
     const stats = {
         total: properties?.length || 0,
-        published: properties?.filter(p => p.status === 'published' || p.status === 'under_negotiation' || p.status === 'contracted').length || 0,
+        published: properties?.filter(p => p.status === 'published').length || 0,
         unreadInquiries: inquiries?.filter(i => !i.is_read).length || 0,
     }
 
@@ -215,12 +215,12 @@ export default async function DashboardPage({
                                     </div>
                                     <span className="text-lg font-black">{properties?.filter(p => p.status === 'pending').length || 0}</span>
                                 </div>
-                                <div className="flex items-center justify-between p-3 rounded-2xl bg-red-50 text-red-600">
+                                <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-slate-600">
                                     <div className="flex items-center space-x-3">
                                         <AlertCircle className="w-5 h-5" />
-                                        <span className="text-sm font-bold">期限切れ等</span>
+                                        <span className="text-sm font-bold">下書き</span>
                                     </div>
-                                    <span className="text-lg font-black">{(properties?.filter(p => p.status === 'expired').length || 0) + (properties?.filter(p => p.status === 'draft').length || 0)}</span>
+                                    <span className="text-lg font-black">{properties?.filter(p => p.status === 'draft').length || 0}</span>
                                 </div>
                             </div>
                         </div>

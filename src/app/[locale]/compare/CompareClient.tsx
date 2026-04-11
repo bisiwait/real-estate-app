@@ -187,7 +187,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
         `
                 )
                 .in("id", ids)
-                .in("status", ["published", "under_negotiation", "contracted"]);
+                .eq("status", "published");
 
             if (cancelled) return;
 

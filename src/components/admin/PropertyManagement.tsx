@@ -27,7 +27,7 @@ export default function AdminPropertyManagement() {
     const [selectedUsers, setSelectedUsers] = useState<Record<string, string>>({})
     const [selectedStatuses, setSelectedStatuses] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'expired'>('all')
+    const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'draft'>('all')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const supabase = createClient()
 
@@ -97,7 +97,7 @@ export default function AdminPropertyManagement() {
         fetchProperties()
     }, [])
 
-    const handleAction = async (id: string, action: 'approve' | 'reject' | 'delete' | 'expire' | 'restore') => {
+    const handleAction = async (id: string, action: 'approve' | 'reject' | 'delete' | 'restore') => {
         if (action === 'delete') {
             if (!confirm('削除しますか？この処理をすると戻せません。')) return
         }
@@ -112,9 +112,6 @@ export default function AdminPropertyManagement() {
             } else if (action === 'reject') {
                 // "Hide" action: set to draft and unapprove
                 await supabase.from('properties').update({ is_approved: false, status: 'draft' }).eq('id', id)
-            } else if (action === 'expire') {
-                // "Expire" action: keep approved but set status to expired
-                await supabase.from('properties').update({ status: 'expired' }).eq('id', id)
             } else if (action === 'delete') {
                 await supabase.from('properties').delete().eq('id', id)
             }
@@ -152,7 +149,7 @@ export default function AdminPropertyManagement() {
         setLoading(true)
         try {
             const updates: any = { status: newStatus }
-            if (['published', 'under_negotiation', 'contracted'].includes(newStatus)) {
+            if (newStatus === 'published') {
                 updates.is_approved = true
             } else if (newStatus === 'draft') {
                 updates.is_approved = false
@@ -178,7 +175,7 @@ export default function AdminPropertyManagement() {
         let tabMatch = true;
         if (filter === 'pending') tabMatch = !p.is_approved || p.status === 'pending'
         else if (filter === 'active') tabMatch = p.is_approved && p.status === 'published'
-        else if (filter === 'expired') tabMatch = p.status === 'expired'
+        else if (filter === 'draft') tabMatch = p.status === 'draft'
 
         // Search Query Match
         let searchMatch = true;
@@ -262,10 +259,10 @@ export default function AdminPropertyManagement() {
                                 公開中
                             </button>
                             <button
-                                onClick={() => setFilter('expired')}
-                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'expired' ? 'bg-red-500 text-white shadow-sm' : 'text-slate-500 hover:text-red-500'}`}
+                                onClick={() => setFilter('draft')}
+                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'draft' ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
-                                期限切れ
+                                下書き
                             </button>
                         </div>
                     </div>
@@ -315,9 +312,6 @@ export default function AdminPropertyManagement() {
                                             {property.status === 'published' && <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-black">公開中</span>}
                                             {property.status === 'pending' && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[8px] font-black">承認待ち</span>}
                                             {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[8px] font-black">下書き</span>}
-                                            {property.status === 'expired' && <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[8px] font-black">期限切れ</span>}
-                                            {property.status === 'under_negotiation' && <span className="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[8px] font-black">商談中</span>}
-                                            {property.status === 'contracted' && <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[8px] font-black">成約済</span>}
                                         </div>
                                         <p className="text-sm font-black text-navy-secondary truncate">{property.title}</p>
                                         <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -368,9 +362,6 @@ export default function AdminPropertyManagement() {
                                                 <option value="draft">下書き</option>
                                                 <option value="pending">承認待ち</option>
                                                 <option value="published">公開中</option>
-                                                <option value="under_negotiation">商談中</option>
-                                                <option value="contracted">成約済</option>
-                                                <option value="expired">期限切れ</option>
                                             </select>
                                             <button
                                                 onClick={() => handleStatusChange(property.id, currentStatus)}
@@ -424,9 +415,6 @@ export default function AdminPropertyManagement() {
                                             <option value="draft">下書き</option>
                                             <option value="pending">承認待ち</option>
                                             <option value="published">公開中</option>
-                                            <option value="under_negotiation">商談中</option>
-                                            <option value="contracted">成約済</option>
-                                            <option value="expired">期限切れ</option>
                                         </select>
                                         <button
                                             onClick={() => handleStatusChange(property.id, currentStatus)}

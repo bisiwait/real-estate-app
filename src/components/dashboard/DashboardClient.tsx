@@ -12,7 +12,7 @@ import {
     DashboardDesktopPropertyRow,
 } from '@/components/dashboard/DashboardPropertyRows'
 
-const SITE_VISIBLE_STATUSES = ['published', 'under_negotiation', 'contracted'] as const
+const SITE_VISIBLE_STATUSES = ['published'] as const
 
 interface DashboardClientProps {
     initialTab: string
@@ -109,7 +109,7 @@ export default function DashboardClient({
 
     const stats = {
         total: properties?.length || 0,
-        published: properties?.filter(p => p.status === 'published' || p.status === 'under_negotiation' || p.status === 'contracted').length || 0,
+        published: properties?.filter(p => p.status === 'published').length || 0,
         unreadInquiries: inquiries?.filter(i => !i.is_read).length || 0,
     }
 

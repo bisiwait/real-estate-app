@@ -41,7 +41,7 @@ export default function RelatedProperties({ currentPropertyId, buildingName, pro
                     )
                 `)
                 .neq('id', currentPropertyId)
-                .in('status', ['published', 'under_negotiation', 'contracted'])
+                .eq('status', 'published')
                 .limit(6)
 
             // Match by building_name or project_name

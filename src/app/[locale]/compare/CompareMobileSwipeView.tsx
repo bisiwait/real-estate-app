@@ -60,16 +60,6 @@ function MobileCompareImageBadges({ property: p, dict }: { property: any; dict: 
     const d = dict.property || {};
     return (
         <div className="pointer-events-none absolute left-2 top-2 right-2 z-10 flex max-h-10 flex-wrap gap-1 overflow-hidden">
-            {p.status === "contracted" && (
-                <span className="rounded-md bg-purple-600 px-1.5 py-0.5 text-[8px] font-normal uppercase tracking-wider text-white shadow-md">
-                    {d.contracted}
-                </span>
-            )}
-            {p.status === "under_negotiation" && (
-                <span className="rounded-md bg-blue-600 px-1.5 py-0.5 text-[8px] font-normal uppercase tracking-wider text-white shadow-md">
-                    {d.under_negotiation}
-                </span>
-            )}
             {p.is_presale && (
                 <span className="shrink-0 rounded-md bg-amber-500 px-1.5 py-0.5 text-[8px] font-normal tracking-wide text-white shadow-sm">
                     {d.presale}
