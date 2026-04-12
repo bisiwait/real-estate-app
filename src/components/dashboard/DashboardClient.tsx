@@ -183,12 +183,8 @@ export default function DashboardClient({
                 ) : tab === 'properties' ? (
                     <>
                         <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-2">
                                 <h3 className="text-lg sm:text-xl font-black text-navy-secondary">登録物件一覧</h3>
-                                <p className="text-[10px] font-medium leading-snug text-slate-500 max-w-xl">
-                                    各行の LINE バッジは、その物件の問い合わせ導線の「今月」（日本時間・1日0時以降）の件数です。
-                                    「掲載更新」で一覧の更新日時が今に近づき、サイト上の物件検索では更新が新しい順の先頭付近に並びやすくなります。
-                                </p>
                                 <BulkConfirmButton
                                     propertyIds={liveFiltered
                                         .filter((p) => p.status === 'published')
