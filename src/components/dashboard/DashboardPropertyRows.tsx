@@ -125,7 +125,6 @@ export function DashboardMobilePropertyRow({
                         propertyId={property.id}
                         currentStatus={property.status}
                         isApproved={!!property.is_approved}
-                        className="min-w-0 flex-1"
                         onRepublished={(id, newStatus) => patchProperty(id, { status: newStatus })}
                     />
                 </div>

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2 } from 'lucide-react'
+import { Loader2, RotateCw } from 'lucide-react'
 
 interface PropertyRepublishButtonProps {
     propertyId: string
@@ -56,18 +56,19 @@ export default function PropertyRepublishButton({
     }
 
     return (
-        <div className={`flex items-center ${className || ''}`}>
+        <div className={`inline-flex shrink-0 items-center ${className || ''}`}>
             {loading ? (
-                <div className="flex min-h-[2.5rem] min-w-[5rem] items-center justify-center px-3 py-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
-                </div>
+                <span className="inline-flex items-center justify-center rounded bg-emerald-600 px-1.5 py-0.5 ring-1 ring-emerald-700/20">
+                    <Loader2 className="h-3 w-3 animate-spin text-white" aria-hidden />
+                </span>
             ) : (
                 <button
                     type="button"
                     onClick={handleRepublish}
                     disabled={loading}
-                    className="inline-flex w-full min-h-[2.5rem] items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md ring-1 ring-emerald-700/20 transition hover:bg-emerald-700 active:scale-[0.98] sm:text-[11px]"
+                    className="inline-flex items-center gap-0.5 rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold leading-none text-white shadow-sm ring-1 ring-emerald-700/20 transition hover:bg-emerald-700 active:scale-[0.98]"
                 >
+                    <RotateCw className="h-2.5 w-2.5 shrink-0 opacity-90" aria-hidden />
                     {isApproved ? '再公開する' : '公開を申請'}
                 </button>
             )}
