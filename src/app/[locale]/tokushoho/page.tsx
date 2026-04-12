@@ -182,7 +182,7 @@ export default async function TokushohoPage({ params }: { params: Promise<{ loca
                                     >
                                         {row.label}
                                     </th>
-                                    <td className="px-4 py-3.5 font-medium leading-relaxed text-slate-600 md:px-6 md:py-4">
+                                    <td className="whitespace-pre-line px-4 py-3.5 font-medium leading-relaxed text-slate-600 md:px-6 md:py-4">
                                         {row.value}
                                     </td>
                                 </tr>
