@@ -13,15 +13,12 @@ import {
     Home,
     CheckCircle,
     Globe,
-    Building2,
-    Bath,
-    Layers,
-    ArrowRight,
     ChevronRight,
     RefreshCw
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
+import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 
 
 export default function AgentProfilePage() {
@@ -212,7 +209,12 @@ function PropertyCard({ property, locale }: { property: any; locale: string }) {
             className="group block bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all overflow-hidden"
         >
             <div className="relative aspect-[4/3] bg-slate-50 overflow-hidden">
-                {property.images?.[0] ? <Image src={property.images[0]} alt={property.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="absolute inset-0 flex items-center justify-center"><Building2 className="opacity-20" /></div>}
+                <PropertyThumbnail
+                    src={property.images?.[0]}
+                    alt={property.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
             </div>
             <div className="p-6">
                 <h3 className="font-normal text-navy-secondary text-base line-clamp-2 mb-4 group-hover:text-navy-primary transition-colors">{property.title}</h3>

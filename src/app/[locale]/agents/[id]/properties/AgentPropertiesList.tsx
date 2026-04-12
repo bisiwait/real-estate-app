@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
+import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 
 interface AgentPropertiesListProps {
     dict: any
@@ -207,19 +208,12 @@ export default function AgentPropertiesList({
                             {properties.map(property => (
                                 <Link key={property.id} href={`/${locale}/properties/${property.id}`} className="group block bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all overflow-hidden relative flex flex-col h-full">
                                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-50 shrink-0">
-                                        {property.images && property.images.length > 0 ? (
-                                            <Image
-                                                src={property.images[0]}
-                                                alt={property.title}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
-                                        ) : (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 gap-2">
-                                                <Building2 className="w-8 h-8 opacity-20" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
-                                            </div>
-                                        )}
+                                        <PropertyThumbnail
+                                            src={property.images?.[0]}
+                                            alt={property.title}
+                                            fill
+                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
 
                                         <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
                                             {property.is_for_sale && <span className="text-[10px] font-black bg-white/95 text-navy-primary px-3 py-1.5 rounded-lg shadow-sm uppercase backdrop-blur-sm tracking-widest">売買</span>}
