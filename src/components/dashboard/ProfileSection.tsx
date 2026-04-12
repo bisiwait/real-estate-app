@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { User, Mail, Phone, Pencil } from "lucide-react";
+import { resolveAvatarUrl } from "@/lib/property-image-url";
 
 interface ProfileSectionProps {
     user: any;
@@ -11,6 +12,7 @@ interface ProfileSectionProps {
 }
 
 export default function ProfileSection({ user, profile, dict, locale }: ProfileSectionProps & { dict: any }) {
+    const avatarSrc = resolveAvatarUrl(profile?.avatar_url);
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -19,8 +21,8 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
         >
             <div className="flex flex-col md:flex-row items-center gap-10">
                 <div className="w-32 h-32 bg-slate-100 rounded-3xl flex items-center justify-center border-4 border-white shadow-xl overflow-hidden shrink-0">
-                    {profile?.avatar_url ? (
-                        <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+                    {avatarSrc ? (
+                        <img src={avatarSrc} alt={profile.full_name} className="w-full h-full object-cover" />
                     ) : (
                         <User className="w-16 h-16 text-slate-300" />
                     )}

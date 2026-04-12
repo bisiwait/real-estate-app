@@ -15,6 +15,7 @@ import {
     Loader2
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
+import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
 
 interface AgentPropertiesListProps {
     dict: any
@@ -95,6 +96,7 @@ export default function AgentPropertiesList({
     }
 
     const refreshingLabel = dict?.property?.refreshing_results ?? '結果を更新中…'
+    const avatarSrc = resolveAvatarUrl(agent.avatar_url)
 
     return (
         <div className="bg-slate-50 min-h-screen">
@@ -110,9 +112,16 @@ export default function AgentPropertiesList({
                                 プロフィールに戻る
                             </Link>
                             <div className="flex items-center gap-4">
-                                {agent.avatar_url && (
+                                {avatarSrc && (
                                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
-                                        <Image src={agent.avatar_url} alt={agent.full_name || ''} width={48} height={48} className="object-cover w-full h-full" />
+                                        <Image
+                                            src={avatarSrc}
+                                            alt={agent.full_name || ''}
+                                            width={48}
+                                            height={48}
+                                            className="object-cover w-full h-full"
+                                            unoptimized={isSupabaseStorageHttpUrl(avatarSrc)}
+                                        />
                                     </div>
                                 )}
                                 <div>

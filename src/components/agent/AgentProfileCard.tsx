@@ -5,6 +5,7 @@ import { Phone, MessageCircle, User, ChevronRight, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
 
 export default function AgentProfileCard({ agentId, dict, locale }: { agentId: string, dict: any, locale: string }) {
     const [agent, setAgent] = useState<any>(null)
@@ -25,6 +26,7 @@ export default function AgentProfileCard({ agentId, dict, locale }: { agentId: s
 
     const title = dict.common.senior_agent || 'Senior Agent'
     const languages = [dict.common.jp, dict.common.en, dict.common.th]
+    const avatarSrc = resolveAvatarUrl(agent.avatar_url)
 
     return (
         <div className="bg-white rounded-[2rem] p-5 sm:p-6 md:p-8 shadow-xl border border-slate-100 flex-shrink-0">
@@ -32,8 +34,15 @@ export default function AgentProfileCard({ agentId, dict, locale }: { agentId: s
 
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 sm:mb-8 text-center sm:text-left">
                 <div className="w-20 h-20 sm:w-16 sm:h-16 bg-navy-primary/10 rounded-full flex items-center justify-center overflow-hidden shrink-0 border-2 border-slate-100">
-                    {agent.avatar_url ? (
-                        <Image src={agent.avatar_url} alt={agent.full_name || 'Agent'} width={64} height={64} className="object-cover w-full h-full" />
+                    {avatarSrc ? (
+                        <Image
+                            src={avatarSrc}
+                            alt={agent.full_name || 'Agent'}
+                            width={64}
+                            height={64}
+                            className="object-cover w-full h-full"
+                            unoptimized={isSupabaseStorageHttpUrl(avatarSrc)}
+                        />
                     ) : (
                         <User className="w-8 h-8 text-navy-primary" />
                     )}

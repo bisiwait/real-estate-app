@@ -1,6 +1,21 @@
 /** 物件カード等で画像が無い・壊れているときのローカルプレースホルダー（必ずリポジトリに含める） */
 export const PROPERTY_PLACEHOLDER_IMAGE = '/images/placeholder-property.svg'
 
+const PROPERTY_IMAGES_BUCKET = 'property-images'
+const AVATARS_STORAGE_BUCKET = 'avatars'
+
+/** Next/Image で Supabase Storage 外部 URL をそのまま最適化しない（ホスト差し替え時の挙動安定化） */
+export function isSupabaseStorageHttpUrl(u: string): boolean {
+    return /^https?:\/\//i.test(u) && /supabase\.(co|in)\//i.test(u)
+}
+
+function normalizeSupabaseHttpToHttps(s: string): string {
+    if (s.startsWith('http://') && /\.supabase\.(co|in)(\/|$)/i.test(s)) {
+        return `https://${s.slice('http://'.length)}`
+    }
+    return s
+}
+
 /**
  * 一覧・カード用の画像 URL を整える。
  * - 空・空白のみ → プレースホルダー
@@ -10,17 +25,22 @@ export function normalizePropertyImageSrc(raw: unknown): string {
     if (raw == null) return PROPERTY_PLACEHOLDER_IMAGE
     const s = String(raw).trim()
     if (!s) return PROPERTY_PLACEHOLDER_IMAGE
-    if (s.startsWith('http://') && /\.supabase\.(co|in)(\/|$)/i.test(s)) {
-        return `https://${s.slice('http://'.length)}`
-    }
-    return s
+    return normalizeSupabaseHttpToHttps(s)
 }
 
-const PROPERTY_IMAGES_BUCKET = 'property-images'
+function getSupabasePublicBase(storageBaseOverride?: string): string {
+    return (
+        typeof storageBaseOverride === 'string' && storageBaseOverride.trim()
+            ? storageBaseOverride.trim()
+            : typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+              ? process.env.NEXT_PUBLIC_SUPABASE_URL.trim()
+              : ''
+    ).replace(/\/$/, '')
+}
 
 /** public バケットのオブジェクト URL から object key を取り出す（別プロジェクト ref の古い URL を現行 Supabase に寄せるため） */
-function extractPublicPropertyImageObjectKey(url: string): string | null {
-    const marker = `/storage/v1/object/public/${PROPERTY_IMAGES_BUCKET}/`
+function extractPublicStorageObjectKey(url: string, bucket: string): string | null {
+    const marker = `/storage/v1/object/public/${bucket}/`
     const idx = url.toLowerCase().indexOf(marker.toLowerCase())
     if (idx < 0) return null
     let key = url.slice(idx + marker.length)
@@ -34,11 +54,15 @@ function extractPublicPropertyImageObjectKey(url: string): string | null {
  * DB に旧 Supabase のホストで保存された public URL が残っていても、
  * 現在の NEXT_PUBLIC_SUPABASE_URL 配下の同じ object key に差し替える。
  */
-function rewriteSupabasePublicImageUrlToCurrentBase(httpsUrl: string, base: string): string | null {
-    const key = extractPublicPropertyImageObjectKey(httpsUrl)
+function rewriteSupabasePublicStorageUrlToCurrentBase(
+    httpsUrl: string,
+    base: string,
+    bucket: string
+): string | null {
+    const key = extractPublicStorageObjectKey(httpsUrl, bucket)
     if (!key) return null
     const cleanBase = base.replace(/\/$/, '')
-    return `${cleanBase}/storage/v1/object/public/${PROPERTY_IMAGES_BUCKET}/${key}`
+    return `${cleanBase}/storage/v1/object/public/${bucket}/${key}`
 }
 
 /**
@@ -51,17 +75,15 @@ export function resolvePropertyImageUrl(raw: unknown, storageBaseOverride?: stri
     const step = normalizePropertyImageSrc(raw)
     if (step === PROPERTY_PLACEHOLDER_IMAGE) return step
 
-    const base =
-        (typeof storageBaseOverride === 'string' && storageBaseOverride.trim()
-            ? storageBaseOverride.trim()
-            : typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
-              ? process.env.NEXT_PUBLIC_SUPABASE_URL.trim()
-              : ''
-        ).replace(/\/$/, '')
+    const base = getSupabasePublicBase(storageBaseOverride)
 
     if (/^https?:\/\//i.test(step)) {
         if (base) {
-            const rewritten = rewriteSupabasePublicImageUrlToCurrentBase(step, base)
+            const rewritten = rewriteSupabasePublicStorageUrlToCurrentBase(
+                step,
+                base,
+                PROPERTY_IMAGES_BUCKET
+            )
             if (rewritten) return rewritten
         }
         return step
@@ -71,4 +93,35 @@ export function resolvePropertyImageUrl(raw: unknown, storageBaseOverride?: stri
     if (!base) return step
     const path = step.replace(/^\/+/, '')
     return `${base}/storage/v1/object/public/${PROPERTY_IMAGES_BUCKET}/${path}`
+}
+
+/**
+ * profiles.avatar_url 用。空は null（プレースホルダーアイコン側で表示）。
+ * 旧 Supabase プロジェクトの public URL を現行 NEXT_PUBLIC_SUPABASE_URL に寄せる。
+ */
+export function resolveAvatarUrl(raw: unknown, storageBaseOverride?: string): string | null {
+    if (raw == null) return null
+    const s = String(raw).trim()
+    if (!s) return null
+    const step = normalizeSupabaseHttpToHttps(s)
+    if (/^data:/i.test(step) || /^blob:/i.test(step)) return step
+
+    const base = getSupabasePublicBase(storageBaseOverride)
+
+    if (/^https?:\/\//i.test(step)) {
+        if (base) {
+            const rewritten = rewriteSupabasePublicStorageUrlToCurrentBase(
+                step,
+                base,
+                AVATARS_STORAGE_BUCKET
+            )
+            if (rewritten) return rewritten
+        }
+        return step
+    }
+
+    if (step.startsWith('/')) return step
+    if (!base) return step
+    const path = step.replace(/^\/+/, '')
+    return `${base}/storage/v1/object/public/${AVATARS_STORAGE_BUCKET}/${path}`
 }

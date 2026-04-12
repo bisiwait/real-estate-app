@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { resolvePropertyImageUrl, PROPERTY_PLACEHOLDER_IMAGE } from '@/lib/property-image-url'
-
-function isSupabaseStorageHttp(u: string): boolean {
-    return /^https?:\/\//i.test(u) && /supabase\.(co|in)\//i.test(u)
-}
+import {
+    resolvePropertyImageUrl,
+    PROPERTY_PLACEHOLDER_IMAGE,
+    isSupabaseStorageHttpUrl,
+} from '@/lib/property-image-url'
 
 type PropertyThumbnailProps = {
     src?: unknown
@@ -42,7 +42,7 @@ export default function PropertyThumbnail({
         setImgSrc(resolvePropertyImageUrl(src))
     }, [src])
 
-    const unoptimized = isSupabaseStorageHttp(imgSrc)
+    const unoptimized = isSupabaseStorageHttpUrl(imgSrc)
 
     const common = {
         src: imgSrc,

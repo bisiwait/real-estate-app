@@ -31,6 +31,7 @@ import { format } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
 import { clsx } from 'clsx'
+import { resolveAvatarUrl } from '@/lib/property-image-url'
 import { isPremiumActive } from '@/lib/utils/plan'
 interface ProfileData {
     full_name: string
@@ -122,7 +123,7 @@ export default function ProfileForm() {
                         : ''
                 setLineConnectStoredValue(lineBasic || lineLegacy)
                 if (data.avatar_url) {
-                    setAvatarPreview(data.avatar_url)
+                    setAvatarPreview(resolveAvatarUrl(data.avatar_url) ?? data.avatar_url)
                 }
             }
             setLoading(false)
@@ -472,7 +473,11 @@ export default function ProfileForm() {
                                 type="button"
                                 onClick={() => {
                                     setAvatarFile(null)
-                                    setAvatarPreview(formData.avatar_url || null)
+                                    setAvatarPreview(
+                                        formData.avatar_url
+                                            ? resolveAvatarUrl(formData.avatar_url) ?? formData.avatar_url
+                                            : null
+                                    )
                                 }}
                                 className="absolute -top-2 -right-2 bg-white text-red-500 p-1.5 rounded-xl shadow-lg hover:scale-110 transition-transform"
                             >

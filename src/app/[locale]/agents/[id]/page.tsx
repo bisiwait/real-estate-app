@@ -21,6 +21,7 @@ import {
     RefreshCw
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
+import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
 
 
 export default function AgentProfilePage() {
@@ -80,6 +81,7 @@ export default function AgentProfilePage() {
 
     const languages = ['日本語', 'English', 'ภาษาไทย']
     const areas = ['パタヤ', 'ジョムティエン', 'シラチャ']
+    const avatarSrc = resolveAvatarUrl(agent.avatar_url)
 
     return (
         <div className="bg-slate-50 min-h-screen">
@@ -89,7 +91,17 @@ export default function AgentProfilePage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 relative z-10">
                         <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
                             <div className="w-48 h-48 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg mb-6 relative">
-                                {agent.avatar_url ? <Image src={agent.avatar_url} alt={agent.full_name} fill className="object-cover" /> : <User className="w-20 h-20 text-slate-300" />}
+                                {avatarSrc ? (
+                                    <Image
+                                        src={avatarSrc}
+                                        alt={agent.full_name}
+                                        fill
+                                        className="object-cover"
+                                        unoptimized={isSupabaseStorageHttpUrl(avatarSrc)}
+                                    />
+                                ) : (
+                                    <User className="w-20 h-20 text-slate-300" />
+                                )}
                                 <div className="absolute bottom-2 right-2 bg-emerald-500 text-white p-1.5 rounded-full border-2 border-white shadow-sm"><CheckCircle className="w-5 h-5" /></div>
                             </div>
                             <h1 className="text-3xl font-normal text-navy-secondary mb-2">{agent.full_name || '提携エージェント'}</h1>
