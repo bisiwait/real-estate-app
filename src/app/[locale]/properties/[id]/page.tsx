@@ -11,6 +11,7 @@ import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-i
 import { buildPropertyDetailAbsoluteUrl } from '@/lib/property-page-canonical-url'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 import { resolvePropertyImageUrl, PROPERTY_PLACEHOLDER_IMAGE } from '@/lib/property-image-url'
+import { getSupabasePublicConfig } from '@/lib/env/supabase-data-plane'
 
 export const revalidate = 60
 
@@ -49,6 +50,8 @@ export async function generateMetadata(
             }
         }
 
+        const { url: supabasePublicUrl } = getSupabasePublicConfig(hostname)
+
         const title = property.title_ja || property.title_en || property.title || 'Property'
         const description = property.description
             ? property.description.replace(/<[^>]+>/g, '').substring(0, 160)
@@ -60,7 +63,7 @@ export async function generateMetadata(
         let ogWidth = 800
         let ogHeight = 400
         if (property.images?.[0]) {
-            const resolved = resolvePropertyImageUrl(property.images[0])
+            const resolved = resolvePropertyImageUrl(property.images[0], supabasePublicUrl)
             if (resolved !== PROPERTY_PLACEHOLDER_IMAGE && /^https?:\/\//i.test(resolved)) {
                 // 1. Next.js の自動エスケープ (& -> &amp;) を避けるため、パラメータを1つ (?format=jpg) に絞る
                 imageUrl = `${resolved}?format=jpg`
@@ -123,22 +126,31 @@ export default async function Page({
         notFound()
     }
 
+    const { url: supabasePublicUrl } = getSupabasePublicConfig(hostname)
+    const imagesRaw = property.images
+    const propertyForClient = {
+        ...property,
+        images: Array.isArray(imagesRaw)
+            ? imagesRaw.map((img: unknown) => resolvePropertyImageUrl(img, supabasePublicUrl))
+            : imagesRaw,
+    }
+
     const propertyDetailPageUrl = buildPropertyDetailAbsoluteUrl(hdrs, locale, id)
 
     /** サイト既定の公式 LINE には誘導しない。オーナーが line_basic_id / line_id を設定している場合のみ組み立てる */
     let officialLineAddFriendUrl = ''
-    if (property.user_id) {
+    if (propertyForClient.user_id) {
         const supabase = createStaticClientForHostname(hostname)
         const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('line_basic_id, line_id, show_line_in_inquiry')
-            .eq('id', property.user_id as string)
+            .eq('id', propertyForClient.user_id as string)
             .maybeSingle()
         const raw = getPropertyOwnerLineInquiryRawInput(ownerProfile)
         if (raw) {
             officialLineAddFriendUrl = await buildPropertyLineInquiryUrlServer(
                 raw,
-                property,
+                propertyForClient,
                 locale,
                 hostname,
                 propertyDetailPageUrl
@@ -155,7 +167,7 @@ export default async function Page({
             }
         >
             <PropertyDetailClient
-                initialProperty={property}
+                initialProperty={propertyForClient}
                 officialLineAddFriendUrl={officialLineAddFriendUrl}
                 propertyDetailPageUrl={propertyDetailPageUrl}
             />
