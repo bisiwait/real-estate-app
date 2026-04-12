@@ -405,6 +405,14 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             }
         }
 
+        // 新規で「物件を公開する」を押したときは status が pending のままだと一覧に出ない（要 published + 承認済み）
+        if (mode === 'create' && statusOverride === 'pending') {
+            finalStatus = 'published'
+        }
+
+        const publishFields =
+            finalStatus === 'published' ? { is_approved: true as const } : {}
+
         try {
             const { data: { user }, error: authError } = await supabase.auth.getUser()
             if (authError) throw authError
@@ -491,7 +499,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         ownership_type: formData.is_for_sale ? formData.ownership_type : null,
                         is_presale: formData.is_presale,
                         description_en: formData.description_en,
-                        description_th: formData.description_th
+                        description_th: formData.description_th,
+                        ...publishFields,
                     })
                     .select()
                     .single()
@@ -548,7 +557,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     ownership_type: formData.is_for_sale ? formData.ownership_type : null,
                     is_presale: formData.is_presale,
                     description_en: formData.description_en,
-                    description_th: formData.description_th
+                    description_th: formData.description_th,
+                    ...publishFields,
                 })
                 .eq('id', propertyId)
                 .eq('user_id', user.id)
