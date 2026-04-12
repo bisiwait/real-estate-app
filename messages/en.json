@@ -146,6 +146,13 @@
             }
         ]
     },
+    "tokushoho_page": {
+        "title": "Legal notice (Japan)",
+        "meta_description": "Disclosure under Japan’s Act on Specified Commercial Transactions is published in Japanese.",
+        "back_home": "Home",
+        "fallback_note": "The notice required under Japan’s Act on Specified Commercial Transactions (特定商取引法) for digital services is provided in Japanese. Please open the Japanese page if you need the official text for payment review or compliance.",
+        "fallback_link": "Open the Japanese disclosure page"
+    },
     "header": {
         "search_placeholder": "Search by area or property name...",
         "list_property": "List Your Property"
@@ -161,6 +168,7 @@
         "list-property": "List Property",
         "about": "About Us",
         "terms": "Terms of Service",
+        "tokushoho": "Legal notice (Japan)",
         "contact": "Contact",
         "faq": "FAQ",
         "footer_want_to_list": "Want to list your property",
@@ -667,6 +675,9 @@
         "modal_confirm_badge": "Confirm",
         "modal_title": "Review your plan",
         "modal_subtitle": "Please confirm before continuing.",
+        "modal_tokushoho_prefix": "Before checkout, review the",
+        "modal_tokushoho_suffix": ".",
+        "modal_tokushoho_link_fallback": "Legal notice (Japan)",
         "modal_plan": "Plan",
         "modal_price": "Price",
         "modal_today_title": "You pay $0 today",

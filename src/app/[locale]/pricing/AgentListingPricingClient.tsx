@@ -38,7 +38,7 @@ function stripePriceIdsReady() {
     );
 }
 
-type Dict = { agent_plan: Record<string, string> };
+type Dict = { agent_plan: Record<string, string>; labels?: Record<string, string> };
 
 function localeToDateLocale(locale: string) {
     if (locale === "jp") return "ja-JP";
@@ -705,6 +705,21 @@ export default function AgentListingPricingClient({
                             {confirmError && (
                                 <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{confirmError}</div>
                             )}
+
+                            {p.modal_tokushoho_prefix && (dict.labels?.tokushoho || p.modal_tokushoho_link_fallback) ? (
+                                <p className="text-center text-xs font-medium leading-relaxed text-slate-500">
+                                    {p.modal_tokushoho_prefix}{' '}
+                                    <Link
+                                        href={`/${locale}/tokushoho`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-bold text-navy-primary underline decoration-navy-primary/25 underline-offset-2 hover:text-navy-secondary"
+                                    >
+                                        {dict.labels?.tokushoho ?? p.modal_tokushoho_link_fallback}
+                                    </Link>
+                                    {p.modal_tokushoho_suffix ? <> {p.modal_tokushoho_suffix}</> : null}
+                                </p>
+                            ) : null}
                         </div>
 
                         <div className="mt-6 flex flex-col gap-3">
