@@ -24,15 +24,15 @@ type TokushohoPageDict = {
 function buildRowsFromFlat(t: Record<string, string>): TokushohoRow[] | null {
     const pairs: [string, string][] = [
         ['row_seller_label', 'row_seller_value'],
+        ['row_manager_label', 'row_manager_value'],
         ['row_address_label', 'row_address_value'],
         ['row_phone_label', 'row_phone_value'],
         ['row_email_label', 'row_email_value'],
-        ['row_manager_label', 'row_manager_value'],
-        ['row_fees_label', 'row_fees_value'],
-        ['row_delivery_label', 'row_delivery_value'],
-        ['row_payment_method_label', 'row_payment_method_value'],
-        ['row_payment_timing_label', 'row_payment_timing_value'],
         ['row_price_label', 'row_price_value'],
+        ['row_fees_label', 'row_fees_value'],
+        ['row_payment_timing_label', 'row_payment_timing_value'],
+        ['row_payment_method_label', 'row_payment_method_value'],
+        ['row_delivery_label', 'row_delivery_value'],
         ['row_refund_label', 'row_refund_value'],
     ]
     const rows: TokushohoRow[] = []
