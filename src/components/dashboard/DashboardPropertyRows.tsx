@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ChevronRight, LayoutDashboard, MessageCircle } from 'lucide-react'
+import { resolvePropertyImageUrl } from '@/lib/property-image-url'
 import FreshnessBadge from '@/components/dashboard/FreshnessBadge'
 import PropertyConfirmButton from '@/components/dashboard/PropertyConfirmButton'
 import DashboardActions from '@/components/dashboard/DashboardActions'
@@ -46,7 +47,11 @@ export function DashboardMobilePropertyRow({
             <div className="flex gap-3">
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0 shadow-sm">
                     {property.images?.[0] ? (
-                        <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
+                        <img
+                            src={resolvePropertyImageUrl(property.images[0])}
+                            alt={property.title}
+                            className="w-full h-full object-cover"
+                        />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-300">
                             <LayoutDashboard className="w-6 h-6" />
@@ -144,7 +149,11 @@ export function DashboardDesktopPropertyRow({
             <div className="flex items-center space-x-4 lg:space-x-6 min-w-0 flex-1">
                 <div className="w-16 h-16 lg:w-24 lg:h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
                     {property.images?.[0] ? (
-                        <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover" />
+                        <img
+                            src={resolvePropertyImageUrl(property.images[0])}
+                            alt={property.title}
+                            className="w-full h-full object-cover"
+                        />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-300">
                             <LayoutDashboard className="w-6 h-6 lg:w-8 lg:h-8" />

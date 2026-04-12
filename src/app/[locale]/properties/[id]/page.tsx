@@ -10,6 +10,7 @@ import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry
 import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
 import { buildPropertyDetailAbsoluteUrl } from '@/lib/property-page-canonical-url'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
+import { resolvePropertyImageUrl, PROPERTY_PLACEHOLDER_IMAGE } from '@/lib/property-image-url'
 
 export const revalidate = 60
 
@@ -59,20 +60,14 @@ export async function generateMetadata(
         let ogWidth = 800
         let ogHeight = 400
         if (property.images?.[0]) {
-            const firstImage = property.images[0]
-            let baseImageUrl = ''
-            if (firstImage.startsWith('http')) {
-                baseImageUrl = firstImage
-            } else {
-                const path = firstImage.startsWith('/') ? firstImage : `/${firstImage}`
-                baseImageUrl = `${baseUrl}${path}`
+            const resolved = resolvePropertyImageUrl(property.images[0])
+            if (resolved !== PROPERTY_PLACEHOLDER_IMAGE && /^https?:\/\//i.test(resolved)) {
+                // 1. Next.js の自動エスケープ (& -> &amp;) を避けるため、パラメータを1つ (?format=jpg) に絞る
+                imageUrl = `${resolved}?format=jpg`
+                ogImageType = 'image/jpeg'
+                ogWidth = 1200
+                ogHeight = 630
             }
-
-            // 1. Next.js の自動エスケープ (& -> &amp;) を避けるため、パラメータを1つ (?format=jpg) に絞る
-            imageUrl = `${baseImageUrl}?format=jpg`
-            ogImageType = 'image/jpeg'
-            ogWidth = 1200
-            ogHeight = 630
         }
 
         const pageUrl = `${baseUrl}/${locale}/properties/${id}`

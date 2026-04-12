@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { normalizePropertyImageSrc, PROPERTY_PLACEHOLDER_IMAGE } from '@/lib/property-image-url'
+import { resolvePropertyImageUrl, PROPERTY_PLACEHOLDER_IMAGE } from '@/lib/property-image-url'
 
 type PropertyThumbnailProps = {
     src?: unknown
@@ -31,11 +31,11 @@ export default function PropertyThumbnail({
     loading,
     className,
 }: PropertyThumbnailProps) {
-    const initial = normalizePropertyImageSrc(src)
+    const initial = resolvePropertyImageUrl(src)
     const [imgSrc, setImgSrc] = useState(initial)
 
     useEffect(() => {
-        setImgSrc(normalizePropertyImageSrc(src))
+        setImgSrc(resolvePropertyImageUrl(src))
     }, [src])
 
     const common = {
