@@ -11,9 +11,15 @@ type AgentContactFormProps = {
     agentId: string
     /** 親でログイン済みと判定したときだけフォームを描画（未ログイン時は null） */
     forLoggedInUser?: boolean
+    /** タブ内表示時は上余白・区切り線を付けない */
+    variant?: 'standalone' | 'inTab'
 }
 
-export default function AgentContactForm({ agentId, forLoggedInUser = false }: AgentContactFormProps) {
+export default function AgentContactForm({
+    agentId,
+    forLoggedInUser = false,
+    variant = 'standalone',
+}: AgentContactFormProps) {
     const { user, userData } = useAuth()
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
@@ -100,10 +106,15 @@ export default function AgentContactForm({ agentId, forLoggedInUser = false }: A
         return null
     }
 
+    const formWrap =
+        variant === 'inTab' ? 'space-y-4' : 'mt-8 space-y-4 border-t border-slate-100 pt-8'
+
     return (
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4 border-t border-slate-100 pt-8">
+        <form onSubmit={handleSubmit} className={formWrap}>
             <input type="hidden" name="agentId" value={agentId} readOnly aria-hidden />
-            <h3 className="text-sm font-normal text-navy-secondary mb-4">お問い合わせフォーム</h3>
+            {variant === 'standalone' ? (
+                <h3 className="text-sm font-normal text-navy-secondary mb-4">お問い合わせフォーム</h3>
+            ) : null}
             <p className="text-xs text-slate-500 leading-relaxed mb-4">
                 このエージェントへのご質問・ご相談はこちらからお送りください。担当よりご連絡いたします。
             </p>

@@ -1,7 +1,7 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
 import { notFound, useParams, usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ComponentType } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -14,14 +14,15 @@ import {
     CheckCircle,
     Globe,
     ChevronRight,
-    RefreshCw
+    RefreshCw,
+    LogIn,
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 import AgentContactForm from '@/components/agent/AgentContactForm'
 import { useAuth } from '@/contexts/AuthContext'
-import { LogIn } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 
 export default function AgentProfilePage() {
@@ -37,6 +38,7 @@ export default function AgentProfilePage() {
     const [totalListings, setTotalListings] = useState(0)
     const [loading, setLoading] = useState(true)
     const [hideAgent, setHideAgent] = useState(false)
+    const [contactTab, setContactTab] = useState<'email' | 'line'>('email')
 
     useEffect(() => {
         const fetchData = async () => {
@@ -75,12 +77,19 @@ export default function AgentProfilePage() {
         if (agentId) fetchData()
     }, [agentId])
 
+    useEffect(() => {
+        setContactTab('email')
+    }, [agentId])
+
     if (loading) return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
     if (hideAgent) return notFound()
     if (!agent) return notFound()
 
     const agentLineContactVisible =
         agent.show_line_in_inquiry !== false && Boolean(agent.line_id?.toString().trim())
+    const lineUrlRaw = String(agent.line_id ?? '').trim()
+    const lineHref = lineUrlRaw.startsWith('http') ? lineUrlRaw : ''
+    const lineTabAvailable = agentLineContactVisible && Boolean(lineHref)
 
     const languages = ['日本語', 'English', 'ภาษาไทย']
     const areas = ['パタヤ', 'ジョムティエン', 'シラチャ']
@@ -144,7 +153,7 @@ export default function AgentProfilePage() {
                                         ログイン後にご利用いただけます
                                     </p>
                                     <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-                                        LINE・電話・メール・お問い合わせフォームを含む、このエージェントへのすべてのお問い合わせ機能はログインが必要です。
+                                        メール・LINEでのお問い合わせはログインが必要です（スマートフォンでは電話での連絡も利用できます）。
                                     </p>
                                     <Link
                                         href={loginHref}
@@ -156,24 +165,83 @@ export default function AgentProfilePage() {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="space-y-4">
-                                        {agentLineContactVisible ? (
+                                    {lineTabAvailable ? (
+                                        <div
+                                            className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-100/90 p-1"
+                                            role="tablist"
+                                            aria-label="お問い合わせ方法"
+                                        >
+                                            <button
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={contactTab === 'email'}
+                                                onClick={() => setContactTab('email')}
+                                                className={cn(
+                                                    'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-black transition-all sm:text-sm',
+                                                    contactTab === 'email'
+                                                        ? 'bg-white text-navy-primary shadow-sm'
+                                                        : 'text-slate-500 hover:text-navy-secondary'
+                                                )}
+                                            >
+                                                <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                                                メール
+                                            </button>
+                                            <button
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={contactTab === 'line'}
+                                                onClick={() => setContactTab('line')}
+                                                className={cn(
+                                                    'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-black transition-all sm:text-sm',
+                                                    contactTab === 'line'
+                                                        ? 'bg-white text-[#06C755] shadow-sm'
+                                                        : 'text-slate-500 hover:text-[#06C755]'
+                                                )}
+                                            >
+                                                <MessageCircle className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                                                LINE
+                                            </button>
+                                        </div>
+                                    ) : null}
+
+                                    {(!lineTabAvailable || contactTab === 'email') && (
+                                        <div className="space-y-4">
+                                            <AgentContactForm agentId={agentId} forLoggedInUser variant="inTab" />
+                                            {agent.email ? (
+                                                <a
+                                                    href={`mailto:${agent.email}`}
+                                                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-navy-primary transition hover:border-navy-primary/30 hover:bg-slate-50"
+                                                >
+                                                    <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                                    メールアプリで開く
+                                                </a>
+                                            ) : null}
+                                            {agent.phone && agent.show_phone_in_inquiry !== false ? (
+                                                <div className="md:hidden">
+                                                    <ContactBtn
+                                                        href={`tel:${agent.phone}`}
+                                                        label="電話をかける"
+                                                        icon={Phone}
+                                                        color="slate"
+                                                    />
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    )}
+
+                                    {lineTabAvailable && contactTab === 'line' && (
+                                        <div className="space-y-4">
+                                            <p className="text-xs text-slate-500 leading-relaxed">
+                                                下のボタンからLINEを開き、このエージェントへメッセージをお送りください。
+                                            </p>
                                             <ContactBtn
-                                                href={(() => {
-                                                    const s = String(agent.line_id).trim()
-                                                    return s.startsWith('http') ? s : '#'
-                                                })()}
-                                                label="LINE"
+                                                href={lineHref}
+                                                label="LINEで連絡する"
                                                 icon={MessageCircle}
                                                 color="emerald"
                                             />
-                                        ) : null}
-                                        {agent.phone && agent.show_phone_in_inquiry !== false ? (
-                                            <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />
-                                        ) : null}
-                                        <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />
-                                    </div>
-                                    <AgentContactForm agentId={agentId} forLoggedInUser />
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -220,10 +288,32 @@ function AreaSection({ title, items, icon: Icon }: any) {
     )
 }
 
-function ContactBtn({ href, label, icon: Icon, color }: any) {
-    const bg = color === 'emerald' ? 'bg-[#06C755]/10 hover:bg-[#06C755] text-[#06C755] hover:text-white' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100'
+function ContactBtn({
+    href,
+    label,
+    icon: Icon,
+    color,
+    className,
+}: {
+    href: string
+    label: string
+    icon: ComponentType<{ className?: string }>
+    color: 'emerald' | 'slate'
+    className?: string
+}) {
+    const bg =
+        color === 'emerald'
+            ? 'bg-[#06C755]/10 hover:bg-[#06C755] text-[#06C755] hover:text-white'
+            : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100'
     return (
-        <a href={href} className={`flex items-center justify-between w-full p-4 rounded-2xl transition-all shadow-sm group ${bg}`}>
+        <a
+            href={href}
+            className={cn(
+                'flex items-center justify-between w-full p-4 rounded-2xl transition-all shadow-sm group',
+                bg,
+                className
+            )}
+        >
             <div className="flex items-center gap-3 font-normal text-sm">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><Icon className="w-5 h-5" /></div>
                 {label}
