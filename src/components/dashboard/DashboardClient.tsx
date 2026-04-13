@@ -1,12 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, Fragment } from 'react'
-import { Building2, Mail, Users, PlusCircle } from 'lucide-react'
+import { Building2, Mail, Users, PlusCircle, UserCircle } from 'lucide-react'
 import Link from 'next/link'
 import LeadsView from '@/components/dashboard/LeadsView'
 import BulkConfirmButton from '@/components/dashboard/BulkConfirmButton'
 import StatusFilter from '@/components/dashboard/StatusFilter'
 import InquiryList from '@/components/dashboard/InquiryList'
+import AgentProfileContactsView from '@/components/dashboard/AgentProfileContactsView'
+import type { AgentProfileContactRow } from '@/lib/supabase/fetch-agent-profile-contacts'
 import {
     DashboardMobilePropertyRow,
     DashboardDesktopPropertyRow,
@@ -23,6 +25,9 @@ interface DashboardClientProps {
     initialInquiries: any[]
     initialLeads: any[]
     leadsCount: number
+    initialProfileContacts: AgentProfileContactRow[]
+    profileContactsUnhandledCount: number
+    profileContactsFetchError: string | null
     locale: string
     activePlan: string
     /** 日本時間・今月1日0時以降の line_inquiry_counts を物件 id ごとに集計 */
@@ -38,6 +43,9 @@ export default function DashboardClient({
     initialInquiries,
     initialLeads,
     leadsCount,
+    initialProfileContacts,
+    profileContactsUnhandledCount,
+    profileContactsFetchError,
     locale,
     activePlan,
     lineInquiryCountsByPropertyThisMonth,
@@ -116,7 +124,7 @@ export default function DashboardClient({
     return (
         <div className="lg:col-span-3 space-y-6">
             {/* Tab Switcher */}
-            <div className="bg-white p-1.5 sm:p-2 rounded-2xl shadow-md border border-slate-100 grid grid-cols-3 gap-1">
+            <div className="bg-white p-1.5 sm:p-2 rounded-2xl shadow-md border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-1">
                 <button
                     onClick={() => setTab('properties')}
                     className={`flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center leading-tight ${tab === 'properties'
@@ -152,6 +160,21 @@ export default function DashboardClient({
                     <Users className="w-4 h-4 shrink-0" />
                     <span>ログ ({leadsCount})</span>
                 </button>
+                <button
+                    onClick={() => setTab('profile_contacts')}
+                    className={`relative flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center leading-tight ${tab === 'profile_contacts'
+                        ? 'bg-navy-primary text-white shadow-lg'
+                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                        }`}
+                >
+                    <UserCircle className="w-4 h-4 shrink-0" />
+                    <span className="leading-tight">プロフィール</span>
+                    {profileContactsUnhandledCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-amber-500 text-[9px] sm:text-[10px] text-white ring-2 ring-white">
+                            {profileContactsUnhandledCount > 99 ? '99+' : profileContactsUnhandledCount}
+                        </span>
+                    )}
+                </button>
             </div>
 
             {/* スマホ: 物件タブのときだけタブ直下に登録系 CTA */}
@@ -180,6 +203,11 @@ export default function DashboardClient({
             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                 {tab === 'leads' ? (
                     <LeadsView initialLeads={leads} locale={locale} />
+                ) : tab === 'profile_contacts' ? (
+                    <AgentProfileContactsView
+                        initialRows={initialProfileContacts}
+                        fetchError={profileContactsFetchError}
+                    />
                 ) : tab === 'properties' ? (
                     <>
                         <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

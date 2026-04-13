@@ -20,6 +20,7 @@ import { getEffectivePlan, isPremiumSubscriptionExpired } from '@/lib/utils/plan
 import FeedbackForm from '@/components/dashboard/FeedbackForm'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
+import { fetchAgentProfileContacts } from '@/lib/supabase/fetch-agent-profile-contacts'
 import { startOfCurrentMonthJstIso } from '@/lib/datetime/jst-month-start'
 
 export default async function DashboardPage({
@@ -90,6 +91,16 @@ export default async function DashboardPage({
     if (leadsError) {
         console.error('Error fetching inquiry_logs (leads):', leadsError)
     }
+
+    const { rows: profileContacts, error: profileContactsErr } = await fetchAgentProfileContacts(
+        supabase,
+        user.id
+    )
+    if (profileContactsErr) {
+        console.error('Error fetching agent_contacts (profile):', profileContactsErr)
+    }
+    const profileContactsFetchError = profileContactsErr?.message ?? null
+    const profileContactsUnhandledCount = profileContacts.filter((r) => !r.is_handled).length
 
     const monthStartJst = startOfCurrentMonthJstIso()
     let lineInquiryLogsThisMonth = 0
@@ -241,6 +252,9 @@ export default async function DashboardPage({
                             initialInquiries={inquiries}
                             leadsCount={leads.length}
                             initialLeads={leads}
+                            initialProfileContacts={profileContacts}
+                            profileContactsUnhandledCount={profileContactsUnhandledCount}
+                            profileContactsFetchError={profileContactsFetchError}
                             locale={locale}
                             activePlan={activePlan}
                             lineInquiryCountsByPropertyThisMonth={lineInquiryCountsByPropertyThisMonth}
