@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { notifyAgentContactSubmission } from '@/lib/agent-contact-notify'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -10,6 +10,14 @@ function trimStr(v: unknown): string {
 }
 
 export async function POST(req: Request) {
+    const supabaseUser = await createClient()
+    const {
+        data: { user },
+    } = await supabaseUser.auth.getUser()
+    if (!user?.id) {
+        return NextResponse.json({ error: 'お問い合わせにはログインが必要です。' }, { status: 401 })
+    }
+
     let body: Record<string, unknown>
     try {
         body = (await req.json()) as Record<string, unknown>
@@ -56,10 +64,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'このエージェントにはお問い合わせできません。' }, { status: 403 })
     }
 
-    const { data: inserted, error: insErr } = await admin
+    const { data: inserted, error: insErr } = await supabaseUser
         .from('agent_contacts')
         .insert({
             agent_id: agentId,
+            submitter_id: user.id,
             customer_name: name,
             customer_email: email,
             customer_phone: phone,

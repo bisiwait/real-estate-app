@@ -146,7 +146,7 @@ export default function AgentProfilePage() {
                                 ) : null}
                                 <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />
                             </div>
-                            <AgentContactForm agentId={agentId} />
+                            <AgentContactForm agentId={agentId} locale={locale} />
                         </div>
                     </div>
                     <div className="lg:col-span-2">

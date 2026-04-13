@@ -12,7 +12,9 @@ export async function GET() {
     const admin = await createAdminClient()
     const { data: rows, error } = await admin
         .from('agent_contacts')
-        .select('id, agent_id, customer_name, customer_email, customer_phone, message, is_handled, created_at')
+        .select(
+            'id, agent_id, submitter_id, customer_name, customer_email, customer_phone, message, is_handled, created_at'
+        )
         .order('created_at', { ascending: false })
         .limit(500)
 
@@ -23,16 +25,45 @@ export async function GET() {
 
     const list = rows ?? []
     const agentIds = [...new Set(list.map((r) => r.agent_id as string).filter(Boolean))]
+    const submitterIds = [
+        ...new Set(
+            list
+                .map((r) => r.submitter_id)
+                .filter((id): id is string => typeof id === 'string' && id.length > 0)
+        ),
+    ]
     let nameById: Record<string, string | null> = {}
+    let submitterById: Record<string, { full_name: string | null; email: string | null }> = {}
     if (agentIds.length > 0) {
         const { data: profiles } = await admin.from('profiles').select('id, full_name').in('id', agentIds)
         nameById = Object.fromEntries((profiles ?? []).map((p) => [p.id as string, (p.full_name as string) ?? null]))
     }
+    if (submitterIds.length > 0) {
+        const { data: submitters } = await admin
+            .from('profiles')
+            .select('id, full_name, email')
+            .in('id', submitterIds)
+        submitterById = Object.fromEntries(
+            (submitters ?? []).map((p) => [
+                p.id as string,
+                {
+                    full_name: (p.full_name as string) ?? null,
+                    email: (p.email as string) ?? null,
+                },
+            ])
+        )
+    }
 
-    const merged = list.map((r) => ({
-        ...r,
-        agent_full_name: nameById[r.agent_id as string] ?? null,
-    }))
+    const merged = list.map((r) => {
+        const sid = r.submitter_id as string | null
+        const sub = sid ? submitterById[sid] : undefined
+        return {
+            ...r,
+            agent_full_name: nameById[r.agent_id as string] ?? null,
+            submitter_full_name: sub?.full_name ?? null,
+            submitter_email: sub?.email ?? null,
+        }
+    })
 
     return NextResponse.json({ rows: merged })
 }

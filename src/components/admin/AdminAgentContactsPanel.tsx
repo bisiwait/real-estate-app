@@ -8,6 +8,7 @@ import { Loader2, Mail, User, Phone, MessageSquare } from 'lucide-react'
 type Row = {
     id: string
     agent_id: string
+    submitter_id: string | null
     customer_name: string
     customer_email: string
     customer_phone: string
@@ -15,6 +16,8 @@ type Row = {
     is_handled: boolean
     created_at: string
     agent_full_name: string | null
+    submitter_full_name: string | null
+    submitter_email: string | null
 }
 
 export default function AdminAgentContactsPanel() {
@@ -83,11 +86,12 @@ export default function AdminAgentContactsPanel() {
                 </p>
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[960px] text-left text-sm">
+                <table className="w-full min-w-[1100px] text-left text-sm">
                     <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black uppercase tracking-widest text-slate-500">
                             <th className="px-4 py-3 whitespace-nowrap">日時</th>
-                            <th className="px-4 py-3 whitespace-nowrap">顧客名</th>
+                            <th className="px-4 py-3 whitespace-nowrap min-w-[140px]">問い合わせユーザー</th>
+                            <th className="px-4 py-3 whitespace-nowrap">顧客名（フォーム）</th>
                             <th className="px-4 py-3 whitespace-nowrap">対象エージェント</th>
                             <th className="px-4 py-3 min-w-[200px]">内容</th>
                             <th className="px-4 py-3 whitespace-nowrap text-center">対応済</th>
@@ -96,7 +100,7 @@ export default function AdminAgentContactsPanel() {
                     <tbody>
                         {rows.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="px-6 py-16 text-center text-sm font-bold text-slate-400">
+                                <td colSpan={6} className="px-6 py-16 text-center text-sm font-bold text-slate-400">
                                     まだ問い合わせはありません
                                 </td>
                             </tr>
@@ -107,6 +111,23 @@ export default function AdminAgentContactsPanel() {
                                         {r.created_at
                                             ? format(new Date(r.created_at), 'yyyy/MM/dd HH:mm')
                                             : '—'}
+                                    </td>
+                                    <td className="px-4 py-3 align-top text-xs">
+                                        {r.submitter_id ? (
+                                            <div className="space-y-1">
+                                                <div className="font-bold text-navy-secondary">
+                                                    {r.submitter_full_name || '（名前未設定）'}
+                                                </div>
+                                                {r.submitter_email ? (
+                                                    <div className="text-[11px] text-slate-600 break-all">{r.submitter_email}</div>
+                                                ) : null}
+                                                <div className="font-mono text-[9px] text-slate-400 break-all" title="UID">
+                                                    {r.submitter_id}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-slate-400">—（レガシー）</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-start gap-2">
