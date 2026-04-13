@@ -41,6 +41,7 @@ export default function PropertyCard({
     hideFavoriteButton = false,
     openDetailInNewTab = false,
     imageOverlay,
+    onBeforeNavigateToDetail,
 }: {
     property: any
     dict: any
@@ -50,6 +51,8 @@ export default function PropertyCard({
     openDetailInNewTab?: boolean
     /** 画像エリア（aspect 4/3）内に重ねるオーバーレイ（例: 比較用チェック） */
     imageOverlay?: ReactNode
+    /** 一覧→詳細遷移直前（スクロール・リスト状態の保存用） */
+    onBeforeNavigateToDetail?: () => void
 }) {
     const params = useParams()
     const locale = params?.locale as string || 'jp'
@@ -188,6 +191,7 @@ export default function PropertyCard({
                 <Link
                     href={detailHref}
                     prefetch={false}
+                    onClick={() => onBeforeNavigateToDetail?.()}
                     className="block h-full transition-transform active:scale-[0.98] duration-200"
                 >
                     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-lg">

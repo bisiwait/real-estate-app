@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useTransition, useMemo, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useTransition, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { createClient } from '@/lib/supabase/client'
@@ -18,6 +18,20 @@ import {
     type PropertyListSort,
 } from '@/lib/services/propertyListQuery'
 import { cn } from '@/lib/utils'
+
+/** 一覧→詳細→戻る でリスト件数・スクロールを復元する */
+const PROPERTY_LIST_RESTORE_STORAGE_KEY = 'propertyListBrowseRestore'
+
+type PropertyListRestoreV1 = {
+    v: 1
+    pathname: string
+    search: string
+    scrollY: number
+    properties: any[]
+    page: number
+    hasMore: boolean
+    totalCount: number
+}
 
 /** DB の tags 配列と一致（messages の property.tags と同じキー） */
 const OCEAN_VIEW_TAG = 'オーシャンビュー'
@@ -134,8 +148,35 @@ export default function PropertiesClient({
     )
     const fetchGenRef = useRef(0)
     const [isFilterNavPending, startFilterNavTransition] = useTransition()
+    /** sessionStorage 復元後は同一マウント内の初回クエリ fetch をスキップ */
+    const skipListFetchAfterSessionRestoreRef = useRef(false)
+    /** 復元したスクロール位置（スクロール適用後にクリア） */
+    const pendingListScrollAfterRestoreRef = useRef<number | null>(null)
+    /** マウント時のルート（戻る復元のキー照合用・初回レンダーのみ固定） */
+    const listMountRouteRef = useRef<{ pathname: string; search: string } | null>(null)
+    if (listMountRouteRef.current === null) {
+        listMountRouteRef.current = { pathname, search: searchParams.toString() }
+    }
 
     const searchParamsKey = searchParams.toString()
+
+    const persistListStateBeforeDetail = useCallback(() => {
+        try {
+            const payload: PropertyListRestoreV1 = {
+                v: 1,
+                pathname,
+                search: searchParamsKey,
+                scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
+                properties: dbProperties,
+                page,
+                hasMore,
+                totalCount,
+            }
+            sessionStorage.setItem(PROPERTY_LIST_RESTORE_STORAGE_KEY, JSON.stringify(payload))
+        } catch {
+            /* 容量超過・シークレットモード等 */
+        }
+    }, [pathname, searchParamsKey, dbProperties, page, hasMore, totalCount])
 
     // ブラウザ戻る・共有 URL などでクエリが変わったらドラフトを同期
     useEffect(() => {
@@ -337,7 +378,66 @@ export default function PropertiesClient({
         })
     }, [listingType, pathname, priceSortEnabled, router, searchParamsKey, startFilterNavTransition])
 
+    /**
+     * ブラウザ「戻る」で戻ったとき: sessionStorage を最優先でリストに反映し、初回 fetch で上書きしない。
+     */
     useEffect(() => {
+        const route = listMountRouteRef.current
+        if (!route) return
+        try {
+            const raw = sessionStorage.getItem(PROPERTY_LIST_RESTORE_STORAGE_KEY)
+            if (!raw) return
+            const data = JSON.parse(raw) as PropertyListRestoreV1
+            if (data.v !== 1 || !Array.isArray(data.properties)) return
+            if (data.pathname !== route.pathname || data.search !== route.search) return
+            setDbProperties(data.properties)
+            setPage(typeof data.page === 'number' ? data.page : 0)
+            setHasMore(Boolean(data.hasMore))
+            setTotalCount(
+                typeof data.totalCount === 'number' ? data.totalCount : data.properties.length
+            )
+            setLoading(false)
+            setLoadingMore(false)
+            pendingListScrollAfterRestoreRef.current = Math.max(0, Number(data.scrollY) || 0)
+            skipListFetchAfterSessionRestoreRef.current = true
+        } catch {
+            /* ignore */
+        }
+    }, [])
+
+    /**
+     * 復元したリストがコミットされたあとでスクロールし、完了したら sessionStorage を削除。
+     * useLayoutEffect でレイアウト確定後に実行（画像などで高さが変わる場合のずれを軽減）。
+     */
+    useLayoutEffect(() => {
+        if (pendingListScrollAfterRestoreRef.current === null) return
+        const y = pendingListScrollAfterRestoreRef.current
+        pendingListScrollAfterRestoreRef.current = null
+        let innerRaf = 0
+        const outerRaf = requestAnimationFrame(() => {
+            innerRaf = requestAnimationFrame(() => {
+                window.scrollTo({ top: y, left: 0, behavior: 'instant' as ScrollBehavior })
+                try {
+                    sessionStorage.removeItem(PROPERTY_LIST_RESTORE_STORAGE_KEY)
+                } catch {
+                    /* ignore */
+                }
+            })
+        })
+        return () => {
+            cancelAnimationFrame(outerRaf)
+            cancelAnimationFrame(innerRaf)
+        }
+    }, [dbProperties])
+
+    useEffect(() => {
+        if (skipListFetchAfterSessionRestoreRef.current) {
+            skipListFetchAfterSessionRestoreRef.current = false
+            while (skipInitialClientFetchRef.current > 0) {
+                skipInitialClientFetchRef.current -= 1
+            }
+            return
+        }
         if (skipInitialClientFetchRef.current > 0) {
             skipInitialClientFetchRef.current -= 1
             return
@@ -725,6 +825,7 @@ export default function PropertiesClient({
                                             property={property}
                                             dict={dict}
                                             imagePriority={idx < 6}
+                                            onBeforeNavigateToDetail={persistListStateBeforeDetail}
                                         />
                                     ))}
                                 </div>
