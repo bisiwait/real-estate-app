@@ -100,7 +100,7 @@ export default async function DashboardPage({
         console.error('Error fetching agent_contacts (profile):', profileContactsErr)
     }
     const profileContactsFetchError = profileContactsErr?.message ?? null
-    const profileContactsUnhandledCount = profileContacts.filter((r) => !r.is_handled).length
+    const profileContactsUnhandledCount = profileContacts.filter((r) => !r.read_by_agent_at).length
 
     const monthStartJst = startOfCurrentMonthJstIso()
     let lineInquiryLogsThisMonth = 0

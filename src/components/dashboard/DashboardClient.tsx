@@ -170,7 +170,7 @@ export default function DashboardClient({
                     <UserCircle className="w-4 h-4 shrink-0" />
                     <span className="leading-tight">プロフィール</span>
                     {profileContactsUnhandledCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-amber-500 text-[9px] sm:text-[10px] text-white ring-2 ring-white">
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[9px] sm:text-[10px] text-white ring-2 ring-white">
                             {profileContactsUnhandledCount > 99 ? '99+' : profileContactsUnhandledCount}
                         </span>
                     )}
@@ -207,6 +207,7 @@ export default function DashboardClient({
                     <AgentProfileContactsView
                         initialRows={initialProfileContacts}
                         fetchError={profileContactsFetchError}
+                        agentDisplayName={profile?.full_name ?? ''}
                     />
                 ) : tab === 'properties' ? (
                     <>

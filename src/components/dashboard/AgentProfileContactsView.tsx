@@ -1,145 +1,518 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
-import { format } from 'date-fns'
-import { Loader2, Mail, User, Phone, MessageSquare } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { AgentProfileContactRow } from '@/lib/supabase/fetch-agent-profile-contacts'
+import {
+    Mail,
+    Calendar,
+    User,
+    Phone,
+    CheckCircle,
+    ChevronDown,
+    ChevronUp,
+    Reply,
+    Send,
+    Loader2,
+    Sparkles,
+    Eraser,
+} from 'lucide-react'
+import { getInquiryReplyTemplates } from '@/lib/inquiry-reply-templates'
+import type {
+    AgentProfileContactReply,
+    AgentProfileContactRow,
+} from '@/lib/supabase/fetch-agent-profile-contacts'
+
+type ContactRow = AgentProfileContactRow & { replies: AgentProfileContactReply[] }
 
 type Props = {
     initialRows: AgentProfileContactRow[]
     fetchError?: string | null
+    agentDisplayName?: string | null
 }
 
-export default function AgentProfileContactsView({ initialRows, fetchError }: Props) {
-    const [rows, setRows] = useState<AgentProfileContactRow[]>(initialRows)
-    const [pendingId, setPendingId] = useState<string | null>(null)
+export default function AgentProfileContactsView({ initialRows, fetchError, agentDisplayName }: Props) {
+    const [contacts, setContacts] = useState<ContactRow[]>(
+        initialRows.map((r) => ({ ...r, replies: r.replies ?? [] }))
+    )
+    const replyTemplates = useMemo(
+        () => getInquiryReplyTemplates(agentDisplayName ?? ''),
+        [agentDisplayName]
+    )
+    const [expandedId, setExpandedId] = useState<string | null>(null)
+    const [replyText, setReplyText] = useState('')
+    const [isSubmittingReply, setIsSubmittingReply] = useState(false)
+    const [replyFilter, setReplyFilter] = useState<'all' | 'pending' | 'replied'>('all')
+    const [handledUpdatingId, setHandledUpdatingId] = useState<string | null>(null)
+    const supabase = createClient()
 
     useEffect(() => {
-        setRows(initialRows)
+        setContacts(initialRows.map((r) => ({ ...r, replies: r.replies ?? [] })))
     }, [initialRows])
 
-    const toggleHandled = useCallback(async (id: string, next: boolean) => {
-        let prevHandled = false
-        setRows((list) => {
-            const cur = list.find((r) => r.id === id)
-            prevHandled = cur?.is_handled ?? false
-            return list.map((r) => (r.id === id ? { ...r, is_handled: next } : r))
+    const filteredContacts = useMemo(() => {
+        return contacts.filter((c) => {
+            const hasReplies = (c.replies?.length ?? 0) > 0
+            if (replyFilter === 'pending' && hasReplies) return false
+            if (replyFilter === 'replied' && !hasReplies) return false
+            return true
         })
-        setPendingId(id)
-        const supabase = createClient()
-        const { error } = await supabase.from('agent_contacts').update({ is_handled: next }).eq('id', id)
-        setPendingId(null)
-        if (error) {
-            setRows((list) => list.map((r) => (r.id === id ? { ...r, is_handled: prevHandled } : r)))
-            toast.error(error.message || '更新に失敗しました')
-            return
+    }, [contacts, replyFilter])
+
+    const markReadIfNeeded = useCallback(
+        async (id: string, alreadyRead: boolean) => {
+            if (alreadyRead) return
+            try {
+                const { error } = await supabase
+                    .from('agent_contacts')
+                    .update({ read_by_agent_at: new Date().toISOString() })
+                    .eq('id', id)
+                    .is('read_by_agent_at', null)
+                if (error) throw error
+                setContacts((prev) =>
+                    prev.map((c) =>
+                        c.id === id ? { ...c, read_by_agent_at: new Date().toISOString() } : c
+                    )
+                )
+            } catch (err) {
+                console.error('[AgentProfileContactsView] mark read:', err)
+            }
+        },
+        [supabase]
+    )
+
+    const toggleExpand = (id: string, isRead: boolean) => {
+        if (expandedId === id) {
+            setExpandedId(null)
+            setReplyText('')
+        } else {
+            setExpandedId(id)
+            setReplyText('')
+            if (!isRead) {
+                void markReadIfNeeded(id, isRead)
+            }
         }
-        toast.success('保存しました')
-    }, [])
+    }
+
+    const toggleHandled = useCallback(
+        async (id: string, next: boolean) => {
+            let prevHandled = false
+            setContacts((list) => {
+                const cur = list.find((r) => r.id === id)
+                prevHandled = cur?.is_handled ?? false
+                return list.map((r) => (r.id === id ? { ...r, is_handled: next } : r))
+            })
+            setHandledUpdatingId(id)
+            const { error } = await supabase.from('agent_contacts').update({ is_handled: next }).eq('id', id)
+            setHandledUpdatingId(null)
+            if (error) {
+                setContacts((list) => list.map((r) => (r.id === id ? { ...r, is_handled: prevHandled } : r)))
+                alert(error.message || '更新に失敗しました')
+            }
+        },
+        [supabase]
+    )
+
+    const handleSendReply = async (contact: ContactRow) => {
+        if (!replyText.trim()) return
+
+        setIsSubmittingReply(true)
+        try {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser()
+            if (!user) throw new Error('Not authenticated')
+
+            const replyId = crypto.randomUUID()
+            const { error } = await supabase.from('agent_contact_replies').insert({
+                id: replyId,
+                agent_contact_id: contact.id,
+                sender_id: user.id,
+                message: replyText.trim(),
+            })
+
+            if (error) throw error
+
+            const messageToNotify = replyText.trim()
+
+            try {
+                const notifyRes = await fetch('/api/agent-contacts/notify-reply', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        agent_contact_id: contact.id,
+                        message: messageToNotify,
+                        agent_contact_reply_id: replyId,
+                    }),
+                })
+                const payload = (await notifyRes.json().catch(() => ({}))) as {
+                    error?: string
+                    hint?: string
+                    sent?: boolean
+                }
+
+                if (!notifyRes.ok) {
+                    const detail = payload.error || notifyRes.statusText
+                    console.warn('[AgentProfileContactsView] notify-reply:', notifyRes.status, detail)
+
+                    if (notifyRes.status === 401) {
+                        alert(
+                            '返信は保存されましたが、通知用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。'
+                        )
+                    } else if (notifyRes.status === 502 || notifyRes.status === 503) {
+                        const hint = payload.hint ? `\n\n${payload.hint}` : ''
+                        alert(`メール通知に失敗しました: ${detail}${hint}`)
+                    } else if (notifyRes.status === 422) {
+                        alert(`${detail}`)
+                    } else {
+                        alert(`送信に失敗しました: ${detail}`)
+                    }
+                }
+            } catch (notifyErr) {
+                console.warn('[AgentProfileContactsView] notify-reply fetch failed:', notifyErr)
+            }
+
+            await supabase.from('agent_contacts').update({ is_handled: true }).eq('id', contact.id)
+
+            const newReply: AgentProfileContactReply = {
+                id: replyId,
+                message: messageToNotify,
+                created_at: new Date().toISOString(),
+            }
+
+            setContacts((prev) =>
+                prev.map((c) => {
+                    if (c.id !== contact.id) return c
+                    return {
+                        ...c,
+                        is_handled: true,
+                        replies: [...(c.replies || []), newReply],
+                    }
+                })
+            )
+            setReplyText('')
+        } catch (err) {
+            console.error('Error sending profile contact reply:', err)
+            alert('返信の保存に失敗しました。')
+        } finally {
+            setIsSubmittingReply(false)
+        }
+    }
 
     if (fetchError) {
         return (
             <div className="p-6 text-sm font-bold leading-relaxed text-red-800 bg-red-50">
-                一覧を読み込めませんでした。Supabase のマイグレーション（agent_contacts のエージェント向け RLS）が適用されているか確認してください。
+                一覧を読み込めませんでした。Supabase のマイグレーション（agent_contact_replies / read_by_agent_at）が適用されているか確認してください。
                 <span className="mt-2 block font-mono text-xs font-normal opacity-90">{fetchError}</span>
             </div>
         )
     }
 
-    const header = (
-        <div className="border-b border-slate-100 px-4 py-4 sm:px-8">
-            <h3 className="text-base font-black text-navy-secondary sm:text-lg">プロフィールからの問い合わせ</h3>
-            <p className="mt-1 text-xs font-bold text-slate-500">
-                あなたのエージェント公開ページのフォームから届いた連絡です。返信・対応が終わったら「対応済」にチェックしてください。
-            </p>
-        </div>
-    )
-
-    if (rows.length === 0) {
+    if (contacts.length === 0) {
         return (
-            <>
-                {header}
-                <div className="p-12 text-center text-sm font-bold text-slate-400">
-                    プロフィールページのフォームからの問い合わせはまだありません
-                </div>
-            </>
+            <div className="p-20 text-center">
+                <p className="text-slate-400 font-medium">プロフィールページからのお問い合わせはありません</p>
+            </div>
         )
     }
 
+    const filterChip = (active: boolean) =>
+        `whitespace-nowrap px-3 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all ${
+            active ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'
+        }`
+
     return (
-        <>
-            {header}
-            <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
-                <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        <th className="px-4 py-3 whitespace-nowrap">日時</th>
-                        <th className="px-4 py-3 min-w-[200px]">お客様（フォーム）</th>
-                        <th className="px-4 py-3 min-w-[240px]">内容</th>
-                        <th className="px-4 py-3 whitespace-nowrap text-center">対応済</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows.map((r) => (
-                        <tr key={r.id} className="border-b border-slate-50 align-top hover:bg-slate-50/50">
-                            <td className="px-4 py-3 text-xs font-medium text-slate-600 whitespace-nowrap">
-                                {r.created_at ? format(new Date(r.created_at), 'yyyy/MM/dd HH:mm') : '—'}
-                            </td>
-                            <td className="px-4 py-3">
-                                <div className="flex items-start gap-2">
-                                    <User className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-                                    <div className="min-w-0">
-                                        <div className="font-bold text-navy-secondary">{r.customer_name}</div>
-                                        <a
-                                            href={`mailto:${r.customer_email}`}
-                                            className="mt-0.5 flex items-center gap-1 text-[11px] text-navy-primary hover:underline break-all"
-                                        >
-                                            <Mail className="h-3 w-3 shrink-0" aria-hidden />
-                                            {r.customer_email}
-                                        </a>
-                                        <a
-                                            href={`tel:${r.customer_phone}`}
-                                            className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-600 hover:underline"
-                                        >
-                                            <Phone className="h-3 w-3 shrink-0" aria-hidden />
-                                            {r.customer_phone}
-                                        </a>
+        <div>
+            <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-6 space-y-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
+                        対応
+                    </span>
+                    <div className="flex min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
+                        <button type="button" onClick={() => setReplyFilter('all')} className={filterChip(replyFilter === 'all')}>
+                            すべて
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setReplyFilter('pending')}
+                            className={filterChip(replyFilter === 'pending')}
+                        >
+                            未対応
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setReplyFilter('replied')}
+                            className={filterChip(replyFilter === 'replied')}
+                        >
+                            返信済み
+                        </button>
+                    </div>
+                </div>
+                <p className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[11px] font-medium leading-relaxed text-slate-600">
+                    公開プロフィールのお問い合わせフォームから届いたメッセージです。返信するとお客様のメール宛に通知されます（物件ページの「問い合わせ」タブと同じ流れです）。
+                </p>
+                <p className="text-[10px] font-bold text-slate-400">
+                    表示 {filteredContacts.length} / 全 {contacts.length} 件
+                </p>
+            </div>
+
+            {filteredContacts.length === 0 ? (
+                <div className="p-16 text-center space-y-3">
+                    <p className="text-slate-500 font-medium text-sm">条件に一致するお問い合わせはありません</p>
+                    <button
+                        type="button"
+                        onClick={() => setReplyFilter('all')}
+                        className="text-xs font-black text-navy-primary underline decoration-navy-primary/30 hover:text-navy-secondary"
+                    >
+                        フィルターをリセット
+                    </button>
+                </div>
+            ) : null}
+
+            <div className={`divide-y divide-slate-50 ${filteredContacts.length === 0 ? 'hidden' : ''}`}>
+                {filteredContacts.map((contact) => {
+                    const expanded = expandedId === contact.id
+                    const isRead = Boolean(contact.read_by_agent_at)
+                    const hasReplies = (contact.replies?.length ?? 0) > 0
+
+                    return (
+                        <div
+                            key={contact.id}
+                            className={`p-6 transition-all ${!isRead ? 'bg-navy-primary/[0.02]' : ''}`}
+                        >
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-center space-x-4">
+                                    <div
+                                        className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                                            !isRead
+                                                ? 'bg-navy-primary text-white shadow-lg shadow-navy-primary/20'
+                                                : 'bg-slate-100 text-slate-400'
+                                        }`}
+                                    >
+                                        <Mail className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                            {!isRead && (
+                                                <span className="bg-navy-primary text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                                    New
+                                                </span>
+                                            )}
+                                            {hasReplies ? (
+                                                <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold">
+                                                    返信済み
+                                                </span>
+                                            ) : (
+                                                <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold">
+                                                    未対応
+                                                </span>
+                                            )}
+                                            {contact.is_handled ? (
+                                                <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold">
+                                                    対応済
+                                                </span>
+                                            ) : null}
+                                            <span className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center">
+                                                <Calendar className="w-3 h-3 mr-1" />
+                                                {new Date(contact.created_at).toLocaleString('ja-JP', {
+                                                    timeZone: 'Asia/Bangkok',
+                                                    year: 'numeric',
+                                                    month: '2-digit',
+                                                    day: '2-digit',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
+                                            </span>
+                                        </div>
+                                        <h4 className="text-lg font-bold text-navy-secondary">
+                                            {contact.customer_name}{' '}
+                                            <span className="text-sm font-normal text-slate-400 ml-1">さんからのお問い合わせ</span>
+                                        </h4>
+                                        <p className="text-xs text-navy-primary font-bold mt-1">対象: エージェント公開ページ（プロフィール）</p>
                                     </div>
                                 </div>
-                            </td>
-                            <td className="px-4 py-3 max-w-md">
-                                <div className="flex gap-2">
-                                    <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-                                    <p className="whitespace-pre-wrap break-words text-xs leading-relaxed text-slate-700">
-                                        {r.message}
-                                    </p>
+
+                                <button
+                                    type="button"
+                                    onClick={() => toggleExpand(contact.id, isRead)}
+                                    className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+                                        expanded
+                                            ? 'bg-navy-secondary text-white border-navy-secondary shadow-lg'
+                                            : 'bg-white text-navy-primary border-navy-primary/10 hover:border-navy-primary/30 hover:shadow-md'
+                                    }`}
+                                >
+                                    <span>{expanded ? '内容を閉じる' : '詳細を確認'}</span>
+                                    {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                </button>
+                            </div>
+
+                            {expanded && (
+                                <div className="mt-8 pt-8 border-t border-slate-100 animate-in slide-in-from-top-4 duration-300">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                        <div className="space-y-4">
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
+                                                    <User className="w-3 h-3 mr-1.5" /> お名前
+                                                </p>
+                                                <p className="text-sm font-bold text-navy-secondary">{contact.customer_name}</p>
+                                            </div>
+                                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
+                                                    <Mail className="w-3 h-3 mr-1.5" /> メールアドレス
+                                                </p>
+                                                <p className="text-sm font-bold text-navy-secondary select-all break-all">
+                                                    {contact.customer_email}
+                                                </p>
+                                            </div>
+                                            {contact.customer_phone ? (
+                                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
+                                                        <Phone className="w-3 h-3 mr-1.5" /> 電話番号
+                                                    </p>
+                                                    <p className="text-sm font-bold text-navy-secondary select-all">
+                                                        {contact.customer_phone}
+                                                    </p>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                        <div className="bg-navy-primary/[0.03] p-6 rounded-3xl border border-navy-primary/5">
+                                            <p className="text-[10px] font-black text-navy-primary/60 uppercase tracking-widest mb-4">
+                                                メッセージ内容
+                                            </p>
+                                            <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic">
+                                                &ldquo;{contact.message}&rdquo;
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h5 className="text-sm font-black text-navy-secondary mb-4 flex items-center">
+                                                <Reply className="w-4 h-4 mr-2" />
+                                                返信履歴
+                                            </h5>
+
+                                            {contact.replies && contact.replies.length > 0 ? (
+                                                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    {contact.replies.map((reply) => (
+                                                        <div
+                                                            key={reply.id}
+                                                            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm ml-4 relative"
+                                                        >
+                                                            <div className="absolute top-4 -left-2 w-4 h-4 bg-white border-l border-t border-slate-100 rotate-45" />
+                                                            <p className="text-xs text-slate-400 mb-2 font-bold">
+                                                                {new Date(reply.created_at).toLocaleString('ja-JP', {
+                                                                    timeZone: 'Asia/Bangkok',
+                                                                    year: 'numeric',
+                                                                    month: '2-digit',
+                                                                    day: '2-digit',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit',
+                                                                })}
+                                                            </p>
+                                                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+                                                                {reply.message}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-slate-400 italic">まだ返信はありません</p>
+                                            )}
+                                        </div>
+
+                                        <hr className="my-8 border-0 border-t-2 border-slate-200" />
+
+                                        <div>
+                                            <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
+                                                <Send className="w-4 h-4 mr-2" />
+                                                返信本文
+                                            </h5>
+                                            <label className="sr-only" htmlFor={`profile-contact-reply-${contact.id}`}>
+                                                返信本文
+                                            </label>
+                                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                                        <Sparkles className="h-3 w-3" />
+                                                        定型文
+                                                    </span>
+                                                    {replyTemplates.map((t) => (
+                                                        <button
+                                                            key={t.label}
+                                                            type="button"
+                                                            onClick={() => setReplyText(t.text)}
+                                                            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-navy-secondary transition hover:border-navy-primary/40 hover:bg-slate-50"
+                                                        >
+                                                            {t.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setReplyText('')}
+                                                    disabled={!replyText}
+                                                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                                                    title="本文を空にします"
+                                                >
+                                                    <Eraser className="h-3 w-3" />
+                                                    本文をクリア
+                                                </button>
+                                            </div>
+                                            <div className="relative min-w-0">
+                                                <textarea
+                                                    id={`profile-contact-reply-${contact.id}`}
+                                                    rows={6}
+                                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
+                                                    placeholder="返信を入力…"
+                                                    value={replyText}
+                                                    onChange={(e) => setReplyText(e.target.value)}
+                                                    aria-label="返信本文"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => void handleSendReply(contact)}
+                                                    disabled={isSubmittingReply || !replyText.trim()}
+                                                    className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                                    title="送信"
+                                                >
+                                                    {isSubmittingReply ? (
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                                    ) : (
+                                                        <Send className="w-5 h-5" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
+                                                ※送信するとお客様にメールで届き、返信履歴にも保存されます。
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-slate-100 pt-6">
+                                            <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-slate-600">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={contact.is_handled}
+                                                    disabled={handledUpdatingId === contact.id}
+                                                    onChange={(e) => void toggleHandled(contact.id, e.target.checked)}
+                                                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                                />
+                                                手動で「対応済み」として記録する（返信とは別に整理用）
+                                            </label>
+                                            {!isRead ? (
+                                                <div className="flex items-center text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg text-xs font-bold w-fit">
+                                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                                    既読としてマークしました
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </div>
                                 </div>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                                <label className="inline-flex cursor-pointer flex-col items-center gap-1">
-                                    <span className="sr-only">対応済み</span>
-                                    {pendingId === r.id ? (
-                                        <Loader2 className="h-4 w-4 animate-spin text-navy-primary" aria-hidden />
-                                    ) : (
-                                        <input
-                                            type="checkbox"
-                                            checked={r.is_handled}
-                                            onChange={(e) => void toggleHandled(r.id, e.target.checked)}
-                                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                                        />
-                                    )}
-                                    <span className="text-[9px] font-black uppercase tracking-tight text-slate-400">
-                                        {r.is_handled ? '済' : '未'}
-                                    </span>
-                                </label>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                            )}
+                        </div>
+                    )
+                })}
             </div>
-        </>
+        </div>
     )
 }
