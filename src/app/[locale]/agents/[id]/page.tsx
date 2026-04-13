@@ -1,6 +1,6 @@
 "use client";
 import { createClient } from '@/lib/supabase/client'
-import { notFound, useParams } from 'next/navigation'
+import { notFound, useParams, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -20,12 +20,17 @@ import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 import AgentContactForm from '@/components/agent/AgentContactForm'
+import { useAuth } from '@/contexts/AuthContext'
+import { LogIn } from 'lucide-react'
 
 
 export default function AgentProfilePage() {
     const params = useParams()
+    const pathname = usePathname()
     const agentId = params?.id as string
     const locale = (params?.locale as string) || 'jp'
+    const { user, isLoading: authLoading } = useAuth()
+    const loginHref = `/${locale}/login?redirect=${encodeURIComponent(pathname || `/${locale}/agents/${agentId}`)}`
     
     const [agent, setAgent] = useState<any>(null)
     const [properties, setProperties] = useState<any[]>([])
@@ -129,24 +134,48 @@ export default function AgentProfilePage() {
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 sticky top-28">
                             <h3 className="text-sm font-normal text-navy-secondary mb-6">このエージェントに連絡する</h3>
-                            <div className="space-y-4">
-                                {agentLineContactVisible ? (
-                                    <ContactBtn
-                                        href={(() => {
-                                            const s = String(agent.line_id).trim()
-                                            return s.startsWith('http') ? s : '#'
-                                        })()}
-                                        label="LINE"
-                                        icon={MessageCircle}
-                                        color="emerald"
-                                    />
-                                ) : null}
-                                {agent.phone && agent.show_phone_in_inquiry !== false ? (
-                                    <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />
-                                ) : null}
-                                <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />
-                            </div>
-                            <AgentContactForm agentId={agentId} locale={locale} />
+                            {authLoading ? (
+                                <div className="flex min-h-[160px] items-center justify-center py-8">
+                                    <RefreshCw className="h-8 w-8 animate-spin text-navy-primary" aria-hidden />
+                                </div>
+                            ) : !user ? (
+                                <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-5 py-6 text-center">
+                                    <p className="text-sm font-bold text-navy-secondary leading-relaxed">
+                                        ログイン後にご利用いただけます
+                                    </p>
+                                    <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                                        LINE・電話・メール・お問い合わせフォームを含む、このエージェントへのすべてのお問い合わせ機能はログインが必要です。
+                                    </p>
+                                    <Link
+                                        href={loginHref}
+                                        className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary px-6 py-3 text-sm font-bold text-white shadow-md shadow-navy-primary/20 transition hover:bg-navy-secondary"
+                                    >
+                                        <LogIn className="h-4 w-4 shrink-0" aria-hidden />
+                                        ログインページへ
+                                    </Link>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-4">
+                                        {agentLineContactVisible ? (
+                                            <ContactBtn
+                                                href={(() => {
+                                                    const s = String(agent.line_id).trim()
+                                                    return s.startsWith('http') ? s : '#'
+                                                })()}
+                                                label="LINE"
+                                                icon={MessageCircle}
+                                                color="emerald"
+                                            />
+                                        ) : null}
+                                        {agent.phone && agent.show_phone_in_inquiry !== false ? (
+                                            <ContactBtn href={`tel:${agent.phone}`} label="電話をかける" icon={Phone} color="slate" />
+                                        ) : null}
+                                        <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />
+                                    </div>
+                                    <AgentContactForm agentId={agentId} forLoggedInUser />
+                                </>
+                            )}
                         </div>
                     </div>
                     <div className="lg:col-span-2">
