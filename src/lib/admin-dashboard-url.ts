@@ -8,6 +8,7 @@ export type AdminDashboardTabId =
     | 'general_users'
     | 'feedback'
     | 'inquiries'
+    | 'agent_contacts'
 
 const TAB_SET = new Set<string>([
     'overview',
@@ -18,6 +19,7 @@ const TAB_SET = new Set<string>([
     'general_users',
     'feedback',
     'inquiries',
+    'agent_contacts',
 ])
 
 const AGENT_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

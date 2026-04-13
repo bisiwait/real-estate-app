@@ -26,6 +26,7 @@ import AdminProjectManagement from './ProjectManagement'
 import AdminDeveloperManagement from './DeveloperManagement'
 import AdminFeedbackManagement from './FeedbackManagement'
 import AdminInquiriesPanel from './AdminInquiriesPanel'
+import AdminAgentContactsPanel from './AdminAgentContactsPanel'
 import type { AdminMailInquiryRow, AdminLineLeadRow } from '@/lib/supabase/fetch-admin-inquiries'
 import {
     type AdminDashboardTabId as TabId,
@@ -176,6 +177,10 @@ export default function AdminDashboardClient({
                     <Mail className={tabIconClass} />
                     <span className={tabLabelClass}>問い合わせ</span>
                 </button>
+                <button onClick={() => selectTab('agent_contacts')} className={`${tabClass('agent_contacts')} sm:flex-1`}>
+                    <MessageSquare className={tabIconClass} />
+                    <span className={tabLabelClass}>エージェント問合せ</span>
+                </button>
                 <button onClick={() => selectTab('feedback')} className={`${tabClass('feedback')} sm:flex-1`}>
                     <Lightbulb className={tabIconClass} />
                     <span className={tabLabelClass}>要望</span>
@@ -280,6 +285,7 @@ export default function AdminDashboardClient({
                         lineLeads={lineLeads}
                     />
                 )}
+                {tab === 'agent_contacts' && <AdminAgentContactsPanel />}
                 {tab === 'feedback' && (
                     <AdminFeedbackManagement onConsumeNewFeedbackBadge={consumeNewFeedbackBadgeIfNeeded} />
                 )}

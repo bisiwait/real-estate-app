@@ -19,6 +19,7 @@ import {
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
 import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
+import AgentContactForm from '@/components/agent/AgentContactForm'
 
 
 export default function AgentProfilePage() {
@@ -145,6 +146,7 @@ export default function AgentProfilePage() {
                                 ) : null}
                                 <ContactBtn href={`mailto:${agent.email}`} label="メール問い合わせ" icon={Mail} color="slate" />
                             </div>
+                            <AgentContactForm agentId={agentId} />
                         </div>
                     </div>
                     <div className="lg:col-span-2">
