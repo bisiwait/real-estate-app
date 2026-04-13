@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { notifyAgentContactSubmission } from '@/lib/agent-contact-notify'
@@ -64,21 +65,20 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'このエージェントにはお問い合わせできません。' }, { status: 403 })
     }
 
-    const { data: inserted, error: insErr } = await supabaseUser
-        .from('agent_contacts')
-        .insert({
-            agent_id: agentId,
-            submitter_id: user.id,
-            customer_name: name,
-            customer_email: email,
-            customer_phone: phone,
-            message,
-            is_handled: false,
-        })
-        .select('id')
-        .single()
+    const submissionId = randomUUID()
+    // .select() は挿入後の行 SELECT が RLS で弾かれると全体が失敗するため、ID はサーバーで付与して返却のみにする
+    const { error: insErr } = await supabaseUser.from('agent_contacts').insert({
+        id: submissionId,
+        agent_id: agentId,
+        submitter_id: user.id,
+        customer_name: name,
+        customer_email: email,
+        customer_phone: phone,
+        message,
+        is_handled: false,
+    })
 
-    if (insErr || !inserted?.id) {
+    if (insErr) {
         console.error('[api/contact] insert', insErr)
         return NextResponse.json({ error: '送信に失敗しました。時間をおいて再度お試しください。' }, { status: 500 })
     }
@@ -91,8 +91,8 @@ export async function POST(req: Request) {
         customerEmail: email,
         customerPhone: phone,
         message,
-        submissionId: inserted.id,
+        submissionId,
     }).catch(() => {})
 
-    return NextResponse.json({ success: true, id: inserted.id })
+    return NextResponse.json({ success: true, id: submissionId })
 }
