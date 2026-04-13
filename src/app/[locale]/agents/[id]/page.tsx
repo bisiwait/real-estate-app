@@ -14,6 +14,7 @@ import {
     CheckCircle,
     Globe,
     ChevronRight,
+    ChevronDown,
     RefreshCw,
     LogIn,
 } from 'lucide-react'
@@ -39,6 +40,7 @@ export default function AgentProfilePage() {
     const [loading, setLoading] = useState(true)
     const [hideAgent, setHideAgent] = useState(false)
     const [contactTab, setContactTab] = useState<'email' | 'line'>('email')
+    const [contactAccordionOpen, setContactAccordionOpen] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -79,6 +81,7 @@ export default function AgentProfilePage() {
 
     useEffect(() => {
         setContactTab('email')
+        setContactAccordionOpen(false)
     }, [agentId])
 
     if (loading) return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
@@ -142,99 +145,125 @@ export default function AgentProfilePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 sticky top-28">
-                            <h3 className="text-sm font-normal text-navy-secondary mb-6">このエージェントに連絡する</h3>
-                            {authLoading ? (
-                                <div className="flex min-h-[160px] items-center justify-center py-8">
-                                    <RefreshCw className="h-8 w-8 animate-spin text-navy-primary" aria-hidden />
-                                </div>
-                            ) : !user ? (
-                                <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-5 py-6 text-center">
-                                    <p className="text-sm font-bold text-navy-secondary leading-relaxed">
-                                        ログイン後にご利用いただけます
-                                    </p>
-                                    <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-                                        メール・LINEでのお問い合わせはログインが必要です（スマートフォンでは電話での連絡も利用できます）。
-                                    </p>
-                                    <Link
-                                        href={loginHref}
-                                        className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary px-6 py-3 text-sm font-bold text-white shadow-md shadow-navy-primary/20 transition hover:bg-navy-secondary"
-                                    >
-                                        <LogIn className="h-4 w-4 shrink-0" aria-hidden />
-                                        ログインページへ
-                                    </Link>
-                                </div>
-                            ) : (
-                                <>
-                                    {lineTabAvailable ? (
-                                        <div
-                                            className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-100/90 p-1"
-                                            role="tablist"
-                                            aria-label="お問い合わせ方法"
+                            <button
+                                type="button"
+                                id="agent-contact-heading"
+                                className="flex w-full items-center justify-between gap-3 rounded-xl py-1 text-left -mx-1 px-1 transition-colors hover:bg-slate-50/90"
+                                onClick={() => setContactAccordionOpen((o) => !o)}
+                                aria-expanded={contactAccordionOpen}
+                                aria-controls="agent-contact-panel"
+                            >
+                                <span className="text-sm font-normal text-navy-secondary">
+                                    このエージェントに連絡する
+                                </span>
+                                <ChevronDown
+                                    className={cn(
+                                        'h-5 w-5 shrink-0 text-slate-400 transition-transform duration-200',
+                                        contactAccordionOpen && 'rotate-180'
+                                    )}
+                                    aria-hidden
+                                />
+                            </button>
+                            <div
+                                id="agent-contact-panel"
+                                role="region"
+                                aria-labelledby="agent-contact-heading"
+                                hidden={!contactAccordionOpen}
+                                className="mt-6 border-t border-slate-100 pt-6"
+                            >
+                                {authLoading ? (
+                                    <div className="flex min-h-[160px] items-center justify-center py-8">
+                                        <RefreshCw className="h-8 w-8 animate-spin text-navy-primary" aria-hidden />
+                                    </div>
+                                ) : !user ? (
+                                    <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-5 py-6 text-center">
+                                        <p className="text-sm font-bold text-navy-secondary leading-relaxed">
+                                            ログイン後にご利用いただけます
+                                        </p>
+                                        <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                                            メール・LINEでのお問い合わせはログインが必要です（スマートフォンでは電話での連絡も利用できます）。
+                                        </p>
+                                        <Link
+                                            href={loginHref}
+                                            className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-navy-primary px-6 py-3 text-sm font-bold text-white shadow-md shadow-navy-primary/20 transition hover:bg-navy-secondary"
                                         >
-                                            <button
-                                                type="button"
-                                                role="tab"
-                                                aria-selected={contactTab === 'email'}
-                                                onClick={() => setContactTab('email')}
-                                                className={cn(
-                                                    'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-black transition-all sm:text-sm',
-                                                    contactTab === 'email'
-                                                        ? 'bg-white text-navy-primary shadow-sm'
-                                                        : 'text-slate-500 hover:text-navy-secondary'
-                                                )}
+                                            <LogIn className="h-4 w-4 shrink-0" aria-hidden />
+                                            ログインページへ
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {lineTabAvailable ? (
+                                            <div
+                                                className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-100/90 p-1"
+                                                role="tablist"
+                                                aria-label="お問い合わせ方法"
                                             >
-                                                <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
-                                                メール
-                                            </button>
-                                            <button
-                                                type="button"
-                                                role="tab"
-                                                aria-selected={contactTab === 'line'}
-                                                onClick={() => setContactTab('line')}
-                                                className={cn(
-                                                    'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-black transition-all sm:text-sm',
-                                                    contactTab === 'line'
-                                                        ? 'bg-white text-[#06C755] shadow-sm'
-                                                        : 'text-slate-500 hover:text-[#06C755]'
-                                                )}
-                                            >
-                                                <MessageCircle className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
-                                                LINE
-                                            </button>
-                                        </div>
-                                    ) : null}
+                                                <button
+                                                    type="button"
+                                                    role="tab"
+                                                    aria-selected={contactTab === 'email'}
+                                                    onClick={() => setContactTab('email')}
+                                                    className={cn(
+                                                        'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-black transition-all sm:text-sm',
+                                                        contactTab === 'email'
+                                                            ? 'bg-white text-navy-primary shadow-sm'
+                                                            : 'text-slate-500 hover:text-navy-secondary'
+                                                    )}
+                                                >
+                                                    <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                                                    メール
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    role="tab"
+                                                    aria-selected={contactTab === 'line'}
+                                                    onClick={() => setContactTab('line')}
+                                                    className={cn(
+                                                        'flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-black transition-all sm:text-sm',
+                                                        contactTab === 'line'
+                                                            ? 'bg-white text-[#06C755] shadow-sm'
+                                                            : 'text-slate-500 hover:text-[#06C755]'
+                                                    )}
+                                                >
+                                                    <MessageCircle className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                                                    LINE
+                                                </button>
+                                            </div>
+                                        ) : null}
 
-                                    {(!lineTabAvailable || contactTab === 'email') && (
-                                        <div className="space-y-4">
-                                            <AgentContactForm agentId={agentId} forLoggedInUser variant="inTab" />
-                                            {agent.phone && agent.show_phone_in_inquiry !== false ? (
-                                                <div className="md:hidden">
-                                                    <ContactBtn
-                                                        href={`tel:${agent.phone}`}
-                                                        label="電話をかける"
-                                                        icon={Phone}
-                                                        color="slate"
-                                                    />
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    )}
+                                        {(!lineTabAvailable || contactTab === 'email') && (
+                                            <div className="space-y-4">
+                                                <AgentContactForm agentId={agentId} forLoggedInUser variant="inTab" />
+                                                {agent.phone && agent.show_phone_in_inquiry !== false ? (
+                                                    <div className="md:hidden">
+                                                        <ContactBtn
+                                                            href={`tel:${agent.phone}`}
+                                                            label="電話をかける"
+                                                            icon={Phone}
+                                                            color="slate"
+                                                        />
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        )}
 
-                                    {lineTabAvailable && contactTab === 'line' && (
-                                        <div className="space-y-4">
-                                            <p className="text-xs text-slate-500 leading-relaxed">
-                                                下のボタンからLINEを開き、このエージェントへメッセージをお送りください。
-                                            </p>
-                                            <ContactBtn
-                                                href={lineHref}
-                                                label="LINEで連絡する"
-                                                icon={MessageCircle}
-                                                color="emerald"
-                                            />
-                                        </div>
-                                    )}
-                                </>
-                            )}
+                                        {lineTabAvailable && contactTab === 'line' && (
+                                            <div className="space-y-4">
+                                                <p className="text-xs text-slate-500 leading-relaxed">
+                                                    下のボタンからLINEを開き、このエージェントへメッセージをお送りください。
+                                                </p>
+                                                <ContactBtn
+                                                    href={lineHref}
+                                                    label="LINEで連絡する"
+                                                    icon={MessageCircle}
+                                                    color="emerald"
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="lg:col-span-2">
