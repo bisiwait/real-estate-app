@@ -207,15 +207,6 @@ export default function AgentProfilePage() {
                                     {(!lineTabAvailable || contactTab === 'email') && (
                                         <div className="space-y-4">
                                             <AgentContactForm agentId={agentId} forLoggedInUser variant="inTab" />
-                                            {agent.email ? (
-                                                <a
-                                                    href={`mailto:${agent.email}`}
-                                                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-navy-primary transition hover:border-navy-primary/30 hover:bg-slate-50"
-                                                >
-                                                    <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                                                    メールアプリで開く
-                                                </a>
-                                            ) : null}
                                             {agent.phone && agent.show_phone_in_inquiry !== false ? (
                                                 <div className="md:hidden">
                                                     <ContactBtn
