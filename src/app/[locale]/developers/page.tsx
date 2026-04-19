@@ -1,5 +1,6 @@
 import { createStaticClient } from '@/lib/supabase/static'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronRight, Building2, Globe, Award } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -46,9 +47,15 @@ export default async function DevelopersPage() {
                             href={`/developers/${developer.id}`}
                             className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col items-start text-left"
                         >
-                            <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 overflow-hidden border border-slate-100 group-hover:scale-110 transition-transform duration-500">
+                            <div className="relative mb-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 transition-transform duration-500 group-hover:scale-110">
                                 {developer.logo_url ? (
-                                    <img src={developer.logo_url} alt={developer.name} className="w-full h-full object-contain p-2" />
+                                    <Image
+                                        src={developer.logo_url}
+                                        alt={developer.name}
+                                        fill
+                                        sizes="80px"
+                                        className="object-contain p-2"
+                                    />
                                 ) : (
                                     <Building2 className="w-10 h-10 text-slate-300" />
                                 )}

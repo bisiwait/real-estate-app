@@ -15,7 +15,7 @@ import {
     Loader2
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
-import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
+import { resolveAvatarUrl } from '@/lib/property-image-url'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 
 interface AgentPropertiesListProps {
@@ -114,14 +114,13 @@ export default function AgentPropertiesList({
                             </Link>
                             <div className="flex items-center gap-4">
                                 {avatarSrc && (
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
+                                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-white shadow-sm">
                                         <Image
                                             src={avatarSrc}
                                             alt={agent.full_name || ''}
-                                            width={48}
-                                            height={48}
-                                            className="object-cover w-full h-full"
-                                            unoptimized={isSupabaseStorageHttpUrl(avatarSrc)}
+                                            fill
+                                            sizes="48px"
+                                            className="object-cover"
                                         />
                                     </div>
                                 )}
@@ -212,6 +211,7 @@ export default function AgentPropertiesList({
                                             src={property.images?.[0]}
                                             alt={property.title}
                                             fill
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
 

@@ -22,6 +22,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/errors'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -235,8 +236,18 @@ export default function BroadcastManager() {
                                                 : "bg-white border-slate-100 hover:border-navy-primary/30"
                                         )}
                                     >
-                                        <div className="relative">
-                                            <img src={p.images?.[0]} className="w-12 h-12 rounded-xl object-cover shadow-sm" />
+                                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl shadow-sm">
+                                            {p.images?.[0] ? (
+                                                <PropertyThumbnail
+                                                    src={p.images[0]}
+                                                    alt=""
+                                                    fill
+                                                    sizes="48px"
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center bg-slate-100" aria-hidden />
+                                            )}
                                             {selectedPropertyIds.includes(p.id) && (
                                                 <div className="absolute -top-1 -right-1 bg-navy-primary text-white rounded-full p-0.5">
                                                     <CheckCircle2 size={12} fill="currentColor" className="text-white" />
@@ -351,7 +362,15 @@ export default function BroadcastManager() {
                                     {selectedProperties[0] ? (
                                         <>
                                             <div className="relative aspect-[4/3]">
-                                                <img src={selectedProperties[0].images?.[0]} className="w-full h-full object-cover" />
+                                                {selectedProperties[0].images?.[0] ? (
+                                                    <PropertyThumbnail
+                                                        src={selectedProperties[0].images[0]}
+                                                        alt=""
+                                                        fill
+                                                        sizes="(max-width: 380px) 100vw, 320px"
+                                                        className="object-cover"
+                                                    />
+                                                ) : null}
                                                 <div className="absolute top-4 left-4 bg-emerald-500 text-white text-[9px] font-black px-2 py-1 rounded shadow-lg uppercase tracking-widest">
                                                     New Listing
                                                 </div>

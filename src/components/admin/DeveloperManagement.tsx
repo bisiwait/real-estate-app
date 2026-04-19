@@ -18,6 +18,7 @@ import {
     Image as ImageIcon
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
+import Image from 'next/image'
 
 interface Developer {
     id: string
@@ -286,9 +287,15 @@ export default function AdminDeveloperManagement() {
                         paginatedDevelopers.map((dev) => (
                             <div key={dev.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors flex items-center gap-3 md:gap-4">
                                 {/* Logo */}
-                                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-slate-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 md:h-14 md:w-14">
                                     {dev.logo_url ? (
-                                        <img src={dev.logo_url} alt={dev.name} className="w-full h-full object-contain p-1" />
+                                        <Image
+                                            src={dev.logo_url}
+                                            alt={dev.name}
+                                            fill
+                                            sizes="(max-width: 767px) 48px, 56px"
+                                            className="object-contain p-1"
+                                        />
                                     ) : (
                                         <Building2 className="w-6 h-6 text-slate-300" />
                                     )}

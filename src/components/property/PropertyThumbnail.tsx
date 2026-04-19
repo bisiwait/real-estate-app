@@ -5,7 +5,6 @@ import Image from 'next/image'
 import {
     resolvePropertyImageUrl,
     PROPERTY_PLACEHOLDER_IMAGE,
-    isSupabaseStorageHttpUrl,
 } from '@/lib/property-image-url'
 
 type PropertyThumbnailProps = {
@@ -42,7 +41,9 @@ export default function PropertyThumbnail({
         setImgSrc(resolvePropertyImageUrl(src))
     }, [src])
 
-    const unoptimized = isSupabaseStorageHttpUrl(imgSrc)
+    /** data/blob は Next の最適化対象外 */
+    const bypassOptimization =
+        imgSrc.startsWith('data:') || imgSrc.startsWith('blob:')
 
     const common = {
         src: imgSrc,
@@ -51,7 +52,7 @@ export default function PropertyThumbnail({
         sizes,
         priority,
         loading,
-        unoptimized,
+        ...(bypassOptimization ? { unoptimized: true as const } : {}),
         onError: () => setImgSrc(PROPERTY_PLACEHOLDER_IMAGE),
     } as const
 

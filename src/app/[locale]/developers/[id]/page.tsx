@@ -2,6 +2,7 @@ import { createStaticClient } from '@/lib/supabase/static'
 export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Building2, Globe, Award, MapPin, ChevronRight, Projector as Project } from 'lucide-react'
 
 
@@ -41,9 +42,15 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
 
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
-                        <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-3xl p-4 shadow-2xl flex items-center justify-center shrink-0 border border-white/20 overflow-hidden">
+                        <div className="relative flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-white/20 bg-white p-4 shadow-2xl md:h-40 md:w-40">
                             {developer.logo_url ? (
-                                <img src={developer.logo_url} alt={developer.name} className="max-w-full max-h-full object-contain" />
+                                <Image
+                                    src={developer.logo_url}
+                                    alt={developer.name}
+                                    fill
+                                    sizes="(max-width: 767px) 128px, 160px"
+                                    className="object-contain"
+                                />
                             ) : (
                                 <Building2 className="w-16 h-16 text-slate-200" />
                             )}
@@ -122,12 +129,14 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                                         href={`/properties?project=${project.id}`}
                                         className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100"
                                     >
-                                        <div className="h-48 relative overflow-hidden bg-slate-100">
+                                        <div className="relative h-48 overflow-hidden bg-slate-100">
                                             {project.image_url ? (
-                                                <img
+                                                <Image
                                                     src={project.image_url}
                                                     alt={project.name}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                    fill
+                                                    sizes="(max-width: 767px) 100vw, 50vw"
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">

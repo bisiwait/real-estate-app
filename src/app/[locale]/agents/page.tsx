@@ -5,7 +5,7 @@ import { Building2, ChevronRight, ShieldCheck, User } from 'lucide-react'
 import { createStaticClient } from '@/lib/supabase/static'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { getPublicSiteUrl } from '@/lib/site-url'
-import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
+import { resolveAvatarUrl } from '@/lib/property-image-url'
 
 export const revalidate = 120
 
@@ -127,15 +127,14 @@ export default async function AgentsDirectoryPage({ params }: { params: Promise<
                                 className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all border border-slate-100 flex flex-col items-start text-left"
                             >
                                 <div className="flex items-start gap-4 w-full mb-4">
-                                    <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100 shrink-0">
+                                    <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
                                         {avatarSrc ? (
                                             <Image
                                                 src={avatarSrc}
                                                 alt={agent.full_name || 'Agent'}
-                                                width={80}
-                                                height={80}
-                                                className="w-full h-full object-cover"
-                                                unoptimized={isSupabaseStorageHttpUrl(avatarSrc)}
+                                                fill
+                                                sizes="80px"
+                                                className="object-cover"
                                             />
                                         ) : (
                                             <User className="w-10 h-10 text-slate-300" />

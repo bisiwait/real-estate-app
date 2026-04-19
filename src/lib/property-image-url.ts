@@ -4,11 +4,6 @@ export const PROPERTY_PLACEHOLDER_IMAGE = '/images/placeholder-property.svg'
 const PROPERTY_IMAGES_BUCKET = 'property-images'
 const AVATARS_STORAGE_BUCKET = 'avatars'
 
-/** Next/Image で Supabase Storage 外部 URL をそのまま最適化しない（ホスト差し替え時の挙動安定化） */
-export function isSupabaseStorageHttpUrl(u: string): boolean {
-    return /^https?:\/\//i.test(u) && /supabase\.(co|in)\//i.test(u)
-}
-
 function normalizeSupabaseHttpToHttps(s: string): string {
     if (s.startsWith('http://') && /\.supabase\.(co|in)(\/|$)/i.test(s)) {
         return `https://${s.slice('http://'.length)}`

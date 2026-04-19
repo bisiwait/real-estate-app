@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { User, Mail, Phone, Pencil } from "lucide-react";
 import { resolveAvatarUrl } from "@/lib/property-image-url";
 
@@ -20,9 +21,15 @@ export default function ProfileSection({ user, profile, dict, locale }: ProfileS
             className="space-y-8 p-8"
         >
             <div className="flex flex-col md:flex-row items-center gap-10">
-                <div className="w-32 h-32 bg-slate-100 rounded-3xl flex items-center justify-center border-4 border-white shadow-xl overflow-hidden shrink-0">
+                <div className="relative flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-slate-100 shadow-xl">
                     {avatarSrc ? (
-                        <img src={avatarSrc} alt={profile.full_name} className="w-full h-full object-cover" />
+                        <Image
+                            src={avatarSrc}
+                            alt={profile.full_name}
+                            fill
+                            sizes="128px"
+                            className="object-cover"
+                        />
                     ) : (
                         <User className="w-16 h-16 text-slate-300" />
                     )}

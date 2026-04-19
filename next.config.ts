@@ -76,6 +76,10 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    /** 一般的なビューポート幅（デフォルトに近いが、一覧サムネ向けに 384 を明示） */
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    /** 小さなアイコン・ダッシュボードサムネ用（80px 等の sizes に合わせやすくする） */
+    imageSizes: [16, 32, 48, 64, 80, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: 'https',

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
+import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 
 
 export default function AdminPropertyManagement() {
@@ -293,9 +294,15 @@ export default function AdminPropertyManagement() {
                                 {/* Mobile & Desktop unified layout */}
                                 <div className="flex gap-3 md:gap-4">
                                     {/* Image */}
-                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm">
+                                    <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm">
                                         {property.images?.[0] ? (
-                                            <img src={property.images[0]} className="w-full h-full object-cover" alt="" />
+                                            <PropertyThumbnail
+                                                src={property.images[0]}
+                                                alt=""
+                                                fill
+                                                sizes="(max-width: 767px) 64px, 80px"
+                                                className="object-cover"
+                                            />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-slate-300">
                                                 <AlertCircle className="w-5 h-5" />

@@ -23,6 +23,7 @@ import {
 import { getErrorMessage } from '@/lib/utils/errors'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 
 const CoordinatePicker = dynamic(() => import('../property/CoordinatePicker'), {
     loading: () => <div className="bg-slate-50 rounded-2xl h-64 animate-pulse border border-slate-100" />,
@@ -585,9 +586,15 @@ export default function AdminProjectManagement() {
                                         {/* Header */}
                                         <div className="flex items-start gap-3 px-3 py-3">
                                             {/* Image */}
-                                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
+                                            <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100">
                                                 {project.image_url ? (
-                                                    <img src={project.image_url} alt={project.name} className="w-full h-full object-cover" />
+                                                    <Image
+                                                        src={project.image_url}
+                                                        alt={project.name}
+                                                        fill
+                                                        sizes="40px"
+                                                        className="object-cover"
+                                                    />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-navy-primary/5">
                                                         <Building2 className="h-4 w-4 text-navy-primary/20" />
@@ -674,9 +681,15 @@ export default function AdminProjectManagement() {
 
                                     {/* Desktop layout */}
                                     <div className="hidden md:flex items-start gap-4 p-5">
-                                        <div className="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden bg-navy-primary/5 flex items-center justify-center">
+                                        <div className="relative flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-navy-primary/5">
                                             {project.image_url ? (
-                                                <img src={project.image_url} alt={project.name} className="w-full h-full object-cover" />
+                                                <Image
+                                                    src={project.image_url}
+                                                    alt={project.name}
+                                                    fill
+                                                    sizes="64px"
+                                                    className="object-cover"
+                                                />
                                             ) : (
                                                 <Building2 className="w-7 h-7 text-navy-primary/30" />
                                             )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 import { resolvePropertyImageUrl } from '@/lib/property-image-url'
 import { createPortal } from 'react-dom'
@@ -21,11 +21,24 @@ interface PropertyGalleryProps {
 const MAIN_GALLERY_SIZES =
   '(max-width: 640px) 100vw, (max-width: 1024px) 100vw, min(896px, 66vw)'
 
+function neighborIndices(center: number, len: number): Set<number> {
+  const s = new Set<number>()
+  if (len <= 0) return s
+  const c = Math.max(0, Math.min(center, len - 1))
+  s.add(c)
+  if (c > 0) s.add(c - 1)
+  if (c < len - 1) s.add(c + 1)
+  return s
+}
+
 export default function PropertyGallery({ images, priority = true }: PropertyGalleryProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [initialSlide, setInitialSlide] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
   const [mounted, setMounted] = useState(false)
+  /** メインギャラリー: 表示中＋前後のみ実画像をマウント（非表示スライドの並列取得を防ぐ） */
+  const [mainLoadedIndices, setMainLoadedIndices] = useState<Set<number>>(() => new Set([0]))
+  const [fsLoadedIndices, setFsLoadedIndices] = useState<Set<number>>(() => new Set())
 
   const safeImages = (images ?? []).filter(
     (src): src is string => typeof src === 'string' && src.trim().length > 0
@@ -34,6 +47,22 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
   /** Swiper の loop はスライドが1枚だと内部エラーになりやすい */
   const enableLoop = safeImages.length > 1
 
+  const expandMainLoaded = useCallback((realIndex: number) => {
+    setMainLoadedIndices((prev) => {
+      const next = new Set(prev)
+      neighborIndices(realIndex, safeImages.length).forEach((i) => next.add(i))
+      return next
+    })
+  }, [safeImages.length])
+
+  const expandFsLoaded = useCallback((realIndex: number) => {
+    setFsLoadedIndices((prev) => {
+      const next = new Set(prev)
+      neighborIndices(realIndex, safeImages.length).forEach((i) => next.add(i))
+      return next
+    })
+  }, [safeImages.length])
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -41,13 +70,20 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
   useEffect(() => {
     if (isFullscreen) {
       document.body.style.overflow = 'hidden'
+      setFsLoadedIndices(neighborIndices(initialSlide, safeImages.length))
     } else {
       document.body.style.overflow = 'unset'
+      setFsLoadedIndices(new Set())
     }
     return () => {
       document.body.style.overflow = 'unset'
     }
-  }, [isFullscreen])
+  }, [isFullscreen, initialSlide, safeImages.length])
+
+  useEffect(() => {
+    setActiveIndex(0)
+    setMainLoadedIndices(neighborIndices(0, safeImages.length))
+  }, [safeImages.length])
 
   if (safeImages.length === 0) {
     return (
@@ -82,7 +118,11 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
           pagination={{ clickable: true }}
           autoplay={{ delay: 5000, disableOnInteraction: false }}
           loop={enableLoop}
-          onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
+          onSlideChange={(swiper) => {
+            const ri = swiper.realIndex
+            setActiveIndex(ri)
+            expandMainLoaded(ri)
+          }}
           className="w-full h-full cursor-zoom-in"
         >
           {safeImages.map((image, index) => (
@@ -91,15 +131,22 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
                 className="relative w-full h-full min-h-[280px] sm:min-h-[360px] cursor-pointer"
                 onClick={() => openFullscreen(index)}
               >
-                <PropertyThumbnail
-                  src={resolvePropertyImageUrl(image)}
-                  alt={`Property image ${index + 1}`}
-                  fill
-                  sizes={MAIN_GALLERY_SIZES}
-                  priority={priority && index === 0}
-                  loading="eager"
-                  className="object-cover"
-                />
+                {mainLoadedIndices.has(index) ? (
+                  <PropertyThumbnail
+                    src={resolvePropertyImageUrl(image)}
+                    alt={`Property image ${index + 1}`}
+                    fill
+                    sizes={MAIN_GALLERY_SIZES}
+                    priority={priority && index === 0}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    className="object-cover"
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0 bg-slate-200/80"
+                    aria-hidden
+                  />
+                )}
               </div>
             </SwiperSlide>
           ))}
@@ -178,18 +225,24 @@ export default function PropertyGallery({ images, priority = true }: PropertyGal
                 pagination={{ clickable: true, type: 'fraction' }}
                 zoom={true}
                 className="w-full h-full"
+                onSlideChange={(swiper) => expandFsLoaded(swiper.realIndex)}
               >
                 {safeImages.map((image, index) => (
                   <SwiperSlide key={`gallery-fs-${index}`} className="flex items-center justify-center">
                     <div className="swiper-zoom-container relative flex items-center justify-center w-full h-full min-h-[50vh]">
-                      <PropertyThumbnail
-                        src={resolvePropertyImageUrl(image)}
-                        alt={`Fullscreen ${index + 1}`}
-                        fill
-                        sizes="100vw"
-                        loading="eager"
-                        className="object-contain"
-                      />
+                      {fsLoadedIndices.has(index) ? (
+                        <PropertyThumbnail
+                          src={resolvePropertyImageUrl(image)}
+                          alt={`Fullscreen ${index + 1}`}
+                          fill
+                          sizes="100vw"
+                          loading={index === initialSlide ? 'eager' : 'lazy'}
+                          priority={index === initialSlide}
+                          className="object-contain"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-neutral-900" aria-hidden />
+                      )}
                     </div>
                   </SwiperSlide>
                 ))}

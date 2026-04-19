@@ -19,7 +19,7 @@ import {
     LogIn,
 } from 'lucide-react'
 import BreadcrumbUpdater from '@/components/layout/BreadcrumbUpdater'
-import { resolveAvatarUrl, isSupabaseStorageHttpUrl } from '@/lib/property-image-url'
+import { resolveAvatarUrl } from '@/lib/property-image-url'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 import AgentContactForm from '@/components/agent/AgentContactForm'
 import { useAuth } from '@/contexts/AuthContext'
@@ -105,14 +105,14 @@ export default function AgentProfilePage() {
                 <div className="bg-white rounded-[2.5rem] p-12 shadow-xl border border-slate-100 mb-12 relative overflow-hidden">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 relative z-10">
                         <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-                            <div className="w-48 h-48 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-lg mb-6 relative">
+                            <div className="relative mb-6 flex h-48 w-48 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-lg">
                                 {avatarSrc ? (
                                     <Image
                                         src={avatarSrc}
                                         alt={agent.full_name}
                                         fill
+                                        sizes="192px"
                                         className="object-cover"
-                                        unoptimized={isSupabaseStorageHttpUrl(avatarSrc)}
                                     />
                                 ) : (
                                     <User className="w-20 h-20 text-slate-300" />
@@ -354,6 +354,7 @@ function PropertyCard({ property, locale }: { property: any; locale: string }) {
                     src={property.images?.[0]}
                     alt={property.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
             </div>
