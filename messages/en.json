@@ -865,5 +865,11 @@
         "error_login": "Please sign in.",
         "guide_image_missing_title": "Add the screenshot images",
         "guide_image_missing_help": "Save the provided images to the path above."
+    },
+    "admin_impersonation": {
+        "banner": "You are acting on behalf of an agent. Actions use that agent’s permissions.",
+        "return_to_admin": "Return to admin",
+        "login_as_agent": "Sign in as this agent",
+        "confirm": "Sign in as this agent and use the dashboard on their behalf?\nYou can return to your admin session anytime via “Return to admin” at the top."
     }
 }

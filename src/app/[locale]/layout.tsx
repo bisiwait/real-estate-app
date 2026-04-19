@@ -8,6 +8,7 @@ import NavigationPendingProvider from "@/components/layout/NavigationPendingProv
 import Link from "next/link";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import AdminImpersonationBanner from "@/components/admin/AdminImpersonationBanner";
 import { SearchCountProvider } from "@/contexts/SearchCountContext";
 import { Toaster } from 'sonner';
 import { getPublicSiteUrl } from '@/lib/site-url';
@@ -94,6 +95,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} antialiased bg-background min-w-0`}>
         <AuthProvider>
           <SearchCountProvider>
+            <AdminImpersonationBanner locale={locale} />
             <Header dict={dict} />
             <main className="min-h-[calc(100vh-80px)] min-w-0 w-full max-w-full">
               <Breadcrumb

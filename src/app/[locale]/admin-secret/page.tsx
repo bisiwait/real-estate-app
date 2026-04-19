@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin'
 import { createAdminClient } from '@/lib/supabase/server'
 import AdminDashboardClient from '@/components/admin/AdminDashboardClient'
+import { getDictionary } from '@/lib/i18n/get-dictionary'
 import {
     fetchAdminMailInquiries,
     fetchAdminLineLeads,
@@ -26,6 +27,15 @@ export default async function AdminSecretDashboard({
 
     if (!isUserAdmin) {
         redirect('/')
+    }
+
+    const dict = await getDictionary(locale)
+    const impRaw = (dict as { admin_impersonation?: { login_as_agent: string; confirm: string } }).admin_impersonation
+    const impersonationCopy = {
+        login_as_agent: impRaw?.login_as_agent ?? 'エージェントとしてログイン',
+        confirm:
+            impRaw?.confirm ??
+            'このエージェントとしてログインし、ダッシュボード等を代行操作しますか？\n画面上部から管理者に戻れます。',
     }
 
     const supabaseAdmin = await createAdminClient()
@@ -80,6 +90,7 @@ export default async function AdminSecretDashboard({
                         lineLeads={lineLeads}
                         lineInquiryClicksByAgent={lineInquiryClicksByAgent}
                         urlInitialTab={urlInitialTab}
+                        impersonationCopy={impersonationCopy}
                     />
                 </Suspense>
             </div>

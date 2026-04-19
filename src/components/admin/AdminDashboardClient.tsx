@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import AdminPropertyManagement from './PropertyManagement'
-import AdminUserManagement from './UserManagement'
+import AdminUserManagement, { type AdminImpersonationActionCopy } from './UserManagement'
 import AdminProjectManagement from './ProjectManagement'
 import AdminDeveloperManagement from './DeveloperManagement'
 import AdminFeedbackManagement from './FeedbackManagement'
@@ -51,6 +51,8 @@ interface Props {
     lineLeads: AdminLineLeadRow[]
     /** エージェントID → 今月（日本時間の月初から）の LINE 問い合わせボタンクリック数 */
     lineInquiryClicksByAgent: Record<string, number>
+    /** 管理者がエージェントとしてログインする操作の文言 */
+    impersonationCopy: AdminImpersonationActionCopy
 }
 
 export default function AdminDashboardClient({
@@ -63,6 +65,7 @@ export default function AdminDashboardClient({
     mailInquiries,
     lineLeads,
     lineInquiryClicksByAgent,
+    impersonationCopy,
 }: Props) {
     const router = useRouter()
     const pathname = usePathname()
@@ -275,6 +278,7 @@ export default function AdminDashboardClient({
                             locale={locale}
                             variant="agent"
                             lineInquiryClicksByAgent={lineInquiryClicksByAgent}
+                            impersonation={impersonationCopy}
                         />
                     ))}
                 {tab === 'general_users' && <AdminUserManagement locale={locale} variant="general" />}

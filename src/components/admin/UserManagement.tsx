@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
     Users,
@@ -18,24 +19,43 @@ import {
     X,
     ExternalLink,
     MessageCircle,
+    LogIn,
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
 import { adminResetPassword } from '@/app/actions/adminAuth'
 import { useAuth } from '@/contexts/AuthContext'
 import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
+import {
+    beginAdminAgentImpersonation,
+    discardAdminImpersonationRevert,
+} from '@/app/actions/adminAgentImpersonation'
 
 export type AdminUserManagementVariant = 'agent' | 'general'
+
+export type AdminImpersonationActionCopy = {
+    login_as_agent: string
+    confirm: string
+}
+
+const DEFAULT_IMPERSONATION_COPY: AdminImpersonationActionCopy = {
+    login_as_agent: 'エージェントとしてログイン',
+    confirm:
+        'このエージェントとしてログインし、ダッシュボード等を代行操作しますか？\n画面上部から管理者に戻れます。',
+}
 
 export default function AdminUserManagement({
     locale,
     variant,
     lineInquiryClicksByAgent = {},
+    impersonation,
 }: {
     locale: string
     /** 管理者ダッシュボードのタブごとに固定（エージェント / 一般ユーザー） */
     variant: AdminUserManagementVariant
     /** variant=agent のとき、今月の LINE 問い合わせボタンクリック数（日本時間の月初から） */
     lineInquiryClicksByAgent?: Record<string, number>
+    /** 管理者がエージェントとしてログインするボタン文言（エージェントタブのみ） */
+    impersonation?: AdminImpersonationActionCopy | null
 }) {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -50,10 +70,13 @@ export default function AdminUserManagement({
     const PAGE_SIZE = 9
     const [agentActionBusy, setAgentActionBusy] = useState<string | null>(null)
     const [resumeRestoringUi, setResumeRestoringUi] = useState(false)
+    const [impersonateBusy, setImpersonateBusy] = useState<string | null>(null)
 
     const supabase = createClient()
-    const { userData } = useAuth()
+    const { userData, refreshUser } = useAuth()
+    const router = useRouter()
     const isAdminUser = userData.isAdmin || userData.role === 'admin'
+    const impersonationCopy = impersonation ?? DEFAULT_IMPERSONATION_COPY
 
     const fetchUsers = async () => {
         setLoading(true)
@@ -167,6 +190,44 @@ export default function AdminUserManagement({
             alert(getErrorMessage(e))
         } finally {
             setAgentActionBusy(null)
+        }
+    }
+
+    const runImpersonateAsAgent = async (user: { id: string; email?: string | null }) => {
+        if (!confirm(impersonationCopy.confirm)) return
+        if (!user.email) {
+            alert('メールアドレスが無いため、代行ログインできません。')
+            return
+        }
+        setImpersonateBusy(user.id)
+        try {
+            const res = await beginAdminAgentImpersonation(user.id, locale)
+            if (!res.ok) {
+                alert(res.error)
+                return
+            }
+            const { error } = await supabase.auth.verifyOtp({
+                type: 'email',
+                email: user.email,
+                token_hash: res.token_hash,
+            })
+            if (error) {
+                console.error(error)
+                const discarded = await discardAdminImpersonationRevert()
+                if (!discarded.ok) {
+                    console.warn(discarded.error)
+                }
+                alert(error.message || 'エージェントへの切り替えに失敗しました。')
+                return
+            }
+            await refreshUser()
+            router.refresh()
+            router.push(`/${locale}/dashboard`)
+        } catch (e) {
+            console.error(e)
+            alert(getErrorMessage(e))
+        } finally {
+            setImpersonateBusy(null)
         }
     }
 
@@ -400,6 +461,22 @@ export default function AdminUserManagement({
                                                         詳細（分析）
                                                         <ExternalLink className="h-3 w-3 opacity-70" />
                                                     </Link>
+                                                    {isAdminUser && !user.deleted_at && (
+                                                        <button
+                                                            type="button"
+                                                            disabled={impersonateBusy === user.id || !!agentActionBusy}
+                                                            onClick={() => runImpersonateAsAgent(user)}
+                                                            className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-emerald-600/25 bg-emerald-50 px-3 py-1.5 text-[10px] font-black text-emerald-800 transition-colors hover:bg-emerald-600 hover:text-white disabled:opacity-50"
+                                                            title={impersonationCopy.login_as_agent}
+                                                        >
+                                                            {impersonateBusy === user.id ? (
+                                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                                            ) : (
+                                                                <LogIn className="h-3 w-3 opacity-80" />
+                                                            )}
+                                                            {impersonationCopy.login_as_agent}
+                                                        </button>
+                                                    )}
                                                     <Link
                                                         href={`/${locale}/agents/${user.id}`}
                                                         target="_blank"
