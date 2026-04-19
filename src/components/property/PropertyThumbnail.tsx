@@ -5,6 +5,7 @@ import Image from 'next/image'
 import {
     resolvePropertyImageUrl,
     PROPERTY_PLACEHOLDER_IMAGE,
+    isSupabaseStorageHttpUrl,
 } from '@/lib/property-image-url'
 
 type PropertyThumbnailProps = {
@@ -41,9 +42,14 @@ export default function PropertyThumbnail({
         setImgSrc(resolvePropertyImageUrl(src))
     }, [src])
 
-    /** data/blob は Next の最適化対象外 */
-    const bypassOptimization =
-        imgSrc.startsWith('data:') || imgSrc.startsWith('blob:')
+    /**
+     * 一時復旧: Supabase は `/_next/image` 経由で 504 になる事例があるため直接取得（unoptimized）。
+     * data/blob も Next 最適化は使わない。
+     */
+    const unoptimized =
+        imgSrc.startsWith('data:') ||
+        imgSrc.startsWith('blob:') ||
+        isSupabaseStorageHttpUrl(imgSrc)
 
     const common = {
         src: imgSrc,
@@ -52,7 +58,7 @@ export default function PropertyThumbnail({
         sizes,
         priority,
         loading,
-        ...(bypassOptimization ? { unoptimized: true as const } : {}),
+        unoptimized,
         onError: () => setImgSrc(PROPERTY_PLACEHOLDER_IMAGE),
     } as const
 
