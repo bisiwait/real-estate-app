@@ -207,8 +207,7 @@ export default function AdminUserManagement({
                 return
             }
             const { error } = await supabase.auth.verifyOtp({
-                type: 'email',
-                email: user.email,
+                type: 'magiclink',
                 token_hash: res.token_hash,
             })
             if (error) {
