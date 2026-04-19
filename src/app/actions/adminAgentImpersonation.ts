@@ -1,8 +1,6 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { isAdmin } from '@/lib/admin'
 import { ADMIN_IMPERSONATION_REVERT_COOKIE } from '@/lib/auth/admin-impersonation'
@@ -152,60 +150,6 @@ export async function beginAdminAgentImpersonation(
     })
 
     return { ok: true, token_hash: linkData.properties.hashed_token as string }
-}
-
-/**
- * エージェント代行を終了し、退避していた管理者セッションに戻す。
- */
-export async function endAdminAgentImpersonation() {
-    const jar = await cookies()
-    const revertId = jar.get(ADMIN_IMPERSONATION_REVERT_COOKIE)?.value
-    if (!revertId) {
-        redirect('/jp/login')
-    }
-
-    const adminSb = await createAdminClient()
-    const { data: row, error: selErr } = await adminSb
-        .from('admin_impersonation_revert_tokens')
-        .select('id, expires_at, admin_access_token, admin_refresh_token, return_locale, target_user_id')
-        .eq('id', revertId)
-        .maybeSingle()
-
-    if (selErr || !row) {
-        jar.set(ADMIN_IMPERSONATION_REVERT_COOKIE, '', { ...cookieBaseOptions(), maxAge: 0 })
-        redirect('/jp/login')
-    }
-
-    if (new Date(row.expires_at).getTime() < Date.now()) {
-        await adminSb.from('admin_impersonation_revert_tokens').delete().eq('id', revertId)
-        jar.set(ADMIN_IMPERSONATION_REVERT_COOKIE, '', { ...cookieBaseOptions(), maxAge: 0 })
-        redirect('/jp/login?error=impersonation_expired')
-    }
-
-    const supabaseUser = await createClient()
-    const {
-        data: { user: caller },
-    } = await supabaseUser.auth.getUser()
-    if (!caller || caller.id !== row.target_user_id) {
-        redirect('/jp/login?error=impersonation_mismatch')
-    }
-
-    const { error: setErr } = await supabaseUser.auth.setSession({
-        access_token: row.admin_access_token,
-        refresh_token: row.admin_refresh_token,
-    })
-
-    await adminSb.from('admin_impersonation_revert_tokens').delete().eq('id', revertId)
-    jar.set(ADMIN_IMPERSONATION_REVERT_COOKIE, '', { ...cookieBaseOptions(), maxAge: 0 })
-
-    if (setErr) {
-        console.error('[endAdminAgentImpersonation] setSession:', setErr)
-        redirect('/jp/login?error=impersonation_restore')
-    }
-
-    const loc = LOCALE_SET.has(row.return_locale) ? row.return_locale : 'jp'
-    revalidatePath('/', 'layout')
-    redirect(`/${loc}/admin-secret`)
 }
 
 /**

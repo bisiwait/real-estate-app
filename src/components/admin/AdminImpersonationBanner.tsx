@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { ADMIN_IMPERSONATION_REVERT_COOKIE } from '@/lib/auth/admin-impersonation'
-import { endAdminAgentImpersonation } from '@/app/actions/adminAgentImpersonation'
 
 export default async function AdminImpersonationBanner({ locale }: { locale: string }) {
     const jar = await cookies()
@@ -20,14 +19,13 @@ export default async function AdminImpersonationBanner({ locale }: { locale: str
             aria-label="管理者によるエージェント代行"
         >
             <p className="text-xs font-black text-amber-950 md:text-sm">{t.banner}</p>
-            <form action={endAdminAgentImpersonation}>
-                <button
-                    type="submit"
-                    className="rounded-lg bg-navy-secondary px-4 py-1.5 text-xs font-black text-white shadow-sm transition-colors hover:bg-navy-primary md:text-sm"
-                >
-                    {t.return_to_admin}
-                </button>
-            </form>
+            {/* Server Action + redirect では Set-Cookie が不安定なため、フル GET で Route Handler へ */}
+            <a
+                href={`/${locale}/auth/end-impersonation`}
+                className="inline-flex items-center justify-center rounded-lg bg-navy-secondary px-4 py-1.5 text-xs font-black text-white shadow-sm transition-colors hover:bg-navy-primary md:text-sm"
+            >
+                {t.return_to_admin}
+            </a>
         </div>
     )
 }
