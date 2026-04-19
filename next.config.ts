@@ -81,11 +81,23 @@ const nextConfig: NextConfig = {
     /** 小さなアイコン・ダッシュボードサムネ用（80px 等の sizes に合わせやすくする） */
     imageSizes: [16, 32, 48, 64, 80, 96, 128, 256, 384],
     remotePatterns: [
+      // 本番プロジェクト（ワイルドカードが効かない環境向けに明示）
+      {
+        protocol: 'https',
+        hostname: 'ublmlivvaxqndbqlvszp.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ublmlivvaxqndbqlvszp.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/**',
+      },
       {
         protocol: 'https',
         hostname: '*.supabase.co',
         port: '',
-        // public / sign / render など Storage 配下のパスをまとめて許可
         pathname: '/storage/v1/object/**',
       },
       {
