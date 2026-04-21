@@ -49,6 +49,11 @@ import { getErrorMessage } from '@/lib/utils/errors'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import { finiteCoord } from '@/lib/google-maps-url'
 import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
+import {
+    getListingSpecFieldLabel,
+    getBedroomSelectOptionLabel,
+    getBathroomSelectOptionLabel,
+} from '@/lib/listing-form-spec-i18n'
 
 interface Area {
     id: string
@@ -1098,19 +1103,19 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">築年数</label>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'yearBuilt')}</label>
                                         <input type="text" value={projectForm.year_built} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, year_built: val }); setFormData({ ...formData, year_built: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数</label>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'totalFloors')}</label>
                                         <input type="number" value={projectForm.total_floors} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, total_floors: val }); setFormData({ ...formData, total_floors: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総戸数 (Units)</label>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'totalUnits')}</label>
                                         <input type="number" value={projectForm.total_units} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, total_units: val }); setFormData({ ...formData, total_units: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー</label>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'developer')}</label>
                                         <input type="text" value={projectForm.developer} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, developer: val }); setFormData({ ...formData, developer: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold" />
                                     </div>
                                 </div>
@@ -1236,7 +1241,14 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">築年数 {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                        {getListingSpecFieldLabel(locale, 'yearBuilt')}
+                                        {formData.project_id && (
+                                            <span className="text-[10px] text-navy-primary">
+                                                ({ui.propertyTypeNoteFromProject}{isAdmin ? ` ${ui.propertyTypeNoteAdminExtra}` : ''})
+                                            </span>
+                                        )}
+                                    </label>
                                     <input
                                         disabled={!!formData.project_id && !isAdmin}
                                         type="text"
@@ -1246,7 +1258,14 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総階数 {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                        {getListingSpecFieldLabel(locale, 'totalFloors')}
+                                        {formData.project_id && (
+                                            <span className="text-[10px] text-navy-primary">
+                                                ({ui.propertyTypeNoteFromProject}{isAdmin ? ` ${ui.propertyTypeNoteAdminExtra}` : ''})
+                                            </span>
+                                        )}
+                                    </label>
                                     <input
                                         disabled={!!formData.project_id && !isAdmin}
                                         type="number"
@@ -1256,7 +1275,14 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総戸数 {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                        {getListingSpecFieldLabel(locale, 'totalUnits')}
+                                        {formData.project_id && (
+                                            <span className="text-[10px] text-navy-primary">
+                                                ({ui.propertyTypeNoteFromProject}{isAdmin ? ` ${ui.propertyTypeNoteAdminExtra}` : ''})
+                                            </span>
+                                        )}
+                                    </label>
                                     <input
                                         disabled={!!formData.project_id && !isAdmin}
                                         type="number"
@@ -1266,7 +1292,14 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                     />
                                 </div>
                                 <div className="md:col-span-1">
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                        {getListingSpecFieldLabel(locale, 'developer')}
+                                        {formData.project_id && (
+                                            <span className="text-[10px] text-navy-primary">
+                                                ({ui.propertyTypeNoteFromProject}{isAdmin ? ` ${ui.propertyTypeNoteAdminExtra}` : ''})
+                                            </span>
+                                        )}
+                                    </label>
                                     <input
                                         disabled={!!formData.project_id && !isAdmin}
                                         type="text"
@@ -1291,24 +1324,19 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">間取り (Bedrooms)</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'bedrooms')}</label>
                                 <select value={formData.bedrooms} onChange={e => setFormData({ ...formData, bedrooms: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
-                                    <option value="0">Studio</option>
-                                    <option value="1">1 Bedroom</option>
-                                    <option value="2">2 Bedrooms</option>
-                                    <option value="3">3 Bedrooms</option>
-                                    <option value="4">4 Bedrooms</option>
-                                    <option value="5">5+ Bedrooms</option>
+                                    {(['0', '1', '2', '3', '4', '5'] as const).map((v) => (
+                                        <option key={v} value={v}>{getBedroomSelectOptionLabel(v, locale)}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">バスルーム (Bathrooms)</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'bathrooms')}</label>
                                 <select value={formData.bathrooms} onChange={e => setFormData({ ...formData, bathrooms: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
-                                    <option value="1">1 Bathroom</option>
-                                    <option value="2">2 Bathrooms</option>
-                                    <option value="3">3 Bathrooms</option>
-                                    <option value="4">4 Bathrooms</option>
-                                    <option value="5">5+ Bathrooms</option>
+                                    {(['1', '2', '3', '4', '5'] as const).map((v) => (
+                                        <option key={v} value={v}>{getBathroomSelectOptionLabel(v, locale)}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
