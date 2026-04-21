@@ -5,10 +5,11 @@ import { isPremium } from '@/lib/utils/plan'
 
 interface CreditSectionProps {
     profile: any
+    dict: any
 }
 
 /** ダッシュボード用プラン表示（掲載クレジットの数値は表示しない） */
-export default function CreditSection({ profile }: CreditSectionProps) {
+export default function CreditSection({ profile, dict }: CreditSectionProps) {
     const isPremiumStatus = isPremium(profile)
     const isStandard = profile?.plan === 'standard' || profile?.plan_type === 'standard'
 
@@ -24,7 +25,7 @@ export default function CreditSection({ profile }: CreditSectionProps) {
                 {isPremiumStatus ? <Infinity className="w-32 h-32" /> : <Sparkles className="w-32 h-32" />}
             </div>
             <div className="flex flex-col items-start gap-1.5 mb-4 relative z-10">
-                <p className="text-sm font-medium text-white/60">ご利用中のプラン</p>
+                <p className="text-sm font-medium text-white/60">{dict.current_plan_label}</p>
                 <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
                         isPremiumStatus
@@ -34,7 +35,7 @@ export default function CreditSection({ profile }: CreditSectionProps) {
                               : 'bg-slate-500 text-white shadow-sm'
                     } uppercase tracking-wider`}
                 >
-                    {isPremiumStatus ? 'プロ' : isStandard ? 'スタンダード' : 'フリー'}プラン
+                    {isPremiumStatus ? dict.plan_name_pro : isStandard ? dict.plan_name_standard : dict.plan_name_free}
                 </span>
             </div>
 
@@ -52,9 +53,7 @@ export default function CreditSection({ profile }: CreditSectionProps) {
                 </div>
             ) : (
                 <div className="relative z-10">
-                    <p className="text-sm font-medium text-white/85 leading-relaxed">
-                        このプランで物件の掲載・編集・お問い合わせ管理ができます。上部の「物件を新規掲載する」から登録してください。
-                    </p>
+                    <p className="text-sm font-medium text-white/85 leading-relaxed">{dict.free_plan_description}</p>
                 </div>
             )}
         </div>

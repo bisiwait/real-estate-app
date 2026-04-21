@@ -184,7 +184,7 @@ export default async function DashboardPage({
 
                         {/* プラン表示（フリープラン時のみ。プロプランは別カード） */}
                         {activePlan !== 'premium' && (
-                            <CreditSection profile={profile} />
+                            <CreditSection profile={profile} dict={d} />
                         )}
 
                         {isPremiumSubscriptionExpired(profile) && <PlanExpiredNotice dict={d} />}

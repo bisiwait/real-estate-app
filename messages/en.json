@@ -1000,7 +1000,12 @@
         "pro_status_label": "Status",
         "pro_status_trial": "In free trial period",
         "pro_upgrade_cta": "Upgrade to paid plan",
-        "feedback_send_button": "Send Feedback"
+        "feedback_send_button": "Send Feedback",
+        "current_plan_label": "Current Plan",
+        "plan_name_pro": "Pro Plan",
+        "plan_name_standard": "Standard Plan",
+        "plan_name_free": "Free Plan",
+        "free_plan_description": "With this plan, you can list and edit properties and manage inquiries. Use \"Create New Listing\" at the top to get started."
     },
     "admin_impersonation": {
         "banner": "You are acting on behalf of an agent. Actions use that agent’s permissions.",

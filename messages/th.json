@@ -999,7 +999,12 @@
         "pro_status_label": "สถานะ",
         "pro_status_trial": "อยู่ในช่วงทดลองใช้ฟรี",
         "pro_upgrade_cta": "อัปเกรดเป็นแพลนแบบชำระเงิน",
-        "feedback_send_button": "ส่งคำขอ"
+        "feedback_send_button": "ส่งคำขอ",
+        "current_plan_label": "แพลนที่ใช้งานอยู่",
+        "plan_name_pro": "แพลน Pro",
+        "plan_name_standard": "แพลน Standard",
+        "plan_name_free": "แพลนฟรี",
+        "free_plan_description": "แพลนนี้สามารถลงประกาศ แก้ไขทรัพย์ และจัดการคำถามได้ กรุณาเริ่มลงประกาศจากปุ่ม \"Create New Listing\" ด้านบน"
     },
     "admin_impersonation": {
         "banner": "คุณกำลังทำงานแทนเอเจนต์ การกระทำจะใช้สิทธิ์ของบัญชีเอเจนต์นั้น",

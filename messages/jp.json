@@ -1052,7 +1052,12 @@
         "pro_status_label": "Status",
         "pro_status_trial": "無料トライアル期間中",
         "pro_upgrade_cta": "有料プランに移行",
-        "feedback_send_button": "要望を送る"
+        "feedback_send_button": "要望を送る",
+        "current_plan_label": "ご利用中のプラン",
+        "plan_name_pro": "プロプラン",
+        "plan_name_standard": "スタンダードプラン",
+        "plan_name_free": "フリープラン",
+        "free_plan_description": "このプランで物件の掲載・編集・お問い合わせ管理ができます。上部の「物件を新規掲載する」から登録してください。"
     },
     "admin_impersonation": {
         "banner": "管理者としてエージェント画面を代行中です。操作は対象エージェントの権限で行われます。",
