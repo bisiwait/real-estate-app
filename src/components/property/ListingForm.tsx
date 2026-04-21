@@ -282,6 +282,47 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
         'シャトルサービス'
     ]
 
+    const TAG_LABELS: Record<string, { en: string; th: string }> = {
+        'バスタブあり': { en: 'Bathtub', th: 'อ่างอาบน้ำ' },
+        'ウォシュレット完備': { en: 'Washlet', th: 'วอชเล็ต' },
+        '洗濯機': { en: 'Washing Machine', th: 'เครื่องซักผ้า' },
+        'テレビ': { en: 'TV', th: 'ทีวี' },
+        '冷蔵庫': { en: 'Refrigerator', th: 'ตู้เย็น' },
+        WiFi: { en: 'WiFi', th: 'WiFi' },
+        'ペット可': { en: 'Pets Allowed', th: 'เลี้ยงสัตว์ได้' },
+        'EV充電器あり': { en: 'EV Charger', th: 'แท่นชาร์จ EV' },
+        '高層階': { en: 'High Floor', th: 'ชั้นสูง' },
+        '築浅': { en: 'Recent Build', th: 'โครงการใหม่' },
+        '格安': { en: 'Great Value', th: 'คุ้มราคา' },
+        '高級物件': { en: 'Luxury', th: 'ทรัพย์หรู' },
+        'バルコニー広い': { en: 'Large Balcony', th: 'ระเบียงกว้าง' },
+        'オーシャンビュー': { en: 'Ocean View', th: 'วิวทะเล' },
+        'シティービュー': { en: 'City View', th: 'วิวเมือง' },
+    }
+
+    const FACILITY_LABELS: Record<string, { en: string; th: string }> = {
+        'プール': { en: 'Pool', th: 'สระว่ายน้ำ' },
+        'インフィニティプール': { en: 'Infinity Pool', th: 'สระอินฟินิตี้' },
+        'サウナ': { en: 'Sauna', th: 'ซาวน่า' },
+        'フィットネス': { en: 'Fitness', th: 'ฟิตเนส' },
+        'スカイラウンジ': { en: 'Sky Lounge', th: 'สกายเลานจ์' },
+        '多目的ルーム': { en: 'Multi-purpose Room', th: 'ห้องอเนกประสงค์' },
+        'キッズルーム': { en: 'Kids Room', th: 'ห้องเด็กเล่น' },
+        'レストラン': { en: 'Restaurant', th: 'ร้านอาหาร' },
+        'EV充電器': { en: 'EV Charger', th: 'แท่นชาร์จ EV' },
+        'オートロック': { en: 'Auto Lock', th: 'ระบบล็อกอัตโนมัติ' },
+        '24Hセキュリティ': { en: '24H Security', th: 'รปภ. 24 ชม.' },
+        'コンシェルジュ': { en: 'Concierge', th: 'คอนเซียร์จ' },
+        '駐車場': { en: 'Parking', th: 'ที่จอดรถ' },
+        WiFi: { en: 'WiFi', th: 'WiFi' },
+        'シャトルサービス': { en: 'Shuttle Service', th: 'บริการรถรับส่ง' },
+    }
+
+    const localizeTag = (value: string) =>
+        locale === 'en' ? (TAG_LABELS[value]?.en ?? value) : locale === 'th' ? (TAG_LABELS[value]?.th ?? value) : value
+    const localizeFacility = (value: string) =>
+        locale === 'en' ? (FACILITY_LABELS[value]?.en ?? value) : locale === 'th' ? (FACILITY_LABELS[value]?.th ?? value) : value
+
     const [formData, setFormData] = useState({
         title: initialData?.title || '',
         description: initialData?.description || '',
@@ -943,7 +984,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                         {formData.project_facilities?.length > 0 ? (
                                             formData.project_facilities.map((f: string) => (
                                                 <span key={f} className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[10px] font-bold text-navy-secondary">
-                                                    {f}
+                                                    {localizeFacility(f)}
                                                 </span>
                                             ))
                                         ) : (
@@ -1107,7 +1148,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                                     }}
                                                     className={`px-3 py-2 rounded-xl text-[10px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}
                                                 >
-                                                    {facility}
+                                                    {localizeFacility(facility)}
                                                 </button>
                                             )
                                         })}
@@ -1313,7 +1354,13 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                                         ...prev,
                                                         [activeTab === 'jp' ? 'description' : activeTab === 'en' ? 'description_en' : 'description_th']: e.target.value
                                                     }))}
-                                                    placeholder={activeTab === 'jp' ? "物件の魅力を詳しく記入してください..." : `Write description in ${activeTab.toUpperCase()}...`}
+                                            placeholder={
+                                                activeTab === 'jp'
+                                                    ? '物件の魅力を詳しく記入してください...'
+                                                    : activeTab === 'en'
+                                                        ? 'Describe the property highlights in detail...'
+                                                        : 'กรอกรายละเอียดจุดเด่นของทรัพย์...'
+                                            }
                                                     className="w-full px-6 py-5 bg-white border border-slate-200 rounded-3xl min-h-[300px] focus:ring-4 focus:ring-navy-primary/5 focus:border-navy-primary outline-none transition-all text-sm leading-relaxed"
                                                 />
                                             </motion.div>
@@ -1358,7 +1405,11 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">2</span>
                         {ui.section2}
                     </h3>
-                    <ImageUploader initialImages={existingImages} onImagesChange={(files) => setSelectedFiles(files)} />
+                    <ImageUploader
+                        initialImages={existingImages}
+                        onImagesChange={(files) => setSelectedFiles(files)}
+                        locale={locale}
+                    />
                 </div>
 
                 {/* Section 3: Details & Settings */}
@@ -1389,7 +1440,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
 
                     <div className="flex flex-wrap gap-3">
                         {JA_TAGS.map(tag => (
-                            <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-5 py-2.5 rounded-full text-xs font-black border-2 ${formData.tags.includes(tag) ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}>{tag}</button>
+                            <button key={tag} type="button" onClick={() => toggleTag(tag)} className={`px-5 py-2.5 rounded-full text-xs font-black border-2 ${formData.tags.includes(tag) ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}>{localizeTag(tag)}</button>
                         ))}
                     </div>
                 </div>

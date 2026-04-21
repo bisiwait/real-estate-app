@@ -8,12 +8,14 @@ interface ImageUploaderProps {
     initialImages?: string[]
     onImagesChange: (files: File[]) => void
     maxImages?: number
+    locale?: string
 }
 
 export default function ImageUploader({
     initialImages = [],
     onImagesChange,
-    maxImages = 20
+    maxImages = 20,
+    locale = 'jp',
 }: ImageUploaderProps) {
     const [previews, setPreviews] = useState<string[]>(initialImages)
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -61,6 +63,24 @@ export default function ImageUploader({
         onImagesChange(newFiles)
     }
 
+    const ui = locale === 'th'
+        ? {
+            dropTitle: 'ลากและวางรูปภาพ',
+            dropSub: `หรือคลิกเพื่อเลือกไฟล์ (สูงสุด ${maxImages} รูป, ไม่เกิน 5MB)`,
+            main: 'Main',
+        }
+        : locale === 'en'
+            ? {
+                dropTitle: 'Drag & drop images',
+                dropSub: `Or click to select files (max ${maxImages}, up to 5MB each)`,
+                main: 'Main',
+            }
+            : {
+                dropTitle: '画像をドラッグ＆ドロップ',
+                dropSub: `またはクリックしてファイルを選択（最大${maxImages}枚、5MBまで）`,
+                main: 'Main',
+            }
+
     return (
         <div className="space-y-6">
             <div
@@ -73,11 +93,9 @@ export default function ImageUploader({
                     <div className="w-16 h-16 bg-navy-primary/10 rounded-2xl flex items-center justify-center mb-4 text-navy-primary">
                         <Upload className="w-8 h-8" />
                     </div>
-                    <p className="text-navy-secondary font-black text-lg mb-1">
-                        画像をドラッグ＆ドロップ
-                    </p>
+                    <p className="text-navy-secondary font-black text-lg mb-1">{ui.dropTitle}</p>
                     <p className="text-slate-400 text-sm font-medium">
-                        またはクリックしてファイルを選択（最大{maxImages}枚、5MBまで）
+                        {ui.dropSub}
                     </p>
                     <p className="text-[10px] text-slate-300 mt-4 uppercase tracking-widest font-bold">
                         SUPPORTED: JPG, PNG, WEBP
@@ -101,7 +119,7 @@ export default function ImageUploader({
                             </div>
                             {index === 0 && (
                                 <div className="absolute top-2 left-2 bg-navy-primary text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-md uppercase tracking-tighter">
-                                    Main
+                                    {ui.main}
                                 </div>
                             )}
                         </div>
