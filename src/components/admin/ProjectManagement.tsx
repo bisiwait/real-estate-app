@@ -24,6 +24,7 @@ import { getErrorMessage } from '@/lib/utils/errors'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import { useParams } from 'next/navigation'
 
 const CoordinatePicker = dynamic(() => import('../property/CoordinatePicker'), {
     loading: () => <div className="bg-slate-50 rounded-2xl h-64 animate-pulse border border-slate-100" />,
@@ -57,6 +58,8 @@ interface Project {
 }
 
 export default function AdminProjectManagement() {
+    const params = useParams()
+    const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
     const [projects, setProjects] = useState<Project[]>([])
     const [areas, setAreas] = useState<Area[]>([])
     const [developers, setDevelopers] = useState<{ id: string, name: string }[]>([])
@@ -162,6 +165,38 @@ export default function AdminProjectManagement() {
         'WiFi',
         'シャトルサービス'
     ]
+
+    const FACILITY_LABELS: Record<string, { en: string; th: string }> = {
+        'プール': { en: 'Pool', th: 'สระว่ายน้ำ' },
+        'インフィニティプール': { en: 'Infinity Pool', th: 'สระอินฟินิตี้' },
+        'サウナ': { en: 'Sauna', th: 'ซาวน่า' },
+        'フィットネス': { en: 'Fitness', th: 'ฟิตเนส' },
+        'スカイラウンジ': { en: 'Sky Lounge', th: 'สกายเลานจ์' },
+        '多目的ルーム': { en: 'Multi-purpose Room', th: 'ห้องอเนกประสงค์' },
+        'キッズルーム': { en: 'Kids Room', th: 'ห้องเด็กเล่น' },
+        'レストラン': { en: 'Restaurant', th: 'ร้านอาหาร' },
+        'EV充電器': { en: 'EV Charger', th: 'แท่นชาร์จ EV' },
+        'オートロック': { en: 'Auto Lock', th: 'ระบบล็อกอัตโนมัติ' },
+        '24Hセキュリティ': { en: '24H Security', th: 'รปภ. 24 ชม.' },
+        'コンシェルジュ': { en: 'Concierge', th: 'คอนเซียร์จ' },
+        '駐車場': { en: 'Parking', th: 'ที่จอดรถ' },
+        WiFi: { en: 'WiFi', th: 'WiFi' },
+        'シャトルサービス': { en: 'Shuttle Service', th: 'บริการรถรับส่ง' },
+    }
+
+    const localizeFacility = (facility: string) => {
+        const labels = FACILITY_LABELS[facility]
+        if (!labels) return facility
+        if (locale === 'en') return labels.en
+        if (locale === 'th') return labels.th
+        return facility
+    }
+
+    const sharedFacilitiesLabel = locale === 'en'
+        ? 'Shared Facilities'
+        : locale === 'th'
+            ? 'สิ่งอำนวยความสะดวกส่วนกลาง'
+            : '共有施設'
 
     // Filter projects based on search query and missing info filter
     const filteredProjects = projects.filter(project => {
@@ -523,7 +558,7 @@ export default function AdminProjectManagement() {
                             <div className="pt-4 border-t border-slate-200">
                                 <label className="block text-xs font-black text-navy-primary uppercase tracking-widest mb-4 ml-1 flex items-center">
                                     <Shield className="w-4 h-4 mr-2" />
-                                    共有施設 (Shared Facilities)
+                                    {sharedFacilitiesLabel}
                                 </label>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                                     {SHARED_FACILITIES.map(facility => {
@@ -542,7 +577,7 @@ export default function AdminProjectManagement() {
                                                 }}
                                                 className={`px-3 py-2 rounded-xl text-[10px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}
                                             >
-                                                {facility}
+                                                {localizeFacility(facility)}
                                             </button>
                                         )
                                     })}
