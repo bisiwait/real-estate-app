@@ -45,6 +45,23 @@ export default function ListPropertyPage() {
     }
 
     const dashboardPath = isAdmin ? `/${locale}/admin-secret` : `/${locale}/dashboard`
+    const ui = locale === 'th'
+        ? {
+            back: 'กลับไปแดชบอร์ด',
+            title: 'ลงประกาศอสังหาริมทรัพย์',
+            subtitle: 'กรอกรายละเอียดเพื่อเผยแพร่ประกาศของคุณ',
+        }
+        : locale === 'en'
+            ? {
+                back: 'Back to Dashboard',
+                title: 'List Property',
+                subtitle: 'Fill in the details to publish your listing.',
+            }
+            : {
+                back: 'ダッシュボードに戻る',
+                title: '物件を掲載する',
+                subtitle: '詳細情報を入力して、物件を公開しましょう。',
+            }
 
     return (
         <div className="bg-slate-50 min-h-screen py-16">
@@ -55,13 +72,13 @@ export default function ListPropertyPage() {
                         className="inline-flex items-center space-x-2 text-slate-400 hover:text-navy-primary font-bold mb-8 transition-colors group"
                     >
                         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span>ダッシュボードに戻る</span>
+                        <span>{ui.back}</span>
                     </Link>
 
                     <div className="flex items-center justify-between mb-12">
                         <div>
-                            <h1 className="text-3xl font-black text-navy-secondary mb-2">物件を掲載する</h1>
-                            <p className="text-slate-500">詳細情報を入力して、物件を公開しましょう。</p>
+                            <h1 className="text-3xl font-black text-navy-secondary mb-2">{ui.title}</h1>
+                            <p className="text-slate-500">{ui.subtitle}</p>
                         </div>
                     </div>
 
