@@ -28,9 +28,17 @@ type Props = {
     initialRows: AgentProfileContactRow[]
     fetchError?: string | null
     agentDisplayName?: string | null
+    dict: any
+    locale: string
 }
 
-export default function AgentProfileContactsView({ initialRows, fetchError, agentDisplayName }: Props) {
+export default function AgentProfileContactsView({
+    initialRows,
+    fetchError,
+    agentDisplayName,
+    dict,
+    locale,
+}: Props) {
     const [contacts, setContacts] = useState<ContactRow[]>(
         initialRows.map((r) => ({ ...r, replies: r.replies ?? [] }))
     )
@@ -106,7 +114,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
             setHandledUpdatingId(null)
             if (error) {
                 setContacts((list) => list.map((r) => (r.id === id ? { ...r, is_handled: prevHandled } : r)))
-                alert(error.message || '更新に失敗しました')
+                alert(error.message || dict.profile_contacts_update_failed)
             }
         },
         [supabase]
@@ -157,15 +165,15 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
 
                     if (notifyRes.status === 401) {
                         alert(
-                            '返信は保存されましたが、通知用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。'
+                            dict.profile_contacts_notify_session_error
                         )
                     } else if (notifyRes.status === 502 || notifyRes.status === 503) {
                         const hint = payload.hint ? `\n\n${payload.hint}` : ''
-                        alert(`メール通知に失敗しました: ${detail}${hint}`)
+                        alert(`${dict.profile_contacts_notify_failed}: ${detail}${hint}`)
                     } else if (notifyRes.status === 422) {
                         alert(`${detail}`)
                     } else {
-                        alert(`送信に失敗しました: ${detail}`)
+                        alert(`${dict.profile_contacts_send_failed}: ${detail}`)
                     }
                 }
             } catch (notifyErr) {
@@ -193,7 +201,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
             setReplyText('')
         } catch (err) {
             console.error('Error sending profile contact reply:', err)
-            alert('返信の保存に失敗しました。')
+            alert(dict.profile_contacts_reply_save_failed)
         } finally {
             setIsSubmittingReply(false)
         }
@@ -202,7 +210,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
     if (fetchError) {
         return (
             <div className="p-6 text-sm font-bold leading-relaxed text-red-800 bg-red-50">
-                一覧を読み込めませんでした。Supabase のマイグレーション（agent_contact_replies / read_by_agent_at）が適用されているか確認してください。
+                {dict.profile_contacts_fetch_error}
                 <span className="mt-2 block font-mono text-xs font-normal opacity-90">{fetchError}</span>
             </div>
         )
@@ -211,7 +219,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
     if (contacts.length === 0) {
         return (
             <div className="p-20 text-center">
-                <p className="text-slate-400 font-medium">プロフィールページからのお問い合わせはありません</p>
+                <p className="text-slate-400 font-medium">{dict.profile_contacts_empty}</p>
             </div>
         )
     }
@@ -226,45 +234,45 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
             <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-6 space-y-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
-                        対応
+                        {dict.inquiries_handling}
                     </span>
                     <div className="flex min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
                         <button type="button" onClick={() => setReplyFilter('all')} className={filterChip(replyFilter === 'all')}>
-                            すべて
+                            {dict.filter_all}
                         </button>
                         <button
                             type="button"
                             onClick={() => setReplyFilter('pending')}
                             className={filterChip(replyFilter === 'pending')}
                         >
-                            未対応
+                            {dict.inquiries_pending}
                         </button>
                         <button
                             type="button"
                             onClick={() => setReplyFilter('replied')}
                             className={filterChip(replyFilter === 'replied')}
                         >
-                            返信済み
+                            {dict.inquiries_replied}
                         </button>
                     </div>
                 </div>
                 <p className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[11px] font-medium leading-relaxed text-slate-600">
-                    公開プロフィールのお問い合わせフォームから届いたメッセージです。返信するとお客様のメール宛に通知されます（物件ページの「問い合わせ」タブと同じ流れです）。
+                    {dict.profile_contacts_intro}
                 </p>
                 <p className="text-[10px] font-bold text-slate-400">
-                    表示 {filteredContacts.length} / 全 {contacts.length} 件
+                    {dict.display_count_compact.replace('{shown}', String(filteredContacts.length)).replace('{total}', String(contacts.length))}
                 </p>
             </div>
 
             {filteredContacts.length === 0 ? (
                 <div className="p-16 text-center space-y-3">
-                    <p className="text-slate-500 font-medium text-sm">条件に一致するお問い合わせはありません</p>
+                    <p className="text-slate-500 font-medium text-sm">{dict.inquiries_no_match}</p>
                     <button
                         type="button"
                         onClick={() => setReplyFilter('all')}
                         className="text-xs font-black text-navy-primary underline decoration-navy-primary/30 hover:text-navy-secondary"
                     >
-                        フィルターをリセット
+                        {dict.filter_reset}
                     </button>
                 </div>
             ) : null}
@@ -300,21 +308,21 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                             )}
                                             {hasReplies ? (
                                                 <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold">
-                                                    返信済み
+                                                    {dict.inquiries_replied}
                                                 </span>
                                             ) : (
                                                 <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold">
-                                                    未対応
+                                                    {dict.inquiries_pending}
                                                 </span>
                                             )}
                                             {contact.is_handled ? (
                                                 <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold">
-                                                    対応済
+                                                    {dict.profile_contacts_handled}
                                                 </span>
                                             ) : null}
                                             <span className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center">
                                                 <Calendar className="w-3 h-3 mr-1" />
-                                                {new Date(contact.created_at).toLocaleString('ja-JP', {
+                                                {new Date(contact.created_at).toLocaleString(locale === 'th' ? 'th-TH' : locale === 'en' ? 'en-US' : 'ja-JP', {
                                                     timeZone: 'Asia/Bangkok',
                                                     year: 'numeric',
                                                     month: '2-digit',
@@ -326,9 +334,9 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                         </div>
                                         <h4 className="text-lg font-bold text-navy-secondary">
                                             {contact.customer_name}{' '}
-                                            <span className="text-sm font-normal text-slate-400 ml-1">さんからのお問い合わせ</span>
+                                            <span className="text-sm font-normal text-slate-400 ml-1">{dict.inquiries_from}</span>
                                         </h4>
-                                        <p className="text-xs text-navy-primary font-bold mt-1">対象: エージェント公開ページ（プロフィール）</p>
+                                        <p className="text-xs text-navy-primary font-bold mt-1">{dict.profile_contacts_target}</p>
                                     </div>
                                 </div>
 
@@ -341,7 +349,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                             : 'bg-white text-navy-primary border-navy-primary/10 hover:border-navy-primary/30 hover:shadow-md'
                                     }`}
                                 >
-                                    <span>{expanded ? '内容を閉じる' : '詳細を確認'}</span>
+                                    <span>{expanded ? dict.inquiries_close : dict.inquiries_view_details}</span>
                                     {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                 </button>
                             </div>
@@ -352,13 +360,13 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                         <div className="space-y-4">
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
-                                                    <User className="w-3 h-3 mr-1.5" /> お名前
+                                                    <User className="w-3 h-3 mr-1.5" /> {dict.inquiries_name}
                                                 </p>
                                                 <p className="text-sm font-bold text-navy-secondary">{contact.customer_name}</p>
                                             </div>
                                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
-                                                    <Mail className="w-3 h-3 mr-1.5" /> メールアドレス
+                                                    <Mail className="w-3 h-3 mr-1.5" /> {dict.inquiries_email}
                                                 </p>
                                                 <p className="text-sm font-bold text-navy-secondary select-all break-all">
                                                     {contact.customer_email}
@@ -367,7 +375,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                             {contact.customer_phone ? (
                                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
-                                                        <Phone className="w-3 h-3 mr-1.5" /> 電話番号
+                                                        <Phone className="w-3 h-3 mr-1.5" /> {dict.inquiries_phone}
                                                     </p>
                                                     <p className="text-sm font-bold text-navy-secondary select-all">
                                                         {contact.customer_phone}
@@ -377,7 +385,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                         </div>
                                         <div className="bg-navy-primary/[0.03] p-6 rounded-3xl border border-navy-primary/5">
                                             <p className="text-[10px] font-black text-navy-primary/60 uppercase tracking-widest mb-4">
-                                                メッセージ内容
+                                                {dict.inquiries_message}
                                             </p>
                                             <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic">
                                                 &ldquo;{contact.message}&rdquo;
@@ -389,7 +397,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                         <div>
                                             <h5 className="text-sm font-black text-navy-secondary mb-4 flex items-center">
                                                 <Reply className="w-4 h-4 mr-2" />
-                                                返信履歴
+                                                {dict.inquiries_reply_history}
                                             </h5>
 
                                             {contact.replies && contact.replies.length > 0 ? (
@@ -401,7 +409,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                                         >
                                                             <div className="absolute top-4 -left-2 w-4 h-4 bg-white border-l border-t border-slate-100 rotate-45" />
                                                             <p className="text-xs text-slate-400 mb-2 font-bold">
-                                                                {new Date(reply.created_at).toLocaleString('ja-JP', {
+                                                                {new Date(reply.created_at).toLocaleString(locale === 'th' ? 'th-TH' : locale === 'en' ? 'en-US' : 'ja-JP', {
                                                                     timeZone: 'Asia/Bangkok',
                                                                     year: 'numeric',
                                                                     month: '2-digit',
@@ -417,7 +425,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <p className="text-xs text-slate-400 italic">まだ返信はありません</p>
+                                                <p className="text-xs text-slate-400 italic">{dict.inquiries_no_replies}</p>
                                             )}
                                         </div>
 
@@ -426,16 +434,16 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                         <div>
                                             <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
                                                 <Send className="w-4 h-4 mr-2" />
-                                                返信本文
+                                                {dict.inquiries_reply_body}
                                             </h5>
                                             <label className="sr-only" htmlFor={`profile-contact-reply-${contact.id}`}>
-                                                返信本文
+                                                {dict.inquiries_reply_body}
                                             </label>
                                             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
                                                         <Sparkles className="h-3 w-3" />
-                                                        定型文
+                                                        {dict.inquiries_templates}
                                                     </span>
                                                     {replyTemplates.map((t) => (
                                                         <button
@@ -453,10 +461,10 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                                     onClick={() => setReplyText('')}
                                                     disabled={!replyText}
                                                     className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                                                    title="本文を空にします"
+                                                    title={dict.inquiries_clear_body_title}
                                                 >
                                                     <Eraser className="h-3 w-3" />
-                                                    本文をクリア
+                                                    {dict.inquiries_clear_body}
                                                 </button>
                                             </div>
                                             <div className="relative min-w-0">
@@ -464,17 +472,17 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                                     id={`profile-contact-reply-${contact.id}`}
                                                     rows={6}
                                                     className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
-                                                    placeholder="返信を入力…"
+                                                    placeholder={dict.inquiries_reply_placeholder}
                                                     value={replyText}
                                                     onChange={(e) => setReplyText(e.target.value)}
-                                                    aria-label="返信本文"
+                                                    aria-label={dict.inquiries_reply_body}
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => void handleSendReply(contact)}
                                                     disabled={isSubmittingReply || !replyText.trim()}
                                                     className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                                                    title="送信"
+                                                    title={dict.inquiries_send}
                                                 >
                                                     {isSubmittingReply ? (
                                                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -484,7 +492,7 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                                 </button>
                                             </div>
                                             <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
-                                                ※送信するとお客様にメールで届き、返信履歴にも保存されます。
+                                                {dict.profile_contacts_send_note}
                                             </p>
                                         </div>
 
@@ -497,12 +505,12 @@ export default function AgentProfileContactsView({ initialRows, fetchError, agen
                                                     onChange={(e) => void toggleHandled(contact.id, e.target.checked)}
                                                     className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                                                 />
-                                                手動で「対応済み」として記録する（返信とは別に整理用）
+                                                {dict.profile_contacts_mark_handled}
                                             </label>
                                             {!isRead ? (
                                                 <div className="flex items-center text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg text-xs font-bold w-fit">
                                                     <CheckCircle className="w-4 h-4 mr-2" />
-                                                    既読としてマークしました
+                                                    {dict.inquiries_marked_read}
                                                 </div>
                                             ) : null}
                                         </div>

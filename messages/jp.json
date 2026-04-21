@@ -1058,6 +1058,18 @@
         "plan_name_standard": "スタンダードプラン",
         "plan_name_free": "フリープラン",
         "free_plan_description": "このプランで物件の掲載・編集・お問い合わせ管理ができます。上部の「物件を新規掲載する」から登録してください。"
+        ,"profile_contacts_update_failed": "更新に失敗しました"
+        ,"profile_contacts_notify_session_error": "返信は保存されましたが、通知用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。"
+        ,"profile_contacts_notify_failed": "メール通知に失敗しました"
+        ,"profile_contacts_send_failed": "送信に失敗しました"
+        ,"profile_contacts_reply_save_failed": "返信の保存に失敗しました。"
+        ,"profile_contacts_fetch_error": "一覧を読み込めませんでした。Supabase のマイグレーション（agent_contact_replies / read_by_agent_at）が適用されているか確認してください。"
+        ,"profile_contacts_empty": "プロフィールページからのお問い合わせはありません"
+        ,"profile_contacts_intro": "公開プロフィールのお問い合わせフォームから届いたメッセージです。返信するとお客様のメール宛に通知されます（物件ページの「問い合わせ」タブと同じ流れです）。"
+        ,"profile_contacts_handled": "対応済"
+        ,"profile_contacts_target": "対象: エージェント公開ページ（プロフィール）"
+        ,"profile_contacts_send_note": "※送信するとお客様にメールで届き、返信履歴にも保存されます。"
+        ,"profile_contacts_mark_handled": "手動で「対応済み」として記録する（返信とは別に整理用）"
     },
     "admin_impersonation": {
         "banner": "管理者としてエージェント画面を代行中です。操作は対象エージェントの権限で行われます。",

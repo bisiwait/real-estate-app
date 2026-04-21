@@ -1005,7 +1005,19 @@
         "plan_name_pro": "Pro Plan",
         "plan_name_standard": "Standard Plan",
         "plan_name_free": "Free Plan",
-        "free_plan_description": "With this plan, you can list and edit properties and manage inquiries. Use \"Create New Listing\" at the top to get started."
+        "free_plan_description": "With this plan, you can list and edit properties and manage inquiries. Use \"Create New Listing\" at the top to get started.",
+        "profile_contacts_update_failed": "Update failed",
+        "profile_contacts_notify_session_error": "Your reply was saved, but the notification session was not recognized on the server. Please log out and sign in again, or try again later.",
+        "profile_contacts_notify_failed": "Failed to send email notification",
+        "profile_contacts_send_failed": "Failed to send",
+        "profile_contacts_reply_save_failed": "Failed to save reply.",
+        "profile_contacts_fetch_error": "Could not load the list. Please confirm the Supabase migrations (agent_contact_replies / read_by_agent_at) are applied.",
+        "profile_contacts_empty": "No inquiries from the profile page.",
+        "profile_contacts_intro": "These messages came from your public profile contact form. When you reply, the customer is notified by email (same flow as the Inquiry tab on property pages).",
+        "profile_contacts_handled": "Handled",
+        "profile_contacts_target": "Target: Agent public page (profile)",
+        "profile_contacts_send_note": "*When sent, your reply is emailed to the customer and saved in reply history.",
+        "profile_contacts_mark_handled": "Record manually as \"Handled\" (for organization, separate from replying)"
     },
     "admin_impersonation": {
         "banner": "You are acting on behalf of an agent. Actions use that agent’s permissions.",

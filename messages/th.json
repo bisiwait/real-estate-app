@@ -1004,7 +1004,19 @@
         "plan_name_pro": "แพลน Pro",
         "plan_name_standard": "แพลน Standard",
         "plan_name_free": "แพลนฟรี",
-        "free_plan_description": "แพลนนี้สามารถลงประกาศ แก้ไขทรัพย์ และจัดการคำถามได้ กรุณาเริ่มลงประกาศจากปุ่ม \"Create New Listing\" ด้านบน"
+        "free_plan_description": "แพลนนี้สามารถลงประกาศ แก้ไขทรัพย์ และจัดการคำถามได้ กรุณาเริ่มลงประกาศจากปุ่ม \"Create New Listing\" ด้านบน",
+        "profile_contacts_update_failed": "อัปเดตไม่สำเร็จ",
+        "profile_contacts_notify_session_error": "บันทึกคำตอบแล้ว แต่เซสชันสำหรับการแจ้งเตือนไม่ถูกยืนยันบนเซิร์ฟเวอร์ กรุณาออกจากระบบแล้วเข้าสู่ระบบใหม่ หรือลองอีกครั้งภายหลัง",
+        "profile_contacts_notify_failed": "ส่งการแจ้งเตือนอีเมลไม่สำเร็จ",
+        "profile_contacts_send_failed": "ส่งไม่สำเร็จ",
+        "profile_contacts_reply_save_failed": "บันทึกคำตอบไม่สำเร็จ",
+        "profile_contacts_fetch_error": "ไม่สามารถโหลดรายการได้ กรุณาตรวจสอบว่าได้ apply Supabase migration (agent_contact_replies / read_by_agent_at) แล้ว",
+        "profile_contacts_empty": "ไม่มีคำถามจากหน้าโปรไฟล์",
+        "profile_contacts_intro": "ข้อความนี้มาจากฟอร์มติดต่อบนหน้าโปรไฟล์สาธารณะของเอเจนต์ เมื่อคุณตอบ ระบบจะส่งอีเมลแจ้งลูกค้า (กระบวนการเดียวกับแท็บ Inquiry ในหน้าทรัพย์)",
+        "profile_contacts_handled": "จัดการแล้ว",
+        "profile_contacts_target": "เป้าหมาย: หน้าเอเจนต์สาธารณะ (โปรไฟล์)",
+        "profile_contacts_send_note": "※เมื่อส่งแล้ว ลูกค้าจะได้รับอีเมล และจะถูกบันทึกในประวัติการตอบกลับด้วย",
+        "profile_contacts_mark_handled": "บันทึกเป็น \"จัดการแล้ว\" ด้วยตนเอง (ใช้จัดระเบียบ แยกจากการตอบกลับ)"
     },
     "admin_impersonation": {
         "banner": "คุณกำลังทำงานแทนเอเจนต์ การกระทำจะใช้สิทธิ์ของบัญชีเอเจนต์นั้น",

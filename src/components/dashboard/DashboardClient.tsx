@@ -211,6 +211,8 @@ export default function DashboardClient({
                         initialRows={initialProfileContacts}
                         fetchError={profileContactsFetchError}
                         agentDisplayName={profile?.full_name ?? ''}
+                        dict={dict}
+                        locale={locale}
                     />
                 ) : tab === 'properties' ? (
                     <>
