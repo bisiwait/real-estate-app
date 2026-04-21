@@ -197,6 +197,7 @@ export default function AdminProjectManagement() {
         : locale === 'th'
             ? 'สิ่งอำนวยความสะดวกส่วนกลาง'
             : '共有施設'
+    const srirachaAreaGroupLabel = locale === 'th' ? 'ศรีราชา' : 'Sriracha'
 
     // Filter projects based on search query and missing info filter
     const filteredProjects = projects.filter(project => {
@@ -441,7 +442,7 @@ export default function AdminProjectManagement() {
                                         <optgroup label="Pattaya">
                                             {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                         </optgroup>
-                                        <optgroup label="Sriracha">
+                                        <optgroup label={srirachaAreaGroupLabel}>
                                             {areas.filter(a => a.region?.name === 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                                         </optgroup>
                                         {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 && (
