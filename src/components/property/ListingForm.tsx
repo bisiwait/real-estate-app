@@ -1313,11 +1313,11 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">専有面積 (sqm)</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'sqm')} (sqm)</label>
                                 <input type="number" value={formData.sqm} onChange={e => setFormData({ ...formData, sqm: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
                             </div>
                             <div>
-                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">所在階</label>
+                                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getListingSpecFieldLabel(locale, 'floor')}</label>
                                 <input type="text" value={formData.floor} onChange={e => setFormData({ ...formData, floor: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
                             </div>
                         </div>

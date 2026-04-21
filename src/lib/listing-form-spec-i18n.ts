@@ -3,6 +3,8 @@ export type ListingSpecFieldKey =
     | 'totalFloors'
     | 'totalUnits'
     | 'developer'
+    | 'sqm'
+    | 'floor'
     | 'bedrooms'
     | 'bathrooms'
 
@@ -18,6 +20,8 @@ const FIELD_LABELS: Record<'jp' | 'en' | 'th', Record<ListingSpecFieldKey, strin
         totalFloors: '総階数',
         totalUnits: '総戸数',
         developer: 'デベロッパー',
+        sqm: '専有面積',
+        floor: '所在階',
         bedrooms: '間取り',
         bathrooms: 'バスルーム',
     },
@@ -26,6 +30,8 @@ const FIELD_LABELS: Record<'jp' | 'en' | 'th', Record<ListingSpecFieldKey, strin
         totalFloors: 'Total floors',
         totalUnits: 'Total units',
         developer: 'Developer',
+        sqm: 'Unit area',
+        floor: 'Floor',
         bedrooms: 'Bedrooms',
         bathrooms: 'Bathrooms',
     },
@@ -34,6 +40,8 @@ const FIELD_LABELS: Record<'jp' | 'en' | 'th', Record<ListingSpecFieldKey, strin
         totalFloors: 'จำนวนชั้นทั้งหมด',
         totalUnits: 'จำนวนยูนิตทั้งหมด',
         developer: 'ผู้พัฒนา',
+        sqm: 'พื้นที่ใช้สอย',
+        floor: 'ชั้นที่ตั้งอยู่',
         bedrooms: 'ห้องนอน',
         bathrooms: 'ห้องน้ำ',
     },
