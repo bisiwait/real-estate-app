@@ -7,9 +7,10 @@ import { Crown, Building2, Sparkles, FileText, ArrowRight, CheckCircle2, Message
 
 interface PremiumPromoCardProps {
     plan?: string
+    dict: any
 }
 
-export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
+export default function PremiumPromoCard({ plan, dict }: PremiumPromoCardProps) {
     const params = useParams()
     const isPremium = plan === 'premium'
 
@@ -29,10 +30,10 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
                 </div>
                 <div>
                     <h3 className={`text-sm font-black tracking-tight ${isPremium ? 'text-amber-400' : 'text-amber-900'}`}>
-                        {isPremium ? 'PRO ACTIVE' : 'PRO PLAN'}
+                        {isPremium ? dict.pro_active_label : dict.pro_plan_label}
                     </h3>
                     <p className={`text-[10px] font-bold uppercase tracking-widest ${isPremium ? 'text-slate-400' : 'text-amber-700/60'}`}>
-                        Exclusive Benefits
+                        {dict.pro_exclusive_benefits}
                     </p>
                 </div>
             </div>
@@ -40,40 +41,40 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
             {/* Features List */}
             <div className="p-5 space-y-4">
                 <p className={`text-[10px] font-bold leading-relaxed ${isPremium ? 'text-slate-400' : 'text-amber-900/80'}`}>
-                    （プレセール物件掲載、AI自動翻訳・紹介文、高品質PDF出力）
+                    {dict.pro_benefits_summary}
                 </p>
                 <div className="space-y-3">
                     <BenefitItem
                         icon={<Building2 className="w-4 h-4" />}
-                        title="プレセール物件掲載"
-                        description="一般非公開の先行販売物件を掲載可能"
+                        title={dict.pro_benefit_presale_title}
+                        description={dict.pro_benefit_presale_desc}
                         isPremium={isPremium}
                     />
                     <BenefitItem
                         icon={<Sparkles className="w-4 h-4" />}
-                        title="AI自動翻訳・紹介文"
-                        description="3ヶ国語の紹介文をAIが自動生成"
+                        title={dict.pro_benefit_ai_title}
+                        description={dict.pro_benefit_ai_desc}
                         isPremium={isPremium}
                     />
                     <BenefitItem
                         icon={<FileText className="w-4 h-4" />}
-                        title="高品質PDF出力"
-                        description="プロ仕様の販売チラシを1クリック作成"
+                        title={dict.pro_benefit_pdf_title}
+                        description={dict.pro_benefit_pdf_desc}
                         isPremium={isPremium}
                     />
                     <BenefitItem
                         icon={<MessageCircle className="w-4 h-4" />}
-                        title="LINE問い合わせ"
-                        description="LINEからの問い合わせを受け取れます"
+                        title={dict.pro_benefit_line_title}
+                        description={dict.pro_benefit_line_desc}
                         isPremium={isPremium}
                     />
                 </div>
 
                 {isPremium ? (
                     <div className="mt-2 p-4 bg-white/5 rounded-2xl border border-white/10">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{dict.pro_status_label}</p>
                         <p className="text-xs font-black text-amber-400">
-                            無料トライアル期間中
+                            {dict.pro_status_trial}
                         </p>
                     </div>
                 ) : (
@@ -81,7 +82,7 @@ export default function PremiumPromoCard({ plan }: PremiumPromoCardProps) {
                         href={`/${params.locale}/pricing`}
                         className="group mt-2 w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-200 active:scale-[0.98]"
                     >
-                        有料プランに移行
+                        {dict.pro_upgrade_cta}
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 )}

@@ -180,18 +180,18 @@ export default async function DashboardPage({
                     {/* Stats Sidebar — スマホでは要望ボタンはページ下部（メインの下）へ */}
                     <div className="order-1 lg:col-span-1 space-y-6">
                         {/* Subscription Status (Trial countdown / Portal link) */}
-                        <SubscriptionStatus profile={profile} />
+                        <SubscriptionStatus profile={profile} dict={d} />
 
                         {/* プラン表示（フリープラン時のみ。プロプランは別カード） */}
                         {activePlan !== 'premium' && (
                             <CreditSection profile={profile} />
                         )}
 
-                        {isPremiumSubscriptionExpired(profile) && <PlanExpiredNotice />}
+                        {isPremiumSubscriptionExpired(profile) && <PlanExpiredNotice dict={d} />}
 
                         {/* Pro plan promo card (free users only) */}
                         {activePlan !== 'premium' && (
-                            <PremiumPromoCard plan={activePlan} />
+                            <PremiumPromoCard plan={activePlan} dict={d} />
                         )}
 
                         {/* Summary List */}
@@ -240,7 +240,7 @@ export default async function DashboardPage({
                         </div>
 
                         <div className="hidden lg:block">
-                            <FeedbackForm />
+                            <FeedbackForm dict={d} />
                         </div>
                     </div>
 
@@ -266,7 +266,7 @@ export default async function DashboardPage({
                     </div>
 
                     <div className="order-3 lg:hidden">
-                        <FeedbackForm />
+                        <FeedbackForm dict={d} />
                     </div>
                 </div>
             </div>

@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Lightbulb, X, Loader2, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
-export default function FeedbackForm() {
+export default function FeedbackForm({ dict }: { dict: any }) {
     const [isOpen, setIsOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
@@ -50,7 +50,7 @@ export default function FeedbackForm() {
                 className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 font-bold hover:bg-amber-100 transition-all active:scale-95 shadow-sm"
             >
                 <Lightbulb className="w-5 h-5" />
-                <span>要望を送る</span>
+                <span>{dict.feedback_send_button}</span>
             </button>
 
             {isOpen && (

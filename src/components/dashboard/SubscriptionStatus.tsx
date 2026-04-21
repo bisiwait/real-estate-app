@@ -6,9 +6,10 @@ import { differenceInDays, parseISO, format } from 'date-fns'
 
 interface SubscriptionStatusProps {
     profile: any
+    dict: any
 }
 
-export default function SubscriptionStatus({ profile }: SubscriptionStatusProps) {
+export default function SubscriptionStatus({ profile, dict }: SubscriptionStatusProps) {
     const [portalLoading, setPortalLoading] = useState(false)
     const [portalError, setPortalError] = useState<string | null>(null)
 
@@ -39,7 +40,7 @@ export default function SubscriptionStatus({ profile }: SubscriptionStatusProps)
         try {
             const res = await fetch('/api/stripe/create-portal', { method: 'POST' })
             const data = await res.json() as { url?: string; error?: string }
-            if (!res.ok || !data.url) throw new Error(data.error || 'ポータルURLを取得できませんでした。')
+            if (!res.ok || !data.url) throw new Error(data.error || dict.subscription_portal_url_error)
             window.location.href = data.url
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Unknown error'
@@ -61,26 +62,26 @@ export default function SubscriptionStatus({ profile }: SubscriptionStatusProps)
             </div>
 
             <div className="space-y-2 mb-6">
-                <h3 className="text-xl font-black text-navy-secondary">プロプラン利用中</h3>
+                <h3 className="text-xl font-black text-navy-secondary">{dict.subscription_in_use_title}</h3>
 
                 {/* 解約予約済み: 目立つ通知を表示 */}
                 {isCancelScheduled ? (
                     <div className="flex items-start gap-2 mt-2 p-3 bg-amber-50 border border-amber-200 rounded-2xl">
                         <CalendarX2 className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                         <p className="text-xs font-bold text-amber-700 leading-relaxed">
-                            {formattedExpiryDate} にフリープランへ戻ります
+                            {dict.subscription_cancel_scheduled_line1.replace('{date}', formattedExpiryDate)}
                             <span className="block text-[10px] font-medium text-amber-600 mt-0.5">
-                                解約予約済み — それまでは全機能をご利用いただけます
+                                {dict.subscription_cancel_scheduled_line2}
                             </span>
                         </p>
                     </div>
                 ) : (
                     <div className="space-y-0.5">
                         <p className="text-xs font-bold text-slate-500">
-                            {`無料トライアル中（次回請求: ${formattedExpiryDate}）`}
+                            {dict.subscription_trial_line1.replace('{date}', formattedExpiryDate)}
                         </p>
                         <p className="text-[10px] font-medium text-blue-600/70">
-                            ※期間内に解約すれば料金はかかりません
+                            {dict.subscription_trial_line2}
                         </p>
                     </div>
                 )}
@@ -105,11 +106,11 @@ export default function SubscriptionStatus({ profile }: SubscriptionStatusProps)
                 {portalLoading ? (
                     <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>処理中...</span>
+                        <span>{dict.subscription_processing}</span>
                     </>
                 ) : (
                     <>
-                        <span>プランの管理・解約</span>
+                        <span>{dict.subscription_manage_cancel}</span>
                         <ExternalLink className="w-4 h-4" />
                     </>
                 )}
