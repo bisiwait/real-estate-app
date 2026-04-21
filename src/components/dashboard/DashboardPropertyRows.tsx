@@ -52,6 +52,7 @@ export function DashboardMobilePropertyRow({
     locale,
     dict,
 }: DashboardPropertyRowProps) {
+    const displayTitle = locale === 'jp' ? property.title : (property.title_en || property.title)
     return (
         <div className="p-3 active:bg-slate-50 transition-colors">
             <div className="flex gap-3">
@@ -59,7 +60,7 @@ export function DashboardMobilePropertyRow({
                     {property.images?.[0] ? (
                         <PropertyThumbnail
                             src={property.images[0]}
-                            alt={property.title}
+                            alt={displayTitle}
                             fill
                             sizes="80px"
                             className="object-cover"
@@ -105,7 +106,7 @@ export function DashboardMobilePropertyRow({
                         />
                     </div>
                     <div className="flex items-start justify-between gap-2">
-                        <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2 min-w-0">{property.title}</p>
+                        <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2 min-w-0">{displayTitle}</p>
                         <PropertyLineInquiryBadge count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0} dict={dict} />
                     </div>
                     <p className="text-[11px] text-slate-400 mt-0.5">{property.area?.name || '—'}</p>
@@ -119,7 +120,7 @@ export function DashboardMobilePropertyRow({
                 <div className="flex-1 flex items-center justify-center">
                     <DashboardActions
                         propertyId={property.id}
-                        propertyTitle={property.title}
+                        propertyTitle={displayTitle}
                         profile={profile}
                         property={property}
                         agent={{ full_name: profile?.full_name, phone: profile?.phone }}
@@ -143,7 +144,7 @@ export function DashboardMobilePropertyRow({
                     />
                 </div>
                 <div className="flex min-w-0 flex-1">
-                    <PropertyConfirmButton propertyId={property.id} title={property.title} dict={dict} />
+                    <PropertyConfirmButton propertyId={property.id} title={displayTitle} dict={dict} />
                 </div>
             </div>
         </div>
@@ -158,6 +159,7 @@ export function DashboardDesktopPropertyRow({
     locale,
     dict,
 }: DashboardPropertyRowProps) {
+    const displayTitle = locale === 'jp' ? property.title : (property.title_en || property.title)
     return (
         <div className="p-4 lg:p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 lg:gap-6">
             <div className="flex items-center space-x-4 lg:space-x-6 min-w-0 flex-1">
@@ -165,7 +167,7 @@ export function DashboardDesktopPropertyRow({
                     {property.images?.[0] ? (
                         <PropertyThumbnail
                             src={property.images[0]}
-                            alt={property.title}
+                            alt={displayTitle}
                             fill
                             sizes="(max-width: 1023px) 64px, 96px"
                             className="object-cover"
@@ -207,7 +209,7 @@ export function DashboardDesktopPropertyRow({
                         />
                     </div>
                     <div className="flex items-center gap-2 mb-1 min-w-0">
-                        <h4 className="text-sm lg:text-lg font-bold text-navy-secondary truncate min-w-0 flex-1">{property.title}</h4>
+                        <h4 className="text-sm lg:text-lg font-bold text-navy-secondary truncate min-w-0 flex-1">{displayTitle}</h4>
                         <PropertyLineInquiryBadge
                             count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0}
                             className="shrink-0"
@@ -259,10 +261,10 @@ export function DashboardDesktopPropertyRow({
                     <span className="hidden lg:inline">{dict.detail}</span>
                     <ChevronRight className="w-4 h-4" />
                 </Link>
-                <PropertyConfirmButton propertyId={property.id} title={property.title} dict={dict} />
+                <PropertyConfirmButton propertyId={property.id} title={displayTitle} dict={dict} />
                 <DashboardActions
                     propertyId={property.id}
-                    propertyTitle={property.title}
+                    propertyTitle={displayTitle}
                     profile={profile}
                     property={property}
                     agent={{ full_name: profile?.full_name, phone: profile?.phone }}
