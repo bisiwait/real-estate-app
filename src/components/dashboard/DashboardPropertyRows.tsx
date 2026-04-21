@@ -132,6 +132,7 @@ export function DashboardMobilePropertyRow({
                     <PropertyEndListingButton
                         propertyId={property.id}
                         currentStatus={property.status}
+                        dict={dict}
                         onEnded={(id) => patchProperty(id, { status: 'draft' })}
                     />
                     <PropertyRepublishButton
@@ -142,7 +143,7 @@ export function DashboardMobilePropertyRow({
                     />
                 </div>
                 <div className="flex min-w-0 flex-1">
-                    <PropertyConfirmButton propertyId={property.id} title={property.title} />
+                    <PropertyConfirmButton propertyId={property.id} title={property.title} dict={dict} />
                 </div>
             </div>
         </div>
@@ -195,6 +196,7 @@ export function DashboardDesktopPropertyRow({
                         <PropertyEndListingButton
                             propertyId={property.id}
                             currentStatus={property.status}
+                            dict={dict}
                             onEnded={(id) => patchProperty(id, { status: 'draft' })}
                         />
                         <PropertyRepublishButton
@@ -257,7 +259,7 @@ export function DashboardDesktopPropertyRow({
                     <span className="hidden lg:inline">{dict.detail}</span>
                     <ChevronRight className="w-4 h-4" />
                 </Link>
-                <PropertyConfirmButton propertyId={property.id} title={property.title} />
+                <PropertyConfirmButton propertyId={property.id} title={property.title} dict={dict} />
                 <DashboardActions
                     propertyId={property.id}
                     propertyTitle={property.title}

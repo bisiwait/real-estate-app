@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation'
 
 interface BulkConfirmButtonProps {
     propertyIds: string[]
+    dict: any
 }
 
-export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProps) {
+export default function BulkConfirmButton({ propertyIds, dict }: BulkConfirmButtonProps) {
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
     const supabase = createClient()
@@ -19,7 +20,9 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
 
     const handleBulkConfirm = async () => {
         const confirmed = window.confirm(
-            `現在公開中の物件（${propertyIds.length}件）をすべて「掲載更新」しますか？検索一覧では更新日時が新しくなり、先頭付近に並びやすくなります。`
+            dict.bulk_confirm_message
+                .replace('{count}', String(propertyIds.length))
+                .replace('{action}', dict.property_refresh_label)
         )
         if (!confirmed) return
 
@@ -36,7 +39,7 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
                 .in('id', propertyIds)
 
             if (error) {
-                alert(`更新に失敗しました: ${error.message}`)
+                alert(`${dict.update_failed}: ${error.message}`)
                 setStatus('idle')
             } else {
                 setStatus('success')
@@ -46,7 +49,7 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
                 }, 2000)
             }
         } catch (err: any) {
-            alert(`エラーが発生しました: ${err.message}`)
+            alert(`${dict.error_occurred}: ${err.message}`)
             setStatus('idle')
         } finally {
             setLoading(false)
@@ -71,10 +74,10 @@ export default function BulkConfirmButton({ propertyIds }: BulkConfirmButtonProp
             )}
             <span>
                 {status === 'loading'
-                    ? '更新中...'
+                    ? dict.updating
                     : status === 'success'
-                        ? 'すべて更新完了'
-                        : '全ての公開物件を掲載更新'}
+                        ? dict.bulk_refresh_done
+                        : dict.bulk_refresh_button}
             </span>
         </button>
     )

@@ -8,9 +8,10 @@ import { useRouter } from 'next/navigation'
 interface PropertyConfirmButtonProps {
     propertyId: string
     title: string
+    dict: any
 }
 
-export default function PropertyConfirmButton({ propertyId, title }: PropertyConfirmButtonProps) {
+export default function PropertyConfirmButton({ propertyId, title, dict }: PropertyConfirmButtonProps) {
     const [loading, setLoading] = useState(false)
     const [confirmed, setConfirmed] = useState(false)
     const supabase = createClient()
@@ -35,14 +36,14 @@ export default function PropertyConfirmButton({ propertyId, title }: PropertyCon
 
             if (error) {
                 setConfirmed(false)
-                alert(`更新に失敗しました: ${error.message}`)
+                alert(`${dict.update_failed}: ${error.message}`)
             } else {
                 // Background refresh
                 router.refresh()
             }
         } catch (err: any) {
             setConfirmed(false)
-            alert(`エラーが発生しました: ${err.message}`)
+            alert(`${dict.error_occurred}: ${err.message}`)
         } finally {
             setLoading(false)
         }
@@ -64,7 +65,7 @@ export default function PropertyConfirmButton({ propertyId, title }: PropertyCon
             ) : (
                 <RefreshCw size={16} />
             )}
-            <span>{confirmed ? '更新完了' : '掲載更新'}</span>
+            <span>{confirmed ? dict.update_done : dict.property_refresh_label}</span>
         </button>
     )
 }

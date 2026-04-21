@@ -220,6 +220,7 @@ export default function DashboardClient({
                             <div className="flex flex-col gap-2">
                                 <h3 className="text-lg sm:text-xl font-black text-navy-secondary">{dict.property_list_title}</h3>
                                 <BulkConfirmButton
+                                    dict={dict}
                                     propertyIds={liveFiltered
                                         .filter((p) => p.status === 'published')
                                         .map((p) => p.id)}
