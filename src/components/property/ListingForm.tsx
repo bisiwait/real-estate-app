@@ -48,6 +48,7 @@ const CoordinatePicker = dynamic(() => import('./CoordinatePicker'), {
 import { getErrorMessage } from '@/lib/utils/errors'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import { finiteCoord } from '@/lib/google-maps-url'
+import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
 
 interface Area {
     id: string
@@ -172,6 +173,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             statusPublished: 'เผยแพร่',
             saveDraft: 'บันทึกฉบับร่าง',
             publish: 'เผยแพร่ประกาศ',
+            propertyTypeNoteFromProject: 'จากโครงการ',
+            propertyTypeNoteAdminExtra: '— แอดมินแก้ไขได้',
         }
         : locale === 'en'
             ? {
@@ -212,6 +215,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 statusPublished: 'Published',
                 saveDraft: 'Save Draft',
                 publish: 'Publish Listing',
+                propertyTypeNoteFromProject: 'from project',
+                propertyTypeNoteAdminExtra: '— editable',
             }
             : {
                 upgradeOnly: 'プロプラン限定機能',
@@ -251,6 +256,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 statusPublished: '公開中',
                 saveDraft: '下書き保存',
                 publish: '物件を公開する',
+                propertyTypeNoteFromProject: '引用中',
+                propertyTypeNoteAdminExtra: '- 編集可',
             }
 
     // Japanese tags options
@@ -1082,12 +1089,12 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div>
-                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ (Type)</label>
+                                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getPropertyTypeFieldLabel(locale)}</label>
                                         <select value={projectForm.property_type} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, property_type: val }); setFormData({ ...formData, property_type: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl appearance-none font-bold">
-                                            <option value="Condo">コンドミニアム</option>
-                                            <option value="House">一軒家・ヴィラ</option>
-                                            <option value="Townhouse">タウンハウス</option>
-                                            <option value="Commercial">店舗・商業</option>
+                                            <option value="Condo">{getPropertyTypeOptionLabel('Condo', locale)}</option>
+                                            <option value="House">{getPropertyTypeOptionLabel('House', locale)}</option>
+                                            <option value="Townhouse">{getPropertyTypeOptionLabel('Townhouse', locale)}</option>
+                                            <option value="Commercial">{getPropertyTypeOptionLabel('Commercial', locale)}</option>
                                         </select>
                                     </div>
                                     <div>
@@ -1208,17 +1215,24 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         {!showNewProjectForm && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ {formData.project_id && <span className="text-[10px] text-navy-primary">(引用中{isAdmin && ' - 編集可'})</span>}</label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
+                                        {getPropertyTypeFieldLabel(locale)}
+                                        {formData.project_id && (
+                                            <span className="text-[10px] text-navy-primary">
+                                                ({ui.propertyTypeNoteFromProject}{isAdmin ? ` ${ui.propertyTypeNoteAdminExtra}` : ''})
+                                            </span>
+                                        )}
+                                    </label>
                                     <select
                                         disabled={!!formData.project_id && !isAdmin}
                                         value={formData.property_type}
                                         onChange={e => setFormData({ ...formData, property_type: e.target.value })}
                                         className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <option value="Condo">コンドミニアム</option>
-                                        <option value="House">一軒家・ヴィラ</option>
-                                        <option value="Townhouse">タウンハウス</option>
-                                        <option value="Commercial">店舗・商業</option>
+                                        <option value="Condo">{getPropertyTypeOptionLabel('Condo', locale)}</option>
+                                        <option value="House">{getPropertyTypeOptionLabel('House', locale)}</option>
+                                        <option value="Townhouse">{getPropertyTypeOptionLabel('Townhouse', locale)}</option>
+                                        <option value="Commercial">{getPropertyTypeOptionLabel('Commercial', locale)}</option>
                                     </select>
                                 </div>
                                 <div>

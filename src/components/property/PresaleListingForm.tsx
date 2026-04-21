@@ -29,6 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Globe } from 'lucide-react'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import { finiteCoord } from '@/lib/google-maps-url'
+import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -72,6 +73,7 @@ interface PresaleListingFormProps {
 export default function PresaleListingForm({ initialData, mode = 'create' }: PresaleListingFormProps) {
     const params = useParams()
     const router = useRouter()
+    const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
     const [mounted, setMounted] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -873,12 +875,12 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">物件タイプ</label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{getPropertyTypeFieldLabel(locale)}</label>
                             <select value={formData.property_type} onChange={e => setFormData({ ...formData, property_type: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
-                                <option value="Condo">コンドミニアム</option>
-                                <option value="House">一軒家・ヴィラ</option>
-                                <option value="Townhouse">タウンハウス</option>
-                                <option value="Commercial">店舗・商業</option>
+                                <option value="Condo">{getPropertyTypeOptionLabel('Condo', locale)}</option>
+                                <option value="House">{getPropertyTypeOptionLabel('House', locale)}</option>
+                                <option value="Townhouse">{getPropertyTypeOptionLabel('Townhouse', locale)}</option>
+                                <option value="Commercial">{getPropertyTypeOptionLabel('Commercial', locale)}</option>
                             </select>
                         </div>
                         <div>
