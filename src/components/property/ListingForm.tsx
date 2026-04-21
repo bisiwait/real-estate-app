@@ -80,7 +80,19 @@ interface ListingFormProps {
     mode?: 'create' | 'edit'
 }
 
+/** サイト言語（ルートの locale）に合わせた紹介文タブ */
+function descriptionTabForLocale(loc: string): 'jp' | 'en' | 'th' {
+    if (loc === 'en') return 'en'
+    if (loc === 'th') return 'th'
+    return 'jp'
+}
+
 export default function ListingForm({ initialData, mode = 'create' }: ListingFormProps) {
+    const router = useRouter()
+    const params = useParams()
+    const supabase = createClient()
+    const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
+
     const [loading, setLoading] = useState(false)
     const [areas, setAreas] = useState<Area[]>([])
     const [projects, setProjects] = useState<Project[]>([])
@@ -117,14 +129,10 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
 
     const [submitStatus, setSubmitStatus] = useState<'pending' | 'draft'>('pending')
     const [isGeneratingAI, setIsGeneratingAI] = useState(false)
-    const [activeTab, setActiveTab] = useState<'jp' | 'en' | 'th'>('jp')
+    const [activeTab, setActiveTab] = useState<'jp' | 'en' | 'th'>(() => descriptionTabForLocale(locale))
     const [currentUserProfile, setCurrentUserProfile] = useState<any | null>(null)
     const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
-    const router = useRouter()
-    const params = useParams()
-    const supabase = createClient()
-    const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
     const ui = locale === 'th'
         ? {
             upgradeOnly: 'ฟีเจอร์เฉพาะแพ็กเกจ Pro',
@@ -386,6 +394,10 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
     }, [supabase])
 
     useEffect(() => {
+        setActiveTab(descriptionTabForLocale(locale))
+    }, [locale])
+
+    useEffect(() => {
         const fetchInitialData = async () => {
             const [areasRes, projectsRes] = await Promise.all([
                 supabase.from('areas').select('id, name, region:regions(name)').order('name'),
@@ -538,8 +550,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                 description_th: data.th || prev.description_th
             }))
 
-            // Move to JP tab after generation
-            setActiveTab('jp')
+            setActiveTab(descriptionTabForLocale(locale))
         } catch (err: any) {
             setError(err.message)
         } finally {
