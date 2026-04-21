@@ -9,7 +9,15 @@ import DashboardActions from '@/components/dashboard/DashboardActions'
 import PropertyEndListingButton from '@/components/dashboard/PropertyEndListingButton'
 import PropertyRepublishButton from '@/components/dashboard/PropertyRepublishButton'
 
-function PropertyLineInquiryBadge({ count, className = '' }: { count: number; className?: string }) {
+function PropertyLineInquiryBadge({
+    count,
+    className = '',
+    dict,
+}: {
+    count: number
+    className?: string
+    dict: any
+}) {
     const active = count > 0
     return (
         <span
@@ -18,11 +26,11 @@ function PropertyLineInquiryBadge({ count, className = '' }: { count: number; cl
                     ? 'border-[#06C755]/35 bg-[#06C755]/10 text-[#047c3d]'
                     : 'border-slate-200 bg-slate-50 text-slate-400'
             } ${className}`}
-            title="この物件のLINE問い合わせ導線の件数（今月・日本時間）"
+            title={dict.line_badge_title}
         >
             <MessageCircle className="h-3 w-3 shrink-0" aria-hidden />
             <span>{count}</span>
-            <span className="sr-only">LINE問い合わせ 今月</span>
+            <span className="sr-only">{dict.line_badge_sr}</span>
         </span>
     )
 }
@@ -33,6 +41,7 @@ export type DashboardPropertyRowProps = {
     lineInquiryCountsByPropertyThisMonth: Record<string, number>
     patchProperty: (id: string, patch: Record<string, unknown>) => void
     locale: string
+    dict: any
 }
 
 export function DashboardMobilePropertyRow({
@@ -41,6 +50,7 @@ export function DashboardMobilePropertyRow({
     lineInquiryCountsByPropertyThisMonth,
     patchProperty,
     locale,
+    dict,
 }: DashboardPropertyRowProps) {
     return (
         <div className="p-3 active:bg-slate-50 transition-colors">
@@ -61,13 +71,13 @@ export function DashboardMobilePropertyRow({
                     )}
                     <div className="absolute top-1 left-1">
                         {property.status === 'published' && (
-                            <span className="bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">公開</span>
+                            <span className="bg-emerald-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">{dict.status_published_short}</span>
                         )}
                         {property.status === 'pending' && (
-                            <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">待ち</span>
+                            <span className="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">{dict.status_pending_short}</span>
                         )}
                         {property.status === 'draft' && (
-                            <span className="bg-slate-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">下書</span>
+                            <span className="bg-slate-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black shadow-sm">{dict.status_draft_short}</span>
                         )}
                     </div>
                 </div>
@@ -96,11 +106,11 @@ export function DashboardMobilePropertyRow({
                     </div>
                     <div className="flex items-start justify-between gap-2">
                         <p className="text-[13px] font-black text-navy-secondary leading-tight line-clamp-2 min-w-0">{property.title}</p>
-                        <PropertyLineInquiryBadge count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0} />
+                        <PropertyLineInquiryBadge count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0} dict={dict} />
                     </div>
                     <p className="text-[11px] text-slate-400 mt-0.5">{property.area?.name || '—'}</p>
                     <div className="text-[13px] font-black text-navy-primary mt-1 tabular-nums">
-                        {property.is_for_rent && <span className="mr-3">{property.rent_price?.toLocaleString()} ฿/月</span>}
+                        {property.is_for_rent && <span className="mr-3">{property.rent_price?.toLocaleString()} {dict.rent_unit}</span>}
                         {property.is_for_sale && <span>{property.sale_price?.toLocaleString()} ฿</span>}
                     </div>
                 </div>
@@ -113,6 +123,7 @@ export function DashboardMobilePropertyRow({
                         profile={profile}
                         property={property}
                         agent={{ full_name: profile?.full_name, phone: profile?.phone }}
+                        dict={dict}
                     />
                 </div>
             </div>
@@ -144,6 +155,7 @@ export function DashboardDesktopPropertyRow({
     lineInquiryCountsByPropertyThisMonth,
     patchProperty,
     locale,
+    dict,
 }: DashboardPropertyRowProps) {
     return (
         <div className="p-4 lg:p-6 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 lg:gap-6">
@@ -166,13 +178,13 @@ export function DashboardDesktopPropertyRow({
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                         {property.status === 'published' && (
-                            <span className="bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded text-[10px] font-bold">公開中</span>
+                            <span className="bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded text-[10px] font-bold">{dict.status_published}</span>
                         )}
                         {property.status === 'pending' && (
-                            <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[10px] font-bold">承認待ち</span>
+                            <span className="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[10px] font-bold">{dict.status_pending}</span>
                         )}
                         {property.status === 'draft' && (
-                            <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">下書き</span>
+                            <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold">{dict.status_draft}</span>
                         )}
                         <span className="text-[10px] text-slate-400 font-medium hidden lg:inline">#{property.id.slice(0, 8)}</span>
                         <FreshnessBadge
@@ -197,10 +209,11 @@ export function DashboardDesktopPropertyRow({
                         <PropertyLineInquiryBadge
                             count={lineInquiryCountsByPropertyThisMonth[property.id] ?? 0}
                             className="shrink-0"
+                            dict={dict}
                         />
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 text-xs lg:text-sm font-medium">
-                        <span className="text-slate-400">{property.area?.name || 'Unknown Area'}</span>
+                        <span className="text-slate-400">{property.area?.name || dict.unknown_area}</span>
                         {property.is_for_rent && (
                             <span className="text-navy-primary font-bold tabular-nums">
                                 <span className="text-[9px] opacity-50 uppercase mr-1">Rent</span>
@@ -241,7 +254,7 @@ export function DashboardDesktopPropertyRow({
                     rel="noopener noreferrer"
                     className="px-2 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-100 flex items-center hidden"
                 >
-                    <span className="hidden lg:inline">詳細</span>
+                    <span className="hidden lg:inline">{dict.detail}</span>
                     <ChevronRight className="w-4 h-4" />
                 </Link>
                 <PropertyConfirmButton propertyId={property.id} title={property.title} />
@@ -251,6 +264,7 @@ export function DashboardDesktopPropertyRow({
                     profile={profile}
                     property={property}
                     agent={{ full_name: profile?.full_name, phone: profile?.phone }}
+                        dict={dict}
                 />
             </div>
         </div>

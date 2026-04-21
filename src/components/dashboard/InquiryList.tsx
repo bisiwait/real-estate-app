@@ -40,11 +40,13 @@ interface Inquiry {
 interface InquiryListProps {
   initialInquiries: any[]
   agentDisplayName?: string | null
+  dict: any
 }
 
 export default function InquiryList({
   initialInquiries,
   agentDisplayName,
+  dict,
 }: InquiryListProps) {
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries)
   const replyTemplates = useMemo(
@@ -150,15 +152,15 @@ export default function InquiryList({
 
           if (notifyRes.status === 401) {
             alert(
-              '返信は保存されましたが、通知用のセッションがサーバーで認識できませんでした。一度ログアウトして再ログインするか、時間をおいて再度お試しください。'
+              dict.inquiries_notify_session_error
             )
           } else if (notifyRes.status === 502 || notifyRes.status === 503) {
             const hint = payload.hint ? `\n\n${payload.hint}` : ''
-            alert(`メール通知に失敗しました: ${detail}${hint}`)
+            alert(`${dict.inquiries_notify_failed}: ${detail}${hint}`)
           } else if (notifyRes.status === 422) {
             alert(`${detail}`)
           } else if (notifyRes.status !== 422) {
-            alert(`送信に失敗しました: ${detail}`)
+            alert(`${dict.inquiries_send_failed}: ${detail}`)
           }
         }
       } catch (notifyErr) {
@@ -179,7 +181,7 @@ export default function InquiryList({
       setReplyText('')
     } catch (err) {
       console.error('Error sending reply:', err)
-      alert('返信の保存に失敗しました。')
+      alert(dict.inquiries_reply_save_failed)
     } finally {
       setIsSubmittingReply(false)
     }
@@ -188,7 +190,7 @@ export default function InquiryList({
   if (inquiries.length === 0) {
     return (
       <div className="p-20 text-center">
-        <p className="text-slate-400 font-medium">お問い合わせはありません</p>
+        <p className="text-slate-400 font-medium">{dict.inquiries_empty}</p>
       </div>
     )
   }
@@ -203,39 +205,39 @@ export default function InquiryList({
       <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:px-6 space-y-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0">
-            対応
+            {dict.inquiries_handling}
           </span>
           <div className="flex min-w-0 bg-slate-100 p-1 rounded-xl border border-slate-200 gap-0.5">
             <button type="button" onClick={() => setReplyFilter('all')} className={filterChip(replyFilter === 'all')}>
-              すべて
+              {dict.filter_all}
             </button>
             <button type="button" onClick={() => setReplyFilter('pending')} className={filterChip(replyFilter === 'pending')}>
-              未対応
+              {dict.inquiries_pending}
             </button>
             <button type="button" onClick={() => setReplyFilter('replied')} className={filterChip(replyFilter === 'replied')}>
-              返信済み
+              {dict.inquiries_replied}
             </button>
           </div>
         </div>
         <p className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[11px] font-medium leading-relaxed text-slate-600">
-          ここではメールでの問い合わせのみ表示されます。
+          {dict.inquiries_mail_only_line1}
           <br />
-          LINEの問い合わせは直接こちらのシステムを通さないため表示されません。
+          {dict.inquiries_mail_only_line2}
         </p>
         <p className="text-[10px] font-bold text-slate-400">
-          表示 {filteredInquiries.length} / 全 {inquiries.length} 件
+          {dict.display_count_compact.replace('{shown}', String(filteredInquiries.length)).replace('{total}', String(inquiries.length))}
         </p>
       </div>
 
       {filteredInquiries.length === 0 ? (
         <div className="p-16 text-center space-y-3">
-          <p className="text-slate-500 font-medium text-sm">条件に一致するお問い合わせはありません</p>
+          <p className="text-slate-500 font-medium text-sm">{dict.inquiries_no_match}</p>
           <button
             type="button"
             onClick={() => setReplyFilter('all')}
             className="text-xs font-black text-navy-primary underline decoration-navy-primary/30 hover:text-navy-secondary"
           >
-            フィルターをリセット
+            {dict.filter_reset}
           </button>
         </div>
       ) : null}
@@ -269,11 +271,11 @@ export default function InquiryList({
                       )}
                       {inquiry.replies && inquiry.replies.length > 0 ? (
                         <span className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold">
-                          返信済み
+                          {dict.inquiries_replied}
                         </span>
                       ) : (
                         <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold">
-                          未対応
+                          {dict.inquiries_pending}
                         </span>
                       )}
                       <span className="text-xs text-slate-400 font-bold uppercase tracking-widest flex items-center">
@@ -290,10 +292,10 @@ export default function InquiryList({
                     </div>
                     <h4 className="text-lg font-bold text-navy-secondary">
                       {inquiry.inquirer_name}{' '}
-                      <span className="text-sm font-normal text-slate-400 ml-1">さんからのお問い合わせ</span>
+                      <span className="text-sm font-normal text-slate-400 ml-1">{dict.inquiries_from}</span>
                     </h4>
                     <p className="text-xs text-navy-primary font-bold mt-1">
-                      対象物件: {inquiry.property?.title || 'Unknown Property'}
+                      {dict.inquiries_target_property}: {inquiry.property?.title || dict.inquiries_unknown_property}
                     </p>
                   </div>
                 </div>
@@ -306,7 +308,7 @@ export default function InquiryList({
                       : 'bg-white text-navy-primary border-navy-primary/10 hover:border-navy-primary/30 hover:shadow-md'
                   }`}
                 >
-                  <span>{expanded ? '内容を閉じる' : '詳細を確認'}</span>
+                  <span>{expanded ? dict.inquiries_close : dict.inquiries_view_details}</span>
                   {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
@@ -317,20 +319,20 @@ export default function InquiryList({
                     <div className="space-y-4">
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
-                          <User className="w-3 h-3 mr-1.5" /> お名前
+                          <User className="w-3 h-3 mr-1.5" /> {dict.inquiries_name}
                         </p>
                         <p className="text-sm font-bold text-navy-secondary">{inquiry.inquirer_name}</p>
                       </div>
                       <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
-                          <Mail className="w-3 h-3 mr-1.5" /> メールアドレス
+                          <Mail className="w-3 h-3 mr-1.5" /> {dict.inquiries_email}
                         </p>
                         <p className="text-sm font-bold text-navy-secondary select-all">{inquiry.inquirer_email}</p>
                       </div>
                       {inquiry.inquirer_phone && (
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">
-                            <Phone className="w-3 h-3 mr-1.5" /> 電話番号
+                            <Phone className="w-3 h-3 mr-1.5" /> {dict.inquiries_phone}
                           </p>
                           <p className="text-sm font-bold text-navy-secondary select-all">{inquiry.inquirer_phone}</p>
                         </div>
@@ -338,7 +340,7 @@ export default function InquiryList({
                     </div>
                     <div className="bg-navy-primary/[0.03] p-6 rounded-3xl border border-navy-primary/5">
                       <p className="text-[10px] font-black text-navy-primary/60 uppercase tracking-widest mb-4">
-                        メッセージ内容
+                        {dict.inquiries_message}
                       </p>
                       <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic">
                         &ldquo;{inquiry.message}&rdquo;
@@ -350,7 +352,7 @@ export default function InquiryList({
                     <div>
                       <h5 className="text-sm font-black text-navy-secondary mb-4 flex items-center">
                         <Reply className="w-4 h-4 mr-2" />
-                        返信履歴
+                        {dict.inquiries_reply_history}
                       </h5>
 
                       {inquiry.replies && inquiry.replies.length > 0 ? (
@@ -378,7 +380,7 @@ export default function InquiryList({
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-400 italic">まだ返信はありません</p>
+                        <p className="text-xs text-slate-400 italic">{dict.inquiries_no_replies}</p>
                       )}
                     </div>
 
@@ -387,16 +389,16 @@ export default function InquiryList({
                     <div>
                       <h5 className="text-sm font-black text-navy-secondary mb-3 flex items-center">
                         <Send className="w-4 h-4 mr-2" />
-                        返信本文
+                        {dict.inquiries_reply_body}
                       </h5>
                       <label className="sr-only" htmlFor={`inquiry-reply-${inquiry.id}`}>
-                        返信本文
+                        {dict.inquiries_reply_body}
                       </label>
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
                             <Sparkles className="h-3 w-3" />
-                            定型文
+                            {dict.inquiries_templates}
                           </span>
                           {replyTemplates.map((t) => (
                             <button
@@ -414,10 +416,10 @@ export default function InquiryList({
                           onClick={() => setReplyText('')}
                           disabled={!replyText}
                           className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-navy-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                          title="本文を空にします"
+                          title={dict.inquiries_clear_body_title}
                         >
                           <Eraser className="h-3 w-3" />
-                          本文をクリア
+                          {dict.inquiries_clear_body}
                         </button>
                       </div>
                       <div className="relative min-w-0">
@@ -425,17 +427,17 @@ export default function InquiryList({
                           id={`inquiry-reply-${inquiry.id}`}
                           rows={6}
                           className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all resize-none pr-14"
-                          placeholder="返信を入力…"
+                          placeholder={dict.inquiries_reply_placeholder}
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
-                          aria-label="返信本文"
+                          aria-label={dict.inquiries_reply_body}
                         />
                         <button
                           type="button"
                           onClick={() => handleSendReply(inquiry)}
                           disabled={isSubmittingReply || !replyText.trim()}
                           className="absolute right-3 bottom-3 p-3 bg-navy-primary text-white rounded-xl hover:bg-navy-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                          title="送信"
+                          title={dict.inquiries_send}
                         >
                           {isSubmittingReply ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -445,14 +447,14 @@ export default function InquiryList({
                         </button>
                       </div>
                       <p className="text-[10px] text-slate-500 mt-2 px-1 font-bold">
-                        ※送信するとお客様に届き、返信履歴にも保存されます。
+                        {dict.inquiries_send_note}
                       </p>
                     </div>
 
                     {!inquiry.is_read && (
                       <div className="flex items-center text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg text-xs font-bold w-fit">
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        既読としてマークしました
+                        {dict.inquiries_marked_read}
                       </div>
                     )}
                   </div>

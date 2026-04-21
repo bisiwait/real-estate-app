@@ -22,6 +22,7 @@ import DashboardClient from '@/components/dashboard/DashboardClient'
 import { fetchAgentInquiryLeads } from '@/lib/supabase/fetch-agent-leads'
 import { fetchAgentProfileContacts } from '@/lib/supabase/fetch-agent-profile-contacts'
 import { startOfCurrentMonthJstIso } from '@/lib/datetime/jst-month-start'
+import { getDictionary } from '@/lib/i18n/get-dictionary'
 
 export default async function DashboardPage({
     searchParams,
@@ -31,6 +32,8 @@ export default async function DashboardPage({
     params: Promise<{ locale: string }>
 }) {
     const { locale } = await params
+    const dict = await getDictionary(locale)
+    const d = dict.dashboard
     const { tab = 'properties', profile_updated, filter = 'all', status = 'all' } = await searchParams
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -142,9 +145,9 @@ export default async function DashboardPage({
                             </div>
                             <div className="min-w-0">
                                 <h1 className="text-xl sm:text-3xl font-black tracking-tight truncate !text-slate-400">
-                                    ダッシュボード
+                                    {d.title}
                                 </h1>
-                                <p className="text-slate-400 text-[10px] sm:text-sm font-medium mt-0.5 sm:mt-1 uppercase tracking-widest">Listing Management</p>
+                                <p className="text-slate-400 text-[10px] sm:text-sm font-medium mt-0.5 sm:mt-1 uppercase tracking-widest">{d.subtitle}</p>
                             </div>
                         </div>
 
@@ -155,7 +158,7 @@ export default async function DashboardPage({
                                     className="bg-amber-500 text-white px-4 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-amber-600 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
                                 >
                                     <Building2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                                    <span>プレセール投稿</span>
+                                    <span>{d.cta_presale_post}</span>
                                 </Link>
                             )}
                             <Link
@@ -163,7 +166,7 @@ export default async function DashboardPage({
                                 className="bg-white text-navy-primary px-4 sm:px-8 py-3 sm:py-3.5 rounded-full text-sm sm:text-base font-bold hover:bg-slate-50 transition-all shadow-lg flex items-center justify-center gap-2 w-full md:w-auto"
                             >
                                 <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                                <span>物件を新規掲載する</span>
+                                <span>{d.cta_new_listing}</span>
                             </Link>
                         </div>
                     </div>
@@ -171,7 +174,7 @@ export default async function DashboardPage({
             </div>
             <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 mt-6 sm:-mt-10">
                 {profile_updated === 'true' && (
-                    <FlashMessage message="プロフィール情報を更新しました。" duration={3000} />
+                    <FlashMessage message={d.profile_updated} duration={3000} />
                 )}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Stats Sidebar — スマホでは要望ボタンはページ下部（メインの下）へ */}
@@ -193,43 +196,43 @@ export default async function DashboardPage({
 
                         {/* Summary List */}
                         <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 px-2">概要</h3>
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 px-2">{d.summary_title}</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 text-emerald-600">
                                     <div className="flex items-center space-x-3">
                                         <CheckCircle2 className="w-5 h-5" />
-                                        <span className="text-sm font-bold">公開中</span>
+                                        <span className="text-sm font-bold">{d.summary_published}</span>
                                     </div>
                                     <span className="text-lg font-black">{stats.published}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-3 rounded-2xl bg-navy-primary/5 text-navy-primary">
                                     <div className="flex items-center space-x-3">
                                         <Mail className="w-5 h-5" />
-                                        <span className="text-sm font-bold">新着お問い合わせ</span>
+                                        <span className="text-sm font-bold">{d.summary_new_inquiries}</span>
                                     </div>
                                     <span className="text-lg font-black">{stats.unreadInquiries}</span>
                                 </div>
                                 <div
                                     className="flex items-center justify-between p-3 rounded-2xl border border-[#06C755]/20 bg-[#06C755]/5 text-[#047c3d]"
-                                    title="日本時間の今月1日0時以降の合計。物件ごとの内訳は「物件」タブの一覧各行のLINEバッジを参照してください。"
+                                    title={d.summary_line_monthly_hint}
                                 >
                                     <div className="flex items-center space-x-3 min-w-0">
                                         <MessageCircle className="w-5 h-5 shrink-0" aria-hidden />
-                                        <span className="text-sm font-bold leading-tight">LINE問い合わせ（今月）</span>
+                                        <span className="text-sm font-bold leading-tight">{d.summary_line_monthly}</span>
                                     </div>
                                     <span className="text-lg font-black tabular-nums shrink-0">{lineInquiryLogsThisMonth}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-50 text-amber-600">
                                     <div className="flex items-center space-x-3">
                                         <Clock className="w-5 h-5" />
-                                        <span className="text-sm font-bold">承認待ち</span>
+                                        <span className="text-sm font-bold">{d.summary_pending}</span>
                                     </div>
                                     <span className="text-lg font-black">{properties?.filter(p => p.status === 'pending').length || 0}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 text-slate-600">
                                     <div className="flex items-center space-x-3">
                                         <AlertCircle className="w-5 h-5" />
-                                        <span className="text-sm font-bold">下書き</span>
+                                        <span className="text-sm font-bold">{d.summary_draft}</span>
                                     </div>
                                     <span className="text-lg font-black">{properties?.filter(p => p.status === 'draft').length || 0}</span>
                                 </div>
@@ -258,6 +261,7 @@ export default async function DashboardPage({
                             locale={locale}
                             activePlan={activePlan}
                             lineInquiryCountsByPropertyThisMonth={lineInquiryCountsByPropertyThisMonth}
+                            dict={d}
                         />
                     </div>
 

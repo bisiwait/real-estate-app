@@ -33,14 +33,6 @@ export interface LeadRow {
   } | null
 }
 
-const STATUS_OPTIONS: { value: LeadStatusValue; label: string }[] = [
-  { value: 'pending', label: '未対応' },
-  { value: 'replied', label: '返信済み' },
-  { value: 'viewing', label: '内見予約' },
-  { value: 'won', label: '成約' },
-  { value: 'lost', label: '失注' },
-]
-
 function normalizeStatus(raw: string | undefined | null): LeadStatusValue {
   const s = (raw || '').toLowerCase()
   if (
@@ -58,14 +50,14 @@ function normalizeStatus(raw: string | undefined | null): LeadStatusValue {
   return 'pending'
 }
 
-function getTypeLabel(type: string) {
+function getTypeLabel(type: string, dict: any) {
   switch (String(type).toLowerCase()) {
     case 'line':
       return 'LINE'
     case 'phone':
-      return '電話'
+      return dict.leads_type_phone
     case 'form':
-      return 'フォーム'
+      return dict.leads_type_form
     default:
       return type
   }
@@ -91,23 +83,24 @@ function lineCopyPayload(lineId: string | null | undefined): string {
   return (lineId ?? '').trim()
 }
 
-async function copyLineContact(lineId: string | null | undefined) {
+async function copyLineContact(lineId: string | null | undefined, dict: any) {
   const text = lineCopyPayload(lineId)
   if (!text) {
-    toast.message('コピーする内容がありません')
+    toast.message(dict.leads_copy_empty)
     return
   }
   try {
     await navigator.clipboard.writeText(text)
-    toast.success('コピーしました')
+    toast.success(dict.leads_copy_success)
   } catch {
-    toast.error('コピーに失敗しました')
+    toast.error(dict.leads_copy_failed)
   }
 }
 
 interface LeadsViewProps {
   initialLeads: LeadRow[]
   locale: string
+  dict: any
 }
 
 function useMobileUa() {
@@ -119,8 +112,9 @@ function useMobileUa() {
   return mobile
 }
 
-function formatInquiryAt(iso: string) {
-  return new Date(iso).toLocaleString('ja-JP', {
+function formatInquiryAt(iso: string, locale: string) {
+  const formatLocale = locale === 'th' ? 'th-TH' : locale === 'en' ? 'en-US' : 'ja-JP'
+  return new Date(iso).toLocaleString(formatLocale, {
     timeZone: 'Asia/Bangkok',
     year: 'numeric',
     month: '2-digit',
@@ -130,10 +124,17 @@ function formatInquiryAt(iso: string) {
   })
 }
 
-export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
+export default function LeadsView({ initialLeads, locale, dict }: LeadsViewProps) {
   const [leads, setLeads] = useState<LeadRow[]>(initialLeads || [])
   const [savingId, setSavingId] = useState<string | null>(null)
   const isMobileUa = useMobileUa()
+  const statusOptions: { value: LeadStatusValue; label: string }[] = [
+    { value: 'pending', label: dict.inquiries_pending },
+    { value: 'replied', label: dict.inquiries_replied },
+    { value: 'viewing', label: dict.leads_status_viewing },
+    { value: 'won', label: dict.leads_status_won },
+    { value: 'lost', label: dict.leads_status_lost },
+  ]
 
   useEffect(() => {
     setLeads(initialLeads || [])
@@ -151,13 +152,13 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
       if (!res.ok) {
         const t = await res.text()
         console.error('Failed to update lead status', t)
-        toast.error('ステータスの更新に失敗しました')
+        toast.error(dict.leads_status_update_failed)
         return
       }
       setLeads((prev) =>
         prev.map((l) => (l.id === leadId ? { ...l, status } : l))
       )
-      toast.success('ステータスを更新しました')
+      toast.success(dict.leads_status_updated)
     } finally {
       setSavingId(null)
     }
@@ -168,7 +169,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
       <div className="flex flex-col">
         <div className="flex flex-col items-center gap-2 px-4 py-16 text-center text-slate-400">
           <Users className="h-10 w-10 opacity-20" />
-          <p className="text-sm font-bold">まだリード情報がありません。</p>
+          <p className="text-sm font-bold">{dict.leads_empty}</p>
         </div>
       </div>
     )
@@ -178,10 +179,9 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
     <div className="flex flex-col">
       <div className="divide-y divide-slate-200/80">
         <div className="px-3 py-3 sm:px-4 lg:px-3 lg:py-2">
-          <h3 className="text-base font-black text-navy-secondary lg:text-sm">リード（問い合わせ）詳細</h3>
+          <h3 className="text-base font-black text-navy-secondary lg:text-sm">{dict.leads_title}</h3>
           <p className="mt-0.5 text-[11px] text-slate-500 lg:mt-0 lg:text-[10px] lg:leading-snug">
-            お客様に LINE 連絡先がある場合はリンクから開けます。公式 LINE の続きのやり取りは LINE Official Account
-            Manager のチャットから行ってください。ステータスを更新してください。
+            {dict.leads_description}
           </p>
         </div>
 
@@ -193,8 +193,8 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
           const statusVal = normalizeStatus(lead.status)
           const lineRaw = lead.profile?.line_id?.trim() || ''
           const canCopyLine = Boolean(lineCopyPayload(lead.profile?.line_id))
-          const userName = lead.profile?.full_name || 'ゲスト（未ログイン）'
-          const propertyTitle = lead.property?.title || '（タイトルなし）'
+          const userName = lead.profile?.full_name || dict.leads_guest_user
+          const propertyTitle = lead.property?.title || dict.leads_untitled
           const messageBody = (lead.notes ?? '').trim()
 
           return (
@@ -222,29 +222,29 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                           strokeWidth={2.25}
                           aria-hidden
                         />
-                        LINEで返信する
+                        {dict.leads_reply_via_line}
                         <ExternalLink className="h-4 w-4 shrink-0 opacity-90 lg:h-3.5 lg:w-3.5" aria-hidden />
                       </a>
                     ) : isLine ? (
                       <p className="rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-xs font-bold text-amber-900 lg:rounded-md lg:px-2.5 lg:py-1.5 lg:text-[11px] lg:leading-snug">
-                        LINE連絡先が未登録のため、返信用リンクを表示できません。
+                        {dict.leads_line_contact_missing}
                       </p>
                     ) : null}
 
                     <dl className="grid gap-2.5 text-sm lg:gap-1.5 lg:text-xs">
                       <div className="min-w-0">
                         <dt className="sr-only">
-                          問い合わせ日時・ユーザー名・LINE連絡先
+                          {dict.leads_meta_label}
                         </dt>
                         <dd className="m-0 flex min-w-0 items-center gap-2 overflow-x-auto overscroll-x-contain pb-0.5 [-ms-overflow-style:none] [scrollbar-width:thin] lg:gap-3 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200">
                           <span className="inline-flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
                             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 lg:text-[9px]">
-                              日時
+                              {dict.leads_datetime}
                             </span>
                             <span className="font-semibold tabular-nums text-navy-secondary lg:text-xs">
-                              {formatInquiryAt(lead.created_at)}
+                              {formatInquiryAt(lead.created_at, locale)}
                               <span className="ml-1 font-normal text-slate-400">
-                                · {getTypeLabel(lead.inquiry_type)}
+                                · {getTypeLabel(lead.inquiry_type, dict)}
                               </span>
                             </span>
                           </span>
@@ -256,7 +256,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                           </span>
                           <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
                             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 lg:text-[9px]">
-                              ユーザー
+                              {dict.leads_user}
                             </span>
                             <User
                               className="h-3.5 w-3.5 shrink-0 text-slate-400 lg:h-3 lg:w-3"
@@ -284,10 +284,10 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                                 {canCopyLine ? (
                                   <button
                                     type="button"
-                                    onClick={() => copyLineContact(lead.profile?.line_id)}
+                                    onClick={() => copyLineContact(lead.profile?.line_id, dict)}
                                     className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-600 transition hover:border-[#06C755]/40 hover:bg-[#06C755]/5 hover:text-[#025c2c] lg:p-1.5"
-                                    title="開く用URL（または入力値）をコピー"
-                                    aria-label="LINE連絡先をコピー"
+                                    title={dict.leads_copy_line_title}
+                                    aria-label={dict.leads_copy_line_aria}
                                   >
                                     <Copy className="h-4 w-4 lg:h-3.5 lg:w-3.5" />
                                   </button>
@@ -301,9 +301,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                       </div>
 
                       <div>
-                        <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:text-[9px]">
-                          対象物件
-                        </dt>
+                        <dt className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:text-[9px]">{dict.leads_property}</dt>
                         <dd className="mt-0.5 font-semibold text-navy-secondary lg:mt-0 lg:text-xs lg:leading-snug">
                           {propertyTitle}
                         </dd>
@@ -312,10 +310,10 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                       <div>
                         <dt className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:text-[9px]">
                           <FileText className="h-3 w-3 lg:h-2.5 lg:w-2.5" aria-hidden />
-                          メッセージ内容
+                          {dict.leads_message}
                         </dt>
                         <dd className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 lg:mt-0 lg:text-xs lg:leading-snug">
-                          {messageBody || '（記載なし）'}
+                          {messageBody || dict.leads_no_message}
                         </dd>
                       </div>
                     </dl>
@@ -326,7 +324,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                       htmlFor={`lead-status-${lead.id}`}
                       className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:text-[9px]"
                     >
-                      対応ステータス
+                      {dict.leads_status}
                     </label>
                     <div className="relative mt-1.5 lg:mt-1">
                       <select
@@ -338,7 +336,7 @@ export default function LeadsView({ initialLeads, locale }: LeadsViewProps) {
                         }
                         className="min-h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-3 pr-10 text-sm font-bold text-navy-secondary outline-none focus:border-navy-primary focus:ring-2 focus:ring-navy-primary/15 disabled:opacity-60 lg:min-h-9 lg:rounded-lg lg:py-1.5 lg:pl-2 lg:pr-8 lg:text-xs"
                       >
-                        {STATUS_OPTIONS.map((o) => (
+                        {statusOptions.map((o) => (
                           <option key={o.value} value={o.value}>
                             {o.label}
                           </option>

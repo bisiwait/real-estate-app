@@ -32,6 +32,7 @@ interface DashboardClientProps {
     activePlan: string
     /** 日本時間・今月1日0時以降の line_inquiry_counts を物件 id ごとに集計 */
     lineInquiryCountsByPropertyThisMonth: Record<string, number>
+    dict: any
 }
 
 export default function DashboardClient({
@@ -49,6 +50,7 @@ export default function DashboardClient({
     locale,
     activePlan,
     lineInquiryCountsByPropertyThisMonth,
+    dict,
 }: DashboardClientProps) {
     const [tab, setTab] = useState(initialTab)
     const [filter, setFilter] = useState(initialFilter)
@@ -95,15 +97,15 @@ export default function DashboardClient({
         {
             key: 'live',
             items: liveFiltered,
-            title: 'サイトに掲載中',
-            subtitle: '公開・商談中・成約済の物件です。掲載終了で下のエリアへ移動します。',
+            title: dict.property_section_live_title,
+            subtitle: dict.property_section_live_subtitle,
             headClass: 'border-b border-slate-100 bg-slate-50',
         },
         {
             key: 'other',
             items: otherFiltered,
-            title: '下書き・承認待ち・その他',
-            subtitle: '下書きは「再公開する」でサイト掲載に戻せます。',
+            title: dict.property_section_other_title,
+            subtitle: dict.property_section_other_subtitle,
             headClass: `${liveFiltered.length > 0 ? 'border-t-2 border-slate-200 ' : ''}border-b border-slate-100 bg-slate-50/95`,
         },
     ] as const
@@ -113,6 +115,7 @@ export default function DashboardClient({
         lineInquiryCountsByPropertyThisMonth,
         patchProperty,
         locale,
+        dict,
     }
 
     const stats = {
@@ -133,7 +136,7 @@ export default function DashboardClient({
                         }`}
                 >
                     <Building2 className="w-4 h-4 shrink-0" />
-                    <span>物件 ({stats.total})</span>
+                    <span>{dict.tab_properties.replace('{count}', String(stats.total))}</span>
                 </button>
                 <button
                     onClick={() => setTab('inquiries')}
@@ -143,7 +146,7 @@ export default function DashboardClient({
                         }`}
                 >
                     <Mail className="w-4 h-4 shrink-0" />
-                    <span>問い合わせ ({inquiries?.length || 0})</span>
+                    <span>{dict.tab_inquiries.replace('{count}', String(inquiries?.length || 0))}</span>
                     {stats.unreadInquiries > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[9px] sm:text-[10px] text-white ring-2 ring-white">
                             {stats.unreadInquiries}
@@ -158,7 +161,7 @@ export default function DashboardClient({
                         }`}
                 >
                     <Users className="w-4 h-4 shrink-0" />
-                    <span>ログ ({leadsCount})</span>
+                    <span>{dict.tab_logs.replace('{count}', String(leadsCount))}</span>
                 </button>
                 <button
                     onClick={() => setTab('profile_contacts')}
@@ -168,7 +171,7 @@ export default function DashboardClient({
                         }`}
                 >
                     <UserCircle className="w-4 h-4 shrink-0" />
-                    <span className="leading-tight">プロフィール</span>
+                    <span className="leading-tight">{dict.tab_profile}</span>
                     {profileContactsUnhandledCount > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[9px] sm:text-[10px] text-white ring-2 ring-white">
                             {profileContactsUnhandledCount > 99 ? '99+' : profileContactsUnhandledCount}
@@ -186,7 +189,7 @@ export default function DashboardClient({
                             className="flex w-full items-center justify-center gap-2 rounded-full bg-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-amber-600"
                         >
                             <Building2 className="h-4 w-4 shrink-0" />
-                            <span>プレセール投稿</span>
+                            <span>{dict.cta_presale_post}</span>
                         </Link>
                     )}
                     <Link
@@ -194,7 +197,7 @@ export default function DashboardClient({
                         className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-navy-primary shadow-md transition-all hover:bg-slate-50"
                     >
                         <PlusCircle className="h-4 w-4 shrink-0" />
-                        <span>物件を新規掲載する</span>
+                        <span>{dict.cta_new_listing}</span>
                     </Link>
                 </div>
             )}
@@ -202,7 +205,7 @@ export default function DashboardClient({
             {/* Content Area */}
             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                 {tab === 'leads' ? (
-                    <LeadsView initialLeads={leads} locale={locale} />
+                    <LeadsView initialLeads={leads} locale={locale} dict={dict} />
                 ) : tab === 'profile_contacts' ? (
                     <AgentProfileContactsView
                         initialRows={initialProfileContacts}
@@ -213,7 +216,7 @@ export default function DashboardClient({
                     <>
                         <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex flex-col gap-2">
-                                <h3 className="text-lg sm:text-xl font-black text-navy-secondary">登録物件一覧</h3>
+                                <h3 className="text-lg sm:text-xl font-black text-navy-secondary">{dict.property_list_title}</h3>
                                 <BulkConfirmButton
                                     propertyIds={liveFiltered
                                         .filter((p) => p.status === 'published')
@@ -222,17 +225,17 @@ export default function DashboardClient({
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                                 <div className="grid grid-cols-4 sm:flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
-                                    <button onClick={() => setFilter('all')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'all' ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'}`}>すべて</button>
-                                    <button onClick={() => setFilter('rent')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'rent' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>賃貸</button>
-                                    <button onClick={() => setFilter('sale')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'sale' ? 'bg-white shadow-sm text-orange-600' : 'text-slate-500 hover:text-orange-600'}`}>売買</button>
-                                    <button onClick={() => setFilter('presale')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'presale' ? 'bg-amber-500 shadow-sm text-white' : 'text-slate-500 hover:text-amber-600'}`}>プレセール</button>
+                                    <button onClick={() => setFilter('all')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'all' ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'}`}>{dict.filter_all}</button>
+                                    <button onClick={() => setFilter('rent')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'rent' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>{dict.filter_rent}</button>
+                                    <button onClick={() => setFilter('sale')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'sale' ? 'bg-white shadow-sm text-orange-600' : 'text-slate-500 hover:text-orange-600'}`}>{dict.filter_sale}</button>
+                                    <button onClick={() => setFilter('presale')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'presale' ? 'bg-amber-500 shadow-sm text-white' : 'text-slate-500 hover:text-amber-600'}`}>{dict.filter_presale}</button>
                                 </div>
 
                                 <div className="w-full sm:w-36">
-                                    <StatusFilter filter={filter} status={status} onChange={(newStatus: string) => setStatus(newStatus)} />
+                                    <StatusFilter filter={filter} status={status} onChange={(newStatus: string) => setStatus(newStatus)} dict={dict} />
                                 </div>
                             </div>
-                            <span className="text-xs font-bold text-slate-400 whitespace-nowrap">表示: {filteredProperties.length} / 全: {stats.total} 件</span>
+                            <span className="text-xs font-bold text-slate-400 whitespace-nowrap">{dict.display_count.replace('{shown}', String(filteredProperties.length)).replace('{total}', String(stats.total))}</span>
                         </div>
 
                         {filteredProperties.length > 0 ? (
@@ -274,7 +277,7 @@ export default function DashboardClient({
                             </>
                         ) : (
                             <div className="p-20 text-center">
-                                <p className="text-slate-400 font-medium">登録されている物件はありません</p>
+                                <p className="text-slate-400 font-medium">{dict.no_properties}</p>
                             </div>
                         )}
                     </>
@@ -282,6 +285,7 @@ export default function DashboardClient({
                     <InquiryList
                         initialInquiries={inquiries || []}
                         agentDisplayName={profile?.full_name ?? ''}
+                        dict={dict}
                     />
                 )}
             </div>
