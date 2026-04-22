@@ -501,11 +501,23 @@ export default function InquiryForm({
           </div>
         ) : null}
 
-        {(!hasOfficialLine || inquiryChannel === 'mail') && !isLoggedIn ? (
+        {!isLoggedIn ? (
           <div
-            id={hasOfficialLine ? 'inquiry-panel-mail' : undefined}
+            id={
+              hasOfficialLine
+                ? inquiryChannel === 'mail'
+                  ? 'inquiry-panel-mail'
+                  : 'inquiry-panel-line'
+                : undefined
+            }
             role={hasOfficialLine ? 'tabpanel' : undefined}
-            aria-labelledby={hasOfficialLine ? 'inquiry-tab-mail' : undefined}
+            aria-labelledby={
+              hasOfficialLine
+                ? inquiryChannel === 'mail'
+                  ? 'inquiry-tab-mail'
+                  : 'inquiry-tab-line'
+                : undefined
+            }
             className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/90 to-white p-6 text-center shadow-sm"
           >
             <p className="text-sm font-black text-navy-secondary">{p.contact_gate_title}</p>
@@ -653,7 +665,7 @@ export default function InquiryForm({
           </form>
         ) : null}
 
-        {hasOfficialLine && inquiryChannel === 'line' ? (
+        {hasOfficialLine && inquiryChannel === 'line' && isLoggedIn ? (
           <div
             id="inquiry-panel-line"
             role="tabpanel"
