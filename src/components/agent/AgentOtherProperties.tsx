@@ -88,7 +88,7 @@ export default function AgentOtherProperties({ agentId, currentPropertyId, agent
                         href={agentListingsUrl}
                         className="shrink-0 text-sm font-normal text-navy-primary hover:text-indigo-600 transition-colors underline-offset-4 hover:underline"
                     >
-                        {dict.common?.view_all ?? 'すべて見る'}
+                        {dict.labels?.view_all ?? dict.common?.view_all ?? 'すべて見る'}
                     </Link>
                 </div>
             </div>
