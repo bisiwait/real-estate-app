@@ -317,6 +317,30 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         'WiFi',
         'シャトルサービス'
     ]
+    const SHARED_FACILITY_LABELS: Record<string, { en: string; th: string }> = {
+        プール: { en: 'Pool', th: 'สระว่ายน้ำ' },
+        インフィニティプール: { en: 'Infinity Pool', th: 'สระว่ายน้ำอินฟินิตี้' },
+        サウナ: { en: 'Sauna', th: 'ซาวน่า' },
+        フィットネス: { en: 'Fitness', th: 'ฟิตเนส' },
+        スカイラウンジ: { en: 'Sky Lounge', th: 'สกายเลานจ์' },
+        多目的ルーム: { en: 'Multi-purpose Room', th: 'ห้องอเนกประสงค์' },
+        キッズルーム: { en: "Kids' Room", th: 'ห้องเด็ก' },
+        レストラン: { en: 'Restaurant', th: 'ร้านอาหาร' },
+        EV充電器: { en: 'EV Charger', th: 'ที่ชาร์จรถ EV' },
+        オートロック: { en: 'Auto-lock', th: 'ระบบล็อกอัตโนมัติ' },
+        '24Hセキュリティ': { en: '24H Security', th: 'ระบบรักษาความปลอดภัย 24 ชม.' },
+        コンシェルジュ: { en: 'Concierge', th: 'คอนเซียร์จ' },
+        駐車場: { en: 'Parking', th: 'ที่จอดรถ' },
+        WiFi: { en: 'Wi-Fi', th: 'Wi-Fi' },
+        シャトルサービス: { en: 'Shuttle Service', th: 'บริการรถรับส่ง' },
+    }
+    const getSharedFacilityLabel = (facility: string) => {
+        const mapped = SHARED_FACILITY_LABELS[facility]
+        if (!mapped) return facility
+        if (locale === 'en') return mapped.en
+        if (locale === 'th') return mapped.th
+        return facility
+    }
 
     const [activeTab, setActiveTab] = useState<'jp' | 'en' | 'th'>('jp')
     const [isGeneratingAI, setIsGeneratingAI] = useState(false)
@@ -844,7 +868,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     {formData.project_facilities?.length > 0 ? (
                                         formData.project_facilities.map((f: string) => (
                                             <span key={f} className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[10px] font-bold text-navy-secondary">
-                                                {f}
+                                                {getSharedFacilityLabel(f)}
                                             </span>
                                         ))
                                     ) : (
@@ -1000,7 +1024,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                                 }}
                                                 className={`px-3 py-2 rounded-xl text-[10px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-400'}`}
                                             >
-                                                {facility}
+                                                {getSharedFacilityLabel(facility)}
                                             </button>
                                         )
                                     })}
@@ -1241,7 +1265,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                             }}
                                             className={`px-3 py-2.5 rounded-xl text-[11px] font-black transition-all border-2 text-center ${isSelected ? 'bg-navy-primary border-navy-primary text-white' : 'bg-white border-slate-100 text-slate-500 hover:border-navy-primary/30'}`}
                                         >
-                                            {facility}
+                                            {getSharedFacilityLabel(facility)}
                                         </button>
                                     )
                                 })}
