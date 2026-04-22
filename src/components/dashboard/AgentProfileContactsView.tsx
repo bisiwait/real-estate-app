@@ -43,8 +43,8 @@ export default function AgentProfileContactsView({
         initialRows.map((r) => ({ ...r, replies: r.replies ?? [] }))
     )
     const replyTemplates = useMemo(
-        () => getInquiryReplyTemplates(agentDisplayName ?? ''),
-        [agentDisplayName]
+        () => getInquiryReplyTemplates(agentDisplayName ?? '', locale),
+        [agentDisplayName, locale]
     )
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [replyText, setReplyText] = useState('')

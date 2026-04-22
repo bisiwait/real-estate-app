@@ -288,6 +288,7 @@ export default function DashboardClient({
                     <InquiryList
                         initialInquiries={inquiries || []}
                         agentDisplayName={profile?.full_name ?? ''}
+                        locale={locale}
                         dict={dict}
                     />
                 )}

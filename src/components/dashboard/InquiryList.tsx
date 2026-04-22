@@ -40,18 +40,20 @@ interface Inquiry {
 interface InquiryListProps {
   initialInquiries: any[]
   agentDisplayName?: string | null
+  locale: string
   dict: any
 }
 
 export default function InquiryList({
   initialInquiries,
   agentDisplayName,
+  locale,
   dict,
 }: InquiryListProps) {
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries)
   const replyTemplates = useMemo(
-    () => getInquiryReplyTemplates(agentDisplayName ?? ''),
-    [agentDisplayName]
+    () => getInquiryReplyTemplates(agentDisplayName ?? '', locale),
+    [agentDisplayName, locale]
   )
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
