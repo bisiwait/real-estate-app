@@ -140,6 +140,15 @@ export default function AdminUserManagement({
         }
     }
 
+    const isExpiredPremiumUser = (user: any): boolean => {
+        const premium = user?.plan === 'premium' || user?.plan_type === 'premium'
+        if (!premium) return false
+        if (!user?.current_period_end) return false
+        const t = new Date(user.current_period_end).getTime()
+        if (Number.isNaN(t)) return false
+        return t <= Date.now()
+    }
+
     const runAgentSuspendResume = async (user: any, suspend: boolean) => {
         const msg = suspend
             ? 'このエージェントを停止しますか？掲載中の物件は、停止前のステータスを記録したうえで一括で下書きになります。'
@@ -432,6 +441,16 @@ export default function AdminUserManagement({
                                                 <option value="free">Free</option>
                                                 <option value="premium">Pro</option>
                                             </select>
+                                            {isExpiredPremiumUser(user) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handlePlanChange(user.id, 'premium')}
+                                                    className="text-[10px] font-black px-2 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+                                                    title="期限切れの Pro を手動で再有効化"
+                                                >
+                                                    Pro再有効化
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                 </div>
