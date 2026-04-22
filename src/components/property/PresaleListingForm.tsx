@@ -129,6 +129,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             publishPresale: 'เผยแพร่พรีเซล',
             developerNameNote: 'ระบบจะกรอกให้อัตโนมัติเมื่อเลือกโครงการ คุณสามารถแก้ไขชื่อที่จะใช้ในคำอธิบายจาก AI ได้',
             paymentPlanPlaceholder: 'เช่น ค่าจอง 100,000 บาท, 20% ตอนทำสัญญา, 30% ระหว่างก่อสร้าง, 50% ตอนโอนกรรมสิทธิ์ (ผลตอบแทนคาดการณ์รับประกัน 7%)',
+            quotaForeignDesc: 'ชาวต่างชาติสามารถถือกรรมสิทธิ์ได้โดยตรง สูงสุด 49% ของพื้นที่ขายรวมทั้งอาคาร',
+            quotaThaiDesc: 'ถือกรรมสิทธิ์ในชื่อนิติบุคคลไทย หรือเช่าระยะยาว (30 ปี + 30 ปี)',
+            quotaCompanyDesc: 'ถือกรรมสิทธิ์ในนามบริษัทไทย ต้องมีการจัดการภาษีอย่างเหมาะสม',
         }
         : locale === 'en'
             ? {
@@ -185,6 +188,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 publishPresale: 'Publish presale',
                 developerNameNote: 'Auto-filled when a project is selected. You can edit the name used in AI-generated descriptions.',
                 paymentPlanPlaceholder: 'e.g. THB 100,000 booking fee, 20% on contract, 30% during construction, 50% on completion. Estimated guaranteed yield: 7%.',
+                quotaForeignDesc: 'Foreign buyers can hold title directly, up to 49% of the building’s total saleable area.',
+                quotaThaiDesc: 'Held under a Thai national name or via long-term lease (30 years + 30 years).',
+                quotaCompanyDesc: 'Held under a Thai company name; proper tax administration is required.',
             }
             : {
                 uploadFailed: '画像のアップロードに失敗しました',
@@ -240,6 +246,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 publishPresale: 'プレセールを公開',
                 developerNameNote: '※ プロジェクト選択時に自動入力されます。AI紹介文に反映させる名前を編集できます。',
                 paymentPlanPlaceholder: '例: 予約金10万バーツ、契約時20%、建設中30%、完成時50%。想定利回り7%保証。',
+                quotaForeignDesc: '外国人が直接名義取得可。ビル全体の49%まで。',
+                quotaThaiDesc: 'タイ人名義または長期リース（30年+30年）。',
+                quotaCompanyDesc: 'タイ法人設立で名義取得。税務管理が必要。',
             }
     const [mounted, setMounted] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -1313,15 +1322,15 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] font-bold">
                                 <div className="px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-blue-600">
                                     <span className="font-black">Foreign Quota</span><br />
-                                    外国人が直接名義取得可。ビル全体の49%まで。
+                                    {ui.quotaForeignDesc}
                                 </div>
                                 <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
                                     <span className="font-black">Thai Quota</span><br />
-                                    タイ人名義または長期リース（30年+30年）。
+                                    {ui.quotaThaiDesc}
                                 </div>
                                 <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600">
                                     <span className="font-black">Company Name</span><br />
-                                    タイ法人設立で名義取得。税務管理が必要。
+                                    {ui.quotaCompanyDesc}
                                 </div>
                             </div>
                         </div>
