@@ -132,6 +132,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             quotaForeignDesc: 'ชาวต่างชาติสามารถถือกรรมสิทธิ์ได้โดยตรง สูงสุด 49% ของพื้นที่ขายรวมทั้งอาคาร',
             quotaThaiDesc: 'ถือกรรมสิทธิ์ในชื่อนิติบุคคลไทย หรือเช่าระยะยาว (30 ปี + 30 ปี)',
             quotaCompanyDesc: 'ถือกรรมสิทธิ์ในนามบริษัทไทย ต้องมีการจัดการภาษีอย่างเหมาะสม',
+            developerNameLabel: 'ชื่อผู้พัฒนา (Developer)',
+            developerLabel: 'ผู้พัฒนา',
+            selectDeveloper: 'เลือกผู้พัฒนา',
         }
         : locale === 'en'
             ? {
@@ -191,6 +194,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 quotaForeignDesc: 'Foreign buyers can hold title directly, up to 49% of the building’s total saleable area.',
                 quotaThaiDesc: 'Held under a Thai national name or via long-term lease (30 years + 30 years).',
                 quotaCompanyDesc: 'Held under a Thai company name; proper tax administration is required.',
+                developerNameLabel: 'Developer name',
+                developerLabel: 'Developer',
+                selectDeveloper: 'Select developer',
             }
             : {
                 uploadFailed: '画像のアップロードに失敗しました',
@@ -249,6 +255,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 quotaForeignDesc: '外国人が直接名義取得可。ビル全体の49%まで。',
                 quotaThaiDesc: 'タイ人名義または長期リース（30年+30年）。',
                 quotaCompanyDesc: 'タイ法人設立で名義取得。税務管理が必要。',
+                developerNameLabel: 'デベロッパー名 (Developer)',
+                developerLabel: 'デベロッパー',
+                selectDeveloper: 'デベロッパーを選択',
             }
     const [mounted, setMounted] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -936,7 +945,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     </div>
 
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー名 (Developer)</label>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.developerNameLabel}</label>
                         <input
                             type="text"
                             value={formData.developer}
@@ -959,7 +968,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     <input type="text" value={projectForm.name} onChange={e => { const val = e.target.value; setProjectForm({ ...projectForm, name: val }); setFormData({ ...formData, building_name: val, project_name: val, title: val }); }} className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary transition-all font-bold text-navy-secondary" placeholder="TBD Tower" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー <span className="text-red-500">*</span></label>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.developerLabel} <span className="text-red-500">*</span></label>
                                     <select
                                         required
                                         value={projectForm.developer_id}
@@ -971,7 +980,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                         }}
                                         className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
                                     >
-                                        <option value="">デベロッパーを選択</option>
+                                        <option value="">{ui.selectDeveloper}</option>
                                         {developers.map(dev => (
                                             <option key={dev.id} value={dev.id}>{dev.name}</option>
                                         ))}
@@ -1107,7 +1116,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         <input type="text" placeholder={ui.completionPlaceholder} value={formData.completion_date} onChange={e => setFormData({ ...formData, completion_date: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー</label>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.developerLabel}</label>
                         <input type="text" placeholder="例: Sansiri" value={formData.developer} onChange={e => setFormData({ ...formData, developer: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
