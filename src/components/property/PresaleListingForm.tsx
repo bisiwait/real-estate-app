@@ -74,6 +74,167 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
     const params = useParams()
     const router = useRouter()
     const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
+    const ui = locale === 'th'
+        ? {
+            uploadFailed: 'อัปโหลดรูปภาพไม่สำเร็จ',
+            requiredProjectAndArea: 'กรุณาระบุชื่อโครงการและพื้นที่',
+            requiredSalePrice: 'ราคาพรีเซล (ราคาขาย) เป็นข้อมูลจำเป็น',
+            requiredAtLeastOneImage: 'กรุณาอัปโหลดรูปภาพอย่างน้อย 1 รูป',
+            successCreate: 'ลงประกาศพรีเซลสำเร็จ!',
+            successUpdate: 'อัปเดตสำเร็จ!',
+            movingToDashboard: 'กำลังย้ายไปหน้าแดชบอร์ด...',
+            modeTitle: 'โหมดลงประกาศพรีเซล',
+            modeDesc: 'ประกาศจากฟอร์มนี้จะแสดงเป็นโครงการพรีเซล (ก่อนสร้างเสร็จ) พร้อมป้ายและข้อมูลกำหนดการ โดยเป็นประกาศเพื่อขายเท่านั้น',
+            sectionProjectInfo: 'ข้อมูลพื้นฐานโครงการ',
+            areaLabel: 'พื้นที่ (Area)',
+            selectAreaFirst: 'กรุณาเลือกพื้นที่ก่อน',
+            projectName: 'ชื่อโครงการ',
+            addAsNewProject: '+ ลงทะเบียนเป็นโครงการใหม่',
+            selectAreaToChooseProject: 'เมื่อเลือก "พื้นที่" ด้านบนแล้ว จะสามารถเลือกโครงการได้',
+            newProjectMode: 'โหมดกรอกข้อมูลโครงการใหม่',
+            searchProject: 'ค้นหาชื่อโครงการ...',
+            projectNotFound: 'ไม่พบโครงการ กรุณาเพิ่มจาก "＋ลงทะเบียนใหม่" ด้านขวาบน',
+            projectFacilities: 'สิ่งอำนวยความสะดวกของโครงการนี้',
+            notRegistered: 'ยังไม่ได้ลงทะเบียน',
+            priceLabel: 'ราคาพรีเซล (THB)',
+            ownershipLabel: 'กรรมสิทธิ์ (Ownership)',
+            pricePerSqm: 'ราคาต่อ ตร.ม. (Price per SQM)',
+            autoCalculated: 'คำนวณอัตโนมัติ',
+            areaSqm: 'พื้นที่ใช้สอย (sqm)',
+            bedroomPlan: 'รูปแบบห้อง (Bedrooms)',
+            sectionPresaleDetails: 'รายละเอียดพรีเซล (Pro)',
+            completionSchedule: 'กำหนดแล้วเสร็จ (ปีที่คาดว่าจะเสร็จ)',
+            completionPlaceholder: 'เช่น: ธ.ค. 2026 หรือ 2026',
+            landArea: 'ขนาดที่ดิน',
+            constructionStatus: 'สถานะการก่อสร้าง',
+            planning: 'วางแผน (Planning)',
+            underConstruction: 'กำลังก่อสร้าง (Under Construction)',
+            completed: 'เสร็จแล้ว (Completed)',
+            totalUnits: 'จำนวนยูนิตทั้งหมด',
+            totalBuildings: 'จำนวนอาคาร',
+            paymentPlan: 'หมายเหตุแผนการชำระเงิน/ผลตอบแทน',
+            appealPoints: 'จุดเด่นและจุดขายของโครงการ',
+            aiWriting: 'AI กำลังเขียน...',
+            aiGenerate: 'สร้างคำอธิบาย 3 ภาษา ด้วย AI',
+            aiGeneratingDesc: 'AI กำลังเขียนคำอธิบายโครงการที่น่าสนใจ...',
+            jpTab: 'ภาษาญี่ปุ่น (JP)',
+            sectionAdvanced: 'ตั้งค่ารายละเอียดสำหรับนักลงทุน',
+            sectionAdvancedSub: 'สิ่งอำนวยความสะดวก / URL โชว์รูม / รายละเอียดโควตา (ไม่บังคับ)',
+            amenities: 'สิ่งอำนวยความสะดวก (Amenities)',
+            selectedCount: 'รายการที่เลือก',
+            showroomMapUrl: 'Google Map URL ของโชว์รูม',
+            showroomMapHint: 'วาง URL ที่คัดลอกจาก Google Maps โดยเลือก "แชร์" -> "คัดลอกลิงก์"',
+            quotaDetails: 'รายละเอียดโควตาต่างชาติ',
+            sectionImages: 'รูปโครงการ (ภาพเรนเดอร์/ภาพจำลอง ฯลฯ)',
+            publishPresale: 'เผยแพร่พรีเซล',
+        }
+        : locale === 'en'
+            ? {
+                uploadFailed: 'Image upload failed',
+                requiredProjectAndArea: 'Project name and area are required.',
+                requiredSalePrice: 'Presale price (sale price) is required.',
+                requiredAtLeastOneImage: 'Please upload at least one image.',
+                successCreate: 'Presale listing published!',
+                successUpdate: 'Updated successfully!',
+                movingToDashboard: 'Redirecting to dashboard...',
+                modeTitle: 'Presale listing mode',
+                modeDesc: 'Listings created from this form are shown as presale (pre-completion) projects with dedicated badges and schedule info. Sale only.',
+                sectionProjectInfo: 'Project basic information',
+                areaLabel: 'Area',
+                selectAreaFirst: 'Please select an area first',
+                projectName: 'Project name',
+                addAsNewProject: '+ Register as a new project',
+                selectAreaToChooseProject: 'Select "Area" above to enable project selection',
+                newProjectMode: 'New project input mode',
+                searchProject: 'Search project name...',
+                projectNotFound: 'No project found. Add one from "+ New registration" at top right.',
+                projectFacilities: 'Shared facilities for this project',
+                notRegistered: 'Not registered',
+                priceLabel: 'Presale price (THB)',
+                ownershipLabel: 'Ownership',
+                pricePerSqm: 'Price per SQM',
+                autoCalculated: 'Auto-calculated',
+                areaSqm: 'Area (sqm)',
+                bedroomPlan: 'Layout (Bedrooms)',
+                sectionPresaleDetails: 'Presale details (Pro)',
+                completionSchedule: 'Estimated completion date (year)',
+                completionPlaceholder: 'e.g. Dec 2026 or 2026',
+                landArea: 'Land area',
+                constructionStatus: 'Current construction status',
+                planning: 'Planning',
+                underConstruction: 'Under Construction',
+                completed: 'Completed',
+                totalUnits: 'Total units',
+                totalBuildings: 'Total buildings',
+                paymentPlan: 'Payment schedule / yield notes',
+                appealPoints: 'Project highlights / selling points',
+                aiWriting: 'AI writing...',
+                aiGenerate: 'Generate 3-language descriptions with AI',
+                aiGeneratingDesc: 'AI is writing engaging property descriptions...',
+                jpTab: 'Japanese (JP)',
+                sectionAdvanced: 'Advanced investor settings',
+                sectionAdvancedSub: 'Amenities / showroom URL / quota details (optional)',
+                amenities: 'Amenities',
+                selectedCount: 'selected',
+                showroomMapUrl: 'Showroom Google Map URL',
+                showroomMapHint: 'Paste the URL copied from Google Maps via "Share" -> "Copy link".',
+                quotaDetails: 'Foreign quota details',
+                sectionImages: 'Project images (renderings / perspectives)',
+                publishPresale: 'Publish presale',
+            }
+            : {
+                uploadFailed: '画像のアップロードに失敗しました',
+                requiredProjectAndArea: 'プロジェクト名とエリアは必須です。',
+                requiredSalePrice: 'プレセール価格（販売価格）は必須です。',
+                requiredAtLeastOneImage: '少なくとも1枚の画像をアップロードしてください。',
+                successCreate: 'プレセール案件掲載完了！',
+                successUpdate: '更新完了！',
+                movingToDashboard: 'ダッシュボードに移動します...',
+                modeTitle: 'プレセール物件登録モード',
+                modeDesc: 'このフォームから登録された物件は「プレセール（完成前）プロジェクト」として、専用のバッジやスケジュール情報と共に表示されます。販売専用となります。',
+                sectionProjectInfo: 'プロジェクト基本情報',
+                areaLabel: 'エリア (Area)',
+                selectAreaFirst: '先にエリアを選択してください',
+                projectName: 'プロジェクト名',
+                addAsNewProject: '+ 新規プロジェクトとして登録',
+                selectAreaToChooseProject: '※ 上の「エリア」を選択するとプロジェクトが選べるようになります',
+                newProjectMode: '新規プロジェクト情報入力モード',
+                searchProject: 'プロジェクト名で検索...',
+                projectNotFound: '見つかりません。右上の「＋新規登録」から追加してください。',
+                projectFacilities: 'このプロジェクトの共有施設',
+                notRegistered: '未登録',
+                priceLabel: 'プレセール価格 (THB)',
+                ownershipLabel: '所有権 (Ownership)',
+                pricePerSqm: '平米単価（Price per SQM）',
+                autoCalculated: '自動計算',
+                areaSqm: '専有面積 (sqm)',
+                bedroomPlan: '想定間取り (Bedrooms)',
+                sectionPresaleDetails: 'プレセール詳細 (Pro)',
+                completionSchedule: '竣工予定時期 (完成年)',
+                completionPlaceholder: '例: 2026年12月 または 2026',
+                landArea: '敷地面積',
+                constructionStatus: '現在の建設状況',
+                planning: '計画中 (Planning)',
+                underConstruction: '建設中 (Under Construction)',
+                completed: '完成済 (Completed)',
+                totalUnits: '総戸数',
+                totalBuildings: '棟数',
+                paymentPlan: '支払いスケジュール・利回り等の補足',
+                appealPoints: 'プロジェクトの魅力・アピールポイント',
+                aiWriting: 'AI執筆中...',
+                aiGenerate: 'AIで3ヶ国語紹介文を作成',
+                aiGeneratingDesc: 'AIが魅力的な紹介文を執筆中...',
+                jpTab: '日本語 (JP)',
+                sectionAdvanced: '投資家向け詳細設定',
+                sectionAdvancedSub: 'アメニティ・ショールームURL・Quota詳細（任意）',
+                amenities: '共有設備・アメニティ (Amenities)',
+                selectedCount: '件選択中',
+                showroomMapUrl: 'ショールームのGoogle Map URL',
+                showroomMapHint: '※ Google マップで「共有」→「リンクをコピー」から取得したURLを貼り付けてください。',
+                quotaDetails: '外国人枠（Quota）詳細',
+                sectionImages: 'プロジェクト画像（完成予想図・パース等）',
+                publishPresale: 'プレセールを公開',
+            }
     const [mounted, setMounted] = useState(false)
     const [loading, setLoading] = useState(false)
 
@@ -291,7 +452,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     })
 
                 if (uploadError) {
-                    throw new Error(`画像のアップロードに失敗しました (${file.name}): ${uploadError.message}`)
+                    throw new Error(`${ui.uploadFailed} (${file.name}): ${uploadError.message}`)
                 }
 
                 const { data: { publicUrl } } = supabase.storage
@@ -319,7 +480,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
             if (showNewProjectForm) {
                 if (!projectForm.name || !formData.area_id) {
-                    throw new Error('プロジェクト名とエリアは必須です。')
+                    throw new Error(ui.requiredProjectAndArea)
                 }
                 const { data: newProject, error: projectError } = await supabase
                     .from('projects')
@@ -346,7 +507,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             }
 
             if (!formData.sale_price) {
-                throw new Error('プレセール価格（販売価格）は必須です。')
+                throw new Error(ui.requiredSalePrice)
             }
 
             let propertyId = initialData?.id
@@ -405,7 +566,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             const finalImages = [...existingImages, ...newImageUrls]
 
             if (finalImages.length === 0) {
-                throw new Error('少なくとも1枚の画像をアップロードしてください。')
+                throw new Error(ui.requiredAtLeastOneImage)
             }
 
             const { error: updateError } = await supabase
@@ -531,8 +692,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 <div className="bg-emerald-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle2 className="text-emerald-600 w-10 h-10" />
                 </div>
-                <h2 className="text-3xl font-black text-navy-secondary mb-4">{mode === 'create' ? 'プレセール案件掲載完了！' : '更新完了！'}</h2>
-                <p className="text-slate-500 mb-8">ダッシュボードに移動します...</p>
+                <h2 className="text-3xl font-black text-navy-secondary mb-4">{mode === 'create' ? ui.successCreate : ui.successUpdate}</h2>
+                <p className="text-slate-500 mb-8">{ui.movingToDashboard}</p>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                     <div className="bg-emerald-500 h-full animate-progress-fast"></div>
                 </div>
@@ -556,8 +717,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     <Building2 className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
-                    <h3 className="text-navy-secondary font-black mb-1">プレセール物件登録モード</h3>
-                    <p className="text-xs text-slate-600 font-medium">このフォームから登録された物件は「プレセール（完成前）プロジェクト」として、専用のバッジやスケジュール情報と共に表示されます。販売専用となります。</p>
+                    <h3 className="text-navy-secondary font-black mb-1">{ui.modeTitle}</h3>
+                    <p className="text-xs text-slate-600 font-medium">{ui.modeDesc}</p>
                 </div>
             </div>
 
@@ -565,12 +726,12 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
                     <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">1</span>
-                    プロジェクト基本情報
+                    {ui.sectionProjectInfo}
                 </h3>
 
                 <div className="grid grid-cols-1 gap-6">
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">エリア (Area) <span className="text-red-500">*</span></label>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.areaLabel} <span className="text-red-500">*</span></label>
                         <select
                             value={formData.area_id}
                             onChange={e => {
@@ -580,7 +741,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             }}
                             className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none"
                         >
-                            <option value="">先にエリアを選択してください</option>
+                            <option value="">{ui.selectAreaFirst}</option>
                             <optgroup label="Pattaya">
                                 {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                             </optgroup>
@@ -592,26 +753,26 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
                     <div>
                         <div className="flex items-center justify-between mb-2">
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">プロジェクト名 <span className="text-red-500">*</span></label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{ui.projectName} <span className="text-red-500">*</span></label>
                             {formData.area_id && (
                                 <button type="button" onClick={() => { setShowNewProjectForm(true); setFormData({ ...formData, project_id: 'new' }) }} className="text-[10px] font-bold text-navy-secondary hover:text-navy-primary transition-colors bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full">
-                                    + 新規プロジェクトとして登録
+                                    {ui.addAsNewProject}
                                 </button>
                             )}
                         </div>
                         {!formData.area_id ? (
                             <div className="w-full px-5 py-4 bg-slate-50 opacity-50 border border-slate-100 rounded-2xl font-bold text-slate-400 text-sm">
-                                ※ 上の「エリア」を選択するとプロジェクトが選べるようになります
+                                {ui.selectAreaToChooseProject}
                             </div>
                         ) : showNewProjectForm ? (
                             <div className="w-full px-5 py-4 bg-navy-primary/5 border border-navy-primary/20 text-navy-primary rounded-2xl font-black text-sm text-center">
-                                新規プロジェクト情報入力モード
+                                {ui.newProjectMode}
                             </div>
                         ) : (
                             <Select
                                 isDisabled={!formData.area_id}
-                                placeholder="プロジェクト名で検索..."
-                                noOptionsMessage={() => "見つかりません。右上の「＋新規登録」から追加してください。"}
+                                placeholder={ui.searchProject}
+                                noOptionsMessage={() => ui.projectNotFound}
                                 options={projects.filter(p => !formData.area_id || p.area_id === formData.area_id).map(p => ({
                                     value: p.id,
                                     label: params.locale === 'jp' && (p as any).name_jp
@@ -671,7 +832,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center">
                                     <Shield className="w-3 h-3 mr-2" />
-                                    このプロジェクトの共有施設
+                                    {ui.projectFacilities}
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {formData.project_facilities?.length > 0 ? (
@@ -681,7 +842,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                             </span>
                                         ))
                                     ) : (
-                                        <span className="text-[10px] font-bold text-slate-400 italic ml-1">未登録</span>
+                                        <span className="text-[10px] font-bold text-slate-400 italic ml-1">{ui.notRegistered}</span>
                                     )}
                                 </div>
                             </div>
@@ -846,11 +1007,11 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">プレセール価格 (THB) <span className="text-red-500">*</span></label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.priceLabel} <span className="text-red-500">*</span></label>
                             <input type="number" placeholder="2500000" value={formData.sale_price} onChange={e => setFormData({ ...formData, sale_price: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">所有権 (Ownership)</label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.ownershipLabel}</label>
                             <select value={formData.ownership_type} onChange={e => setFormData({ ...formData, ownership_type: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
                                 <option value="Foreign Quota">外国人クオータ (Foreign Quota)</option>
                                 <option value="Thai Quota">タイ人クオータ (Thai Quota)</option>
@@ -864,12 +1025,12 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         <div className="flex items-center gap-3 px-5 py-3 bg-blue-50 border border-blue-100 rounded-2xl">
                             <DollarSign className="w-4 h-4 text-blue-500 shrink-0" />
                             <div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">平米単価（Price per SQM）</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">{ui.pricePerSqm}</span>
                                 <span className="ml-3 text-base font-black text-blue-700 tabular-nums">
                                     {Math.round(parseFloat(formData.sale_price) / parseFloat(formData.sqm)).toLocaleString()} THB/㎡
                                 </span>
                             </div>
-                            <span className="ml-auto text-[10px] text-blue-300 font-bold">自動計算</span>
+                            <span className="ml-auto text-[10px] text-blue-300 font-bold">{ui.autoCalculated}</span>
                         </div>
                     )}
 
@@ -884,11 +1045,11 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">専有面積 (sqm)</label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.areaSqm}</label>
                             <input type="number" value={formData.sqm} onChange={e => setFormData({ ...formData, sqm: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold" />
                         </div>
                         <div>
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">想定間取り (Bedrooms)</label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.bedroomPlan}</label>
                             <select value={formData.bedrooms} onChange={e => setFormData({ ...formData, bedrooms: e.target.value })} className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl appearance-none font-bold">
                                 <option value="0">Studio</option><option value="1">1 Bed</option><option value="2">2 Beds</option><option value="3">3 Beds+</option>
                             </select>
@@ -901,53 +1062,53 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
                     <span className="w-8 h-8 bg-amber-500/10 rounded-lg flex items-center justify-center mr-3 text-amber-500 text-sm font-black">2</span>
-                    プレセール詳細 (Pro)
+                    {ui.sectionPresaleDetails}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center"><Calendar className="w-3 h-3 mr-1" /> 竣工予定時期 (完成年)</label>
-                        <input type="text" placeholder="例: 2026年12月 または 2026" value={formData.completion_date} onChange={e => setFormData({ ...formData, completion_date: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center"><Calendar className="w-3 h-3 mr-1" /> {ui.completionSchedule}</label>
+                        <input type="text" placeholder={ui.completionPlaceholder} value={formData.completion_date} onChange={e => setFormData({ ...formData, completion_date: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">デベロッパー</label>
                         <input type="text" placeholder="例: Sansiri" value={formData.developer} onChange={e => setFormData({ ...formData, developer: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">敷地面積</label>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.landArea}</label>
                         <input type="text" placeholder="例: 2 Rai 3 Ngan" value={formData.land_area} onChange={e => setFormData({ ...formData, land_area: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">現在の建設状況</label>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.constructionStatus}</label>
                         <select value={formData.construction_status} onChange={e => setFormData({ ...formData, construction_status: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl appearance-none font-bold">
-                            <option value="planning">計画中 (Planning)</option>
-                            <option value="under_construction">建設中 (Under Construction)</option>
-                            <option value="completed">完成済 (Completed)</option>
+                            <option value="planning">{ui.planning}</option>
+                            <option value="under_construction">{ui.underConstruction}</option>
+                            <option value="completed">{ui.completed}</option>
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">総戸数</label>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.totalUnits}</label>
                         <input type="number" placeholder="例: 500" value={formData.total_units} onChange={e => setFormData({ ...formData, total_units: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">棟数</label>
+                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.totalBuildings}</label>
                         <input type="number" placeholder="例: 2" value={formData.total_buildings} onChange={e => setFormData({ ...formData, total_buildings: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                 </div>
                 <div>
-                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center"><Wallet className="w-3 h-3 mr-1" /> 支払いスケジュール・利回り等の補足</label>
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center"><Wallet className="w-3 h-3 mr-1" /> {ui.paymentPlan}</label>
                     <textarea rows={3} placeholder="例: 予約金10万バーツ、契約時20%、建設中30%、完成時50%。想定利回り7%保証。" value={formData.payment_plan} onChange={e => setFormData({ ...formData, payment_plan: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl resize-none font-medium text-sm" />
                 </div>
                 <div>
                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
                         <div className="space-y-1">
-                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">プロジェクトの魅力・アピールポイント <span className="text-red-500">*</span></label>
+                            <label className="block text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{ui.appealPoints} <span className="text-red-500">*</span></label>
                             <div className="flex p-1 bg-slate-100 rounded-xl w-fit">
                                 <button
                                     type="button"
                                     onClick={() => setActiveTab('jp')}
                                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'jp' ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
                                 >
-                                    日本語 (JP)
+                                    {ui.jpTab}
                                 </button>
                                 <button
                                     type="button"
@@ -974,12 +1135,12 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             {isGeneratingAI ? (
                                 <>
                                     <LoaderIcon className="w-4 h-4 animate-spin" />
-                                    <span>AI執筆中...</span>
+                                    <span>{ui.aiWriting}</span>
                                 </>
                             ) : (
                                 <>
                                     <Sparkles className="w-4 h-4" />
-                                    <span>AIで3ヶ国語紹介文を作成</span>
+                                    <span>{ui.aiGenerate}</span>
                                 </>
                             )}
                         </button>
@@ -1001,7 +1162,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                     <div className="h-4 bg-slate-200 rounded-full w-2/3 animate-pulse"></div>
                                     <div className="mt-4 flex items-center text-xs font-bold text-amber-500 animate-pulse">
                                         <Sparkles className="w-3 h-3 mr-2" />
-                                        AIが魅力的な紹介文を執筆中...
+                                        {ui.aiGeneratingDesc}
                                     </div>
                                 </motion.div>
                             ) : (
@@ -1042,9 +1203,9 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         <div className="text-left">
                             <p className="text-xl font-black text-navy-secondary flex items-center gap-2">
                                 <Settings2 className="w-5 h-5 text-slate-400" />
-                                投資家向け詳細設定
+                                {ui.sectionAdvanced}
                             </p>
-                            <p className="text-[11px] text-slate-400 font-medium mt-0.5">アメニティ・ショールームURL・Quota詳細（任意）</p>
+                            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{ui.sectionAdvancedSub}</p>
                         </div>
                     </div>
                     <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`} />
@@ -1057,7 +1218,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         <div className="pt-8">
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-4 ml-1 flex items-center gap-2">
                                 <Shield className="w-3.5 h-3.5" />
-                                共有設備・アメニティ (Amenities)
+                                {ui.amenities}
                             </label>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                                 {SHARED_FACILITIES.map(facility => {
@@ -1083,7 +1244,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             </div>
                             {formData.project_facilities.length > 0 && (
                                 <p className="mt-3 text-[10px] text-navy-primary font-bold ml-1">
-                                    ✓ {formData.project_facilities.length} 件選択中
+                                    ✓ {formData.project_facilities.length} {ui.selectedCount}
                                 </p>
                             )}
                         </div>
@@ -1092,7 +1253,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         <div>
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center gap-2">
                                 <Link2 className="w-3.5 h-3.5" />
-                                ショールームのGoogle Map URL
+                                {ui.showroomMapUrl}
                             </label>
                             <input
                                 type="url"
@@ -1102,7 +1263,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                 className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all"
                             />
                             <p className="mt-1.5 text-[10px] text-slate-400 font-medium ml-1">
-                                ※ Google マップで「共有」→「リンクをコピー」から取得したURLを貼り付けてください。
+                                {ui.showroomMapHint}
                             </p>
                         </div>
 
@@ -1110,7 +1271,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         <div>
                             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center gap-2">
                                 <Shield className="w-3.5 h-3.5" />
-                                外国人枠（Quota）詳細
+                                {ui.quotaDetails}
                             </label>
                             <select
                                 value={formData.ownership_type}
@@ -1144,7 +1305,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             <div className="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 space-y-8">
                 <h3 className="text-xl font-black text-navy-secondary flex items-center">
                     <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">4</span>
-                    プロジェクト画像（完成予想図・パース等）
+                    {ui.sectionImages}
                 </h3>
                 <ImageUploader initialImages={existingImages} onImagesChange={(files) => setSelectedFiles(files)} />
             </div>
@@ -1155,7 +1316,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     disabled={loading}
                     className="w-full md:w-auto bg-amber-500 hover:bg-amber-600 border-2 border-amber-500 text-white px-12 py-4 rounded-2xl font-black text-lg transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
                 >
-                    {loading ? <Loader2 className="animate-spin" /> : <><span>プレセールを公開</span><Plus /></>}
+                    {loading ? <Loader2 className="animate-spin" /> : <><span>{ui.publishPresale}</span><Plus /></>}
                 </button>
             </div>
 
