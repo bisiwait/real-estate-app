@@ -227,7 +227,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 bedroomPlan: '想定間取り (Bedrooms)',
                 sectionPresaleDetails: 'プレセール詳細 (Pro)',
                 completionSchedule: '竣工予定時期 (完成年)',
-                completionPlaceholder: '例: 2026年12月 または 2026',
+                completionPlaceholder: '2026年12月 または 2026',
                 landArea: '敷地面積',
                 constructionStatus: '現在の建設状況',
                 planning: '計画中 (Planning)',
@@ -251,7 +251,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 sectionImages: 'プロジェクト画像（完成予想図・パース等）',
                 publishPresale: 'プレセールを公開',
                 developerNameNote: '※ プロジェクト選択時に自動入力されます。AI紹介文に反映させる名前を編集できます。',
-                paymentPlanPlaceholder: '例: 予約金10万バーツ、契約時20%、建設中30%、完成時50%。想定利回り7%保証。',
+                paymentPlanPlaceholder: '予約金10万バーツ、契約時20%、建設中30%、完成時50%。想定利回り7%保証。',
                 quotaForeignDesc: '外国人が直接名義取得可。ビル全体の49%まで。',
                 quotaThaiDesc: 'タイ人名義または長期リース（30年+30年）。',
                 quotaCompanyDesc: 'タイ法人設立で名義取得。税務管理が必要。',
@@ -1117,11 +1117,11 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     </div>
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.developerLabel}</label>
-                        <input type="text" placeholder="例: Sansiri" value={formData.developer} onChange={e => setFormData({ ...formData, developer: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
+                        <input type="text" placeholder="Sansiri" value={formData.developer} onChange={e => setFormData({ ...formData, developer: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.landArea}</label>
-                        <input type="text" placeholder="例: 2 Rai 3 Ngan" value={formData.land_area} onChange={e => setFormData({ ...formData, land_area: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
+                        <input type="text" placeholder="2 Rai 3 Ngan" value={formData.land_area} onChange={e => setFormData({ ...formData, land_area: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.constructionStatus}</label>
@@ -1133,11 +1133,11 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     </div>
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.totalUnits}</label>
-                        <input type="number" placeholder="例: 500" value={formData.total_units} onChange={e => setFormData({ ...formData, total_units: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
+                        <input type="number" placeholder="500" value={formData.total_units} onChange={e => setFormData({ ...formData, total_units: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.totalBuildings}</label>
-                        <input type="number" placeholder="例: 2" value={formData.total_buildings} onChange={e => setFormData({ ...formData, total_buildings: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
+                        <input type="number" placeholder="2" value={formData.total_buildings} onChange={e => setFormData({ ...formData, total_buildings: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl font-bold" />
                     </div>
                 </div>
                 <div>
