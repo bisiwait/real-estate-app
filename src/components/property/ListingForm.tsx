@@ -589,13 +589,8 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             }
         }
 
-        // 新規で「物件を公開する」を押したときは status が pending のままだと一覧に出ない（要 published + 承認済み）
-        if (mode === 'create' && statusOverride === 'pending') {
-            finalStatus = 'published'
-        }
-
         const publishFields =
-            finalStatus === 'published' ? { is_approved: true as const } : {}
+            finalStatus === 'published' && isAdmin ? { is_approved: true as const } : {}
 
         try {
             const { data: { user }, error: authError } = await supabase.auth.getUser()

@@ -523,6 +523,14 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         try {
             const { data: { user }, error: authError } = await supabase.auth.getUser()
             if (authError || !user) throw new Error('Unauthorized')
+            const targetStatus =
+                mode === 'edit'
+                    ? (initialData?.status || (isAdmin ? 'published' : 'pending'))
+                    : (isAdmin ? 'published' : 'pending')
+            const targetApproved =
+                mode === 'edit'
+                    ? (typeof initialData?.is_approved === 'boolean' ? initialData.is_approved : isAdmin)
+                    : isAdmin
 
             let finalProjectId = formData.project_id
 
@@ -575,8 +583,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         project_name: formData.project_name,
                         images: [],
                         tags: formData.tags,
-                        status: 'published',
-                        is_approved: true,
+                        status: targetStatus,
+                        is_approved: targetApproved,
                         expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                         property_type: formData.property_type,
                         sqm: formData.sqm ? parseFloat(formData.sqm) : null,
@@ -631,8 +639,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     project_name: formData.project_name,
                     images: finalImages,
                     tags: formData.tags,
-                    status: 'published',
-                    is_approved: true,
+                    status: targetStatus,
+                    is_approved: targetApproved,
                     updated_at: new Date().toISOString(),
                     property_type: formData.property_type,
                     sqm: formData.sqm ? parseFloat(formData.sqm) : null,
