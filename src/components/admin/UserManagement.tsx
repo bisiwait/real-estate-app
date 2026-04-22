@@ -113,12 +113,17 @@ export default function AdminUserManagement({
     const handlePlanChange = async (userId: string, newPlan: string) => {
         setLoading(true)
         try {
+            const patch: Record<string, string | null> = {
+                plan: newPlan,
+                plan_type: newPlan,
+            }
+            if (newPlan === 'premium') {
+                // 手動でプレミアム復帰させる場合、期限切れ日時をクリアして即時有効化する
+                patch.current_period_end = null
+            }
             const { error } = await supabase
                 .from('profiles')
-                .update({
-                    plan: newPlan,
-                    plan_type: newPlan
-                })
+                .update(patch)
                 .eq('id', userId)
 
             if (!error) {
