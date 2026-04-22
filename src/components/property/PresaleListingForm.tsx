@@ -127,6 +127,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             quotaDetails: 'รายละเอียดโควตาต่างชาติ',
             sectionImages: 'รูปโครงการ (ภาพเรนเดอร์/ภาพจำลอง ฯลฯ)',
             publishPresale: 'เผยแพร่พรีเซล',
+            developerNameNote: 'ระบบจะกรอกให้อัตโนมัติเมื่อเลือกโครงการ คุณสามารถแก้ไขชื่อที่จะใช้ในคำอธิบายจาก AI ได้',
+            paymentPlanPlaceholder: 'เช่น ค่าจอง 100,000 บาท, 20% ตอนทำสัญญา, 30% ระหว่างก่อสร้าง, 50% ตอนโอนกรรมสิทธิ์ (ผลตอบแทนคาดการณ์รับประกัน 7%)',
         }
         : locale === 'en'
             ? {
@@ -181,6 +183,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 quotaDetails: 'Foreign quota details',
                 sectionImages: 'Project images (renderings / perspectives)',
                 publishPresale: 'Publish presale',
+                developerNameNote: 'Auto-filled when a project is selected. You can edit the name used in AI-generated descriptions.',
+                paymentPlanPlaceholder: 'e.g. THB 100,000 booking fee, 20% on contract, 30% during construction, 50% on completion. Estimated guaranteed yield: 7%.',
             }
             : {
                 uploadFailed: '画像のアップロードに失敗しました',
@@ -234,6 +238,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 quotaDetails: '外国人枠（Quota）詳細',
                 sectionImages: 'プロジェクト画像（完成予想図・パース等）',
                 publishPresale: 'プレセールを公開',
+                developerNameNote: '※ プロジェクト選択時に自動入力されます。AI紹介文に反映させる名前を編集できます。',
+                paymentPlanPlaceholder: '例: 予約金10万バーツ、契約時20%、建設中30%、完成時50%。想定利回り7%保証。',
             }
     const [mounted, setMounted] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -905,9 +911,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                             placeholder="Developer name..."
                             className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary"
                         />
-                        <p className="mt-1.5 text-[10px] text-slate-400 font-medium ml-1 italic">
-                            ※ プロジェクト選択時に自動入力されます。AI紹介文に反映させる名前を編集できます。
-                        </p>
+                        <p className="mt-1.5 text-[10px] text-slate-400 font-medium ml-1 italic">{ui.developerNameNote}</p>
                     </div>
 
                     {showNewProjectForm && (
@@ -1096,7 +1100,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 </div>
                 <div>
                     <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1 flex items-center"><Wallet className="w-3 h-3 mr-1" /> {ui.paymentPlan}</label>
-                    <textarea rows={3} placeholder="例: 予約金10万バーツ、契約時20%、建設中30%、完成時50%。想定利回り7%保証。" value={formData.payment_plan} onChange={e => setFormData({ ...formData, payment_plan: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl resize-none font-medium text-sm" />
+                    <textarea rows={3} placeholder={ui.paymentPlanPlaceholder} value={formData.payment_plan} onChange={e => setFormData({ ...formData, payment_plan: e.target.value })} className="w-full px-5 py-4 bg-amber-50/50 border border-amber-100 rounded-2xl resize-none font-medium text-sm" />
                 </div>
                 <div>
                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
@@ -1307,7 +1311,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     <span className="w-8 h-8 bg-navy-primary/10 rounded-lg flex items-center justify-center mr-3 text-navy-primary text-sm font-black">4</span>
                     {ui.sectionImages}
                 </h3>
-                <ImageUploader initialImages={existingImages} onImagesChange={(files) => setSelectedFiles(files)} />
+                <ImageUploader initialImages={existingImages} onImagesChange={(files) => setSelectedFiles(files)} locale={locale} />
             </div>
 
             {/* Submit */}

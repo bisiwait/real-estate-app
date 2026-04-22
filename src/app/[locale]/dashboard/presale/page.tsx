@@ -55,6 +55,23 @@ export default function PresalePropertyPage() {
     }
 
     const d = dict?.presale_posting_page ?? {}
+    const ui = locale === 'th'
+        ? {
+            backToDashboard: 'กลับไปที่แดชบอร์ด',
+            title: 'ลงประกาศพรีเซล',
+            subtitle: 'เผยแพร่ข้อมูลโครงการลงทุนใหม่หรือระหว่างก่อสร้าง',
+        }
+        : locale === 'en'
+            ? {
+                backToDashboard: 'Back to dashboard',
+                title: 'Post a presale property',
+                subtitle: 'Publish investment project information for new or under-construction developments.',
+            }
+            : {
+                backToDashboard: 'ダッシュボードに戻る',
+                title: 'プレセール物件を投稿する',
+                subtitle: '新築や建設中の投資用プロジェクト情報を公開しましょう。',
+            }
 
     if (isPremium === false) {
         return (
@@ -79,7 +96,7 @@ export default function PresalePropertyPage() {
                             href={`/${locale}/dashboard`}
                             className="w-full border-2 border-slate-200 bg-white text-navy-secondary py-4 rounded-xl font-bold flex items-center justify-center space-x-2 hover:bg-slate-50 transition-all"
                         >
-                            <span>{d.back_to_dashboard ?? 'ダッシュボードへ戻る'}</span>
+                            <span>{d.back_to_dashboard ?? ui.backToDashboard}</span>
                         </Link>
                     </div>
                 </div>
@@ -96,7 +113,7 @@ export default function PresalePropertyPage() {
                         className="inline-flex items-center space-x-2 text-slate-400 hover:text-navy-primary font-bold mb-8 transition-colors group"
                     >
                         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span>{d.back_to_dashboard ?? 'ダッシュボードに戻る'}</span>
+                        <span>{d.back_to_dashboard ?? ui.backToDashboard}</span>
                     </Link>
 
                     <div className="flex items-center justify-between mb-12">
@@ -105,10 +122,10 @@ export default function PresalePropertyPage() {
                                 <span className="bg-amber-100 text-amber-600 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded">Pro</span>
                             </div>
                             <h1 className="text-3xl font-black text-navy-secondary mb-2">
-                                {d.title ?? 'プレセール物件を投稿する'}
+                                {d.title ?? ui.title}
                             </h1>
                             <p className="text-slate-500">
-                                {d.subtitle ?? '新築や建設中の投資用プロジェクト情報を公開しましょう。'}
+                                {d.subtitle ?? ui.subtitle}
                             </p>
                         </div>
                     </div>
