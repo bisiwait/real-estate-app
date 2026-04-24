@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { escapeIlikePattern, maxPageForCount } from '@/lib/admin-list-url'
+import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
+import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import {
     Plus,
     Edit2,
@@ -69,11 +72,32 @@ export default function AdminProjectManagement() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const formRef = useRef<HTMLDivElement>(null)
 
-    // Search & Pagination & Filters
     const [searchQuery, setSearchQuery] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
+    const [debouncedSearch, setDebouncedSearch] = useState('')
     const [filterMissingInfo, setFilterMissingInfo] = useState(false)
-    const itemsPerPage = 10
+    const [totalCount, setTotalCount] = useState<number | null>(null)
+    const { limit, page, setPage, setLimit } = useAdminTablePagination()
+
+    useEffect(() => {
+        const t = window.setTimeout(() => setDebouncedSearch(searchQuery), 300)
+        return () => window.clearTimeout(t)
+    }, [searchQuery])
+
+    const prevDebouncedRef = useRef(debouncedSearch)
+    useEffect(() => {
+        if (prevDebouncedRef.current !== debouncedSearch) {
+            prevDebouncedRef.current = debouncedSearch
+            if (page !== 1) setPage(1)
+        }
+    }, [debouncedSearch, page, setPage])
+
+    const prevMissingRef = useRef(filterMissingInfo)
+    useEffect(() => {
+        if (prevMissingRef.current !== filterMissingInfo) {
+            prevMissingRef.current = filterMissingInfo
+            if (page !== 1) setPage(1)
+        }
+    }, [filterMissingInfo, page, setPage])
 
     const [formData, setFormData] = useState<Partial<Project>>({
         name: '',
@@ -95,58 +119,104 @@ export default function AdminProjectManagement() {
 
     const supabase = createClient()
 
-    const fetchData = async () => {
-        setLoading(true)
+    const sortAreas = (mappedAreas: Area[]) => {
+        mappedAreas.sort((a: Area, b: Area) => {
+            const regionA = a.region?.name || ''
+            const regionB = b.region?.name || ''
+
+            if (regionA === 'Pattaya' && regionB !== 'Pattaya') return -1
+            if (regionA !== 'Pattaya' && regionB === 'Pattaya') return 1
+
+            if (regionA === 'Sriracha' && regionB !== 'Sriracha') return -1
+            if (regionA !== 'Sriracha' && regionB === 'Sriracha') return 1
+
+            if (regionA !== regionB) return regionA.localeCompare(regionB)
+            return a.name.localeCompare(b.name)
+        })
+        return mappedAreas
+    }
+
+    const fetchMeta = useCallback(async () => {
         setErrorMessage(null)
         try {
-            const [projectsRes, areasRes, developersRes] = await Promise.all([
-                supabase.from('projects').select('*').order('name'),
+            const [areasRes, developersRes] = await Promise.all([
                 supabase.from('areas').select('id, name, region:regions(name)').order('name'),
-                supabase.from('developers').select('id, name').order('name')
+                supabase.from('developers').select('id, name').order('name'),
             ])
 
-            if (projectsRes.error) throw projectsRes.error
             if (areasRes.error) throw areasRes.error
 
-            setProjects(projectsRes.data || [])
             setDevelopers(developersRes.data || [])
             if (areasRes.data) {
                 const mappedAreas = areasRes.data.map((item: any) => ({
                     id: item.id,
                     name: item.name,
-                    region: item.region || { name: '' }
+                    region: item.region || { name: '' },
                 }))
-
-                // Sort areas: Pattaya first, then Sriracha, then alphabetical inside
-                mappedAreas.sort((a: Area, b: Area) => {
-                    const regionA = a.region?.name || ''
-                    const regionB = b.region?.name || ''
-
-                    if (regionA === 'Pattaya' && regionB !== 'Pattaya') return -1
-                    if (regionA !== 'Pattaya' && regionB === 'Pattaya') return 1
-
-                    if (regionA === 'Sriracha' && regionB !== 'Sriracha') return -1
-                    if (regionA !== 'Sriracha' && regionB === 'Sriracha') return 1
-
-                    if (regionA !== regionB) return regionA.localeCompare(regionB)
-                    return a.name.localeCompare(b.name)
-                })
-
-                setAreas(mappedAreas)
+                setAreas(sortAreas(mappedAreas))
             } else {
                 setAreas([])
             }
         } catch (err: any) {
-            console.error('Fetch error:', err)
+            console.error('Fetch meta error:', err)
             setErrorMessage(getErrorMessage(err))
+        }
+    }, [supabase])
+
+    const fetchProjectsPage = useCallback(async () => {
+        setLoading(true)
+        setErrorMessage(null)
+        try {
+            let q = supabase.from('projects').select('*', { count: 'exact', head: false }).order('name')
+            if (filterMissingInfo) {
+                q = q.or('year_built.is.null,total_floors.is.null')
+            }
+            const rawSearch = debouncedSearch.trim().replace(/,/g, '')
+            if (rawSearch) {
+                const pattern = `%${escapeIlikePattern(rawSearch)}%`
+                const qLower = rawSearch.toLowerCase()
+                const parts = [`name.ilike.${pattern}`, `name_jp.ilike.${pattern}`]
+                const areaMatchIds = areas
+                    .filter((a) => {
+                        const n = (a.name || '').toLowerCase()
+                        const r = (a.region?.name || '').toLowerCase()
+                        return n.includes(qLower) || r.includes(qLower)
+                    })
+                    .map((a) => a.id)
+                if (areaMatchIds.length > 0) {
+                    parts.push(`area_id.in.(${areaMatchIds.join(',')})`)
+                }
+                q = q.or(parts.join(','))
+            }
+            const from = (page - 1) * limit
+            const to = from + limit - 1
+            const { data, error, count } = await q.range(from, to)
+            if (error) throw error
+            setProjects((data as Project[]) || [])
+            setTotalCount(typeof count === 'number' ? count : (data?.length ?? 0))
+        } catch (err: any) {
+            console.error('Fetch projects error:', err)
+            setErrorMessage(getErrorMessage(err))
+            setProjects([])
+            setTotalCount(0)
         } finally {
             setLoading(false)
         }
-    }
+    }, [supabase, areas, debouncedSearch, filterMissingInfo, page, limit])
 
     useEffect(() => {
-        fetchData()
-    }, [])
+        void fetchMeta()
+    }, [fetchMeta])
+
+    useEffect(() => {
+        void fetchProjectsPage()
+    }, [fetchProjectsPage])
+
+    useEffect(() => {
+        if (totalCount === null) return
+        const maxP = maxPageForCount(totalCount, limit)
+        if (page > maxP) setPage(maxP)
+    }, [totalCount, limit, page, setPage])
 
     const SHARED_FACILITIES = [
         'プール',
@@ -199,32 +269,10 @@ export default function AdminProjectManagement() {
             : '共有施設'
     const srirachaAreaGroupLabel = locale === 'th' ? 'ศรีราชา' : 'Sriracha'
 
-    // Filter projects based on search query and missing info filter
-    const filteredProjects = projects.filter(project => {
-        // Missing Info Filter logic: IF filter is ON, project MUST be missing year_built OR total_floors
-        if (filterMissingInfo) {
-            const hasMissingInfo = !project.year_built || !project.total_floors;
-            if (!hasMissingInfo) return false;
-        }
-
-        if (!searchQuery) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-            project.name.toLowerCase().includes(query) ||
-            (areas.find(a => a.id === project.area_id)?.name || '').toLowerCase().includes(query)
-        );
-    });
-
-    // Pagination logic
-    const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
-    const paginatedProjects = filteredProjects.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery]);
+    const totalPages =
+        totalCount !== null && totalCount > 0 ? Math.max(1, Math.ceil(totalCount / limit)) : 1
+    const fromRow = totalCount === 0 ? 0 : (page - 1) * limit + 1
+    const toRow = totalCount === null ? 0 : Math.min(page * limit, totalCount)
 
     // Scroll to form when adding or editing
     useEffect(() => {
@@ -303,7 +351,7 @@ export default function AdminProjectManagement() {
             }
 
             handleCancel()
-            await fetchData()
+            await fetchProjectsPage()
         } catch (err: any) {
             console.error('Submit error:', err)
             setErrorMessage(getErrorMessage(err))
@@ -323,7 +371,7 @@ export default function AdminProjectManagement() {
                 .eq('id', id)
 
             if (error) throw error
-            await fetchData()
+            await fetchProjectsPage()
         } catch (err: any) {
             console.error('Delete error:', err)
             setErrorMessage('削除できませんでした。このプロジェクトに紐づく物件が既に存在している可能性があります。')
@@ -340,9 +388,9 @@ export default function AdminProjectManagement() {
                         <h2 className="min-w-0 whitespace-nowrap text-base font-black text-navy-secondary md:text-xl">
                             プロジェクト情報管理<span className="hidden md:inline">（建物マスター）</span>
                         </h2>
-                        {!loading && (
+                        {!loading && totalCount !== null && (
                             <span className="shrink-0 rounded-full bg-navy-primary/10 px-2.5 py-1 text-[11px] font-bold text-navy-primary md:px-3 md:text-xs">
-                                {filteredProjects.length}件
+                                {totalCount}件
                             </span>
                         )}
                     </div>
@@ -350,6 +398,12 @@ export default function AdminProjectManagement() {
                 </div>
                 {!isAdding && !editingId && (
                     <div className="mt-3 flex items-center gap-2 md:mt-4 md:flex-wrap md:gap-4">
+                        <AdminRowsPerPageSelect
+                            id="admin-projects-limit"
+                            value={limit}
+                            onChange={setLimit}
+                            className="w-full shrink-0 justify-end md:w-auto"
+                        />
                         <button
                             onClick={() => setFilterMissingInfo(!filterMissingInfo)}
                             className={`flex shrink-0 items-center justify-center space-x-1 rounded-xl border px-3 py-2 text-[11px] font-bold transition-all md:space-x-2 md:px-4 md:text-xs ${filterMissingInfo
@@ -604,13 +658,13 @@ export default function AdminProjectManagement() {
                             <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mb-4" />
                             <p className="font-bold">読み込み中...</p>
                         </div>
-                    ) : projects.length === 0 ? (
+                    ) : !loading && totalCount === 0 ? (
                         <div className="py-20 flex flex-col items-center justify-center text-slate-300">
                             <Building2 className="w-10 h-10 mb-4" />
                             <p className="font-bold">プロジェクトが見つかりません</p>
                         </div>
                     ) : (
-                        paginatedProjects.map((project) => {
+                        projects.map((project) => {
                             const areaName = areas.find(a => a.id === project.area_id)?.name || '—'
                             const developerName = (project as any).developer_id
                                 ? developers.find(d => d.id === (project as any).developer_id)?.name || '—'
@@ -780,32 +834,33 @@ export default function AdminProjectManagement() {
                 </div>
 
                 {/* Pagination Controls */}
-                {!loading && totalPages > 1 && (
-                    <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 mt-2">
+                {!loading && totalCount !== null && totalCount > 0 && totalPages > 1 && (
+                    <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-4 mt-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                         <span className="text-xs font-bold text-slate-400">
-                            全 {filteredProjects.length} 件中 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredProjects.length)} 件を表示
+                            全 {totalCount} 件中 {fromRow} - {toRow} 件を表示
                         </span>
                         <div className="flex space-x-1">
                             <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
+                                type="button"
+                                onClick={() => setPage(page - 1)}
+                                disabled={page === 1}
                                 className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
 
                             {Array.from({ length: totalPages }).map((_, i) => {
-                                // Show first, last, current, and adjacent pages
                                 if (
                                     i === 0 ||
                                     i === totalPages - 1 ||
-                                    Math.abs(i + 1 - currentPage) <= 1
+                                    Math.abs(i + 1 - page) <= 1
                                 ) {
                                     return (
                                         <button
+                                            type="button"
                                             key={i}
-                                            onClick={() => setCurrentPage(i + 1)}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1
+                                            onClick={() => setPage(i + 1)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${page === i + 1
                                                 ? 'bg-navy-primary text-white border border-navy-primary'
                                                 : 'border border-slate-200 text-slate-500 hover:bg-slate-50'
                                                 }`}
@@ -814,7 +869,7 @@ export default function AdminProjectManagement() {
                                         </button>
                                     );
                                 } else if (
-                                    Math.abs(i + 1 - currentPage) === 2
+                                    Math.abs(i + 1 - page) === 2
                                 ) {
                                     return <span key={i} className="px-1 py-1.5 text-slate-400">...</span>;
                                 }
@@ -822,8 +877,9 @@ export default function AdminProjectManagement() {
                             })}
 
                             <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
+                                type="button"
+                                onClick={() => setPage(page + 1)}
+                                disabled={page === totalPages}
                                 className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronRight className="w-4 h-4" />

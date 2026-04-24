@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
+import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import { createClient } from '@/lib/supabase/client'
 import {
     Users,
@@ -64,10 +66,22 @@ export default function AdminUserManagement({
     const [newPassword, setNewPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
 
-    // Pagination & Search States
     const [searchQuery, setSearchQuery] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
-    const PAGE_SIZE = 9
+    const [debouncedSearch, setDebouncedSearch] = useState('')
+    const { limit, page, setPage, setLimit } = useAdminTablePagination()
+
+    useEffect(() => {
+        const t = window.setTimeout(() => setDebouncedSearch(searchQuery), 300)
+        return () => window.clearTimeout(t)
+    }, [searchQuery])
+
+    const prevDebouncedRef = useRef(debouncedSearch)
+    useEffect(() => {
+        if (prevDebouncedRef.current !== debouncedSearch) {
+            prevDebouncedRef.current = debouncedSearch
+            if (page !== 1) setPage(1)
+        }
+    }, [debouncedSearch, page, setPage])
     const [agentActionBusy, setAgentActionBusy] = useState<string | null>(null)
     const [resumeRestoringUi, setResumeRestoringUi] = useState(false)
     const [impersonateBusy, setImpersonateBusy] = useState<string | null>(null)
@@ -285,8 +299,8 @@ export default function AdminUserManagement({
         }
 
         // Step 2: Search Query
-        if (!searchQuery) return true
-        const query = searchQuery.toLowerCase()
+        if (!debouncedSearch) return true
+        const query = debouncedSearch.toLowerCase()
         return (
             user.full_name?.toLowerCase().includes(query) ||
             user.email?.toLowerCase().includes(query) ||
@@ -294,13 +308,22 @@ export default function AdminUserManagement({
         )
     })
 
-    const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE)
-    const paginatedUsers = filteredUsers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+    const totalPages = Math.max(1, Math.ceil(filteredUsers.length / limit))
+    const paginatedUsers = filteredUsers.slice((page - 1) * limit, page * limit)
 
-    // Reset page on search or filter change
+    const prevVariantRef = useRef(variant)
     useEffect(() => {
-        setCurrentPage(1)
-    }, [searchQuery, variant])
+        if (prevVariantRef.current !== variant) {
+            prevVariantRef.current = variant
+            if (page !== 1) setPage(1)
+        }
+    }, [variant, page, setPage])
+
+    useEffect(() => {
+        if (filteredUsers.length === 0) return
+        const maxP = Math.max(1, Math.ceil(filteredUsers.length / limit))
+        if (page > maxP) setPage(maxP)
+    }, [filteredUsers.length, limit, page, setPage])
 
     return (
         <>
@@ -341,6 +364,12 @@ export default function AdminUserManagement({
                     </div>
 
                     <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+                        <AdminRowsPerPageSelect
+                            id={`admin-users-limit-${variant}`}
+                            value={limit}
+                            onChange={setLimit}
+                            className="order-last md:order-none"
+                        />
                         {/* Search Bar */}
                         <div className="relative w-full md:w-64 flex-shrink-0">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
@@ -564,24 +593,25 @@ export default function AdminUserManagement({
             </div>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
+            {filteredUsers.length > 0 && totalPages > 1 && (
                 <div className="bg-white border-t border-slate-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-xs font-bold text-slate-400">
                         全 <span className="text-navy-secondary">{filteredUsers.length}</span> 件中
                         <span className="text-navy-secondary mx-1">
-                            {(currentPage - 1) * PAGE_SIZE + 1}
+                            {(page - 1) * limit + 1}
                         </span>
                         〜
                         <span className="text-navy-secondary mx-1">
-                            {Math.min(currentPage * PAGE_SIZE, filteredUsers.length)}
+                            {Math.min(page * limit, filteredUsers.length)}
                         </span>
                         件を表示
                     </p>
 
                     <div className="flex items-center space-x-2">
                         <button
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
+                            type="button"
+                            onClick={() => setPage(page - 1)}
+                            disabled={page === 1}
                             className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             <ChevronLeft className="w-5 h-5" />
@@ -590,9 +620,10 @@ export default function AdminUserManagement({
                         <div className="flex items-center space-x-1">
                             {Array.from({ length: totalPages }).map((_, i) => (
                                 <button
+                                    type="button"
                                     key={i}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${currentPage === i + 1
+                                    onClick={() => setPage(i + 1)}
+                                    className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${page === i + 1
                                         ? 'bg-navy-primary text-white shadow-md'
                                         : 'text-slate-500 hover:bg-slate-100'
                                         }`}
@@ -603,8 +634,9 @@ export default function AdminUserManagement({
                         </div>
 
                         <button
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage === totalPages}
+                            type="button"
+                            onClick={() => setPage(page + 1)}
+                            disabled={page === totalPages}
                             className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                             <ChevronRight className="w-5 h-5" />

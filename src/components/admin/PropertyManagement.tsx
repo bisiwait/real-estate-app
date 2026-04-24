@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { escapeIlikePattern, maxPageForCount } from '@/lib/admin-list-url'
+import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
+import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import {
     Check,
     X,
@@ -30,73 +33,122 @@ export default function AdminPropertyManagement() {
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'draft'>('all')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [totalCount, setTotalCount] = useState<number | null>(null)
     const supabase = createClient()
+    const { limit, page, setPage, setLimit } = useAdminTablePagination()
 
     const agentIdSet = useMemo(() => new Set(users.map((u) => u.id)), [users])
 
-    // Search & Pagination
     const [searchQuery, setSearchQuery] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 10
+    const [debouncedSearch, setDebouncedSearch] = useState('')
+    useEffect(() => {
+        const t = window.setTimeout(() => setDebouncedSearch(searchQuery), 300)
+        return () => window.clearTimeout(t)
+    }, [searchQuery])
 
-    const fetchProperties = async () => {
+    const prevFilterRef = useRef(filter)
+    useEffect(() => {
+        if (prevFilterRef.current !== filter) {
+            prevFilterRef.current = filter
+            if (page !== 1) setPage(1)
+        }
+    }, [filter, page, setPage])
+
+    const prevDebouncedRef = useRef(debouncedSearch)
+    useEffect(() => {
+        if (prevDebouncedRef.current !== debouncedSearch) {
+            prevDebouncedRef.current = debouncedSearch
+            if (page !== 1) setPage(1)
+        }
+    }, [debouncedSearch, page, setPage])
+
+    const fetchAgentProfiles = useCallback(async () => {
+        const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, email')
+            .eq('user_role', 'agent')
+            .is('deleted_at', null)
+            .order('full_name')
+
+        if (!profilesError && profilesData) {
+            setUsers(profilesData)
+        }
+    }, [supabase])
+
+    const fetchPropertiesPage = useCallback(async () => {
         setLoading(true)
         setErrorMessage(null)
-        const { data: propertiesData, error } = await supabase
-            .from('properties')
-            .select('*')
-            .order('created_at', { ascending: false })
-
-        if (error) {
-            console.error('Fetch properties error:', error)
-            setErrorMessage(getErrorMessage(error))
-        } else if (propertiesData) {
-            // 担当変更プルダウンはエージェントのみ（論理削除済みは除外）
-            const { data: profilesData, error: profilesError } = await supabase
-                .from('profiles')
-                .select('id, full_name, email')
-                .eq('user_role', 'agent')
-                .is('deleted_at', null)
-                .order('full_name')
-
-            if (!profilesError && profilesData) {
-                setUsers(profilesData)
-                const ownerIds = [
-                    ...new Set(
-                        propertiesData
-                            .map((p) => p.user_id)
-                            .filter((id): id is string => Boolean(id))
-                    ),
-                ]
-                const missingOwnerIds = ownerIds.filter(
-                    (id) => !profilesData.some((p) => p.id === id)
+        try {
+            let q = supabase
+                .from('properties')
+                .select(
+                    '*, profile:profiles!properties_user_id_fkey(id, full_name, email)',
+                    { count: 'exact', head: false }
                 )
-                let ownerProfiles: { id: string; full_name: string | null; email: string | null }[] =
-                    []
-                if (missingOwnerIds.length > 0) {
-                    const { data: owners } = await supabase
-                        .from('profiles')
-                        .select('id, full_name, email')
-                        .in('id', missingOwnerIds)
-                    ownerProfiles = owners ?? []
-                }
-                const propertiesWithProfiles = propertiesData.map((property) => {
-                    const profile =
-                        profilesData.find((p) => p.id === property.user_id) ||
-                        ownerProfiles.find((p) => p.id === property.user_id)
-                    return { ...property, profile }
-                })
-                setProperties(propertiesWithProfiles)
-            } else {
-                setProperties(propertiesData)
+                .order('created_at', { ascending: false })
+
+            if (filter === 'pending') {
+                q = q.or('is_approved.eq.false,is_approved.is.null,status.eq.pending')
+            } else if (filter === 'active') {
+                q = q.eq('is_approved', true).eq('status', 'published')
+            } else if (filter === 'draft') {
+                q = q.eq('status', 'draft')
             }
+
+            const trimmed = debouncedSearch.trim().replace(/,/g, '')
+            if (trimmed) {
+                const pattern = `%${escapeIlikePattern(trimmed)}%`
+                const { data: profMatches } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .or(`full_name.ilike.${pattern},email.ilike.${pattern}`)
+                const ids = (profMatches ?? []).map((r) => r.id).filter(Boolean)
+                if (ids.length > 0) {
+                    q = q.or(`title.ilike.${pattern},user_id.in.(${ids.join(',')})`)
+                } else {
+                    q = q.ilike('title', pattern)
+                }
+            }
+
+            const from = (page - 1) * limit
+            const to = from + limit - 1
+            const { data: rows, error, count } = await q.range(from, to)
+
+            if (error) {
+                console.error('Fetch properties error:', error)
+                setErrorMessage(getErrorMessage(error))
+                setProperties([])
+                setTotalCount(0)
+                return
+            }
+
+            const list = rows ?? []
+            const normalized = list.map((property: any) => {
+                const embedded = property.profile
+                const profile = Array.isArray(embedded) ? embedded[0] : embedded
+                const { profile: _p, ...rest } = property
+                return { ...rest, profile }
+            })
+            setProperties(normalized)
+            setTotalCount(typeof count === 'number' ? count : normalized.length)
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
-    }
+    }, [supabase, filter, debouncedSearch, page, limit])
 
     useEffect(() => {
-        fetchProperties()
-    }, [])
+        void fetchAgentProfiles()
+    }, [fetchAgentProfiles])
+
+    useEffect(() => {
+        void fetchPropertiesPage()
+    }, [fetchPropertiesPage])
+
+    useEffect(() => {
+        if (totalCount === null) return
+        const maxP = maxPageForCount(totalCount, limit)
+        if (page > maxP) setPage(maxP)
+    }, [totalCount, limit, page, setPage])
 
     const handleAction = async (id: string, action: 'approve' | 'reject' | 'delete' | 'restore') => {
         if (action === 'delete') {
@@ -116,7 +168,7 @@ export default function AdminPropertyManagement() {
             } else if (action === 'delete') {
                 await supabase.from('properties').delete().eq('id', id)
             }
-            await fetchProperties()
+            await fetchPropertiesPage()
         } catch (err: any) {
             console.error('Admin action error:', err)
             setErrorMessage(getErrorMessage(err))
@@ -133,7 +185,7 @@ export default function AdminPropertyManagement() {
         try {
             const { error } = await supabase.from('properties').update({ user_id: newUserId || null }).eq('id', id)
             if (error) throw error
-            await fetchProperties()
+            await fetchPropertiesPage()
             setSelectedUsers(prev => {
                 const next = { ...prev }
                 delete next[id]
@@ -157,7 +209,7 @@ export default function AdminPropertyManagement() {
             }
             const { error } = await supabase.from('properties').update(updates).eq('id', id)
             if (error) throw error
-            await fetchProperties()
+            await fetchPropertiesPage()
             setSelectedStatuses((prev: Record<string, string>) => {
                 const next = { ...prev }
                 delete next[id]
@@ -171,36 +223,10 @@ export default function AdminPropertyManagement() {
         }
     }
 
-    const filteredProperties = properties.filter(p => {
-        // Tab Filter
-        let tabMatch = true;
-        if (filter === 'pending') tabMatch = !p.is_approved || p.status === 'pending'
-        else if (filter === 'active') tabMatch = p.is_approved && p.status === 'published'
-        else if (filter === 'draft') tabMatch = p.status === 'draft'
-
-        // Search Query Match
-        let searchMatch = true;
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            const titleMatch = (p.title || '').toLowerCase().includes(query);
-            const userMatch = (p.profile?.full_name || p.profile?.email || '').toLowerCase().includes(query);
-            searchMatch = titleMatch || userMatch;
-        }
-
-        return tabMatch && searchMatch;
-    })
-
-    // Pagination logic
-    const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
-    const paginatedProperties = filteredProperties.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-
-    // Reset to page 1 when search or filter changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery, filter]);
+    const totalPages =
+        totalCount !== null && totalCount > 0 ? Math.max(1, Math.ceil(totalCount / limit)) : 1
+    const fromRow = totalCount === 0 ? 0 : (page - 1) * limit + 1
+    const toRow = totalCount === null ? 0 : Math.min(page * limit, totalCount)
 
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
@@ -208,9 +234,9 @@ export default function AdminPropertyManagement() {
                 <div>
                     <div className="flex items-center gap-3">
                         <h2 className="text-lg md:text-xl font-black text-navy-secondary">物件承認・管理</h2>
-                        {!loading && (
+                        {!loading && totalCount !== null && (
                             <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
-                                {filteredProperties.length}件
+                                {totalCount}件
                             </span>
                         )}
                     </div>
@@ -218,6 +244,12 @@ export default function AdminPropertyManagement() {
                 </div>
 
                 <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full xl:w-auto">
+                    <AdminRowsPerPageSelect
+                        id="admin-properties-limit"
+                        value={limit}
+                        onChange={setLimit}
+                        className="order-last md:order-none"
+                    />
                     {/* Search Bar */}
                     <div className="relative w-full md:w-64 flex-shrink-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
@@ -281,13 +313,13 @@ export default function AdminPropertyManagement() {
                         <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mb-4" />
                         <p className="font-bold">読み込み中...</p>
                     </div>
-                ) : filteredProperties.length === 0 ? (
+                ) : !loading && totalCount === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center text-slate-400">
                         <Filter className="w-10 h-10 text-slate-200 mb-4" />
                         <p className="font-bold">表示する物件がありません</p>
                     </div>
                 ) : (
-                    paginatedProperties.map((property) => {
+                    properties.map((property) => {
                         const currentStatus = selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status
                         return (
                             <div key={property.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors">
@@ -443,32 +475,33 @@ export default function AdminPropertyManagement() {
             </div>
 
             {/* Pagination Controls */}
-            {!loading && totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 bg-white">
+            {!loading && totalCount !== null && totalCount > 0 && totalPages > 1 && (
+                <div className="flex flex-col gap-3 border-t border-slate-100 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <span className="text-xs font-bold text-slate-400">
-                        全 {filteredProperties.length} 件中 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredProperties.length)} 件を表示
+                        全 {totalCount} 件中 {fromRow} - {toRow} 件を表示
                     </span>
                     <div className="flex space-x-1">
                         <button
-                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
+                            type="button"
+                            onClick={() => setPage(page - 1)}
+                            disabled={page === 1}
                             className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
 
                         {Array.from({ length: totalPages }).map((_, i) => {
-                            // Show first, last, current, and adjacent pages
                             if (
                                 i === 0 ||
                                 i === totalPages - 1 ||
-                                Math.abs(i + 1 - currentPage) <= 1
+                                Math.abs(i + 1 - page) <= 1
                             ) {
                                 return (
                                     <button
+                                        type="button"
                                         key={i}
-                                        onClick={() => setCurrentPage(i + 1)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1
+                                        onClick={() => setPage(i + 1)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${page === i + 1
                                             ? 'bg-navy-primary text-white border border-navy-primary'
                                             : 'border border-slate-200 text-slate-500 hover:bg-slate-50'
                                             }`}
@@ -477,7 +510,7 @@ export default function AdminPropertyManagement() {
                                     </button>
                                 );
                             } else if (
-                                Math.abs(i + 1 - currentPage) === 2
+                                Math.abs(i + 1 - page) === 2
                             ) {
                                 return <span key={i} className="px-1 py-1.5 text-slate-400">...</span>;
                             }
@@ -485,8 +518,9 @@ export default function AdminPropertyManagement() {
                         })}
 
                         <button
-                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
+                            type="button"
+                            onClick={() => setPage(page + 1)}
+                            disabled={page === totalPages}
                             className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             <ChevronRight className="w-4 h-4" />

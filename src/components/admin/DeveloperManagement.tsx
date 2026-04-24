@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { escapeIlikePattern, maxPageForCount } from '@/lib/admin-list-url'
+import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
+import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import {
     Plus,
     Edit2,
@@ -36,10 +39,23 @@ export default function AdminDeveloperManagement() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-    // Search & Pagination
     const [searchQuery, setSearchQuery] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
-    const itemsPerPage = 10
+    const [debouncedSearch, setDebouncedSearch] = useState('')
+    const [totalCount, setTotalCount] = useState<number | null>(null)
+    const { limit, page, setPage, setLimit } = useAdminTablePagination()
+
+    useEffect(() => {
+        const t = window.setTimeout(() => setDebouncedSearch(searchQuery), 300)
+        return () => window.clearTimeout(t)
+    }, [searchQuery])
+
+    const prevDebouncedRef = useRef(debouncedSearch)
+    useEffect(() => {
+        if (prevDebouncedRef.current !== debouncedSearch) {
+            prevDebouncedRef.current = debouncedSearch
+            if (page !== 1) setPage(1)
+        }
+    }, [debouncedSearch, page, setPage])
 
     const [formData, setFormData] = useState<Partial<Developer>>({
         name: '',
@@ -50,38 +66,45 @@ export default function AdminDeveloperManagement() {
 
     const supabase = createClient()
 
-    const fetchDevelopers = async () => {
+    const fetchDevelopersPage = useCallback(async () => {
         setLoading(true)
         setErrorMessage(null)
         try {
-            const { data, error } = await supabase
-                .from('developers')
-                .select('*')
-                .order('name')
-
+            let q = supabase.from('developers').select('*', { count: 'exact', head: false }).order('name')
+            const trimmed = debouncedSearch.trim().replace(/,/g, '')
+            if (trimmed) {
+                q = q.ilike('name', `%${escapeIlikePattern(trimmed)}%`)
+            }
+            const from = (page - 1) * limit
+            const to = from + limit - 1
+            const { data, error, count } = await q.range(from, to)
             if (error) throw error
             setDevelopers(data || [])
+            setTotalCount(typeof count === 'number' ? count : (data?.length ?? 0))
         } catch (err: any) {
             console.error('Fetch error:', err)
             setErrorMessage(getErrorMessage(err))
+            setDevelopers([])
+            setTotalCount(0)
         } finally {
             setLoading(false)
         }
-    }
+    }, [supabase, debouncedSearch, page, limit])
 
     useEffect(() => {
-        fetchDevelopers()
-    }, [])
+        void fetchDevelopersPage()
+    }, [fetchDevelopersPage])
 
-    const filteredDevelopers = developers.filter(dev =>
-        dev.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    useEffect(() => {
+        if (totalCount === null) return
+        const maxP = maxPageForCount(totalCount, limit)
+        if (page > maxP) setPage(maxP)
+    }, [totalCount, limit, page, setPage])
 
-    const totalPages = Math.ceil(filteredDevelopers.length / itemsPerPage)
-    const paginatedDevelopers = filteredDevelopers.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    )
+    const totalPages =
+        totalCount !== null && totalCount > 0 ? Math.max(1, Math.ceil(totalCount / limit)) : 1
+    const fromRow = totalCount === 0 ? 0 : (page - 1) * limit + 1
+    const toRow = totalCount === null ? 0 : Math.min(page * limit, totalCount)
 
     const handleEdit = (developer: Developer) => {
         setEditingId(developer.id)
@@ -125,7 +148,7 @@ export default function AdminDeveloperManagement() {
             }
 
             handleCancel()
-            await fetchDevelopers()
+            await fetchDevelopersPage()
         } catch (err: any) {
             console.error('Submit error:', err)
             setErrorMessage(getErrorMessage(err))
@@ -143,7 +166,7 @@ export default function AdminDeveloperManagement() {
                 .delete()
                 .eq('id', id)
             if (error) throw error
-            await fetchDevelopers()
+            await fetchDevelopersPage()
         } catch (err: any) {
             setErrorMessage('削除できませんでした。このデベロッパーに紐づくプロジェクトが存在する可能性があります。')
         } finally {
@@ -159,9 +182,9 @@ export default function AdminDeveloperManagement() {
                         <h2 className="min-w-0 whitespace-nowrap text-base font-black text-navy-secondary md:text-xl">
                             デベロッパーマスター<span className="hidden md:inline">・管理会社マスター</span>
                         </h2>
-                        {!loading && (
+                        {!loading && totalCount !== null && (
                             <span className="shrink-0 rounded-full bg-navy-primary/10 px-2.5 py-1 text-[11px] font-bold text-navy-primary md:px-3 md:text-xs">
-                                {filteredDevelopers.length}件
+                                {totalCount}件
                             </span>
                         )}
                     </div>
@@ -169,6 +192,12 @@ export default function AdminDeveloperManagement() {
                 </div>
                 {!isAdding && !editingId && (
                     <div className="mt-3 flex items-center gap-2 md:mt-4 md:flex-wrap md:gap-4">
+                        <AdminRowsPerPageSelect
+                            id="admin-developers-limit"
+                            value={limit}
+                            onChange={setLimit}
+                            className="w-full shrink-0 justify-end md:w-auto"
+                        />
                         <div className="relative min-w-0 flex-1 md:w-64 md:flex-none">
                             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 md:h-4 md:w-4" />
                             <input
@@ -278,13 +307,13 @@ export default function AdminDeveloperManagement() {
                             <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mb-4" />
                             <p className="font-bold">読み込み中...</p>
                         </div>
-                    ) : paginatedDevelopers.length === 0 ? (
+                    ) : !loading && totalCount === 0 ? (
                         <div className="py-20 flex flex-col items-center justify-center text-slate-300">
                             <Building2 className="w-10 h-10 mb-4" />
                             <p className="font-bold">デベロッパーが見つかりません</p>
                         </div>
                     ) : (
-                        paginatedDevelopers.map((dev) => (
+                        developers.map((dev) => (
                             <div key={dev.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors flex items-center gap-3 md:gap-4">
                                 {/* Logo */}
                                 <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 md:h-14 md:w-14">
@@ -331,32 +360,33 @@ export default function AdminDeveloperManagement() {
                 </div>
 
                 {/* Pagination Controls */}
-                {!loading && totalPages > 1 && (
-                    <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 mt-2">
+                {!loading && totalCount !== null && totalCount > 0 && totalPages > 1 && (
+                    <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 mt-2">
                         <span className="text-xs font-bold text-slate-400">
-                            全 {filteredDevelopers.length} 件中 {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredDevelopers.length)} 件を表示
+                            全 {totalCount} 件中 {fromRow} - {toRow} 件を表示
                         </span>
                         <div className="flex space-x-1">
                             <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
+                                type="button"
+                                onClick={() => setPage(page - 1)}
+                                disabled={page === 1}
                                 className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                             </button>
 
                             {Array.from({ length: totalPages }).map((_, i) => {
-                                // Show first, last, current, and adjacent pages
                                 if (
                                     i === 0 ||
                                     i === totalPages - 1 ||
-                                    Math.abs(i + 1 - currentPage) <= 1
+                                    Math.abs(i + 1 - page) <= 1
                                 ) {
                                     return (
                                         <button
+                                            type="button"
                                             key={i}
-                                            onClick={() => setCurrentPage(i + 1)}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${currentPage === i + 1
+                                            onClick={() => setPage(i + 1)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${page === i + 1
                                                 ? 'bg-navy-primary text-white border border-navy-primary'
                                                 : 'border border-slate-200 text-slate-500 hover:bg-slate-50'
                                                 }`}
@@ -365,7 +395,7 @@ export default function AdminDeveloperManagement() {
                                         </button>
                                     );
                                 } else if (
-                                    Math.abs(i + 1 - currentPage) === 2
+                                    Math.abs(i + 1 - page) === 2
                                 ) {
                                     return <span key={i} className="px-1 py-1.5 text-slate-400">...</span>;
                                 }
@@ -373,8 +403,9 @@ export default function AdminDeveloperManagement() {
                             })}
 
                             <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
+                                type="button"
+                                onClick={() => setPage(page + 1)}
+                                disabled={page === totalPages}
                                 className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronRight className="w-4 h-4" />
