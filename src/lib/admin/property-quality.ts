@@ -52,3 +52,13 @@ export function getAdminPropertyQualityFlags(row: {
 export function adminPropertyQualityFlagCount(flags: AdminPropertyQualityFlags): number {
     return [flags.missingPrice, flags.missingImage, flags.noDeveloper, flags.shortDescription].filter(Boolean).length
 }
+
+/** 物件名に Riviera が含まれるのに developer_id が無い → デベロッパー紐付けを推奨 */
+export function shouldRecommendDeveloperForProperty(row: {
+    title?: string | null
+    developer_id?: string | null
+}): boolean {
+    const t = (row.title ?? '').toLowerCase()
+    if (!t.includes('riviera')) return false
+    return row.developer_id == null || String(row.developer_id).trim() === ''
+}

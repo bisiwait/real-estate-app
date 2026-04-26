@@ -45,6 +45,7 @@ import {
     Building2,
     FileWarning,
     Copy,
+    Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
@@ -54,7 +55,9 @@ import AdminHoverTip from '@/components/admin/AdminHoverTip'
 import {
     ADMIN_PROPERTY_MIN_DESCRIPTION_CHARS,
     getAdminPropertyQualityFlags,
+    shouldRecommendDeveloperForProperty,
 } from '@/lib/admin/property-quality'
+import { shouldAuditStorageImageUrl, verifyPublicImageUrlReachable } from '@/lib/admin/verify-property-image-url'
 import { fetchAdminDuplicateTitlesOnPage } from '@/lib/supabase/admin-duplicate-titles'
 import { cn } from '@/lib/utils'
 
@@ -87,6 +90,8 @@ export default function AdminPropertyManagement() {
     const [filterPanelOpen, setFilterPanelOpen] = useState(true)
     const [qualityStats, setQualityStats] = useState<AdminQualityStatsRow | null>(null)
     const [duplicateTitleSet, setDuplicateTitleSet] = useState<Set<string>>(() => new Set())
+    /** メイン画像 URL が Supabase Storage 上で参照不能（404 等）と判定された物件 id */
+    const [brokenStorageImageIds, setBrokenStorageImageIds] = useState<Set<string>>(() => new Set())
     const supabase = createClient()
     const { limit, page, setPage, setLimit, replaceQuery } = useAdminTablePagination()
 
@@ -321,6 +326,31 @@ export default function AdminPropertyManagement() {
     }, [listFetchBusy, properties, supabase])
 
     useEffect(() => {
+        if (listFetchBusy || properties.length === 0) {
+            setBrokenStorageImageIds(new Set())
+            return
+        }
+        const ac = new AbortController()
+        const urlToPropertyIds = new Map<string, Set<string>>()
+        for (const p of properties) {
+            const url = String(p.images?.[0] ?? '').trim()
+            if (!url || !shouldAuditStorageImageUrl(url)) continue
+            if (!urlToPropertyIds.has(url)) urlToPropertyIds.set(url, new Set())
+            urlToPropertyIds.get(url)!.add(String(p.id))
+        }
+        void (async () => {
+            const brokenIds = new Set<string>()
+            for (const [url, ids] of urlToPropertyIds) {
+                if (ac.signal.aborted) return
+                const ok = await verifyPublicImageUrlReachable(url, ac.signal)
+                if (!ok) ids.forEach((id) => brokenIds.add(id))
+            }
+            if (!ac.signal.aborted) setBrokenStorageImageIds(brokenIds)
+        })()
+        return () => ac.abort()
+    }, [listFetchBusy, properties])
+
+    useEffect(() => {
         if (totalCount === null) return
         const maxP = maxPageForCount(totalCount, limit)
         if (page > maxP) setPage(maxP)
@@ -477,7 +507,8 @@ export default function AdminPropertyManagement() {
                             {qualityStats.short_description ?? 0} 件
                         </p>
                         <p className="mt-1 text-[10px] font-bold leading-relaxed text-amber-900/75">
-                            全物件を対象に DB 側で集計しています（承認タブの絞り込みは反映されません）。
+                            全物件を対象に DB 側で集計しています（承認タブの絞り込みは反映されません）。画像 URL
+                            の実体確認は一覧の現在ページのみ HTTP で行います（CSV 直投入などの整合性確認用）。
                         </p>
                     </div>
                 ) : null}
@@ -700,16 +731,30 @@ export default function AdminPropertyManagement() {
                     </div>
                 ) : (
                     <div className="relative">
+                    {duplicateTitleSet.size > 0 ? (
+                        <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-900">
+                            このページには<strong className="mx-0.5">物件名（title）が完全一致</strong>する行が含まれています。CSV
+                            インポートやコピー登録の重複がないか確認してください。
+                        </div>
+                    ) : null}
                     {properties.map((property) => {
                         const currentStatus = selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status
                         const qf = getAdminPropertyQualityFlags(property)
                         const titleDup = duplicateTitleSet.has(String(property.title ?? ''))
+                        const brokenStorage = brokenStorageImageIds.has(String(property.id))
+                        const devRecommend = shouldRecommendDeveloperForProperty(property)
+                        const auditImportRed = Boolean(qf.noDeveloper || brokenStorage || titleDup)
                         return (
                             <div key={property.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors">
                                 {/* Mobile & Desktop unified layout */}
                                 <div className="flex gap-3 md:gap-4">
                                     {/* Image */}
-                                    <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm">
+                                    <div
+                                        className={cn(
+                                            'relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100 shadow-sm',
+                                            brokenStorage && 'ring-2 ring-red-500 ring-offset-1'
+                                        )}
+                                    >
                                         {property.images?.[0] ? (
                                             <PropertyThumbnail
                                                 src={property.images[0]}
@@ -736,7 +781,14 @@ export default function AdminPropertyManagement() {
                                             {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[8px] font-black">下書き</span>}
                                         </div>
                                         <div className="flex flex-wrap items-center gap-1.5">
-                                            <p className="min-w-0 flex-1 truncate text-sm font-black text-navy-secondary">{property.title}</p>
+                                            <p
+                                                className={cn(
+                                                    'min-w-0 flex-1 truncate text-sm font-black',
+                                                    auditImportRed ? 'text-red-600' : 'text-navy-secondary'
+                                                )}
+                                            >
+                                                {property.title}
+                                            </p>
                                             <div className="flex flex-shrink-0 flex-wrap items-center gap-1">
                                                 {qf.missingPrice ? (
                                                     <AdminHoverTip tip="DB の price が 0 または未設定です。賃料・売価とは別列のため、必要に応じて price を入力してください。">
@@ -761,13 +813,35 @@ export default function AdminPropertyManagement() {
                                                     </AdminHoverTip>
                                                 ) : null}
                                                 {qf.noDeveloper ? (
-                                                    <AdminHoverTip tip="developer_id が未設定です。">
+                                                    <AdminHoverTip tip="developer_id が未設定です。CSV 直インポート時に抜けやすい項目です。">
                                                         <span
                                                             tabIndex={0}
-                                                            className="inline-flex items-center gap-0.5 rounded border border-violet-200 bg-violet-50 px-1 py-0.5 text-[8px] font-black text-violet-800"
+                                                            className="inline-flex items-center gap-0.5 rounded border border-red-300 bg-red-50 px-1 py-0.5 text-[8px] font-black text-red-700"
                                                         >
                                                             <Building2 className="h-3 w-3 shrink-0" aria-hidden />
-                                                            Dev
+                                                            Dev未設定
+                                                        </span>
+                                                    </AdminHoverTip>
+                                                ) : null}
+                                                {brokenStorage ? (
+                                                    <AdminHoverTip tip="メイン画像の URL は Supabase Storage 形式ですが、HTTP 応答が失敗しました。オブジェクト削除・URL 誤り・別プロジェクトの URL など CSV 取り込み不整合の可能性があります。">
+                                                        <span
+                                                            tabIndex={0}
+                                                            className="inline-flex items-center gap-0.5 rounded border border-red-300 bg-red-50 px-1 py-0.5 text-[8px] font-black text-red-700"
+                                                        >
+                                                            <ImageOff className="h-3 w-3 shrink-0" aria-hidden />
+                                                            画像URL
+                                                        </span>
+                                                    </AdminHoverTip>
+                                                ) : null}
+                                                {devRecommend ? (
+                                                    <AdminHoverTip tip="物件名に Riviera が含まれています。developer_id の設定を推奨します。">
+                                                        <span
+                                                            tabIndex={0}
+                                                            className="inline-flex items-center gap-0.5 rounded border border-indigo-200 bg-indigo-50 px-1 py-0.5 text-[8px] font-black text-indigo-800"
+                                                        >
+                                                            <Sparkles className="h-3 w-3 shrink-0" aria-hidden />
+                                                            デベロッパー設定を推奨
                                                         </span>
                                                     </AdminHoverTip>
                                                 ) : null}
@@ -785,26 +859,52 @@ export default function AdminPropertyManagement() {
                                                     </AdminHoverTip>
                                                 ) : null}
                                                 {titleDup ? (
-                                                    <AdminHoverTip tip="他の物件と物件名が完全に一致しています。誤複製の可能性があります。">
+                                                    <AdminHoverTip tip="DB 上で同じ物件名（title）の行が複数あります。CSV インポートや手入力の重複を疑ってください。">
                                                         <span
                                                             tabIndex={0}
-                                                            className="inline-flex items-center gap-0.5 rounded border border-rose-200 bg-rose-50 px-1 py-0.5 text-[8px] font-black text-rose-800"
+                                                            className="inline-flex items-center gap-0.5 rounded border border-red-300 bg-red-50 px-1 py-0.5 text-[8px] font-black text-red-700"
                                                         >
                                                             <Copy className="h-3 w-3 shrink-0" aria-hidden />
-                                                            同名
+                                                            物件名重複
                                                         </span>
                                                     </AdminHoverTip>
                                                 ) : null}
                                             </div>
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                                        <div
+                                            className={cn(
+                                                'mt-1 flex flex-wrap items-center gap-2',
+                                                auditImportRed && 'text-red-600'
+                                            )}
+                                        >
                                             {property.is_for_rent && property.rent_price && (
-                                                <span className="text-[10px] font-bold text-indigo-600">{property.rent_price.toLocaleString()} ฿/月</span>
+                                                <span
+                                                    className={cn(
+                                                        'text-[10px] font-bold',
+                                                        auditImportRed ? 'text-red-600' : 'text-indigo-600'
+                                                    )}
+                                                >
+                                                    {property.rent_price.toLocaleString()} ฿/月
+                                                </span>
                                             )}
                                             {property.is_for_sale && property.sale_price && (
-                                                <span className="text-[10px] font-bold text-orange-600">{property.sale_price.toLocaleString()} ฿</span>
+                                                <span
+                                                    className={cn(
+                                                        'text-[10px] font-bold',
+                                                        auditImportRed ? 'text-red-600' : 'text-orange-600'
+                                                    )}
+                                                >
+                                                    {property.sale_price.toLocaleString()} ฿
+                                                </span>
                                             )}
-                                            <span className="text-[10px] text-slate-400">{property.profile?.full_name || property.profile?.email || '未割当'}</span>
+                                            <span
+                                                className={cn(
+                                                    'text-[10px]',
+                                                    auditImportRed ? 'text-red-600' : 'text-slate-400'
+                                                )}
+                                            >
+                                                {property.profile?.full_name || property.profile?.email || '未割当'}
+                                            </span>
                                         </div>
                                     </div>
                                     {/* Actions - Desktop */}
