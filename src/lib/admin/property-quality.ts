@@ -31,15 +31,31 @@ function hasMainImage(row: { images?: string[] | null }): boolean {
  */
 export function getAdminPropertyQualityFlags(row: {
     price?: number | string | null
+    list_sort_price?: number | string | null
+    rent_price?: number | string | null
+    sale_price?: number | string | null
     images?: string[] | null
     developer_id?: string | null
     description?: string | null
     description_en?: string | null
     description_th?: string | null
 }): AdminPropertyQualityFlags {
-    const raw = row.price
-    const n = raw == null || raw === '' ? null : Number(raw)
-    const missingPrice = raw == null || raw === '' || !Number.isFinite(n) || n === 0
+    const listRaw = row.list_sort_price
+    const listN = listRaw == null || listRaw === '' ? null : Number(listRaw)
+    const listHasValue = listN != null && Number.isFinite(listN) && listN > 0
+
+    const rentRaw = row.rent_price
+    const saleRaw = row.sale_price
+    const rentN = rentRaw == null || rentRaw === '' ? null : Number(rentRaw)
+    const saleN = saleRaw == null || saleRaw === '' ? null : Number(saleRaw)
+    const hasRentSaleValue =
+        (rentN != null && Number.isFinite(rentN) && rentN > 0) ||
+        (saleN != null && Number.isFinite(saleN) && saleN > 0)
+
+    const fallbackRaw = row.price
+    const fallbackN = fallbackRaw == null || fallbackRaw === '' ? null : Number(fallbackRaw)
+    const fallbackHasValue = fallbackN != null && Number.isFinite(fallbackN) && fallbackN > 0
+    const missingPrice = !(listHasValue || hasRentSaleValue || fallbackHasValue)
 
     return {
         missingPrice,

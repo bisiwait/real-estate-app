@@ -502,7 +502,7 @@ export default function AdminPropertyManagement() {
                             要修正物件：{qualityStats.any_issue} 件
                         </p>
                         <p className="mt-1 font-bold leading-relaxed text-amber-900/95">
-                            画像なし {qualityStats.missing_image ?? 0} 件、価格なし（price 未設定） {qualityStats.missing_price ?? 0} 件、デベロッパー未設定{' '}
+                            画像なし {qualityStats.missing_image ?? 0} 件、価格なし（list_sort_price 未設定） {qualityStats.missing_price ?? 0} 件、デベロッパー未設定{' '}
                             {qualityStats.no_developer ?? 0} 件、説明不足（{ADMIN_PROPERTY_MIN_DESCRIPTION_CHARS} 文字以下・日英泰の最大）{' '}
                             {qualityStats.short_description ?? 0} 件
                         </p>
@@ -796,7 +796,7 @@ export default function AdminPropertyManagement() {
                                             </p>
                                             <div className="flex flex-shrink-0 flex-wrap items-center gap-1">
                                                 {qf.missingPrice ? (
-                                                    <AdminHoverTip tip="DB の price が 0 または未設定です。賃料・売価とは別列のため、必要に応じて price を入力してください。">
+                                                    <AdminHoverTip tip="表示価格（list_sort_price）を算出できる価格情報がありません。rent/sale または price を設定してください。">
                                                         <span
                                                             tabIndex={0}
                                                             className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1 py-0.5 text-[8px] font-black text-amber-800"
