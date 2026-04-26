@@ -129,8 +129,6 @@ export default function AgentProfilePage() {
                         <div className="lg:col-span-2 flex flex-col justify-center">
                             <div className="flex flex-wrap gap-6 mb-8 pb-8 border-b border-slate-100">
                                 <StatItem value={totalListings} label="掲載中の物件" />
-                                <StatItem value={128} label="成約実績" />
-                                <StatItem value={5} label="業界経験" suffix="年" />
                             </div>
                             <h3 className="text-sm font-normal text-slate-400 uppercase tracking-widest mb-4">ご挨拶</h3>
                             <p className="text-slate-600 leading-relaxed font-normal mb-8">{agent.bio || 'タイでの不動産探しはお任せください。駐在員様向けのご家族用コンドミニアムから、投資用物件まで幅広く対応いたします。'}</p>
