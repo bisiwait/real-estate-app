@@ -1,66 +1,183 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { escapeIlikePattern, maxPageForCount } from '@/lib/admin-list-url'
+import {
+    ADMIN_PROP_AREA,
+    ADMIN_PROP_DEVELOPER_ID,
+    ADMIN_PROP_LIST_FILTER,
+    ADMIN_PROP_MAX_PRICE,
+    ADMIN_PROP_MIN_PRICE,
+    ADMIN_PROP_PROPERTY_TYPE,
+    ADMIN_PROP_SEARCH,
+    parseAdminPropListFilter,
+    parseOptionalPositiveNumber,
+    parseOptionalUuid,
+} from '@/lib/admin-property-list-url'
 import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
 import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
 import {
-    Check,
     X,
     Trash2,
     ExternalLink,
-    Clock,
     AlertCircle,
     Loader2,
-    EyeOff,
-    RotateCcw,
     Search,
     ChevronLeft,
     ChevronRight,
-    Filter
+    Filter,
+    ChevronDown,
+    SlidersHorizontal,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
+import { cn } from '@/lib/utils'
 
+
+type AreaRow = { id: string; name: string; slug: string }
+
+const PROPERTY_TYPE_VALUES = ['Condo', 'House', 'Townhouse', 'Commercial'] as const
+
+/** 存在しない area slug 指定時に全件ヒットさせないためのダミー UUID */
+const NO_MATCH_AREA_ID = '00000000-0000-4000-8000-000000000001'
 
 export default function AdminPropertyManagement() {
+    const searchParams = useSearchParams()
     const [properties, setProperties] = useState<any[]>([])
     const [users, setUsers] = useState<any[]>([])
     const [selectedUsers, setSelectedUsers] = useState<Record<string, string>>({})
     const [selectedStatuses, setSelectedStatuses] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'draft'>('all')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [totalCount, setTotalCount] = useState<number | null>(null)
+    const [areas, setAreas] = useState<AreaRow[]>([])
+    const [developers, setDevelopers] = useState<{ id: string; name: string }[]>([])
+    const [filterPanelOpen, setFilterPanelOpen] = useState(true)
     const supabase = createClient()
-    const { limit, page, setPage, setLimit } = useAdminTablePagination()
+    const { limit, page, setPage, setLimit, replaceQuery } = useAdminTablePagination()
+
+    const filter = useMemo(
+        () => parseAdminPropListFilter(searchParams.get(ADMIN_PROP_LIST_FILTER)),
+        [searchParams]
+    )
+
+    const urlSearch = (searchParams.get(ADMIN_PROP_SEARCH) ?? '').trim()
+    const areaSlug = (searchParams.get(ADMIN_PROP_AREA) ?? '').trim()
+    const propertyTypeParam = (searchParams.get(ADMIN_PROP_PROPERTY_TYPE) ?? '').trim()
+    const developerIdParam = parseOptionalUuid(searchParams.get(ADMIN_PROP_DEVELOPER_ID))
+    const minPriceUrl = parseOptionalPositiveNumber(searchParams.get(ADMIN_PROP_MIN_PRICE))
+    const maxPriceUrl = parseOptionalPositiveNumber(searchParams.get(ADMIN_PROP_MAX_PRICE))
+
+    const [draftSearch, setDraftSearch] = useState(urlSearch)
+    useEffect(() => {
+        setDraftSearch(urlSearch)
+    }, [urlSearch])
+
+    useEffect(() => {
+        const t = window.setTimeout(() => {
+            const next = draftSearch.trim()
+            if (next === urlSearch) return
+            replaceQuery((p) => {
+                if (next) p.set(ADMIN_PROP_SEARCH, next)
+                else p.delete(ADMIN_PROP_SEARCH)
+                p.delete('page')
+            })
+        }, 300)
+        return () => window.clearTimeout(t)
+    }, [draftSearch, replaceQuery, urlSearch])
+
+    const [minPriceDraft, setMinPriceDraft] = useState('')
+    const [maxPriceDraft, setMaxPriceDraft] = useState('')
+    useEffect(() => {
+        setMinPriceDraft(minPriceUrl != null ? String(minPriceUrl) : '')
+        setMaxPriceDraft(maxPriceUrl != null ? String(maxPriceUrl) : '')
+    }, [minPriceUrl, maxPriceUrl])
+
+    const commitPriceRange = useCallback(() => {
+        const minN = parseOptionalPositiveNumber(minPriceDraft)
+        const maxN = parseOptionalPositiveNumber(maxPriceDraft)
+        replaceQuery((p) => {
+            if (minN != null) p.set(ADMIN_PROP_MIN_PRICE, String(Math.floor(minN)))
+            else p.delete(ADMIN_PROP_MIN_PRICE)
+            if (maxN != null) p.set(ADMIN_PROP_MAX_PRICE, String(Math.floor(maxN)))
+            else p.delete(ADMIN_PROP_MAX_PRICE)
+            p.delete('page')
+        })
+    }, [maxPriceDraft, minPriceDraft, replaceQuery])
+
+    const areaIdForQuery = useMemo(() => {
+        if (!areaSlug) return null
+        const row = areas.find((a) => a.slug === areaSlug)
+        return row?.id ?? null
+    }, [areaSlug, areas])
 
     const agentIdSet = useMemo(() => new Set(users.map((u) => u.id)), [users])
 
-    const [searchQuery, setSearchQuery] = useState('')
-    const [debouncedSearch, setDebouncedSearch] = useState('')
-    useEffect(() => {
-        const t = window.setTimeout(() => setDebouncedSearch(searchQuery), 300)
-        return () => window.clearTimeout(t)
-    }, [searchQuery])
+    const setListFilter = useCallback(
+        (next: ReturnType<typeof parseAdminPropListFilter>) => {
+            replaceQuery((p) => {
+                if (next === 'all') p.delete(ADMIN_PROP_LIST_FILTER)
+                else p.set(ADMIN_PROP_LIST_FILTER, next)
+                p.delete('page')
+            })
+        },
+        [replaceQuery]
+    )
 
-    const prevFilterRef = useRef(filter)
-    useEffect(() => {
-        if (prevFilterRef.current !== filter) {
-            prevFilterRef.current = filter
-            if (page !== 1) setPage(1)
-        }
-    }, [filter, page, setPage])
+    const setAreaSlug = useCallback(
+        (slug: string) => {
+            replaceQuery((p) => {
+                if (slug) p.set(ADMIN_PROP_AREA, slug)
+                else p.delete(ADMIN_PROP_AREA)
+                p.delete('page')
+            })
+        },
+        [replaceQuery]
+    )
 
-    const prevDebouncedRef = useRef(debouncedSearch)
-    useEffect(() => {
-        if (prevDebouncedRef.current !== debouncedSearch) {
-            prevDebouncedRef.current = debouncedSearch
-            if (page !== 1) setPage(1)
-        }
-    }, [debouncedSearch, page, setPage])
+    const setPropertyTypeFilter = useCallback(
+        (value: string) => {
+            replaceQuery((p) => {
+                if (value) p.set(ADMIN_PROP_PROPERTY_TYPE, value)
+                else p.delete(ADMIN_PROP_PROPERTY_TYPE)
+                p.delete('page')
+            })
+        },
+        [replaceQuery]
+    )
+
+    const setDeveloperFilter = useCallback(
+        (id: string) => {
+            replaceQuery((p) => {
+                if (id) p.set(ADMIN_PROP_DEVELOPER_ID, id)
+                else p.delete(ADMIN_PROP_DEVELOPER_ID)
+                p.delete('page')
+            })
+        },
+        [replaceQuery]
+    )
+
+    const clearAdvancedFilters = useCallback(() => {
+        replaceQuery((p) => {
+            p.delete(ADMIN_PROP_SEARCH)
+            p.delete(ADMIN_PROP_AREA)
+            p.delete(ADMIN_PROP_MIN_PRICE)
+            p.delete(ADMIN_PROP_MAX_PRICE)
+            p.delete(ADMIN_PROP_PROPERTY_TYPE)
+            p.delete(ADMIN_PROP_DEVELOPER_ID)
+            p.delete('page')
+        })
+        setDraftSearch('')
+        setMinPriceDraft('')
+        setMaxPriceDraft('')
+    }, [replaceQuery])
 
     const fetchAgentProfiles = useCallback(async () => {
         const { data: profilesData, error: profilesError } = await supabase
@@ -73,6 +190,15 @@ export default function AdminPropertyManagement() {
         if (!profilesError && profilesData) {
             setUsers(profilesData)
         }
+    }, [supabase])
+
+    const fetchAreasAndDevelopers = useCallback(async () => {
+        const [{ data: areaRows, error: areaErr }, { data: devRows, error: devErr }] = await Promise.all([
+            supabase.from('areas').select('id, name, slug').order('name'),
+            supabase.from('developers').select('id, name').order('name'),
+        ])
+        if (!areaErr && areaRows) setAreas(areaRows as AreaRow[])
+        if (!devErr && devRows) setDevelopers(devRows as { id: string; name: string }[])
     }, [supabase])
 
     const fetchPropertiesPage = useCallback(async () => {
@@ -95,18 +221,50 @@ export default function AdminPropertyManagement() {
                 q = q.eq('status', 'draft')
             }
 
-            const trimmed = debouncedSearch.trim().replace(/,/g, '')
+            if (areaSlug) {
+                if (areaIdForQuery) {
+                    q = q.eq('area_id', areaIdForQuery)
+                } else if (areas.length > 0) {
+                    q = q.eq('area_id', NO_MATCH_AREA_ID)
+                }
+            }
+
+            if (propertyTypeParam && PROPERTY_TYPE_VALUES.includes(propertyTypeParam as (typeof PROPERTY_TYPE_VALUES)[number])) {
+                q = q.eq('property_type', propertyTypeParam)
+            }
+
+            if (developerIdParam) {
+                q = q.eq('developer_id', developerIdParam)
+            }
+
+            let minN = minPriceUrl
+            let maxN = maxPriceUrl
+            if (minN != null && maxN != null && minN > maxN) {
+                const t = minN
+                minN = maxN
+                maxN = t
+            }
+            if (minN != null) q = q.gte('list_sort_price', minN)
+            if (maxN != null) q = q.lte('list_sort_price', maxN)
+
+            const trimmed = urlSearch.replace(/,/g, '')
             if (trimmed) {
                 const pattern = `%${escapeIlikePattern(trimmed)}%`
+                const textOr = [
+                    `title.ilike.${pattern}`,
+                    `description.ilike.${pattern}`,
+                    `description_en.ilike.${pattern}`,
+                    `description_th.ilike.${pattern}`,
+                ].join(',')
                 const { data: profMatches } = await supabase
                     .from('profiles')
                     .select('id')
                     .or(`full_name.ilike.${pattern},email.ilike.${pattern}`)
                 const ids = (profMatches ?? []).map((r) => r.id).filter(Boolean)
                 if (ids.length > 0) {
-                    q = q.or(`title.ilike.${pattern},user_id.in.(${ids.join(',')})`)
+                    q = q.or(`${textOr},user_id.in.(${ids.join(',')})`)
                 } else {
-                    q = q.ilike('title', pattern)
+                    q = q.or(textOr)
                 }
             }
 
@@ -134,11 +292,28 @@ export default function AdminPropertyManagement() {
         } finally {
             setLoading(false)
         }
-    }, [supabase, filter, debouncedSearch, page, limit])
+    }, [
+        supabase,
+        filter,
+        urlSearch,
+        page,
+        limit,
+        areaSlug,
+        areaIdForQuery,
+        propertyTypeParam,
+        developerIdParam,
+        minPriceUrl,
+        maxPriceUrl,
+        areas.length,
+    ])
 
     useEffect(() => {
         void fetchAgentProfiles()
     }, [fetchAgentProfiles])
+
+    useEffect(() => {
+        void fetchAreasAndDevelopers()
+    }, [fetchAreasAndDevelopers])
 
     useEffect(() => {
         void fetchPropertiesPage()
@@ -228,76 +403,253 @@ export default function AdminPropertyManagement() {
     const fromRow = totalCount === 0 ? 0 : (page - 1) * limit + 1
     const toRow = totalCount === null ? 0 : Math.min(page * limit, totalCount)
 
+    const adminLocale = 'jp'
+    const hasAdvancedFilters =
+        Boolean(urlSearch) ||
+        Boolean(areaSlug) ||
+        minPriceUrl != null ||
+        maxPriceUrl != null ||
+        Boolean(propertyTypeParam) ||
+        Boolean(developerIdParam)
+
     return (
         <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-100 p-2 md:p-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4 md:gap-6">
-                <div>
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-lg md:text-xl font-black text-navy-secondary">物件承認・管理</h2>
-                        {!loading && totalCount !== null && (
-                            <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
-                                {totalCount}件
-                            </span>
-                        )}
+            <div className="bg-slate-50 border-b border-slate-100 p-2 md:p-8 flex flex-col gap-4 md:gap-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-lg md:text-xl font-black text-navy-secondary">物件承認・管理</h2>
+                            {!loading && totalCount !== null && (
+                                <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
+                                    {totalCount}件
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                            Property Management
+                        </p>
                     </div>
-                    <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Property Management</p>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setFilterPanelOpen((o) => !o)}
+                            className="h-10 border-slate-200 bg-white text-xs font-bold text-navy-secondary shadow-sm hover:bg-slate-50"
+                            aria-expanded={filterPanelOpen}
+                        >
+                            <SlidersHorizontal className="mr-2 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+                            検索・フィルタ
+                            <ChevronDown
+                                className={cn(
+                                    'ml-2 h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200',
+                                    filterPanelOpen && 'rotate-180'
+                                )}
+                                aria-hidden
+                            />
+                        </Button>
+                        <AdminRowsPerPageSelect
+                            id="admin-properties-limit"
+                            value={limit}
+                            onChange={setLimit}
+                            className="sm:min-w-[140px]"
+                        />
+                    </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full xl:w-auto">
-                    <AdminRowsPerPageSelect
-                        id="admin-properties-limit"
-                        value={limit}
-                        onChange={setLimit}
-                        className="order-last md:order-none"
-                    />
-                    {/* Search Bar */}
-                    <div className="relative w-full md:w-64 flex-shrink-0">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="物件名・エージェント名で検索..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] md:text-xs font-bold text-navy-secondary focus:outline-none focus:ring-2 focus:ring-navy-primary/20 transition-all"
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Filter Tabs */}
-                    <div className="flex items-center w-full md:w-auto overflow-hidden">
-                        <div className="flex bg-white p-1 rounded-xl border border-slate-200 w-full md:w-auto">
-                            <button
-                                onClick={() => setFilter('all')}
-                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'all' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
-                            >
-                                すべて
-                            </button>
-                            <button
-                                onClick={() => setFilter('pending')}
-                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-amber-500'}`}
-                            >
-                                承認待ち
-                            </button>
-                            <button
-                                onClick={() => setFilter('active')}
-                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'active' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-500'}`}
-                            >
-                                公開中
-                            </button>
-                            <button
-                                onClick={() => setFilter('draft')}
-                                className={`flex-1 md:flex-none px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${filter === 'draft' ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                下書き
-                            </button>
+                {filterPanelOpen ? (
+                    <div
+                        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-6"
+                        role="region"
+                        aria-label="物件一覧の検索・フィルタ"
+                    >
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            <div className="md:col-span-2 xl:col-span-1">
+                                <label htmlFor="admin-prop-search" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    フリーワード
+                                </label>
+                                <div className="relative">
+                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <Input
+                                        id="admin-prop-search"
+                                        placeholder="物件名・説明・エージェント名など"
+                                        value={draftSearch}
+                                        onChange={(e) => setDraftSearch(e.target.value)}
+                                        className="h-10 pl-9 pr-9 text-xs font-bold"
+                                        autoComplete="off"
+                                    />
+                                    {draftSearch ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setDraftSearch('')
+                                                replaceQuery((p) => {
+                                                    p.delete(ADMIN_PROP_SEARCH)
+                                                    p.delete('page')
+                                                })
+                                            }}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                            aria-label="検索語をクリア"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    ) : null}
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="admin-prop-area" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    エリア
+                                </label>
+                                <Select
+                                    id="admin-prop-area"
+                                    value={areaSlug && areas.some((a) => a.slug === areaSlug) ? areaSlug : ''}
+                                    onChange={(e) => setAreaSlug(e.target.value)}
+                                    className="text-xs font-bold"
+                                >
+                                    <option value="">すべて</option>
+                                    {areas.map((a) => (
+                                        <option key={a.id} value={a.slug}>
+                                            {a.name}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div>
+                                <label htmlFor="admin-prop-type" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    物件タイプ
+                                </label>
+                                <Select
+                                    id="admin-prop-type"
+                                    value={PROPERTY_TYPE_VALUES.includes(propertyTypeParam as (typeof PROPERTY_TYPE_VALUES)[number]) ? propertyTypeParam : ''}
+                                    onChange={(e) => setPropertyTypeFilter(e.target.value)}
+                                    className="text-xs font-bold"
+                                >
+                                    <option value="">すべて</option>
+                                    {PROPERTY_TYPE_VALUES.map((v) => (
+                                        <option key={v} value={v}>
+                                            {getPropertyTypeOptionLabel(v, adminLocale)}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div>
+                                <label htmlFor="admin-prop-developer" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    デベロッパー
+                                </label>
+                                <Select
+                                    id="admin-prop-developer"
+                                    value={developerIdParam && developers.some((d) => d.id === developerIdParam) ? developerIdParam : ''}
+                                    onChange={(e) => setDeveloperFilter(e.target.value)}
+                                    className="text-xs font-bold"
+                                >
+                                    <option value="">すべて</option>
+                                    {developers.map((d) => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.name}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div className="md:col-span-2 xl:col-span-2">
+                                <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    価格帯（list_sort_price・バーツ）
+                                </span>
+                                <div className="flex flex-wrap items-end gap-3">
+                                    <div className="min-w-[120px] flex-1">
+                                        <label htmlFor="admin-prop-minp" className="sr-only">
+                                            最低価格
+                                        </label>
+                                        <Input
+                                            id="admin-prop-minp"
+                                            inputMode="numeric"
+                                            placeholder="最安"
+                                            value={minPriceDraft}
+                                            onChange={(e) => setMinPriceDraft(e.target.value)}
+                                            onBlur={commitPriceRange}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                                            }}
+                                            className="text-xs font-bold"
+                                        />
+                                    </div>
+                                    <span className="pb-2 text-xs font-bold text-slate-400">〜</span>
+                                    <div className="min-w-[120px] flex-1">
+                                        <label htmlFor="admin-prop-maxp" className="sr-only">
+                                            最高価格
+                                        </label>
+                                        <Input
+                                            id="admin-prop-maxp"
+                                            inputMode="numeric"
+                                            placeholder="最高"
+                                            value={maxPriceDraft}
+                                            onChange={(e) => setMaxPriceDraft(e.target.value)}
+                                            onBlur={commitPriceRange}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                                            }}
+                                            className="text-xs font-bold"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={commitPriceRange}
+                                        className="h-10 shrink-0 border-slate-200 bg-slate-50 text-xs font-bold text-navy-secondary hover:bg-slate-100"
+                                    >
+                                        価格を反映
+                                    </Button>
+                                </div>
+                                <p className="mt-1.5 text-[10px] leading-relaxed text-slate-400">
+                                    一覧ソート用の換算価格に対して絞り込みます。入力後はフォーカスを外すか「価格を反映」を押してください。
+                                </p>
+                            </div>
                         </div>
+                        <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={!hasAdvancedFilters}
+                                onClick={clearAdvancedFilters}
+                                className="h-9 border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                            >
+                                フィルタをクリア
+                            </Button>
+                        </div>
+                    </div>
+                ) : null}
+
+                <div className="flex w-full items-center overflow-hidden">
+                    <div className="flex w-full flex-wrap gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:flex-nowrap sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={() => setListFilter('all')}
+                            className={`min-h-[40px] flex-1 rounded-lg px-3 py-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 md:text-xs ${filter === 'all' ? 'bg-navy-primary text-white shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
+                        >
+                            すべて
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setListFilter('pending')}
+                            className={`min-h-[40px] flex-1 rounded-lg px-3 py-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 md:text-xs ${filter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-amber-500'}`}
+                        >
+                            承認待ち
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setListFilter('active')}
+                            className={`min-h-[40px] flex-1 rounded-lg px-3 py-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 md:text-xs ${filter === 'active' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-500 hover:text-emerald-500'}`}
+                        >
+                            公開中
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setListFilter('draft')}
+                            className={`min-h-[40px] flex-1 rounded-lg px-3 py-2 text-[10px] font-bold transition-all sm:flex-none sm:px-4 md:text-xs ${filter === 'draft' ? 'bg-slate-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            下書き
+                        </button>
                     </div>
                 </div>
             </div>
