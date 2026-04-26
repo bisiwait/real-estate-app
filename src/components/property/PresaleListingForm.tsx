@@ -30,6 +30,7 @@ import { Globe } from 'lucide-react'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import { finiteCoord } from '@/lib/google-maps-url'
 import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
+import { checkPropertySaveDuplicates } from '@/lib/supabase/property-save-duplicate-guard'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -523,6 +524,15 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         try {
             const { data: { user }, error: authError } = await supabase.auth.getUser()
             if (authError || !user) throw new Error('Unauthorized')
+
+            const dup = await checkPropertySaveDuplicates(supabase, {
+                title: formData.title,
+                excludePropertyId: mode === 'edit' ? initialData?.id ?? null : null,
+                description: formData.description,
+                checkDescriptionPrefix: true,
+            })
+            if (!dup.ok) throw new Error(dup.message)
+
             const targetStatus =
                 mode === 'edit'
                     ? (initialData?.status || (isAdmin ? 'published' : 'pending'))

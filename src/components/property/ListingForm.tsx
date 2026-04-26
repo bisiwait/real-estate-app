@@ -46,6 +46,7 @@ const CoordinatePicker = dynamic(() => import('./CoordinatePicker'), {
 })
 
 import { getErrorMessage } from '@/lib/utils/errors'
+import { checkPropertySaveDuplicates } from '@/lib/supabase/property-save-duplicate-guard'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import { finiteCoord } from '@/lib/google-maps-url'
 import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
@@ -596,6 +597,14 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             const { data: { user }, error: authError } = await supabase.auth.getUser()
             if (authError) throw authError
             if (!user) throw new Error('Unauthorized')
+
+            const dup = await checkPropertySaveDuplicates(supabase, {
+                title: formData.title,
+                excludePropertyId: mode === 'edit' ? initialData?.id ?? null : null,
+                description: formData.description,
+                checkDescriptionPrefix: true,
+            })
+            if (!dup.ok) throw new Error(dup.message)
 
             let finalProjectId = formData.project_id
 

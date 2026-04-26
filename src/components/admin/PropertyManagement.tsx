@@ -40,15 +40,34 @@ import {
     Filter,
     ChevronDown,
     SlidersHorizontal,
+    CircleDollarSign,
+    ImageOff,
+    Building2,
+    FileWarning,
+    Copy,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
 import AdminPropertyListSkeleton from '@/components/admin/AdminPropertyListSkeleton'
+import AdminHoverTip from '@/components/admin/AdminHoverTip'
+import {
+    ADMIN_PROPERTY_MIN_DESCRIPTION_CHARS,
+    getAdminPropertyQualityFlags,
+} from '@/lib/admin/property-quality'
+import { fetchAdminDuplicateTitlesOnPage } from '@/lib/supabase/admin-duplicate-titles'
 import { cn } from '@/lib/utils'
 
 
 type AreaRow = { id: string; name: string; slug: string }
+
+type AdminQualityStatsRow = {
+    missing_price?: number
+    missing_image?: number
+    no_developer?: number
+    short_description?: number
+    any_issue?: number
+}
 
 export default function AdminPropertyManagement() {
     const searchParams = useSearchParams()
@@ -66,6 +85,8 @@ export default function AdminPropertyManagement() {
     const [areas, setAreas] = useState<AreaRow[]>([])
     const [developers, setDevelopers] = useState<{ id: string; name: string }[]>([])
     const [filterPanelOpen, setFilterPanelOpen] = useState(true)
+    const [qualityStats, setQualityStats] = useState<AdminQualityStatsRow | null>(null)
+    const [duplicateTitleSet, setDuplicateTitleSet] = useState<Set<string>>(() => new Set())
     const supabase = createClient()
     const { limit, page, setPage, setLimit, replaceQuery } = useAdminTablePagination()
 
@@ -194,6 +215,17 @@ export default function AdminPropertyManagement() {
         }
     }, [supabase])
 
+    const refreshQualityStats = useCallback(async () => {
+        const { data, error } = await supabase.rpc('admin_property_quality_stats')
+        if (error) {
+            console.warn('[admin properties] quality stats', error.message)
+            return
+        }
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+            setQualityStats(data as AdminQualityStatsRow)
+        }
+    }, [supabase])
+
     const fetchAreasAndDevelopers = useCallback(async () => {
         const [{ data: areaRows, error: areaErr }, { data: devRows, error: devErr }] = await Promise.all([
             supabase.from('areas').select('id, name, slug').order('name'),
@@ -269,6 +301,26 @@ export default function AdminPropertyManagement() {
     }, [fetchPropertiesPage])
 
     useEffect(() => {
+        void refreshQualityStats()
+    }, [refreshQualityStats])
+
+    useEffect(() => {
+        if (listFetchBusy || properties.length === 0) {
+            setDuplicateTitleSet(new Set())
+            return
+        }
+        let cancelled = false
+        const titles = properties.map((p: { title?: string }) => String(p.title ?? ''))
+        void (async () => {
+            const dup = await fetchAdminDuplicateTitlesOnPage(supabase, titles)
+            if (!cancelled) setDuplicateTitleSet(dup)
+        })()
+        return () => {
+            cancelled = true
+        }
+    }, [listFetchBusy, properties, supabase])
+
+    useEffect(() => {
         if (totalCount === null) return
         const maxP = maxPageForCount(totalCount, limit)
         if (page > maxP) setPage(maxP)
@@ -293,6 +345,7 @@ export default function AdminPropertyManagement() {
                 await supabase.from('properties').delete().eq('id', id)
             }
             await fetchPropertiesPage()
+            await refreshQualityStats()
         } catch (err: any) {
             console.error('Admin action error:', err)
             setErrorMessage(getErrorMessage(err))
@@ -309,6 +362,7 @@ export default function AdminPropertyManagement() {
             const { error } = await supabase.from('properties').update({ user_id: newUserId || null }).eq('id', id)
             if (error) throw error
             await fetchPropertiesPage()
+            await refreshQualityStats()
             setSelectedUsers(prev => {
                 const next = { ...prev }
                 delete next[id]
@@ -334,6 +388,7 @@ export default function AdminPropertyManagement() {
             const { error } = await supabase.from('properties').update(updates).eq('id', id)
             if (error) throw error
             await fetchPropertiesPage()
+            await refreshQualityStats()
             setSelectedStatuses((prev: Record<string, string>) => {
                 const next = { ...prev }
                 delete next[id]
@@ -410,6 +465,22 @@ export default function AdminPropertyManagement() {
                         />
                     </div>
                 </div>
+
+                {qualityStats != null && typeof qualityStats.any_issue === 'number' ? (
+                    <div className="rounded-2xl border border-amber-200/90 bg-amber-50/95 px-4 py-3 text-xs text-amber-950 shadow-sm md:px-5 md:py-4">
+                        <p className="font-black text-navy-secondary">
+                            要修正物件：{qualityStats.any_issue} 件
+                        </p>
+                        <p className="mt-1 font-bold leading-relaxed text-amber-900/95">
+                            画像なし {qualityStats.missing_image ?? 0} 件、価格なし（price 未設定） {qualityStats.missing_price ?? 0} 件、デベロッパー未設定{' '}
+                            {qualityStats.no_developer ?? 0} 件、説明不足（{ADMIN_PROPERTY_MIN_DESCRIPTION_CHARS} 文字以下・日英泰の最大）{' '}
+                            {qualityStats.short_description ?? 0} 件
+                        </p>
+                        <p className="mt-1 text-[10px] font-bold leading-relaxed text-amber-900/75">
+                            全物件を対象に DB 側で集計しています（承認タブの絞り込みは反映されません）。
+                        </p>
+                    </div>
+                ) : null}
 
                 {filterPanelOpen ? (
                     <div
@@ -631,6 +702,8 @@ export default function AdminPropertyManagement() {
                     <div className="relative">
                     {properties.map((property) => {
                         const currentStatus = selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status
+                        const qf = getAdminPropertyQualityFlags(property)
+                        const titleDup = duplicateTitleSet.has(String(property.title ?? ''))
                         return (
                             <div key={property.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors">
                                 {/* Mobile & Desktop unified layout */}
@@ -662,7 +735,68 @@ export default function AdminPropertyManagement() {
                                             {property.status === 'pending' && <span className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-[8px] font-black">承認待ち</span>}
                                             {property.status === 'draft' && <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[8px] font-black">下書き</span>}
                                         </div>
-                                        <p className="text-sm font-black text-navy-secondary truncate">{property.title}</p>
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                            <p className="min-w-0 flex-1 truncate text-sm font-black text-navy-secondary">{property.title}</p>
+                                            <div className="flex flex-shrink-0 flex-wrap items-center gap-1">
+                                                {qf.missingPrice ? (
+                                                    <AdminHoverTip tip="DB の price が 0 または未設定です。賃料・売価とは別列のため、必要に応じて price を入力してください。">
+                                                        <span
+                                                            tabIndex={0}
+                                                            className="inline-flex items-center gap-0.5 rounded border border-amber-200 bg-amber-50 px-1 py-0.5 text-[8px] font-black text-amber-800"
+                                                        >
+                                                            <CircleDollarSign className="h-3 w-3 shrink-0" aria-hidden />
+                                                            価格
+                                                        </span>
+                                                    </AdminHoverTip>
+                                                ) : null}
+                                                {qf.missingImage ? (
+                                                    <AdminHoverTip tip="画像が未設定か、先頭画像が空です。">
+                                                        <span
+                                                            tabIndex={0}
+                                                            className="inline-flex items-center gap-0.5 rounded border border-slate-200 bg-slate-100 px-1 py-0.5 text-[8px] font-black text-slate-700"
+                                                        >
+                                                            <ImageOff className="h-3 w-3 shrink-0" aria-hidden />
+                                                            画像
+                                                        </span>
+                                                    </AdminHoverTip>
+                                                ) : null}
+                                                {qf.noDeveloper ? (
+                                                    <AdminHoverTip tip="developer_id が未設定です。">
+                                                        <span
+                                                            tabIndex={0}
+                                                            className="inline-flex items-center gap-0.5 rounded border border-violet-200 bg-violet-50 px-1 py-0.5 text-[8px] font-black text-violet-800"
+                                                        >
+                                                            <Building2 className="h-3 w-3 shrink-0" aria-hidden />
+                                                            Dev
+                                                        </span>
+                                                    </AdminHoverTip>
+                                                ) : null}
+                                                {qf.shortDescription ? (
+                                                    <AdminHoverTip
+                                                        tip={`説明文（日本語・英語・タイ語のいずれかの最大長）が ${ADMIN_PROPERTY_MIN_DESCRIPTION_CHARS} 文字以下です。`}
+                                                    >
+                                                        <span
+                                                            tabIndex={0}
+                                                            className="inline-flex items-center gap-0.5 rounded border border-sky-200 bg-sky-50 px-1 py-0.5 text-[8px] font-black text-sky-800"
+                                                        >
+                                                            <FileWarning className="h-3 w-3 shrink-0" aria-hidden />
+                                                            説明
+                                                        </span>
+                                                    </AdminHoverTip>
+                                                ) : null}
+                                                {titleDup ? (
+                                                    <AdminHoverTip tip="他の物件と物件名が完全に一致しています。誤複製の可能性があります。">
+                                                        <span
+                                                            tabIndex={0}
+                                                            className="inline-flex items-center gap-0.5 rounded border border-rose-200 bg-rose-50 px-1 py-0.5 text-[8px] font-black text-rose-800"
+                                                        >
+                                                            <Copy className="h-3 w-3 shrink-0" aria-hidden />
+                                                            同名
+                                                        </span>
+                                                    </AdminHoverTip>
+                                                ) : null}
+                                            </div>
+                                        </div>
                                         <div className="flex flex-wrap items-center gap-2 mt-1">
                                             {property.is_for_rent && property.rent_price && (
                                                 <span className="text-[10px] font-bold text-indigo-600">{property.rent_price.toLocaleString()} ฿/月</span>
