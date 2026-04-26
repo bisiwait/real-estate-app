@@ -607,6 +607,11 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             if (!dup.ok) throw new Error(dup.message)
 
             let finalProjectId = formData.project_id
+            const linkedProject = !showNewProjectForm
+                ? projects.find((p) => p.id === finalProjectId)
+                : undefined
+            const effectiveDeveloperId =
+                (showNewProjectForm ? projectForm.developer_id : (linkedProject as Project | undefined)?.developer_id) || null
 
             if (showNewProjectForm) {
                 if (!projectForm.name || !projectForm.area_id) {
@@ -656,6 +661,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                         sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
                         area_id: formData.area_id || null,
                         project_id: finalProjectId || null,
+                        developer_id: effectiveDeveloperId,
                         building_name: formData.building_name,
                         project_name: formData.project_name,
                         images: [],
@@ -715,6 +721,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
                     area_id: formData.area_id || null,
                     project_id: finalProjectId || null,
+                    developer_id: effectiveDeveloperId,
                     building_name: formData.building_name,
                     project_name: formData.project_name,
                     images: finalImages,

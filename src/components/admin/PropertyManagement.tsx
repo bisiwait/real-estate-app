@@ -742,8 +742,13 @@ export default function AdminPropertyManagement() {
                         const qf = getAdminPropertyQualityFlags(property)
                         const titleDup = duplicateTitleSet.has(String(property.title ?? ''))
                         const brokenStorage = brokenStorageImageIds.has(String(property.id))
-                        const devRecommend = shouldRecommendDeveloperForProperty(property)
-                        const auditImportRed = Boolean(qf.noDeveloper || brokenStorage || titleDup)
+                        const projectDevId = String((property.project?.developer_id ?? '')).trim()
+                        const missingDeveloperEffective = qf.noDeveloper && !projectDevId
+                        const devRecommend = shouldRecommendDeveloperForProperty({
+                            ...property,
+                            developer_id: property.developer_id ?? projectDevId ?? null,
+                        })
+                        const auditImportRed = Boolean(missingDeveloperEffective || brokenStorage || titleDup)
                         return (
                             <div key={property.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors">
                                 {/* Mobile & Desktop unified layout */}
@@ -812,7 +817,7 @@ export default function AdminPropertyManagement() {
                                                         </span>
                                                     </AdminHoverTip>
                                                 ) : null}
-                                                {qf.noDeveloper ? (
+                                                {missingDeveloperEffective ? (
                                                     <AdminHoverTip tip="developer_id が未設定です。CSV 直インポート時に抜けやすい項目です。">
                                                         <span
                                                             tabIndex={0}

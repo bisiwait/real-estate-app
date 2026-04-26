@@ -543,6 +543,11 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     : isAdmin
 
             let finalProjectId = formData.project_id
+            const linkedProject = !showNewProjectForm
+                ? projects.find((p) => p.id === finalProjectId)
+                : undefined
+            const effectiveDeveloperId =
+                (showNewProjectForm ? projectForm.developer_id : linkedProject?.developer_id) || null
 
             if (showNewProjectForm) {
                 if (!projectForm.name || !formData.area_id) {
@@ -560,6 +565,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
                         total_buildings: projectForm.total_buildings ? parseInt(projectForm.total_buildings as string) : null,
                         developer: projectForm.developer,
+                        developer_id: projectForm.developer_id || null,
                         latitude: projectForm.latitude,
                         longitude: projectForm.longitude,
                         google_place_id: projectForm.google_place_id?.trim() || null,
@@ -589,6 +595,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         sale_price: parseFloat(formData.sale_price),
                         area_id: formData.area_id || null,
                         project_id: finalProjectId || null,
+                        developer_id: effectiveDeveloperId,
                         building_name: formData.building_name,
                         project_name: formData.project_name,
                         images: [],
@@ -611,7 +618,6 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                         land_area: formData.land_area,
                         total_units: formData.total_units ? parseInt(formData.total_units) : null,
                         total_buildings: formData.total_buildings ? parseInt(formData.total_buildings) : null,
-                        developer_id: projectForm.developer_id || null,
                         has_bathtub: formData.has_bathtub,
                         has_washlet: formData.has_washlet,
                         allows_pets: formData.allows_pets,
@@ -645,6 +651,7 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                     sale_price: parseFloat(formData.sale_price),
                     area_id: formData.area_id || null,
                     project_id: finalProjectId || null,
+                    developer_id: effectiveDeveloperId,
                     building_name: formData.building_name,
                     project_name: formData.project_name,
                     images: finalImages,

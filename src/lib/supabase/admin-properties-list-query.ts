@@ -79,7 +79,7 @@ export async function fetchAdminPropertiesPage(
 
     let q = supabase
         .from('properties')
-        .select('*, profile:profiles!properties_user_id_fkey(id, full_name, email)', {
+        .select('*, profile:profiles!properties_user_id_fkey(id, full_name, email), project:projects(id, developer_id)', {
             count: 'exact',
             head: false,
         })
@@ -167,8 +167,10 @@ export async function fetchAdminPropertiesPage(
     const normalized = list.map((property) => {
         const embedded = property.profile
         const profile = Array.isArray(embedded) ? embedded[0] : embedded
-        const { profile: _p, ...rest } = property
-        return { ...rest, profile } as AdminPropertyRowWithProfile
+        const embeddedProject = (property as { project?: unknown }).project
+        const project = Array.isArray(embeddedProject) ? embeddedProject[0] : embeddedProject
+        const { profile: _p, project: _pj, ...rest } = property as AdminPropertyRowWithProfile & { project?: unknown }
+        return { ...rest, profile, project } as AdminPropertyRowWithProfile
     })
 
     return {
