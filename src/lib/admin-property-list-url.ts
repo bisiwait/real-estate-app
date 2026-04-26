@@ -1,5 +1,8 @@
 /** 管理者「物件承認・管理」一覧の URL クエリ用 */
 
+/** フリーワードを URL に反映するまでの待ち（ms）。この間は Supabase 一覧クエリを走らせない。 */
+export const ADMIN_PROP_SEARCH_DEBOUNCE_MS = 400
+
 export const ADMIN_PROP_SEARCH = 'search'
 export const ADMIN_PROP_AREA = 'area'
 export const ADMIN_PROP_MIN_PRICE = 'minPrice'

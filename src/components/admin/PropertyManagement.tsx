@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { escapeIlikePattern, maxPageForCount } from '@/lib/admin-list-url'
+import { maxPageForCount } from '@/lib/admin-list-url'
 import {
     ADMIN_PROP_AREA,
     ADMIN_PROP_DEVELOPER_ID,
@@ -12,10 +12,16 @@ import {
     ADMIN_PROP_MIN_PRICE,
     ADMIN_PROP_PROPERTY_TYPE,
     ADMIN_PROP_SEARCH,
+    ADMIN_PROP_SEARCH_DEBOUNCE_MS,
     parseAdminPropListFilter,
     parseOptionalPositiveNumber,
     parseOptionalUuid,
 } from '@/lib/admin-property-list-url'
+import {
+    ADMIN_PROPERTY_TYPE_VALUES,
+    fetchAdminPropertiesPage,
+    resolveAdminPropertyAreaFilter,
+} from '@/lib/supabase/admin-properties-list-query'
 import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
 import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import { Button } from '@/components/ui/button'
@@ -38,15 +44,11 @@ import {
 import Link from 'next/link'
 import { getErrorMessage } from '@/lib/utils/errors'
 import PropertyThumbnail from '@/components/property/PropertyThumbnail'
+import AdminPropertyListSkeleton from '@/components/admin/AdminPropertyListSkeleton'
 import { cn } from '@/lib/utils'
 
 
 type AreaRow = { id: string; name: string; slug: string }
-
-const PROPERTY_TYPE_VALUES = ['Condo', 'House', 'Townhouse', 'Commercial'] as const
-
-/** 存在しない area slug 指定時に全件ヒットさせないためのダミー UUID */
-const NO_MATCH_AREA_ID = '00000000-0000-4000-8000-000000000001'
 
 export default function AdminPropertyManagement() {
     const searchParams = useSearchParams()
@@ -54,7 +56,11 @@ export default function AdminPropertyManagement() {
     const [users, setUsers] = useState<any[]>([])
     const [selectedUsers, setSelectedUsers] = useState<Record<string, string>>({})
     const [selectedStatuses, setSelectedStatuses] = useState<Record<string, string>>({})
-    const [loading, setLoading] = useState(true)
+    /** 一覧の Supabase 取得中（ページ・フィルタ変更時）。UI はスケルトンで応答性を維持 */
+    const [listFetchBusy, setListFetchBusy] = useState(true)
+    /** 承認・削除などミューテーション中（一覧と重ならないよう別フラグ） */
+    const [mutationBusy, setMutationBusy] = useState(false)
+    const listRequestIdRef = useRef(0)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [totalCount, setTotalCount] = useState<number | null>(null)
     const [areas, setAreas] = useState<AreaRow[]>([])
@@ -89,7 +95,7 @@ export default function AdminPropertyManagement() {
                 else p.delete(ADMIN_PROP_SEARCH)
                 p.delete('page')
             })
-        }, 300)
+        }, ADMIN_PROP_SEARCH_DEBOUNCE_MS)
         return () => window.clearTimeout(t)
     }, [draftSearch, replaceQuery, urlSearch])
 
@@ -112,11 +118,7 @@ export default function AdminPropertyManagement() {
         })
     }, [maxPriceDraft, minPriceDraft, replaceQuery])
 
-    const areaIdForQuery = useMemo(() => {
-        if (!areaSlug) return null
-        const row = areas.find((a) => a.slug === areaSlug)
-        return row?.id ?? null
-    }, [areaSlug, areas])
+    const areaResolved = useMemo(() => resolveAdminPropertyAreaFilter(areaSlug, areas), [areaSlug, areas])
 
     const agentIdSet = useMemo(() => new Set(users.map((u) => u.id)), [users])
 
@@ -202,75 +204,28 @@ export default function AdminPropertyManagement() {
     }, [supabase])
 
     const fetchPropertiesPage = useCallback(async () => {
-        setLoading(true)
+        if (areaResolved.kind === 'wait_areas' && areaSlug.trim()) {
+            setListFetchBusy(true)
+            return
+        }
+
+        const reqId = ++listRequestIdRef.current
+        setListFetchBusy(true)
         setErrorMessage(null)
         try {
-            let q = supabase
-                .from('properties')
-                .select(
-                    '*, profile:profiles!properties_user_id_fkey(id, full_name, email)',
-                    { count: 'exact', head: false }
-                )
-                .order('created_at', { ascending: false })
+            const { rows, count, error } = await fetchAdminPropertiesPage(supabase, {
+                listFilter: filter,
+                urlSearch,
+                area: areaResolved,
+                propertyTypeParam,
+                developerIdParam,
+                minPriceUrl,
+                maxPriceUrl,
+                page,
+                limit,
+            })
 
-            if (filter === 'pending') {
-                q = q.or('is_approved.eq.false,is_approved.is.null,status.eq.pending')
-            } else if (filter === 'active') {
-                q = q.eq('is_approved', true).eq('status', 'published')
-            } else if (filter === 'draft') {
-                q = q.eq('status', 'draft')
-            }
-
-            if (areaSlug) {
-                if (areaIdForQuery) {
-                    q = q.eq('area_id', areaIdForQuery)
-                } else if (areas.length > 0) {
-                    q = q.eq('area_id', NO_MATCH_AREA_ID)
-                }
-            }
-
-            if (propertyTypeParam && PROPERTY_TYPE_VALUES.includes(propertyTypeParam as (typeof PROPERTY_TYPE_VALUES)[number])) {
-                q = q.eq('property_type', propertyTypeParam)
-            }
-
-            if (developerIdParam) {
-                q = q.eq('developer_id', developerIdParam)
-            }
-
-            let minN = minPriceUrl
-            let maxN = maxPriceUrl
-            if (minN != null && maxN != null && minN > maxN) {
-                const t = minN
-                minN = maxN
-                maxN = t
-            }
-            if (minN != null) q = q.gte('list_sort_price', minN)
-            if (maxN != null) q = q.lte('list_sort_price', maxN)
-
-            const trimmed = urlSearch.replace(/,/g, '')
-            if (trimmed) {
-                const pattern = `%${escapeIlikePattern(trimmed)}%`
-                const textOr = [
-                    `title.ilike.${pattern}`,
-                    `description.ilike.${pattern}`,
-                    `description_en.ilike.${pattern}`,
-                    `description_th.ilike.${pattern}`,
-                ].join(',')
-                const { data: profMatches } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .or(`full_name.ilike.${pattern},email.ilike.${pattern}`)
-                const ids = (profMatches ?? []).map((r) => r.id).filter(Boolean)
-                if (ids.length > 0) {
-                    q = q.or(`${textOr},user_id.in.(${ids.join(',')})`)
-                } else {
-                    q = q.or(textOr)
-                }
-            }
-
-            const from = (page - 1) * limit
-            const to = from + limit - 1
-            const { data: rows, error, count } = await q.range(from, to)
+            if (reqId !== listRequestIdRef.current) return
 
             if (error) {
                 console.error('Fetch properties error:', error)
@@ -280,17 +235,12 @@ export default function AdminPropertyManagement() {
                 return
             }
 
-            const list = rows ?? []
-            const normalized = list.map((property: any) => {
-                const embedded = property.profile
-                const profile = Array.isArray(embedded) ? embedded[0] : embedded
-                const { profile: _p, ...rest } = property
-                return { ...rest, profile }
-            })
-            setProperties(normalized)
-            setTotalCount(typeof count === 'number' ? count : normalized.length)
+            setProperties(rows as any[])
+            setTotalCount(count ?? 0)
         } finally {
-            setLoading(false)
+            if (reqId === listRequestIdRef.current) {
+                setListFetchBusy(false)
+            }
         }
     }, [
         supabase,
@@ -299,12 +249,11 @@ export default function AdminPropertyManagement() {
         page,
         limit,
         areaSlug,
-        areaIdForQuery,
+        areaResolved,
         propertyTypeParam,
         developerIdParam,
         minPriceUrl,
         maxPriceUrl,
-        areas.length,
     ])
 
     useEffect(() => {
@@ -330,7 +279,7 @@ export default function AdminPropertyManagement() {
             if (!confirm('削除しますか？この処理をすると戻せません。')) return
         }
 
-        setLoading(true)
+        setMutationBusy(true)
         try {
             if (action === 'approve') {
                 await supabase.from('properties').update({ is_approved: true, status: 'published' }).eq('id', id)
@@ -348,15 +297,14 @@ export default function AdminPropertyManagement() {
             console.error('Admin action error:', err)
             setErrorMessage(getErrorMessage(err))
         } finally {
-
-            setLoading(false)
+            setMutationBusy(false)
         }
     }
 
     const handleAssignUser = async (id: string, newUserId: string) => {
         if (!confirm('掲載エージェントを変更しますか？')) return
 
-        setLoading(true)
+        setMutationBusy(true)
         try {
             const { error } = await supabase.from('properties').update({ user_id: newUserId || null }).eq('id', id)
             if (error) throw error
@@ -369,12 +317,13 @@ export default function AdminPropertyManagement() {
         } catch (err: any) {
             console.error('Assign user error:', err)
             setErrorMessage(getErrorMessage(err))
-            setLoading(false)
+        } finally {
+            setMutationBusy(false)
         }
     }
 
     const handleStatusChange = async (id: string, newStatus: string) => {
-        setLoading(true)
+        setMutationBusy(true)
         try {
             const updates: any = { status: newStatus }
             if (newStatus === 'published') {
@@ -394,7 +343,7 @@ export default function AdminPropertyManagement() {
             console.error('Status change error:', err)
             setErrorMessage(getErrorMessage(err))
         } finally {
-            setLoading(false)
+            setMutationBusy(false)
         }
     }
 
@@ -419,9 +368,14 @@ export default function AdminPropertyManagement() {
                     <div>
                         <div className="flex items-center gap-3">
                             <h2 className="text-lg md:text-xl font-black text-navy-secondary">物件承認・管理</h2>
-                            {!loading && totalCount !== null && (
-                                <span className="bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
-                                    {totalCount}件
+                            {(totalCount !== null || listFetchBusy) && (
+                                <span
+                                    className={cn(
+                                        'bg-navy-primary/10 text-navy-primary px-3 py-1 rounded-full text-[10px] md:text-xs font-bold',
+                                        listFetchBusy && 'animate-pulse opacity-80'
+                                    )}
+                                >
+                                    {totalCount === null ? '…' : `${totalCount}件`}
                                 </span>
                             )}
                         </div>
@@ -520,12 +474,18 @@ export default function AdminPropertyManagement() {
                                 </label>
                                 <Select
                                     id="admin-prop-type"
-                                    value={PROPERTY_TYPE_VALUES.includes(propertyTypeParam as (typeof PROPERTY_TYPE_VALUES)[number]) ? propertyTypeParam : ''}
+                                    value={
+                                        ADMIN_PROPERTY_TYPE_VALUES.includes(
+                                            propertyTypeParam as (typeof ADMIN_PROPERTY_TYPE_VALUES)[number]
+                                        )
+                                            ? propertyTypeParam
+                                            : ''
+                                    }
                                     onChange={(e) => setPropertyTypeFilter(e.target.value)}
                                     className="text-xs font-bold"
                                 >
                                     <option value="">すべて</option>
-                                    {PROPERTY_TYPE_VALUES.map((v) => (
+                                    {ADMIN_PROPERTY_TYPE_VALUES.map((v) => (
                                         <option key={v} value={v}>
                                             {getPropertyTypeOptionLabel(v, adminLocale)}
                                         </option>
@@ -660,18 +620,16 @@ export default function AdminPropertyManagement() {
                         エラーが発生しました: {errorMessage}
                     </div>
                 )}
-                {loading && properties.length === 0 ? (
-                    <div className="py-20 flex flex-col items-center justify-center text-slate-400">
-                        <Loader2 className="w-10 h-10 text-navy-primary/20 animate-spin mb-4" />
-                        <p className="font-bold">読み込み中...</p>
-                    </div>
-                ) : !loading && totalCount === 0 ? (
+                {listFetchBusy ? (
+                    <AdminPropertyListSkeleton rows={Math.min(limit, 10)} />
+                ) : totalCount === 0 ? (
                     <div className="py-20 flex flex-col items-center justify-center text-slate-400">
                         <Filter className="w-10 h-10 text-slate-200 mb-4" />
                         <p className="font-bold">表示する物件がありません</p>
                     </div>
                 ) : (
-                    properties.map((property) => {
+                    <div className="relative">
+                    {properties.map((property) => {
                         const currentStatus = selectedStatuses[property.id] !== undefined ? selectedStatuses[property.id] : property.status
                         return (
                             <div key={property.id} className="p-4 md:p-5 hover:bg-slate-50/50 transition-colors">
@@ -822,12 +780,22 @@ export default function AdminPropertyManagement() {
                                 </div>
                             </div>
                         )
-                    })
+                    })}
+                    {mutationBusy ? (
+                        <div
+                            className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/60 backdrop-blur-[1px]"
+                            aria-live="polite"
+                            aria-busy
+                        >
+                            <Loader2 className="h-10 w-10 animate-spin text-navy-primary" aria-hidden />
+                        </div>
+                    ) : null}
+                    </div>
                 )}
             </div>
 
             {/* Pagination Controls */}
-            {!loading && totalCount !== null && totalCount > 0 && totalPages > 1 && (
+            {!listFetchBusy && totalCount !== null && totalCount > 0 && totalPages > 1 && (
                 <div className="flex flex-col gap-3 border-t border-slate-100 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <span className="text-xs font-bold text-slate-400">
                         全 {totalCount} 件中 {fromRow} - {toRow} 件を表示
