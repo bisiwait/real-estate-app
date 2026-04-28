@@ -24,7 +24,8 @@ function filtersToCacheKeyParts(f: PropertyListFilters): string[] {
 }
 
 /**
- * 物件一覧の初回ページを 60 秒 ISR 相当でキャッシュ（フィルタ組み合わせごと）
+ * 物件一覧の初回ページを ISR 相当でキャッシュ（フィルタ組み合わせごと）
+ * ページの `export const revalidate` と揃え、Data Cache 経由の再検証間隔を統一する
  */
 export async function getCachedPropertiesListFirstPage(
     searchParams: Record<string, string | string[] | undefined>
@@ -48,7 +49,7 @@ export async function getCachedPropertiesListFirstPage(
             }
         },
         keyParts,
-        { revalidate: 60 }
+        { revalidate: 3600 }
     )
 
     return run()

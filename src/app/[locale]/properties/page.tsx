@@ -3,7 +3,8 @@ import { getDictionary } from "@/lib/i18n/get-dictionary";
 import PropertiesClient from "./PropertiesClient";
 import { getCachedPropertiesListFirstPage } from "@/lib/services/propertiesListCache";
 
-export const revalidate = 60;
+/** ISR: 一覧のサーバー取得（初回ページ＋ unstable_cache）を 1 時間単位で再検証 */
+export const revalidate = 3600;
 
 export default async function PropertiesPage({
     params,

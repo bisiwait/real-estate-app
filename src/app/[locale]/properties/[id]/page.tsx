@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
-import { createStaticClientForHostname } from '@/lib/supabase/static'
+import { createStaticClient, createStaticClientForHostname } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry-url'
@@ -13,7 +13,36 @@ import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 import { resolvePropertyImageUrl, PROPERTY_PLACEHOLDER_IMAGE } from '@/lib/property-image-url'
 import { getSupabasePublicConfig } from '@/lib/env/supabase-data-plane'
 
-export const revalidate = 60
+/** ISR: 1時間ごとに静的ページを再検証（Edge からキャッシュ HTML を返しやすくする） */
+export const revalidate = 3600
+
+/** ビルド時に未生成の ID へのアクセスも許可（初回オンデマンド生成後、revalidate に従って更新） */
+export const dynamicParams = true
+
+/**
+ * 公開・承認済みの最新物件をビルド時プリレンダー（× layout の locale 組み合わせ）
+ */
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+    try {
+        const supabase = createStaticClient()
+        const { data, error } = await supabase
+            .from('properties')
+            .select('id')
+            .eq('status', 'published')
+            .eq('is_approved', true)
+            .order('created_at', { ascending: false })
+            .limit(120)
+
+        if (error) {
+            console.error('[properties/[id] generateStaticParams]', error)
+            return []
+        }
+        return (data ?? []).map((row: { id: string }) => ({ id: row.id }))
+    } catch (e) {
+        console.error('[properties/[id] generateStaticParams]', e)
+        return []
+    }
+}
 
 async function fetchProperty(id: string, hostname: string | null) {
     const supabase = createStaticClientForHostname(hostname)
