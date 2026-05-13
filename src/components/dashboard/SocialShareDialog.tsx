@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useRef, useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import Script from 'next/script'
 import { X, Download, Share2, Facebook, MessageCircle, Crown, FileText, CheckCircle, Copy, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
@@ -35,6 +36,8 @@ interface SocialShareDialogProps {
 }
 
 export default function SocialShareDialog({ isOpen, onClose, propertyContext }: SocialShareDialogProps) {
+  const params = useParams()
+  const shareLocale = ((params?.locale as string) || 'jp').trim() || 'jp'
   const bannerRef = useRef<HTMLDivElement>(null)
   const captureRef = useRef<HTMLDivElement>(null)
   const previewContainerRef = useRef<HTMLDivElement>(null)
@@ -93,7 +96,10 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
 
   if (!isOpen || !mounted) return null
 
-  const propertyUrl = typeof window !== 'undefined' ? `${window.location.origin}/jp/properties/${propertyContext.id}` : ''
+  const propertyUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/${shareLocale}/properties/${propertyContext.id}`
+      : ''
   const displayPrice = Number(editedProperty.price).toLocaleString() + ' ฿'
   const actionLabel = propertyContext.isForSale && propertyContext.isForRent ? 'FOR SALE / RENT' 
     : propertyContext.isForRent ? 'FOR RENT' 
@@ -204,10 +210,11 @@ export default function SocialShareDialog({ isOpen, onClose, propertyContext }: 
     }
   }
 
+  /** Facebook 公式のシンプルな sharer（u のみ）。u は RFC 3986 に沿ってエンコード */
   const handleFacebookShare = () => {
-    const url = propertyUrl;
-    const encodedUrl = encodeURIComponent(url);
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, '_blank', 'width=600,height=400');
+    if (!propertyUrl) return
+    const u = encodeURIComponent(propertyUrl)
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank', 'width=600,height=400')
   }
 
   const handleLineShare = () => {

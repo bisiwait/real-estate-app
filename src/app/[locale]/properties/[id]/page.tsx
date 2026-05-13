@@ -94,8 +94,14 @@ export async function generateMetadata(
         if (property.images?.[0]) {
             const resolved = resolvePropertyImageUrl(property.images[0], supabasePublicUrl)
             if (resolved !== PROPERTY_PLACEHOLDER_IMAGE && /^https?:\/\//i.test(resolved)) {
-                // 1. Next.js の自動エスケープ (& -> &amp;) を避けるため、パラメータを1つ (?format=jpg) に絞る
-                imageUrl = `${resolved}?format=jpg`
+                // Supabase Storage の変換は searchParams で統一（既存クエリがあれば上書き／マージ）
+                try {
+                    const u = new URL(resolved)
+                    u.searchParams.set('format', 'jpg')
+                    imageUrl = u.toString()
+                } catch {
+                    imageUrl = `${resolved}${resolved.includes('?') ? '&' : '?'}format=jpg`
+                }
                 ogImageType = 'image/jpeg'
                 ogWidth = 1200
                 ogHeight = 630
