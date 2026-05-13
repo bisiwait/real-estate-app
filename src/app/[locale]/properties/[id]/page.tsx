@@ -70,22 +70,25 @@ function propertyDetailFallbackMetadata(
 ): Metadata {
     const baseUrl = getPublicSiteUrl()
     const pageUrl = `${baseUrl}/${locale}/properties/${id}`
+    const safeTitle = (title || 'Property | Chonburi Home').trim() || 'Property | Chonburi Home'
+    const safeDescription =
+        (description || '').trim() || 'Real estate listings in Pattaya & Sriracha.'
     return {
         metadataBase: new URL(baseUrl),
-        title,
-        description,
+        title: safeTitle,
+        description: safeDescription,
         alternates: { canonical: pageUrl },
         openGraph: {
-            title,
-            description,
+            title: safeTitle,
+            description: safeDescription,
             url: pageUrl,
             siteName: 'Chonburi Home',
             type: 'website',
         },
         twitter: {
             card: 'summary_large_image',
-            title,
-            description,
+            title: safeTitle,
+            description: safeDescription,
         },
     }
 }
@@ -111,10 +114,12 @@ export async function generateMetadata(
 
         const { url: supabasePublicUrl } = getSupabasePublicConfig(hostname)
 
-        const title = property.title_ja || property.title_en || property.title || 'Property'
-        const description = property.description
-            ? property.description.replace(/<[^>]+>/g, '').substring(0, 160)
-            : 'Pattaya & Sriracha real estate listing on Chonburi Home.'
+        const rawTitle = (property.title_ja || property.title_en || property.title || 'Property').trim() || 'Property'
+        const strippedDesc = property.description
+            ? property.description.replace(/<[^>]+>/g, '').trim()
+            : ''
+        const defaultDesc = 'Pattaya & Sriracha real estate listing on Chonburi Home.'
+        const description = strippedDesc ? strippedDesc.substring(0, 160) : defaultDesc
 
         const baseUrl = getPublicSiteUrl()
         let imageUrl = `${baseUrl}/logo_800.svg`
@@ -139,7 +144,7 @@ export async function generateMetadata(
         }
 
         const pageUrl = `${baseUrl}/${locale}/properties/${id}`
-        const fullTitle = `${title} | Chonburi Home`
+        const fullTitle = `${rawTitle} | Chonburi Home`
 
         return {
             metadataBase: new URL(baseUrl),
@@ -157,7 +162,7 @@ export async function generateMetadata(
                         secureUrl: imageUrl,
                         width: ogWidth,
                         height: ogHeight,
-                        alt: title,
+                        alt: rawTitle,
                         type: ogImageType,
                     },
                 ],
