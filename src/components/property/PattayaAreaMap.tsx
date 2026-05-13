@@ -25,26 +25,10 @@ type RegionProfile = {
     value: string
     rgb: readonly [number, number, number]
     tolerance: number
-    /** 海と同色のナクルアなど、色だけでは区別できない領域 */
-    polygonPercent?: readonly [number, number][]
 }
 
-/** 画像の塗り色に合わせたエリア判定（% は幅・高さに対する比率） */
+/** 画像の塗り色に合わせたエリア判定 */
 const REGION_PROFILES: RegionProfile[] = [
-    {
-        value: 'North Pattaya / Wongamat',
-        rgb: [148, 201, 233],
-        tolerance: 18,
-        polygonPercent: [
-            [46, 5.5],
-            [63, 5.5],
-            [63, 18.5],
-            [50, 19.5],
-            [22, 18.5],
-            [12, 13],
-            [32, 6.5],
-        ],
-    },
     {
         value: 'Central Pattaya',
         rgb: [238, 162, 68],
@@ -72,6 +56,35 @@ const REGION_PROFILES: RegionProfile[] = [
     },
 ]
 
+const NAKLUA_VALUE = 'North Pattaya / Wongamat'
+const NAKLUA_RGB: readonly [number, number, number] = [148, 201, 233]
+const NAKLUA_TOLERANCE = 18
+
+/** ナクルア・ウォンアマットの陸地（% は幅・高さに対する比率） */
+const NAKLUA_LAND_POLYGON: readonly [number, number][] = [
+    [17, 3.8],
+    [26, 3.2],
+    [39, 3.5],
+    [51, 4.2],
+    [61.5, 5.2],
+    [62.5, 11],
+    [61, 18.5],
+    [50, 19.8],
+    [30, 20.2],
+    [14, 18.5],
+    [11, 14],
+    [13, 8],
+]
+
+/** 左側の開放水域。ナクルアと同色の海を選択対象から除外する */
+const OPEN_WATER_COASTLINE: readonly [number, number][] = [
+    [3, 18],
+    [8, 13],
+    [14, 11],
+    [20, 10],
+    [25, 9],
+]
+
 const HIGHLIGHT_RGBA: readonly [number, number, number, number] = [15, 23, 42, 95]
 const HOVER_RGBA: readonly [number, number, number, number] = [15, 23, 42, 55]
 
@@ -97,6 +110,28 @@ function pointInPolygon(x: number, y: number, polygon: readonly [number, number]
     return inside
 }
 
+function coastlineXAtY(yPercent: number): number {
+    for (let i = 0; i < OPEN_WATER_COASTLINE.length - 1; i++) {
+        const [y1, x1] = OPEN_WATER_COASTLINE[i]
+        const [y2, x2] = OPEN_WATER_COASTLINE[i + 1]
+        if (yPercent < y1 || yPercent > y2) continue
+        const t = (yPercent - y1) / (y2 - y1 + Number.EPSILON)
+        return x1 + (x2 - x1) * t
+    }
+    return OPEN_WATER_COASTLINE[OPEN_WATER_COASTLINE.length - 1]?.[1] ?? 0
+}
+
+function isOpenWater(xPercent: number, yPercent: number, r: number, g: number, b: number): boolean {
+    if (colorDistance(r, g, b, NAKLUA_RGB) > NAKLUA_TOLERANCE) return false
+    return xPercent < coastlineXAtY(yPercent)
+}
+
+function isNakluaLand(xPercent: number, yPercent: number, r: number, g: number, b: number): boolean {
+    if (isOpenWater(xPercent, yPercent, r, g, b)) return false
+    if (!pointInPolygon(xPercent, yPercent, NAKLUA_LAND_POLYGON)) return false
+    return colorDistance(r, g, b, NAKLUA_RGB) <= NAKLUA_TOLERANCE
+}
+
 function classifyPixel(r: number, g: number, b: number, x: number, y: number): string | null {
     const xPercent = (x / MAP_WIDTH) * 100
     const yPercent = (y / MAP_HEIGHT) * 100
@@ -105,15 +140,20 @@ function classifyPixel(r: number, g: number, b: number, x: number, y: number): s
     for (const profile of REGION_PROFILES) {
         const distance = colorDistance(r, g, b, profile.rgb)
         if (distance > profile.tolerance) continue
-        if (profile.polygonPercent && !pointInPolygon(xPercent, yPercent, profile.polygonPercent)) {
-            continue
-        }
         if (!best || distance < best.distance) {
             best = { value: profile.value, distance }
         }
     }
 
-    return best?.value ?? null
+    if (best) return best.value
+    if (isNakluaLand(xPercent, yPercent, r, g, b)) return NAKLUA_VALUE
+    return null
+}
+
+function regionIndexForValue(value: string): number {
+    if (value === NAKLUA_VALUE) return REGION_PROFILES.length + 1
+    const index = REGION_PROFILES.findIndex((profile) => profile.value === value)
+    return index >= 0 ? index + 1 : 0
 }
 
 function buildRegionMap(imageData: ImageData): Uint8Array {
@@ -124,9 +164,7 @@ function buildRegionMap(imageData: ImageData): Uint8Array {
         for (let x = 0; x < MAP_WIDTH; x++) {
             const offset = (y * MAP_WIDTH + x) * 4
             const region = classifyPixel(data[offset], data[offset + 1], data[offset + 2], x, y)
-            regionMap[y * MAP_WIDTH + x] = region
-                ? REGION_PROFILES.findIndex((profile) => profile.value === region) + 1
-                : 0
+            regionMap[y * MAP_WIDTH + x] = region ? regionIndexForValue(region) : 0
         }
     }
 
@@ -183,10 +221,8 @@ export default function PattayaAreaMap({
     const [hoveredArea, setHoveredArea] = useState('')
 
     const labelByValue = Object.fromEntries(areas.map((area) => [area.value, area.label]))
-    const selectedIndex =
-        REGION_PROFILES.findIndex((profile) => profile.value === selectedArea) + 1
-    const hoveredIndex =
-        REGION_PROFILES.findIndex((profile) => profile.value === hoveredArea) + 1
+    const selectedIndex = regionIndexForValue(selectedArea)
+    const hoveredIndex = regionIndexForValue(hoveredArea)
 
     const redrawOverlay = useCallback(() => {
         const canvas = overlayRef.current
@@ -245,7 +281,11 @@ export default function PattayaAreaMap({
         const regionIndex = regionMap[pixel.y * MAP_WIDTH + pixel.x]
         if (regionIndex <= 0) return null
 
-        return REGION_PROFILES[regionIndex - 1]?.value ?? null
+        return regionIndex > 0
+            ? regionIndex === REGION_PROFILES.length + 1
+                ? NAKLUA_VALUE
+                : REGION_PROFILES[regionIndex - 1]?.value ?? null
+            : null
     }, [])
 
     const handlePointerMove = useCallback(
