@@ -316,6 +316,8 @@
         "active_filters_title": "Current filters",
         "city": "City",
         "area": "Area",
+        "area_map_title": "Pattaya area map",
+        "area_map_hint": "Tap the map or the list to filter. Tap the same area again to clear.",
         "all_areas": "All Areas",
         "property_type": "Property Type",
         "all_types": "All Types",

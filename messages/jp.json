@@ -368,6 +368,8 @@
         "active_filters_title": "現在の条件",
         "city": "都市",
         "area": "エリア",
+        "area_map_title": "パタヤエリアマップ",
+        "area_map_hint": "地図または一覧をタップして絞り込みできます。同じエリアをもう一度選ぶと解除されます。",
         "all_areas": "すべてのエリア",
         "property_type": "物件種別",
         "all_types": "すべての種別",

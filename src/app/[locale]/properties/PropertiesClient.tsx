@@ -18,6 +18,7 @@ import {
     type PropertyListSort,
 } from '@/lib/services/propertyListQuery'
 import { cn } from '@/lib/utils'
+import AreaMapSelector from '@/components/search/AreaMapSelector'
 
 /** 一覧→詳細→戻る でリスト件数・スクロールを復元する */
 const PROPERTY_LIST_RESTORE_STORAGE_KEY = 'propertyListBrowseRestore'
@@ -789,6 +790,19 @@ export default function PropertiesClient({
                             </div>
                         </div>
                     </div>
+
+                    {selectedCity === 'Pattaya' ? (
+                        <div className="lg:col-span-4 mb-6">
+                            <AreaMapSelector
+                                areas={AREAS_BY_CITY.Pattaya}
+                                region={selectedCity}
+                                dict={{
+                                    area_map_title: dict.property.area_map_title,
+                                    area_map_hint: dict.property.area_map_hint,
+                                }}
+                            />
+                        </div>
+                    ) : null}
 
                     <aside className="hidden lg:block lg:col-span-1 min-w-0">
                         <div className="bg-white rounded-3xl shadow-xl px-5 py-7 sm:px-6 sm:py-8 sticky top-28 border border-white/50 backdrop-blur-sm">
