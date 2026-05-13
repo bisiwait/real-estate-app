@@ -15,17 +15,78 @@ type PattayaAreaMapProps = {
     className?: string
 }
 
-/** viewBox 0–1000。背景画像の色分けに合わせたクリック領域 */
+/** public/images/pattaya-area-map.png の実ピクセル寸法（viewBox と一致させる） */
+const MAP_WIDTH = 780
+const MAP_HEIGHT = 752
+
+/** 画像幅・高さに対する % で定義し、座標ずれを防ぐ */
+function mapPoint(xPercent: number, yPercent: number): string {
+    return `${Math.round((MAP_WIDTH * xPercent) / 100)},${Math.round((MAP_HEIGHT * yPercent) / 100)}`
+}
+
+function mapPolygon(points: Array<[number, number]>): string {
+    return points.map(([x, y]) => mapPoint(x, y)).join(' ')
+}
+
 const PATTAYA_REGION_SHAPES: { value: string; points: string }[] = [
     {
         value: 'North Pattaya / Wongamat',
-        points: '52,72 60,198 92,210 302,204 606,190 622,88 508,76 268,70',
+        points: mapPolygon([
+            [46, 5.5],
+            [63, 5.5],
+            [63, 18.5],
+            [50, 19.5],
+            [22, 18.5],
+            [12, 13],
+            [32, 6.5],
+        ]),
     },
-    { value: 'Central Pattaya', points: '92,212 608,198 618,448 84,452' },
-    { value: 'Pratumnak', points: '18,412 304,402 336,578 12,588 8,488' },
-    { value: 'South Pattaya', points: '344,406 612,412 622,578 352,572' },
-    { value: 'Jomtien', points: '52,592 622,582 662,962 48,958' },
-    { value: 'East Pattaya', points: '636,72 984,76 978,970 642,968' },
+    {
+        value: 'Central Pattaya',
+        points: mapPolygon([
+            [27, 19.5],
+            [63, 19],
+            [63, 43],
+            [25, 43.5],
+        ]),
+    },
+    {
+        value: 'Pratumnak',
+        points: mapPolygon([
+            [4.5, 39],
+            [38, 38],
+            [40.5, 58],
+            [3.5, 59],
+            [3, 48],
+        ]),
+    },
+    {
+        value: 'South Pattaya',
+        points: mapPolygon([
+            [39, 40],
+            [62.5, 40.5],
+            [62.5, 57.5],
+            [38.5, 57],
+        ]),
+    },
+    {
+        value: 'Jomtien',
+        points: mapPolygon([
+            [15, 58.5],
+            [62.5, 57.5],
+            [64, 95.5],
+            [13.5, 95],
+        ]),
+    },
+    {
+        value: 'East Pattaya',
+        points: mapPolygon([
+            [63.5, 5.5],
+            [98, 5.5],
+            [97, 96.5],
+            [63.5, 96.5],
+        ]),
+    },
 ]
 
 export default function PattayaAreaMap({
@@ -41,13 +102,14 @@ export default function PattayaAreaMap({
             <Image
                 src="/images/pattaya-area-map.png"
                 alt=""
-                width={1000}
-                height={1000}
-                className="h-auto w-full select-none"
+                width={MAP_WIDTH}
+                height={MAP_HEIGHT}
+                className="block h-auto w-full select-none"
                 priority={false}
             />
             <svg
-                viewBox="0 0 1000 1000"
+                viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+                preserveAspectRatio="xMidYMid meet"
                 className="absolute inset-0 h-full w-full"
                 role="img"
                 aria-label="Pattaya area map"
