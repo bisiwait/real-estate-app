@@ -5,7 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchCount } from '@/contexts/SearchCountContext'
-import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves, Map } from 'lucide-react'
+import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
 import {
@@ -18,8 +18,6 @@ import {
     type PropertyListSort,
 } from '@/lib/services/propertyListQuery'
 import { cn } from '@/lib/utils'
-import AreaMapSelector from '@/components/search/AreaMapSelector'
-import { Button } from '@/components/ui/button'
 
 /** 一覧→詳細→戻る でリスト件数・スクロールを復元する */
 const PROPERTY_LIST_RESTORE_STORAGE_KEY = 'propertyListBrowseRestore'
@@ -138,7 +136,6 @@ export default function PropertiesClient({
     )
 
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
-    const [areaMapOpen, setAreaMapOpen] = useState(false)
     const [dbProperties, setDbProperties] = useState<any[]>(initialProperties)
     const [loading, setLoading] = useState(!skipInitialClientFetch)
     const [loadingMore, setLoadingMore] = useState(false)
@@ -184,7 +181,6 @@ export default function PropertiesClient({
     // ブラウザ戻る・共有 URL などでクエリが変わったらドラフトを同期
     useEffect(() => {
         setDraft(draftFromSearchParams(new URLSearchParams(searchParamsKey)))
-        setAreaMapOpen(false)
     }, [searchParamsKey])
 
     const committedDraft = useMemo(
@@ -297,23 +293,6 @@ export default function PropertiesClient({
                 setLoading(true)
                 startFilterNavTransition(() => {
                     router.replace(`${pathname}?${qs}`, { scroll: false })
-                })
-            }
-        },
-        [draft, pathname, router, searchParams, startFilterNavTransition]
-    )
-
-    /** エリアマップから選択 → ドラフト・URL を即時更新しマップを閉じる */
-    const selectAreaFromMap = useCallback(
-        (value: string) => {
-            const next = { ...draft, area: value }
-            setDraft(next)
-            setAreaMapOpen(false)
-            const qs = buildSearchParamsFromDraft(next, searchParams).toString()
-            if (qs !== searchParams.toString()) {
-                setLoading(true)
-                startFilterNavTransition(() => {
-                    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
                 })
             }
         },
@@ -585,15 +564,14 @@ export default function PropertiesClient({
                         <button
                             key={city.value}
                             type="button"
-                            onClick={() => {
+                            onClick={() =>
                                 setDraft((d) => ({
                                     ...d,
                                     region: city.value,
                                     area: '',
                                     tags: [],
                                 }))
-                                setAreaMapOpen(false)
-                            }}
+                            }
                             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${draft.region === city.value ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
                         >
                             {city.label}
@@ -603,35 +581,16 @@ export default function PropertiesClient({
             </div>
 
             <div>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-                    <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest flex min-w-0 flex-1 items-center">
-                        <Filter className="mr-2 h-3 w-3 shrink-0" />
-                        <span className="min-w-0">{dict.property.area}</span>
-                    </h3>
-                    {draft.region === 'Pattaya' ? (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            aria-expanded={areaMapOpen}
-                            aria-controls="pattaya-area-map-panel"
-                            onClick={() => setAreaMapOpen((o) => !o)}
-                            className="h-9 shrink-0 gap-2 border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                            <Map className="h-3.5 w-3.5 shrink-0 text-navy-primary" aria-hidden />
-                            <span className="max-w-[10rem] truncate sm:max-w-none">{dict.property.area_map_from_map_option}</span>
-                        </Button>
-                    ) : null}
-                </div>
+                <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
+                    <Filter className="w-3 h-3 mr-2" />
+                    {dict.property.area}
+                </h3>
                 <select
                     id="filter-area-select"
                     aria-label={dict.property.area}
-                    className={cn(selectFieldClass, 'min-h-[44px] w-full')}
+                    className={selectFieldClass}
                     value={draft.area}
-                    onChange={(e) => {
-                        setDraft((d) => ({ ...d, area: e.target.value }))
-                        setAreaMapOpen(false)
-                    }}
+                    onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value }))}
                 >
                     <option value="">{dict.property.all_areas}</option>
                     {(AREAS_BY_CITY[draft.region] || []).map((area) => (
@@ -640,21 +599,6 @@ export default function PropertiesClient({
                         </option>
                     ))}
                 </select>
-                {draft.region === 'Pattaya' && areaMapOpen ? (
-                    <div id="pattaya-area-map-panel" className="mt-3">
-                        <AreaMapSelector
-                            open
-                            areas={AREAS_BY_CITY.Pattaya}
-                            region={draft.region}
-                            selectedUrlArea={searchParams.get('area') || ''}
-                            onPickArea={selectAreaFromMap}
-                            dict={{
-                                area_map_title: dict.property.area_map_title,
-                                area_map_hint: dict.property.area_map_hint,
-                            }}
-                        />
-                    </div>
-                ) : null}
             </div>
 
             <div>
