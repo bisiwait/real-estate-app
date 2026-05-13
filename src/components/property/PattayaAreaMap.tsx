@@ -19,12 +19,12 @@ type PattayaAreaMapProps = {
 const PATTAYA_REGION_SHAPES: { value: string; points: string }[] = [
     {
         value: 'North Pattaya / Wongamat',
-        points: '44,118 52,248 88,272 318,268 612,252 628,108 520,96 280,90',
+        points: '52,72 60,198 92,210 302,204 606,190 622,88 508,76 268,70',
     },
-    { value: 'Central Pattaya', points: '54,278 608,262 616,402 48,406' },
+    { value: 'Central Pattaya', points: '92,212 608,198 618,448 84,452' },
     { value: 'Pratumnak', points: '18,412 304,402 336,578 12,588 8,488' },
     { value: 'South Pattaya', points: '344,406 612,412 622,578 352,572' },
-    { value: 'Jomtien', points: '16,594 618,584 658,962 12,958' },
+    { value: 'Jomtien', points: '52,592 622,582 662,962 48,958' },
     { value: 'East Pattaya', points: '636,72 984,76 978,970 642,968' },
 ]
 
