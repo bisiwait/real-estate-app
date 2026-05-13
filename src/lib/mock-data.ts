@@ -158,7 +158,7 @@ export const MOCK_PROPERTIES = [
         description: 'シラチャの中心地、スクンビット通り沿いでロビンソン百貨店の真向かいという最高立地の最新物件。日本人向けのコンシェルジュサービス、和食レストラン、屋上温泉など日本人に嬉しい設備がずらり。内装は高級感溢れる仕上がりで、水回りの不具合も最小限です。法人契約実績も多く、シラチャでの駐在生活を妥協なく始めたい方へお勧め。',
         price: 45000,
         listing_type: 'rent',
-        area_name: 'ロビンソン周辺',
+        area_name: 'シラチャ中心部',
         images: [
             'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?auto=format&fit=crop&q=80&w=1200',
@@ -173,7 +173,7 @@ export const MOCK_PROPERTIES = [
         description: 'シラチャの南側、スクンビット通り沿いにある施設充実のハイグレード物件。企業送迎バスのルート内にあるため、アマタ系やイースタンシーボードへの通勤に非常に便利です。屋上の大パノラマプールや、日本を彷彿とさせる清潔なサウナ・大浴場が魅力。居住者の多くが日本人のため、お子様同士のコミュニティも形成されやすい環境です。',
         price: 35000,
         listing_type: 'rent',
-        area_name: 'スラサック・山側',
+        area_name: 'シラチャ南部',
         images: [
             'https://images.unsplash.com/photo-1512918766674-5509f623631f?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&q=80&w=1200',
@@ -188,7 +188,7 @@ export const MOCK_PROPERTIES = [
         description: 'シラチャ生活の定番物件といえばここ。シラチャ中心部のアタラモールやロビンソン百貨店へ徒歩数分。周囲には飲食店やカフェが多く、お一人様でも食事に困りません。お部屋の作りは無駄がなく機能的で、日本人入居者が多いため管理側も日本人の好みに精通しています。程よい規模感で、過不足ない快適な都市生活が送れます。',
         price: 28000,
         listing_type: 'rent',
-        area_name: 'ロビンソン周辺',
+        area_name: 'シラチャ中心部',
         images: [
             'https://images.unsplash.com/photo-1554995207-c18c203602cb?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&q=80&w=1200',
@@ -203,7 +203,7 @@ export const MOCK_PROPERTIES = [
         description: 'スカパープ公園の真横に位置し、シラチャ湾を180度見渡せるオーシャンフロント物件。遮るもののない静かな環境と、美しい夕日は唯一無二の価値。公園でのジョギングや健康的な生活を重視する方に選ばれています。室内はシックな色使いの家具が備え付けられており、ラグジュアリーホテルのような滞在感が味わえる高級物件です。',
         price: 48000,
         listing_type: 'rent',
-        area_name: 'スカパープ公園周辺',
+        area_name: 'シラチャ中心部',
         images: [
             'https://images.unsplash.com/photo-1567496898905-af413988d4d3?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1536376074432-8d64059253e9?auto=format&fit=crop&q=80&w=1200',
@@ -218,7 +218,7 @@ export const MOCK_PROPERTIES = [
         description: 'J-Parkに近い日本情緒溢れるエリアに建つ低層コンドミニアム。まるで日本にいるかのような落ち着いた街並みの中で、静かに生活できます。近くにはマックスバリュや和食店が多く、日本の食材も容易に手に入ります。お子様用のプレイエリアやプールも清潔に保たれており、シラチャ郊外ののんびりした暮らしを好むご家族に大人気です。',
         price: 32000,
         listing_type: 'rent',
-        area_name: 'J-Park周辺',
+        area_name: 'Jパーク周辺',
         images: [
             'https://images.unsplash.com/photo-1493246507139-91e8bef99c02?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&q=80&w=1200',
@@ -233,7 +233,7 @@ export const MOCK_PROPERTIES = [
         description: 'シラチャ中心部、山側へ少し入った高台に位置する新進気鋭のタワー物件。バルコニーからはシラチャの街並みと海、そして緑豊かな山々が見渡せます。近接するロビンソンへはシャトルサービスもあり、利便性と静穏さを両立。居住者専用のコワーキングスペースはシラチャ一の広さを誇り、リモートワークが多いビジネスマンに最適です。',
         price: 30000,
         listing_type: 'rent',
-        area_name: 'ロビンソン周辺',
+        area_name: 'シラチャ中心部',
         images: [
             'https://images.unsplash.com/photo-1515263487990-61b07816b324?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1531835551805-16d864c8d311?auto=format&fit=crop&q=80&w=1200',
@@ -248,7 +248,7 @@ export const MOCK_PROPERTIES = [
         description: 'スカパープ公園周辺に位置するモダンな内装が特徴のコンド。天井高のあるお部屋やメゾネットタイプもあり、個性的な空間を求める方に選ばれています。管理会社が非常に親切で、水漏れや電気のトラブル時も日本語でのサポート依頼が可能。周辺は夜間も静かで、安眠を約束してくれる環境です。海を眺めるジムでのワークアウトは最高に贅沢。',
         price: 38000,
         listing_type: 'rent',
-        area_name: 'スカパープ公園周辺',
+        area_name: 'シラチャ中心部',
         images: [
             'https://images.unsplash.com/photo-1444201983204-c43cbd584d93?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1200',
@@ -263,22 +263,12 @@ export const MOCK_PROPERTIES = [
         description: 'シラチャ中心部から少し南、海辺の隠れ家のような低層コンドミニアム。多くの日本人駐在員が暮らしており、日本人同士の繋がりが作りやすいのが特徴。物件からアタラモール等への無料送迎トゥクトゥクが頻繁に出ているため、買い物もスムーズです。洗い場付きお風呂や対面キッチンなど、日本のご家庭に近い感覚で生活できる間取りが魅力。',
         price: 22000,
         listing_type: 'rent',
-        area_name: 'スラサック・山側',
-        images: [
-            'https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&q=80&w=1200',
-            'https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&q=80&w=1200',
-            'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=80&w=1200'
-        ],
-        tags: ['企業送迎バスルート内（Company Shuttle）', '法人契約可（Corporate Contract）', '日本語テレビ無料（Japanese TV）'],
-        created_at: new Date().toISOString()
-    },
-    {
-        id: 'sriracha-condoview-v2',
+        area_name: 'その他',
         title: 'Sriracha Condoview (シラチャ・コンドビュー)',
         description: 'シラチャの老舗ながら、しっかりとメンテナンスされた安心の物件。アサンプション周辺の日本人学校への通学路に近く、家族連れに長年愛されています。広い部屋が多く、コストパフォーマンスはシラチャ随一。豪華さよりも実用性と利便性を求める方に選ばれており、周囲には日本語対応のクリニックや塾も多く、子育て世代に優しい環境です。',
         price: 16000,
         listing_type: 'rent',
-        area_name: 'アサンプション周辺',
+        area_name: 'イオン周辺',
         images: [
             'https://images.unsplash.com/photo-1493106819501-66d381c466f1?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=1200',
@@ -293,7 +283,7 @@ export const MOCK_PROPERTIES = [
         description: 'スカパープ公園近くの海岸線に佇むラグジュアリーレジデンス。広々としたベランダからはシラチャの穏やかな海が一望できます。内装は温かみのある木目調を多用しており、リラックスできる空間作りがされています。共有施設のプールとガーデンが美しく、タイにいながら喧騒を忘れさせてくれる上質な静寂を提供してくれます。エグゼクティブ層に好まれる物件です。',
         price: 65000,
         listing_type: 'rent',
-        area_name: 'スカパープ公園周辺',
+        area_name: 'シラチャ中心部',
         images: [
             'https://images.unsplash.com/photo-1512914890251-2f96a9b0bbe2?auto=format&fit=crop&q=80&w=1200',
             'https://images.unsplash.com/photo-1536376074432-8d64059253e9?auto=format&fit=crop&q=80&w=1200',

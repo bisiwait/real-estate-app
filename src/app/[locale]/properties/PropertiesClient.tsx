@@ -12,6 +12,7 @@ import {
     executePropertyListQuery,
     formatPropertyListRows,
     isPropertyListPriceSortAllowed,
+    normalizeLegacyAreaFilter,
     parsePropertyListFiltersFromURLSearchParams,
     parsePropertyListSort,
     PROPERTY_LIST_PAGE_SIZE,
@@ -60,7 +61,7 @@ function draftFromSearchParams(sp: URLSearchParams): FilterDraft {
     const tags = sp.get('tags')?.split(',').filter(Boolean) || []
     return {
         region: sp.get('region') || 'Pattaya',
-        area: sp.get('area') || '',
+        area: normalizeLegacyAreaFilter(sp.get('area') || ''),
         property_type: sp.get('property_type') || '',
         price: sp.get('price') || '',
         tags,
@@ -207,11 +208,12 @@ export default function PropertiesClient({
             { label: dict.property.areas.pattaya_east, value: 'East Pattaya' },
         ],
         Sriracha: [
-            { label: dict.property.areas.sriracha_robinson, value: 'ロビンソン周辺' },
-            { label: dict.property.areas.sriracha_park, value: 'スカパープ公園周辺' },
-            { label: dict.property.areas.sriracha_assumption, value: 'アサンプション周辺' },
-            { label: dict.property.areas.sriracha_jpark, value: 'J-Park周辺' },
-            { label: dict.property.areas.sriracha_mt, value: 'スラサック・山側' },
+            { label: dict.property.areas.sriracha_central, value: 'シラチャ中心部' },
+            { label: dict.property.areas.sriracha_north, value: 'シラチャ北部' },
+            { label: dict.property.areas.sriracha_south, value: 'シラチャ南部' },
+            { label: dict.property.areas.sriracha_aeon, value: 'イオン周辺' },
+            { label: dict.property.areas.sriracha_jpark, value: 'Jパーク周辺' },
+            { label: dict.property.areas.sriracha_other, value: 'その他' },
         ],
     }
 

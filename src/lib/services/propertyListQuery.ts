@@ -27,6 +27,20 @@ function firstParam(v: string | string[] | undefined): string {
     return Array.isArray(v) ? (v[0] ?? '') : v
 }
 
+/** 旧エリア名のブックマーク URL を新しい DB 上の area.name に寄せる */
+const LEGACY_AREA_FILTER_TO_CANONICAL: Record<string, string> = {
+    ロビンソン周辺: 'シラチャ中心部',
+    スカパープ公園周辺: 'シラチャ中心部',
+    アサンプション周辺: 'イオン周辺',
+    'J-Park周辺': 'Jパーク周辺',
+    'スラサック・山側': 'その他',
+}
+
+export function normalizeLegacyAreaFilter(area: string): string {
+    const t = area.trim()
+    return LEGACY_AREA_FILTER_TO_CANONICAL[t] ?? t
+}
+
 /** Next.js App Router searchParams → 一覧クエリ用フィルタ */
 export function parsePropertyListFiltersFromSearchParams(
     sp: Record<string, string | string[] | undefined>
@@ -34,7 +48,7 @@ export function parsePropertyListFiltersFromSearchParams(
     const tagsRaw = firstParam(sp.tags)
     return {
         selectedCity: firstParam(sp.region) || 'Pattaya',
-        selectedArea: firstParam(sp.area),
+        selectedArea: normalizeLegacyAreaFilter(firstParam(sp.area)),
         selectedPropertyType: firstParam(sp.property_type),
         selectedPrice: firstParam(sp.price),
         selectedTags: tagsRaw ? tagsRaw.split(',').filter(Boolean) : [],
@@ -50,7 +64,7 @@ export function parsePropertyListFiltersFromURLSearchParams(searchParams: URLSea
     const tagsRaw = searchParams.get('tags') || ''
     return {
         selectedCity: searchParams.get('region') || 'Pattaya',
-        selectedArea: searchParams.get('area') || '',
+        selectedArea: normalizeLegacyAreaFilter(searchParams.get('area') || ''),
         selectedPropertyType: searchParams.get('property_type') || '',
         selectedPrice: searchParams.get('price') || '',
         selectedTags: tagsRaw ? tagsRaw.split(',').filter(Boolean) : [],
