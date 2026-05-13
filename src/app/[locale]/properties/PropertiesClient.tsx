@@ -19,6 +19,7 @@ import {
 } from '@/lib/services/propertyListQuery'
 import { cn } from '@/lib/utils'
 import AreaMapSelector from '@/components/search/AreaMapSelector'
+import { PATTAYA_AREA_MAP_SELECT_VALUE } from '@/lib/search/pattayaAreaMap'
 
 /** 一覧→詳細→戻る でリスト件数・スクロールを復元する */
 const PROPERTY_LIST_RESTORE_STORAGE_KEY = 'propertyListBrowseRestore'
@@ -82,7 +83,12 @@ function serializeDraft(d: FilterDraft): string {
 function buildSearchParamsFromDraft(d: FilterDraft, sortSource: URLSearchParams | null): URLSearchParams {
     const p = new URLSearchParams()
     p.set('region', d.region || 'Pattaya')
-    if (d.area) p.set('area', d.area)
+    if (d.area === PATTAYA_AREA_MAP_SELECT_VALUE) {
+        const keep = sortSource?.get('area')?.trim()
+        if (keep) p.set('area', keep)
+    } else if (d.area) {
+        p.set('area', d.area)
+    }
     if (d.property_type) p.set('property_type', d.property_type)
     if (d.price) p.set('price', d.price)
     if (d.tags.length > 0) p.set('tags', d.tags.join(','))
@@ -300,6 +306,22 @@ export default function PropertiesClient({
         [draft, pathname, router, searchParams, startFilterNavTransition]
     )
 
+    /** エリアマップから選択 → ドラフト・URL を即時更新しマップを閉じる */
+    const selectAreaFromMap = useCallback(
+        (value: string) => {
+            const next = { ...draft, area: value }
+            setDraft(next)
+            const qs = buildSearchParamsFromDraft(next, searchParams).toString()
+            if (qs !== searchParams.toString()) {
+                setLoading(true)
+                startFilterNavTransition(() => {
+                    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+                })
+            }
+        },
+        [draft, pathname, router, searchParams, startFilterNavTransition]
+    )
+
     const fetchProperties = async (isLoadMore = false) => {
         const myGen = ++fetchGenRef.current
 
@@ -456,7 +478,7 @@ export default function PropertiesClient({
     }, [totalCount, setPropertiesHitCount])
 
     const activeFilterChipCount = [
-        draft.area,
+        draft.area && draft.area !== PATTAYA_AREA_MAP_SELECT_VALUE,
         draft.property_type,
         draft.price,
         draft.bathtub,
@@ -590,9 +612,21 @@ export default function PropertiesClient({
                     id="filter-area-select"
                     aria-label={dict.property.area}
                     className={selectFieldClass}
-                    value={draft.area}
-                    onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value }))}
+                    value={
+                        draft.region === 'Pattaya'
+                            ? draft.area
+                            : draft.area === PATTAYA_AREA_MAP_SELECT_VALUE
+                              ? ''
+                              : draft.area
+                    }
+                    onChange={(e) => {
+                        const v = e.target.value
+                        setDraft((d) => ({ ...d, area: v }))
+                    }}
                 >
+                    {draft.region === 'Pattaya' ? (
+                        <option value={PATTAYA_AREA_MAP_SELECT_VALUE}>{dict.property.area_map_from_map_option}</option>
+                    ) : null}
                     <option value="">{dict.property.all_areas}</option>
                     {(AREAS_BY_CITY[draft.region] || []).map((area) => (
                         <option key={area.value} value={area.value}>
@@ -600,6 +634,19 @@ export default function PropertiesClient({
                         </option>
                     ))}
                 </select>
+                {draft.region === 'Pattaya' && draft.area === PATTAYA_AREA_MAP_SELECT_VALUE ? (
+                    <AreaMapSelector
+                        visible
+                        areas={AREAS_BY_CITY.Pattaya}
+                        region={draft.region}
+                        selectedUrlArea={searchParams.get('area') || ''}
+                        onPickArea={selectAreaFromMap}
+                        dict={{
+                            area_map_title: dict.property.area_map_title,
+                            area_map_hint: dict.property.area_map_hint,
+                        }}
+                    />
+                ) : null}
             </div>
 
             <div>
@@ -790,19 +837,6 @@ export default function PropertiesClient({
                             </div>
                         </div>
                     </div>
-
-                    {selectedCity === 'Pattaya' ? (
-                        <div className="lg:col-span-4 mb-6">
-                            <AreaMapSelector
-                                areas={AREAS_BY_CITY.Pattaya}
-                                region={selectedCity}
-                                dict={{
-                                    area_map_title: dict.property.area_map_title,
-                                    area_map_hint: dict.property.area_map_hint,
-                                }}
-                            />
-                        </div>
-                    ) : null}
 
                     <aside className="hidden lg:block lg:col-span-1 min-w-0">
                         <div className="bg-white rounded-3xl shadow-xl px-5 py-7 sm:px-6 sm:py-8 sticky top-28 border border-white/50 backdrop-blur-sm">
