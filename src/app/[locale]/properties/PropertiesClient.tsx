@@ -586,25 +586,11 @@ export default function PropertiesClient({
             </div>
 
             <div>
-                <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
-                    <Filter className="w-3 h-3 mr-2" />
-                    {dict.property.area}
-                </h3>
-                <div className="flex items-stretch gap-2">
-                    <select
-                        id="filter-area-select"
-                        aria-label={dict.property.area}
-                        className={cn(selectFieldClass, 'min-w-0 flex-1')}
-                        value={draft.area}
-                        onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value }))}
-                    >
-                        <option value="">{dict.property.all_areas}</option>
-                        {(AREAS_BY_CITY[draft.region] || []).map((area) => (
-                            <option key={area.value} value={area.value}>
-                                {area.label}
-                            </option>
-                        ))}
-                    </select>
+                <div className="mb-4 flex items-center justify-between gap-2">
+                    <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest flex items-center min-w-0">
+                        <Filter className="w-3 h-3 mr-2 shrink-0" />
+                        {dict.property.area}
+                    </h3>
                     {draft.region === 'Pattaya' && (
                         <button
                             type="button"
@@ -614,16 +600,30 @@ export default function PropertiesClient({
                             aria-label={dict.property.area_map_toggle}
                             title={dict.property.area_map_toggle}
                             className={cn(
-                                'inline-flex shrink-0 items-center justify-center rounded-xl border px-3 transition-colors',
+                                'inline-flex shrink-0 items-center justify-center rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-colors',
                                 isAreaMapOpen
                                     ? 'border-navy-primary bg-navy-primary text-white'
                                     : 'border-slate-200 bg-white text-navy-primary hover:border-navy-primary/40 hover:bg-slate-50'
                             )}
                         >
-                            <Map className="h-4 w-4" aria-hidden />
+                            <Map className="h-3.5 w-3.5" aria-hidden />
                         </button>
                     )}
                 </div>
+                <select
+                    id="filter-area-select"
+                    aria-label={dict.property.area}
+                    className={selectFieldClass}
+                    value={draft.area}
+                    onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value }))}
+                >
+                    <option value="">{dict.property.all_areas}</option>
+                    {(AREAS_BY_CITY[draft.region] || []).map((area) => (
+                        <option key={area.value} value={area.value}>
+                            {area.label}
+                        </option>
+                    ))}
+                </select>
                 {isAreaMapOpen && draft.region === 'Pattaya' && (
                     <div id="filter-area-map-panel" className="mt-3">
                         <PattayaAreaMap

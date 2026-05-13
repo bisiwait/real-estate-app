@@ -15,14 +15,17 @@ type PattayaAreaMapProps = {
     className?: string
 }
 
-/** viewBox 0–1000 に合わせたクリック領域（背景画像と同じ比率） */
+/** viewBox 0–1000。背景画像の色分けに合わせたクリック領域 */
 const PATTAYA_REGION_SHAPES: { value: string; points: string }[] = [
-    { value: 'North Pattaya / Wongamat', points: '70,55 610,55 640,210 50,210' },
-    { value: 'Central Pattaya', points: '55,215 600,215 620,360 45,360' },
-    { value: 'Pratumnak', points: '40,365 360,365 395,560 25,560' },
-    { value: 'South Pattaya', points: '365,365 615,365 640,560 350,560' },
-    { value: 'Jomtien', points: '35,565 640,565 670,960 20,960' },
-    { value: 'East Pattaya', points: '625,55 980,55 980,960 655,960' },
+    {
+        value: 'North Pattaya / Wongamat',
+        points: '44,118 52,248 88,272 318,268 612,252 628,108 520,96 280,90',
+    },
+    { value: 'Central Pattaya', points: '54,278 608,262 616,402 48,406' },
+    { value: 'Pratumnak', points: '18,412 304,402 336,578 12,588 8,488' },
+    { value: 'South Pattaya', points: '344,406 612,412 622,578 352,572' },
+    { value: 'Jomtien', points: '16,594 618,584 658,962 12,958' },
+    { value: 'East Pattaya', points: '636,72 984,76 978,970 642,968' },
 ]
 
 export default function PattayaAreaMap({
