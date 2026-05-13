@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, startTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { ChevronDown, Check } from 'lucide-react'
+import { useStartNavigationPending } from '@/components/layout/NavigationPendingProvider'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -19,6 +20,7 @@ const LOCALES = [
 export default function LanguageSwitcher({ dict }: { dict: any }) {
     const pathname = usePathname()
     const router = useRouter()
+    const startNavigationPending = useStartNavigationPending()
     const [isOpen, setIsOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -53,8 +55,10 @@ export default function LanguageSwitcher({ dict }: { dict: any }) {
         const newPath = newSegments.join('/') || '/'
 
         setIsOpen(false)
-        router.push(newPath)
-        router.refresh()
+        startNavigationPending()
+        startTransition(() => {
+            router.push(newPath)
+        })
     }
 
     return (

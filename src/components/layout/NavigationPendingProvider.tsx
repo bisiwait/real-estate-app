@@ -1,26 +1,75 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import React, {
+  Suspense,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
-/**
- * 内部リンクを押してからルートが切り替わるまで上部にインジケータを表示する。
- */
-export default function NavigationPendingProvider({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+type NavigationPendingContextValue = {
+  startNavigationPending: () => void
+}
+
+const NavigationPendingContext = createContext<NavigationPendingContextValue | null>(null)
+
+/** `router.push` 等・言語切替ボタンからナビ開始を通知し、ローディング UI を出す */
+export function useStartNavigationPending() {
+  const ctx = useContext(NavigationPendingContext)
+  return ctx?.startNavigationPending ?? (() => {})
+}
+
+function RouteChangeNotifier({ onKeyChange }: { onKeyChange: (routeKey: string) => void }) {
   const pathname = usePathname()
-  const [pending, setPending] = useState(false)
-  const prevPathRef = useRef(pathname)
+  const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (prevPathRef.current !== pathname) {
-      prevPathRef.current = pathname
+    const qs = searchParams.toString()
+    const key = qs ? `${pathname}?${qs}` : pathname
+    onKeyChange(key)
+  }, [pathname, searchParams, onKeyChange])
+
+  return null
+}
+
+/**
+ * 内部リンクの pointerdown で pending。
+ * 言語切替など `router.push` は `useStartNavigationPending()` で明示通知。
+ * ルート確定は pathname + searchParams で検知（クエリのみの遷移でも pending を解除）。
+ */
+function NavigationPendingInner({ children }: { children: React.ReactNode }) {
+  const [pending, setPending] = useState(false)
+  const [showOverlay, setShowOverlay] = useState(false)
+  const prevRouteKeyRef = useRef<string | null>(null)
+
+  const syncRouteKey = useCallback((routeKey: string) => {
+    if (prevRouteKeyRef.current === null) {
+      prevRouteKeyRef.current = routeKey
+      return
+    }
+    if (prevRouteKeyRef.current !== routeKey) {
+      prevRouteKeyRef.current = routeKey
       setPending(false)
     }
-  }, [pathname])
+  }, [])
+
+  const startNavigationPending = useCallback(() => {
+    setPending(true)
+  }, [])
+
+  useEffect(() => {
+    if (!pending) {
+      setShowOverlay(false)
+      return
+    }
+    const t = window.setTimeout(() => setShowOverlay(true), 280)
+    return () => window.clearTimeout(t)
+  }, [pending])
 
   useEffect(() => {
     if (!pending) return
@@ -63,10 +112,13 @@ export default function NavigationPendingProvider({
   }, [])
 
   return (
-    <>
+    <NavigationPendingContext.Provider value={{ startNavigationPending }}>
+      <Suspense fallback={null}>
+        <RouteChangeNotifier onKeyChange={syncRouteKey} />
+      </Suspense>
       {pending ? (
         <div
-          className="pointer-events-none fixed inset-x-0 top-0 z-[500] h-[3px] overflow-hidden bg-slate-200/90"
+          className="pointer-events-none fixed inset-x-0 top-0 z-[500] h-[4px] overflow-hidden bg-slate-200/95 shadow-sm"
           role="status"
           aria-live="polite"
           aria-label="ページを読み込み中"
@@ -74,7 +126,29 @@ export default function NavigationPendingProvider({
           <div className="h-full w-[40%] max-w-md animate-nav-pending-bar bg-gradient-to-r from-navy-primary via-[#2563eb] to-navy-primary" />
         </div>
       ) : null}
+      {pending && showOverlay ? (
+        <div
+          className="pointer-events-none fixed inset-0 z-[480] flex items-center justify-center bg-slate-900/18 backdrop-blur-[2px]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+          aria-label="ページを読み込み中"
+        >
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/95 px-6 py-4 shadow-xl">
+            <Loader2 className="h-9 w-9 shrink-0 animate-spin text-navy-primary" aria-hidden />
+            <span className="text-sm font-bold text-navy-secondary tabular-nums">読み込み中…</span>
+          </div>
+        </div>
+      ) : null}
       {children}
-    </>
+    </NavigationPendingContext.Provider>
   )
+}
+
+export default function NavigationPendingProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return <NavigationPendingInner>{children}</NavigationPendingInner>
 }

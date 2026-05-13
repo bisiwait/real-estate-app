@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { startTransition } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useStartNavigationPending } from '@/components/layout/NavigationPendingProvider'
 import { createClient } from '@/lib/supabase/client'
 import { User, LogOut, LayoutDashboard, Coins, LogIn, UserPlus, ShieldCheck, Search, Settings, BarChart3, ChevronDown, MessageCircle } from 'lucide-react'
 import { clsx, type ClassValue } from 'clsx'
@@ -15,11 +16,10 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
-import { usePathname } from 'next/navigation'
-
 export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: { dict: any, isMobile?: boolean, onCloseMobileMenu?: () => void }) {
     const supabase = createClient()
     const router = useRouter()
+    const startNavigationPending = useStartNavigationPending()
     const pathname = usePathname()
     const segments = pathname.split('/')
     const currentLocale = ['jp', 'en', 'th'].includes(segments[1]) ? segments[1] : 'jp'
@@ -27,10 +27,13 @@ export default function UserNav({ dict, isMobile = false, onCloseMobileMenu }: {
     const { user, userData, isLoading } = useAuth()
 
     const handleLogout = async () => {
+        startNavigationPending()
         await supabase.auth.signOut()
         if (onCloseMobileMenu) onCloseMobileMenu()
-        router.push(`/${currentLocale}`)
-        router.refresh()
+        startTransition(() => {
+            router.push(`/${currentLocale}`)
+            router.refresh()
+        })
     }
 
     if (isLoading) return <div className="w-8 h-8 rounded-full bg-slate-100 animate-pulse" />
