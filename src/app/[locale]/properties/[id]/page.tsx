@@ -62,6 +62,34 @@ async function fetchProperty(id: string, hostname: string | null) {
     return minimal.data ?? null
 }
 
+function propertyDetailFallbackMetadata(
+    locale: string,
+    id: string,
+    title: string,
+    description: string
+): Metadata {
+    const baseUrl = getPublicSiteUrl()
+    const pageUrl = `${baseUrl}/${locale}/properties/${id}`
+    return {
+        metadataBase: new URL(baseUrl),
+        title,
+        description,
+        alternates: { canonical: pageUrl },
+        openGraph: {
+            title,
+            description,
+            url: pageUrl,
+            siteName: 'Chonburi Home',
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+        },
+    }
+}
+
 export async function generateMetadata(
     { params }: { params: Promise<{ locale: string; id: string }> }
 ): Promise<Metadata> {
@@ -73,10 +101,12 @@ export async function generateMetadata(
         const property = await fetchProperty(id, hostname)
 
         if (!property) {
-            return {
-                title: 'Property | Chonburi Home',
-                description: 'Real estate listings in Pattaya & Sriracha.',
-            }
+            return propertyDetailFallbackMetadata(
+                locale,
+                id,
+                'Property | Chonburi Home',
+                'Real estate listings in Pattaya & Sriracha.'
+            )
         }
 
         const { url: supabasePublicUrl } = getSupabasePublicConfig(hostname)
@@ -109,12 +139,15 @@ export async function generateMetadata(
         }
 
         const pageUrl = `${baseUrl}/${locale}/properties/${id}`
+        const fullTitle = `${title} | Chonburi Home`
 
         return {
-            title: `${title} | Chonburi Home`,
+            metadataBase: new URL(baseUrl),
+            title: fullTitle,
             description,
+            alternates: { canonical: pageUrl },
             openGraph: {
-                title: `${title} | Chonburi Home`,
+                title: fullTitle,
                 description,
                 url: pageUrl,
                 siteName: 'Chonburi Home',
@@ -133,17 +166,19 @@ export async function generateMetadata(
             },
             twitter: {
                 card: 'summary_large_image',
-                title: `${title} | Chonburi Home`,
+                title: fullTitle,
                 description,
                 images: [imageUrl],
             },
         }
     } catch (error) {
         console.error('[generateMetadata] error:', error)
-        return {
-            title: 'Property | Chonburi Home',
-            description: 'Real estate listings in Pattaya & Sriracha.',
-        }
+        return propertyDetailFallbackMetadata(
+            locale,
+            id,
+            'Property | Chonburi Home',
+            'Real estate listings in Pattaya & Sriracha.'
+        )
     }
 }
 
