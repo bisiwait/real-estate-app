@@ -369,7 +369,7 @@
         "city": "都市",
         "area": "エリア",
         "area_map_title": "パタヤエリアマップ",
-        "area_map_hint": "下の地図でエリアをタップすると検索に反映されます。",
+        "area_map_hint": "右のボタンで地図を開き、エリアをタップすると検索に反映されます。",
         "area_map_from_map_option": "MAPから選ぶ",
         "all_areas": "すべてのエリア",
         "property_type": "物件種別",

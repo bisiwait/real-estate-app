@@ -2,7 +2,12 @@
 
 import { useId, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { PATTAYA_MAP_AREAS, PATTAYA_MAP_LABEL_POS, type PattayaMapAreaKey } from '@/lib/search/pattayaAreaMap'
+import {
+    PATTAYA_MAP_AREAS,
+    PATTAYA_MAP_LABEL_POS,
+    PATTAYA_MAP_STROKE,
+    type PattayaMapAreaKey,
+} from '@/lib/search/pattayaAreaMap'
 
 type PattayaAreaRow = { value: string; label: string }
 
@@ -12,11 +17,9 @@ export type AreaMapSelectorDict = {
 }
 
 type AreaMapSelectorProps = {
-    /** フィルター内で「MAPから選ぶ」後に true */
-    visible: boolean
+    open: boolean
     areas: PattayaAreaRow[]
     region: string
-    /** URL の `area`（マップ表示中も前回選択をハイライト） */
     selectedUrlArea: string
     onPickArea: (filterValue: string) => void
     className?: string
@@ -24,7 +27,7 @@ type AreaMapSelectorProps = {
 }
 
 export default function AreaMapSelector({
-    visible,
+    open,
     areas,
     region,
     selectedUrlArea,
@@ -40,58 +43,48 @@ export default function AreaMapSelector({
         return new Set(PATTAYA_MAP_AREAS.filter((a) => s.has(a.filterValue)).map((a) => a.key))
     }, [areas])
 
-    if (!visible || region !== 'Pattaya') return null
+    if (!open || region !== 'Pattaya') return null
 
     return (
         <div
             className={cn(
-                'mt-3 overflow-hidden rounded-2xl border border-slate-200/90 bg-gradient-to-b from-slate-50 to-white shadow-inner',
+                'overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm',
+                'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200',
                 className
             )}
             role="region"
             aria-labelledby={`${baseId}-map-title`}
         >
-            <div className="border-b border-slate-100 bg-white/80 px-3 py-2.5 sm:px-4">
-                <h3 id={`${baseId}-map-title`} className="text-xs font-black tracking-tight text-navy-secondary">
+            <div className="border-b border-slate-100 px-3 py-2.5 sm:px-4">
+                <h3 id={`${baseId}-map-title`} className="text-xs font-semibold tracking-tight text-slate-700">
                     {dict.area_map_title}
                 </h3>
-                <p className="mt-0.5 text-[10px] font-semibold leading-relaxed text-slate-500">{dict.area_map_hint}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-slate-500">{dict.area_map_hint}</p>
             </div>
 
-            <div className="relative w-full overflow-x-auto overflow-y-hidden overscroll-x-contain px-2 py-3 sm:px-3 sm:py-4">
-                <div className="mx-auto w-full min-w-[300px] max-w-[440px]">
+            <div className="flex w-full max-w-full items-center justify-center bg-slate-50/60 p-3 sm:p-4">
+                <div className="relative h-full w-full max-h-72 max-w-lg">
                     <svg
-                        viewBox="0 0 420 400"
-                        className="h-auto w-full max-h-[min(58vh,440px)] touch-manipulation select-none"
+                        viewBox="0 0 400 320"
+                        className="h-auto max-h-72 w-full object-contain touch-manipulation select-none"
                         preserveAspectRatio="xMidYMid meet"
-                        role="presentation"
+                        role="img"
+                        aria-labelledby={`${baseId}-svg-title`}
                     >
+                        <title id={`${baseId}-svg-title`}>{dict.area_map_title}</title>
                         <defs>
                             <linearGradient id={`${baseId}-sea`} x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.55" />
-                                <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.25" />
+                                <stop offset="0%" stopColor="#f8fafc" />
+                                <stop offset="100%" stopColor="#e0f2fe" />
                             </linearGradient>
-                            <linearGradient id={`${baseId}-shore`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#fef9c3" stopOpacity="0.35" />
-                                <stop offset="100%" stopColor="#f8fafc" stopOpacity="0.2" />
-                            </linearGradient>
-                            <filter id={`${baseId}-shadow`} x="-8%" y="-8%" width="116%" height="116%">
-                                <feDropShadow dx="0" dy="1" stdDeviation="1.2" floodOpacity="0.12" />
-                            </filter>
                         </defs>
 
-                        <rect x="0" y="0" width="118" height="400" fill={`url(#${baseId}-sea)`} rx="0" />
+                        <rect x="0" y="0" width="92" height="320" fill={`url(#${baseId}-sea)`} />
                         <path
-                            d="M 118 0 L 118 400"
-                            stroke="#38bdf8"
-                            strokeWidth="1.5"
-                            strokeOpacity="0.5"
+                            d="M 92 0 L 92 320"
+                            stroke={PATTAYA_MAP_STROKE.default}
+                            strokeWidth="1"
                             fill="none"
-                        />
-                        <path
-                            d="M 118 0 Q 108 80 112 160 T 118 320 Q 120 360 118 400 L 0 400 L 0 0 Z"
-                            fill={`url(#${baseId}-shore)`}
-                            opacity="0.5"
                         />
 
                         {PATTAYA_MAP_AREAS.filter((a) => allowed.has(a.key)).map((a) => {
@@ -99,7 +92,12 @@ export default function AreaMapSelector({
                             const selected = selectedUrlArea === a.filterValue
                             const hover = hoveredKey === a.key
                             const fill = selected ? a.fillSelected : hover ? a.fillHover : a.fill
-                            const strokeW = selected ? 2.6 : hover ? 2 : 1.35
+                            const stroke = selected
+                                ? PATTAYA_MAP_STROKE.selected
+                                : hover
+                                  ? PATTAYA_MAP_STROKE.hover
+                                  : PATTAYA_MAP_STROKE.default
+                            const strokeW = selected ? 1.35 : hover ? 1.2 : 1
                             return (
                                 <g
                                     key={a.key}
@@ -122,33 +120,21 @@ export default function AreaMapSelector({
                                     <path
                                         d={a.path}
                                         fill={fill}
-                                        stroke={a.stroke}
+                                        stroke={stroke}
                                         strokeWidth={strokeW}
                                         strokeLinejoin="round"
-                                        filter={`url(#${baseId}-shadow)`}
-                                        className="transition-[fill,stroke-width] duration-200 ease-out"
+                                        className="transition-[fill,stroke,stroke-width] duration-200 ease-out"
                                     />
                                     <text
                                         textAnchor="middle"
                                         pointerEvents="none"
+                                        fill="#475569"
                                         style={{ fontFamily: 'inherit' }}
                                     >
-                                        <tspan
-                                            x={pos.x}
-                                            y={pos.y}
-                                            fill="#0f172a"
-                                            fontSize="10.5"
-                                            fontWeight="800"
-                                        >
+                                        <tspan x={pos.x} y={pos.y} fontSize="10" fontWeight="600">
                                             {a.labelJa}
                                         </tspan>
-                                        <tspan
-                                            x={pos.x}
-                                            y={pos.y + 13}
-                                            fill="#475569"
-                                            fontSize="9"
-                                            fontWeight="600"
-                                        >
+                                        <tspan x={pos.x} y={pos.y + 12} fontSize="9" fontWeight="500" opacity="0.92">
                                             {a.labelEn}
                                         </tspan>
                                     </text>
@@ -161,5 +147,3 @@ export default function AreaMapSelector({
         </div>
     )
 }
-
-export { PATTAYA_AREA_MAP_SELECT_VALUE } from '@/lib/search/pattayaAreaMap'
