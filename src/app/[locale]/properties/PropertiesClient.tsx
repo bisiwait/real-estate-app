@@ -617,6 +617,8 @@ export default function PropertiesClient({
                     <option value="Condo">{dict.property.condo}</option>
                     <option value="House">{dict.property.house}</option>
                     <option value="Townhouse">{dict.property.townhouse}</option>
+                    <option value="Apartment">{dict.property.apartment}</option>
+                    <option value="ServiceApartment">{dict.property.service_apartment}</option>
                     <option value="Commercial">{dict.property.shop}</option>
                 </select>
             </div>

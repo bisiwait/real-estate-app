@@ -28,6 +28,7 @@ import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkF
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useParams } from 'next/navigation'
+import { getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
 
 const CoordinatePicker = dynamic(() => import('../property/CoordinatePicker'), {
     loading: () => <div className="bg-slate-50 rounded-2xl h-64 animate-pulse border border-slate-100" />,
@@ -516,10 +517,12 @@ export default function AdminProjectManagement() {
                                         onChange={e => setFormData({ ...formData, property_type: e.target.value })}
                                         className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold"
                                     >
-                                        <option value="Condo">Condo</option>
-                                        <option value="House">House</option>
-                                        <option value="Townhouse">Townhouse</option>
-                                        <option value="Commercial">Commercial</option>
+                                        <option value="Condo">{getPropertyTypeOptionLabel('Condo', locale)}</option>
+                                        <option value="House">{getPropertyTypeOptionLabel('House', locale)}</option>
+                                        <option value="Townhouse">{getPropertyTypeOptionLabel('Townhouse', locale)}</option>
+                                        <option value="Apartment">{getPropertyTypeOptionLabel('Apartment', locale)}</option>
+                                        <option value="ServiceApartment">{getPropertyTypeOptionLabel('ServiceApartment', locale)}</option>
+                                        <option value="Commercial">{getPropertyTypeOptionLabel('Commercial', locale)}</option>
                                     </select>
                                 </div>
                                 <div>

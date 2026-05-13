@@ -132,6 +132,9 @@ export default function HeroSection({ dict, locale }: { dict: any, locale: strin
                                 <option value="Condo">{dict.home.condo}</option>
                                 <option value="House">{dict.home.house}</option>
                                 <option value="Townhouse">{dict.home.townhouse}</option>
+                                <option value="Apartment">{dict.home.apartment}</option>
+                                <option value="ServiceApartment">{dict.home.service_apartment}</option>
+                                <option value="Commercial">{dict.home.commercial}</option>
                             </select>
                         </div>
                         <div className="flex-[0.8] flex items-end">

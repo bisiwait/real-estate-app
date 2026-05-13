@@ -6,7 +6,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { escapeIlikePattern } from '@/lib/admin-list-url'
 import type { AdminPropListFilter } from '@/lib/admin-property-list-url'
 
-export const ADMIN_PROPERTY_TYPE_VALUES = ['Condo', 'House', 'Townhouse', 'Commercial'] as const
+export const ADMIN_PROPERTY_TYPE_VALUES = [
+    'Condo',
+    'House',
+    'Townhouse',
+    'Apartment',
+    'ServiceApartment',
+    'Commercial',
+] as const
 const PROPERTY_TYPE_SET = new Set<string>(ADMIN_PROPERTY_TYPE_VALUES)
 
 /** エージェント名検索で properties.user_id.in(...) に載せる ID の上限（URL・クエリ肥大化防止） */

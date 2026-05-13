@@ -1,8 +1,10 @@
 /** DB / API 用の value は英語キーのまま。表示ラベルのみ多言語化。 */
 const PROPERTY_TYPE_LABELS: Record<string, { jp: string; en: string; th: string }> = {
     Condo: { jp: 'コンドミニアム', en: 'Condominium', th: 'คอนโดมิเนียม' },
-    House: { jp: '一軒家・ヴィラ', en: 'House / Villa', th: 'บ้านเดี่ยว / วิลล่า' },
+    House: { jp: 'ヴィラ・一軒家', en: 'Villa / House', th: 'วิลล่า / บ้านเดี่ยว' },
     Townhouse: { jp: 'タウンハウス', en: 'Townhouse', th: 'ทาวน์เฮาส์' },
+    Apartment: { jp: 'アパート', en: 'Apartment', th: 'อพาร์ตเมนต์' },
+    ServiceApartment: { jp: 'サービスアパート', en: 'Service apartment', th: 'เซอร์วิสอพาร์ตเมนต์' },
     Commercial: { jp: '店舗・商業', en: 'Retail / Commercial', th: 'อาคารพาณิชย์ / เชิงพาณิชย์' },
 }
 

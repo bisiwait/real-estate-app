@@ -1112,6 +1112,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                                 <option value="Condo">{getPropertyTypeOptionLabel('Condo', locale)}</option>
                                 <option value="House">{getPropertyTypeOptionLabel('House', locale)}</option>
                                 <option value="Townhouse">{getPropertyTypeOptionLabel('Townhouse', locale)}</option>
+                                <option value="Apartment">{getPropertyTypeOptionLabel('Apartment', locale)}</option>
+                                <option value="ServiceApartment">{getPropertyTypeOptionLabel('ServiceApartment', locale)}</option>
                                 <option value="Commercial">{getPropertyTypeOptionLabel('Commercial', locale)}</option>
                             </select>
                         </div>

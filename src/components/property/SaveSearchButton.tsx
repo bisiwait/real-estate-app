@@ -140,6 +140,8 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
                 Condo: dict.property.condo,
                 House: dict.property.house,
                 Townhouse: dict.property.townhouse,
+                Apartment: dict.property.apartment,
+                ServiceApartment: dict.property.service_apartment,
                 Commercial: dict.property.shop,
             };
             filters.push({ label: dict.labels.filters.property_type, value: propLabels[propType] || propType });
