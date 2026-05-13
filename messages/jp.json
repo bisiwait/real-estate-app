@@ -371,6 +371,7 @@
         "active_filters_title": "現在の条件",
         "city": "都市",
         "area": "エリア",
+        "area_map_toggle": "地図で選択",
         "all_areas": "すべてのエリア",
         "property_type": "物件種別",
         "all_types": "すべての種別",

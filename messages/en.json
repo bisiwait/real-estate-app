@@ -319,6 +319,7 @@
         "active_filters_title": "Current filters",
         "city": "City",
         "area": "Area",
+        "area_map_toggle": "Select on map",
         "all_areas": "All Areas",
         "property_type": "Property Type",
         "all_types": "All Types",

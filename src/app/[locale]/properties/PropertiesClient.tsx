@@ -5,9 +5,10 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchCount } from '@/contexts/SearchCountContext'
-import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves } from 'lucide-react'
+import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves, Map } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
+import PattayaAreaMap from '@/components/property/PattayaAreaMap'
 import {
     executePropertyListQuery,
     formatPropertyListRows,
@@ -137,6 +138,7 @@ export default function PropertiesClient({
     )
 
     const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
+    const [isAreaMapOpen, setIsAreaMapOpen] = useState(false)
     const [dbProperties, setDbProperties] = useState<any[]>(initialProperties)
     const [loading, setLoading] = useState(!skipInitialClientFetch)
     const [loadingMore, setLoadingMore] = useState(false)
@@ -566,14 +568,15 @@ export default function PropertiesClient({
                         <button
                             key={city.value}
                             type="button"
-                            onClick={() =>
+                            onClick={() => {
                                 setDraft((d) => ({
                                     ...d,
                                     region: city.value,
                                     area: '',
                                     tags: [],
                                 }))
-                            }
+                                setIsAreaMapOpen(false)
+                            }}
                             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${draft.region === city.value ? 'bg-white text-navy-primary shadow-sm' : 'text-slate-500 hover:text-navy-primary'}`}
                         >
                             {city.label}
@@ -587,20 +590,49 @@ export default function PropertiesClient({
                     <Filter className="w-3 h-3 mr-2" />
                     {dict.property.area}
                 </h3>
-                <select
-                    id="filter-area-select"
-                    aria-label={dict.property.area}
-                    className={selectFieldClass}
-                    value={draft.area}
-                    onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value }))}
-                >
-                    <option value="">{dict.property.all_areas}</option>
-                    {(AREAS_BY_CITY[draft.region] || []).map((area) => (
-                        <option key={area.value} value={area.value}>
-                            {area.label}
-                        </option>
-                    ))}
-                </select>
+                <div className="flex items-stretch gap-2">
+                    <select
+                        id="filter-area-select"
+                        aria-label={dict.property.area}
+                        className={cn(selectFieldClass, 'min-w-0 flex-1')}
+                        value={draft.area}
+                        onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value }))}
+                    >
+                        <option value="">{dict.property.all_areas}</option>
+                        {(AREAS_BY_CITY[draft.region] || []).map((area) => (
+                            <option key={area.value} value={area.value}>
+                                {area.label}
+                            </option>
+                        ))}
+                    </select>
+                    {draft.region === 'Pattaya' && (
+                        <button
+                            type="button"
+                            onClick={() => setIsAreaMapOpen((open) => !open)}
+                            aria-expanded={isAreaMapOpen}
+                            aria-controls="filter-area-map-panel"
+                            aria-label={dict.property.area_map_toggle}
+                            title={dict.property.area_map_toggle}
+                            className={cn(
+                                'inline-flex shrink-0 items-center justify-center rounded-xl border px-3 transition-colors',
+                                isAreaMapOpen
+                                    ? 'border-navy-primary bg-navy-primary text-white'
+                                    : 'border-slate-200 bg-white text-navy-primary hover:border-navy-primary/40 hover:bg-slate-50'
+                            )}
+                        >
+                            <Map className="h-4 w-4" aria-hidden />
+                        </button>
+                    )}
+                </div>
+                {isAreaMapOpen && draft.region === 'Pattaya' && (
+                    <div id="filter-area-map-panel" className="mt-3">
+                        <PattayaAreaMap
+                            areas={AREAS_BY_CITY.Pattaya}
+                            selectedArea={draft.area}
+                            onSelectArea={(value) => setDraft((d) => ({ ...d, area: value }))}
+                        />
+                    </div>
+                )}
             </div>
 
             <div>
