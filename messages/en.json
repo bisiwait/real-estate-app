@@ -317,7 +317,7 @@
         "city": "City",
         "area": "Area",
         "area_map_title": "Pattaya area map",
-        "area_map_hint": "Use the button to open the map, then tap a zone to apply it.",
+        "area_map_hint": "Use the button next to the area heading to open the map, then tap a zone.",
         "area_map_from_map_option": "Choose on map",
         "all_areas": "All Areas",
         "property_type": "Property Type",

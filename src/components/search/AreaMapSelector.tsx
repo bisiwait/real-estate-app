@@ -62,11 +62,16 @@ export default function AreaMapSelector({
                 <p className="mt-0.5 text-[11px] leading-snug text-slate-500">{dict.area_map_hint}</p>
             </div>
 
-            <div className="flex w-full max-w-full items-center justify-center bg-slate-50/60 p-3 sm:p-4">
-                <div className="relative h-full w-full max-h-72 max-w-lg">
+            <div className="flex w-full max-w-full items-center justify-center bg-slate-50/60 p-3 sm:p-4 lg:p-5">
+                <div className="relative mx-auto w-full max-w-full lg:max-w-none">
                     <svg
                         viewBox="0 0 400 320"
-                        className="h-auto max-h-72 w-full object-contain touch-manipulation select-none"
+                        className={cn(
+                            'w-full touch-manipulation select-none object-contain',
+                            'min-h-[220px] max-h-[min(48vh,17rem)]',
+                            'sm:min-h-[240px] sm:max-h-[min(50vh,19rem)]',
+                            'lg:min-h-[340px] lg:max-h-[min(72vh,520px)]'
+                        )}
                         preserveAspectRatio="xMidYMid meet"
                         role="img"
                         aria-labelledby={`${baseId}-svg-title`}
@@ -131,10 +136,10 @@ export default function AreaMapSelector({
                                         fill="#475569"
                                         style={{ fontFamily: 'inherit' }}
                                     >
-                                        <tspan x={pos.x} y={pos.y} fontSize="10" fontWeight="600">
+                                        <tspan x={pos.x} y={pos.y} fontSize="11" fontWeight="600">
                                             {a.labelJa}
                                         </tspan>
-                                        <tspan x={pos.x} y={pos.y + 12} fontSize="9" fontWeight="500" opacity="0.92">
+                                        <tspan x={pos.x} y={pos.y + 13} fontSize="10" fontWeight="500" opacity="0.92">
                                             {a.labelEn}
                                         </tspan>
                                     </text>
