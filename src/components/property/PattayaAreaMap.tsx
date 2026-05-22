@@ -60,49 +60,33 @@ const NAKLUA_VALUE = 'North Pattaya / Wongamat'
 const NAKLUA_RGB: readonly [number, number, number] = [148, 201, 233]
 const NAKLUA_TOLERANCE = 18
 
-/**
- * 地図上の日本語ラベル帯（%）。文字色は塗り色と一致しないため、色判定より先にヒットさせる。
- * rect: [xMin, yMin, xMax, yMax]
- */
-const AREA_LABEL_HIT_REGIONS: readonly { value: string; rect: readonly [number, number, number, number] }[] = [
-    { value: NAKLUA_VALUE, rect: [18, 2, 76, 8] },
-    { value: 'Central Pattaya', rect: [34, 19, 62, 23.5] },
-    { value: 'East Pattaya', rect: [60, 19, 97, 25] },
-    { value: 'Pratumnak', rect: [38, 35, 74, 43] },
-    { value: 'South Pattaya', rect: [26, 35, 66, 46] },
-    { value: 'Jomtien', rect: [18, 54, 62, 61] },
-]
-
-/** ナクルア・ウォンアマットの陸地（% は幅・高さに対する比率・780×752 実測に合わせて調整） */
+/** ナクルア・ウォンアマットの陸地（% は幅・高さに対する比率） */
 const NAKLUA_LAND_POLYGON: readonly [number, number][] = [
-    [24, 5.2],
-    [32, 5.0],
-    [44, 5.5],
-    [54, 6.0],
-    [62, 6.8],
-    [63.5, 11],
-    [62.5, 17.5],
-    [61, 20.5],
-    [52, 21.2],
-    [38, 21.5],
-    [26, 20.5],
-    [22, 17],
-    [21, 12],
-    [22, 8],
+    [17, 3.8],
+    [26, 3.2],
+    [39, 3.5],
+    [51, 4.2],
+    [61.5, 5.2],
+    [62.5, 11],
+    [61, 18.5],
+    [50, 19.8],
+    [30, 20.2],
+    [14, 18.5],
+    [11, 14],
+    [13, 8],
 ]
 
-/** 左側の開放水域 [y%, x%]。ナクルアと同色の海を選択対象から除外する */
+/** 左側の開放水域。ナクルアと同色の海を選択対象から除外する */
 const OPEN_WATER_COASTLINE: readonly [number, number][] = [
-    [5, 22],
-    [10, 20],
-    [15, 19],
-    [20, 22],
-    [24, 26],
+    [3, 18],
+    [8, 13],
+    [14, 11],
+    [20, 10],
+    [25, 9],
 ]
 
-/** 選択・ホバーは少し濃い水色 */
-const HIGHLIGHT_RGBA: readonly [number, number, number, number] = [2, 132, 199, 135]
-const HOVER_RGBA: readonly [number, number, number, number] = [56, 189, 248, 95]
+const HIGHLIGHT_RGBA: readonly [number, number, number, number] = [15, 23, 42, 95]
+const HOVER_RGBA: readonly [number, number, number, number] = [15, 23, 42, 55]
 
 function colorDistance(
     r: number,
@@ -148,23 +132,9 @@ function isNakluaLand(xPercent: number, yPercent: number, r: number, g: number, 
     return colorDistance(r, g, b, NAKLUA_RGB) <= NAKLUA_TOLERANCE
 }
 
-function regionFromLabelHit(xPercent: number, yPercent: number): string | null {
-    for (const { value, rect } of AREA_LABEL_HIT_REGIONS) {
-        const [xMin, yMin, xMax, yMax] = rect
-        if (xPercent >= xMin && xPercent <= xMax && yPercent >= yMin && yPercent <= yMax) {
-            return value
-        }
-    }
-    return null
-}
-
 function classifyPixel(r: number, g: number, b: number, x: number, y: number): string | null {
     const xPercent = (x / MAP_WIDTH) * 100
     const yPercent = (y / MAP_HEIGHT) * 100
-
-    const labelHit = regionFromLabelHit(xPercent, yPercent)
-    if (labelHit) return labelHit
-
     let best: { value: string; distance: number } | null = null
 
     for (const profile of REGION_PROFILES) {
