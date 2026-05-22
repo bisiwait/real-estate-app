@@ -37,8 +37,17 @@ function RouteChangeNotifier({ onKeyChange }: { onKeyChange: (routeKey: string) 
   return null
 }
 
+/** スクロールとタップを区別する移動閾値（px） */
+const TAP_MOVE_THRESHOLD_PX = 12
+
+type LinkNavCandidate = {
+  routeTarget: string
+  startX: number
+  startY: number
+}
+
 /**
- * 内部リンクの pointerdown で pending。
+ * 内部リンクのタップ確定時のみ pending（pointerdown 即時だとモバイルスクロールで誤発火）。
  * 言語切替など `router.push` は `useStartNavigationPending()` で明示通知。
  * ルート確定は pathname + searchParams で検知（クエリのみの遷移でも pending を解除）。
  */
@@ -46,6 +55,7 @@ function NavigationPendingInner({ children }: { children: React.ReactNode }) {
   const [pending, setPending] = useState(false)
   const [showOverlay, setShowOverlay] = useState(false)
   const prevRouteKeyRef = useRef<string | null>(null)
+  const linkNavCandidateRef = useRef<LinkNavCandidate | null>(null)
 
   const syncRouteKey = useCallback((routeKey: string) => {
     if (prevRouteKeyRef.current === null) {
@@ -88,6 +98,32 @@ function NavigationPendingInner({ children }: { children: React.ReactNode }) {
       }
     }
 
+    const clearLinkNavCandidate = () => {
+      linkNavCandidateRef.current = null
+    }
+
+    const movedBeyondTapThreshold = (clientX: number, clientY: number) => {
+      const c = linkNavCandidateRef.current
+      if (!c) return true
+      const dx = clientX - c.startX
+      const dy = clientY - c.startY
+      return dx * dx + dy * dy > TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX
+    }
+
+    const commitLinkNavCandidate = (clientX: number, clientY: number) => {
+      const c = linkNavCandidateRef.current
+      clearLinkNavCandidate()
+      if (!c) return
+      const dx = clientX - c.startX
+      const dy = clientY - c.startY
+      if (dx * dx + dy * dy > TAP_MOVE_THRESHOLD_PX * TAP_MOVE_THRESHOLD_PX) return
+
+      const current = `${window.location.pathname}${window.location.search}`
+      if (c.routeTarget === current) return
+
+      setPending(true)
+    }
+
     const onPointerDown = (e: PointerEvent) => {
       if (e.button !== 0) return
       const el = e.target as HTMLElement | null
@@ -104,11 +140,39 @@ function NavigationPendingInner({ children }: { children: React.ReactNode }) {
       const current = `${window.location.pathname}${window.location.search}`
       if (target === current) return
 
-      setPending(true)
+      linkNavCandidateRef.current = {
+        routeTarget: target,
+        startX: e.clientX,
+        startY: e.clientY,
+      }
+    }
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!linkNavCandidateRef.current) return
+      if (movedBeyondTapThreshold(e.clientX, e.clientY)) {
+        clearLinkNavCandidate()
+      }
+    }
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (e.button !== 0) return
+      commitLinkNavCandidate(e.clientX, e.clientY)
+    }
+
+    const onPointerCancel = () => {
+      clearLinkNavCandidate()
     }
 
     document.addEventListener('pointerdown', onPointerDown, true)
-    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('pointermove', onPointerMove, true)
+    document.addEventListener('pointerup', onPointerUp, true)
+    document.addEventListener('pointercancel', onPointerCancel, true)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('pointermove', onPointerMove, true)
+      document.removeEventListener('pointerup', onPointerUp, true)
+      document.removeEventListener('pointercancel', onPointerCancel, true)
+    }
   }, [])
 
   return (
