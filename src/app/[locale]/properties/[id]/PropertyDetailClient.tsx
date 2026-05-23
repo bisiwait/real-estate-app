@@ -23,6 +23,7 @@ import {
     replaceLineInquiryUrlPrefill,
     resolveLinePropertyTitle,
 } from '@/lib/line-oa-message-inquiry-url'
+import { buildWhatsAppWaMeUrl } from '@/lib/whatsapp-wa-me-url'
 import { isPremium } from '@/lib/utils/plan'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
@@ -266,6 +267,25 @@ export default function PropertyDetailClient({
         property,
     ])
 
+    /** 電話公開設定済みエージェントのみ。ログイン不要で wa.me から直接連絡可能 */
+    const whatsAppInquiryUrl = useMemo(() => {
+        const phoneTrimmed =
+            typeof agent?.phone === 'string' && agent.phone.trim().length > 0 ? agent.phone.trim() : ''
+        const allowed = phoneTrimmed && agent?.show_phone_in_inquiry !== false
+        if (!allowed || !dict) return null
+        const pageUrl =
+            (clientPageHref && clientPageHref.trim()) ||
+            (propertyDetailPageUrl && propertyDetailPageUrl.trim()) ||
+            ''
+        const tpl =
+            dict.property?.whatsapp_inquiry_prefill_template ??
+            '物件について問い合わせます。\n{propertyName}\n{propertyUrl}'
+        const msg = tpl
+            .replace(/\{propertyName\}/g, displayTitle.trim())
+            .replace(/\{propertyUrl\}/g, pageUrl.trim())
+        return buildWhatsAppWaMeUrl(phoneTrimmed, msg)
+    }, [agent, dict, clientPageHref, propertyDetailPageUrl, displayTitle])
+
     const mapSearchHint = useMemo(() => {
         if (!property) return null
         const parts = [displayTitle, property.building_name, projectDisplayName].filter(
@@ -410,6 +430,7 @@ export default function PropertyDetailClient({
                                 contactPrefill={contactPrefill}
                                 officialLineAddFriendUrl={resolvedLineInquiryUrl}
                                 propertyPageUrl={clientPageHref ?? propertyDetailPageUrl}
+                                whatsAppInquiryUrl={whatsAppInquiryUrl ?? undefined}
                             />
                         </div>
                     </div>
@@ -422,6 +443,7 @@ export default function PropertyDetailClient({
             </div>
             <StickyContactBar
                 phoneNumber={stickyPhone}
+                whatsAppUrl={whatsAppInquiryUrl ?? undefined}
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}

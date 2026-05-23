@@ -25,6 +25,7 @@ import { postLineInquiryLog } from '@/lib/line-inquiry-log-client'
 import { buildLineInquiryShareText } from '@/lib/line-inquiry-share-text'
 import { replaceLineInquiryUrlPrefill } from '@/lib/line-oa-message-inquiry-url'
 import { copyTextToClipboard } from '@/lib/clipboard-copy'
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon'
 
 async function requestInquiryConfirmationEmail(
   supabase: ReturnType<typeof createClient>,
@@ -106,6 +107,8 @@ interface InquiryFormProps {
   officialLineAddFriendUrl: string
   /** クリップボード用テンプレートの {propertyUrl} に使う（正規の物件ページ URL） */
   propertyPageUrl: string
+  /** wa.me でのエージェント直行（ログイン不要） */
+  whatsAppInquiryUrl?: string
 }
 
 export default function InquiryForm({
@@ -118,6 +121,7 @@ export default function InquiryForm({
   contactPrefill,
   officialLineAddFriendUrl,
   propertyPageUrl,
+  whatsAppInquiryUrl,
 }: InquiryFormProps) {
   const routeParams = useParams()
   const locale = (routeParams?.locale as string) || 'jp'
@@ -445,6 +449,24 @@ export default function InquiryForm({
             : 'max-h-0 overflow-hidden opacity-0 lg:max-h-none lg:overflow-visible lg:opacity-100'
         )}
       >
+        {whatsAppInquiryUrl ? (
+          <div className="mb-5 rounded-2xl border border-[#25D366]/30 bg-[#dcf8ef]/45 p-4 shadow-sm">
+            <a
+              href={whatsAppInquiryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#25D366] px-4 py-3.5 text-sm font-black text-white shadow-md shadow-[#25D366]/25 transition hover:bg-[#20bd5c] active:scale-[0.99]"
+            >
+              <WhatsAppIcon className="h-5 w-5 shrink-0 text-white" aria-hidden />
+              <span>{p.whatsapp_inquiry_btn ?? 'WhatsApp'}</span>
+            </a>
+            <p className="mt-2 whitespace-pre-line text-center text-[10px] leading-relaxed text-slate-500">
+              {p.whatsapp_inquiry_hint ??
+                'WhatsApp が新しいタブで開きます。サイトへのログインは不要です。'}
+            </p>
+          </div>
+        ) : null}
+
         {hasOfficialLine ? (
           <div
             className="mb-5"

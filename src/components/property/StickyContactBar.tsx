@@ -2,9 +2,12 @@
 
 import React from 'react'
 import { Phone, Mail } from 'lucide-react'
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon'
 
 interface StickyContactBarProps {
     phoneNumber?: string
+    /** WhatsApp（wa.me）問い合わせ。ログイン不要 */
+    whatsAppUrl?: string
     /** false のとき電話ボタンを出さない（エージェント設定） */
     showPhoneInquiry?: boolean
     dict: any
@@ -14,6 +17,7 @@ interface StickyContactBarProps {
 
 export default function StickyContactBar({
     phoneNumber,
+    whatsAppUrl,
     showPhoneInquiry = true,
     dict,
     isLoggedIn = true,
@@ -56,6 +60,22 @@ export default function StickyContactBar({
                         >
                             <Phone className="w-5 h-5 mb-0.5" />
                             <span className="text-[9px] font-black uppercase text-center">{dict.common.call_btn || 'Call'}</span>
+                        </a>
+                    ) : null}
+
+                    {whatsAppUrl ? (
+                        <a
+                            href={whatsAppUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center bg-[#25D366]/12 border border-[#25D366]/35 text-[#128C7E] w-14 h-14 rounded-xl active:scale-95 transition-all flex-shrink-0"
+                            aria-label={dict.common?.whatsapp_btn ?? 'WhatsApp'}
+                            title={dict.common?.whatsapp_btn ?? 'WhatsApp'}
+                        >
+                            <WhatsAppIcon className="w-6 h-6 mb-0.5 text-[#25D366]" />
+                            <span className="text-[9px] font-black uppercase text-center leading-tight">
+                                {dict.common?.whatsapp_btn_short ?? 'WA'}
+                            </span>
                         </a>
                     ) : null}
 
