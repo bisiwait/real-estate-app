@@ -146,11 +146,25 @@ export default function InquiryForm({
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [portalReady, setPortalReady] = useState(false)
   const [lineQrModalOpen, setLineQrModalOpen] = useState(false)
-  /** LINE 連携ありのときのみ使用。メール / LINE のセグメント切替 */
-  const [inquiryChannel, setInquiryChannel] = useState<'mail' | 'line'>('mail')
   const lineAddFriendUrl = officialLineAddFriendUrl?.trim() ?? ''
   const hasOfficialLine = Boolean(lineAddFriendUrl)
+  const whatsAppHref = (whatsAppInquiryUrl ?? '').trim()
+  const hasWhatsApp = Boolean(whatsAppHref)
+  const needsChannelTabs = hasOfficialLine || hasWhatsApp
+  const [inquiryChannel, setInquiryChannel] = useState<'mail' | 'line' | 'whatsapp'>('mail')
   const { isSmartphone: isSmartphoneDevice } = useDeviceType()
+
+  useEffect(() => {
+    if (!hasOfficialLine) setInquiryChannel((c) => (c === 'line' ? 'mail' : c))
+  }, [hasOfficialLine])
+
+  useEffect(() => {
+    if (!hasWhatsApp) setInquiryChannel((c) => (c === 'whatsapp' ? 'mail' : c))
+  }, [hasWhatsApp])
+
+  useEffect(() => {
+    if (!needsChannelTabs) setInquiryChannel('mail')
+  }, [needsChannelTabs])
 
   const shareText = useMemo(() => {
     const tpl =
@@ -190,10 +204,6 @@ export default function InquiryForm({
     isSmartphoneDevice,
     lineLaunch.launchAssign,
   ])
-
-  useEffect(() => {
-    if (!hasOfficialLine) setInquiryChannel('mail')
-  }, [hasOfficialLine])
 
   const clearConfirmTimer = useCallback(() => {
     if (confirmTimerRef.current) {
@@ -449,31 +459,13 @@ export default function InquiryForm({
             : 'max-h-0 overflow-hidden opacity-0 lg:max-h-none lg:overflow-visible lg:opacity-100'
         )}
       >
-        {whatsAppInquiryUrl ? (
-          <div className="mb-5 rounded-2xl border border-[#25D366]/30 bg-[#dcf8ef]/45 p-4 shadow-sm">
-            <a
-              href={whatsAppInquiryUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#25D366] px-4 py-3.5 text-sm font-black text-white shadow-md shadow-[#25D366]/25 transition hover:bg-[#20bd5c] active:scale-[0.99]"
-            >
-              <WhatsAppIcon className="h-5 w-5 shrink-0 text-white" aria-hidden />
-              <span>{p.whatsapp_inquiry_btn ?? 'WhatsApp'}</span>
-            </a>
-            <p className="mt-2 whitespace-pre-line text-center text-[10px] leading-relaxed text-slate-500">
-              {p.whatsapp_inquiry_hint ??
-                'WhatsApp が新しいタブで開きます。サイトへのログインは不要です。'}
-            </p>
-          </div>
-        ) : null}
-
-        {hasOfficialLine ? (
+        {needsChannelTabs ? (
           <div
             className="mb-5"
             role="tablist"
             aria-label={p.inquiry_title ?? 'お問い合わせ'}
           >
-            <div className="flex rounded-2xl border border-slate-200/90 bg-slate-100/95 p-1 shadow-inner">
+            <div className="flex gap-1 rounded-2xl border border-slate-200/90 bg-slate-100/95 p-1 shadow-inner sm:flex-nowrap flex-wrap justify-stretch">
               <button
                 type="button"
                 role="tab"
@@ -483,84 +475,138 @@ export default function InquiryForm({
                 tabIndex={inquiryChannel === 'mail' ? 0 : -1}
                 onClick={() => setInquiryChannel('mail')}
                 className={clsx(
-                  'relative flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-center text-xs font-black transition-all sm:text-sm',
+                  'relative flex min-h-12 flex-1 basis-[30%] min-w-[calc(31%-6px)] items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-center text-[11px] font-black transition-all sm:gap-2 sm:px-2 sm:text-sm',
                   inquiryChannel === 'mail'
                     ? 'bg-white text-navy-primary shadow-md shadow-slate-200/80 ring-1 ring-slate-200/60'
                     : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
                 )}
               >
                 <Mail className="h-4 w-4 shrink-0" aria-hidden />
-                <span>{p.inquiry_channel_tab_mail ?? 'メール'}</span>
+                <span className="leading-tight">{p.inquiry_channel_tab_mail ?? 'メール'}</span>
               </button>
-              <button
-                type="button"
-                role="tab"
-                id="inquiry-tab-line"
-                aria-selected={inquiryChannel === 'line'}
-                aria-controls="inquiry-panel-line"
-                tabIndex={inquiryChannel === 'line' ? 0 : -1}
-                title={p.inquiry_channel_line_badge_hint}
-                onClick={() => setInquiryChannel('line')}
-                className={clsx(
-                  'relative flex min-h-12 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-all sm:flex-row sm:gap-2 sm:py-2.5',
-                  inquiryChannel === 'line'
-                    ? 'bg-white text-[#047c3d] shadow-md shadow-[#06C755]/15 ring-1 ring-[#06C755]/25'
-                    : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
-                )}
-              >
-                <span className="flex items-center gap-2 text-xs font-black sm:text-sm">
-                  <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
-                  <span>{p.inquiry_channel_tab_line ?? 'LINE'}</span>
-                </span>
-                <span
-                  className="inline-flex max-w-full items-center rounded-full bg-[#06C755]/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#047c3d] ring-1 ring-[#06C755]/20"
-                  aria-hidden
+              {hasOfficialLine ? (
+                <button
+                  type="button"
+                  role="tab"
+                  id="inquiry-tab-line"
+                  aria-selected={inquiryChannel === 'line'}
+                  aria-controls="inquiry-panel-line"
+                  tabIndex={inquiryChannel === 'line' ? 0 : -1}
+                  title={p.inquiry_channel_line_badge_hint}
+                  onClick={() => setInquiryChannel('line')}
+                  className={clsx(
+                    'relative flex min-h-12 flex-1 basis-[38%] min-w-[calc(31%-6px)] flex-col items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-center transition-all sm:flex-row sm:gap-2 sm:py-2.5',
+                    inquiryChannel === 'line'
+                      ? 'bg-white text-[#047c3d] shadow-md shadow-[#06C755]/15 ring-1 ring-[#06C755]/25'
+                      : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
+                  )}
                 >
-                  {p.inquiry_channel_line_badge ?? 'おすすめ'}
-                </span>
-              </button>
+                  <span className="flex items-center gap-2 text-[11px] font-black sm:text-sm">
+                    <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
+                    <span className="leading-tight">{p.inquiry_channel_tab_line ?? 'LINE'}</span>
+                  </span>
+                  <span
+                    className="inline-flex max-w-full items-center rounded-full bg-[#06C755]/15 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-[#047c3d] ring-1 ring-[#06C755]/20 leading-tight"
+                    aria-hidden
+                  >
+                    {p.inquiry_channel_line_badge ?? 'おすすめ'}
+                  </span>
+                </button>
+              ) : null}
+              {hasWhatsApp ? (
+                <button
+                  type="button"
+                  role="tab"
+                  id="inquiry-tab-whatsapp"
+                  aria-selected={inquiryChannel === 'whatsapp'}
+                  aria-controls="inquiry-panel-whatsapp"
+                  tabIndex={inquiryChannel === 'whatsapp' ? 0 : -1}
+                  title={p.whatsapp_tab_hint ?? p.whatsapp_inquiry_hint}
+                  onClick={() => setInquiryChannel('whatsapp')}
+                  className={clsx(
+                    'relative flex min-h-12 flex-1 basis-[30%] min-w-[calc(31%-6px)] items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-center text-[11px] font-black transition-all sm:text-sm',
+                    inquiryChannel === 'whatsapp'
+                      ? 'bg-white text-[#075e54] shadow-md shadow-[#25D366]/25 ring-1 ring-[#25D366]/35'
+                      : 'text-slate-500 hover:bg-white/50 hover:text-slate-700'
+                  )}
+                >
+                  <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#25D366]" aria-hidden />
+                  <span className="leading-tight">
+                    {p.inquiry_channel_tab_whatsapp ??
+                      dict.common?.whatsapp_btn_short ??
+                      'WA'}
+                  </span>
+                </button>
+              ) : null}
             </div>
           </div>
         ) : null}
 
         {!isLoggedIn ? (
-          <div
-            id={
-              hasOfficialLine
-                ? inquiryChannel === 'mail'
-                  ? 'inquiry-panel-mail'
-                  : 'inquiry-panel-line'
-                : undefined
-            }
-            role={hasOfficialLine ? 'tabpanel' : undefined}
-            aria-labelledby={
-              hasOfficialLine
-                ? inquiryChannel === 'mail'
-                  ? 'inquiry-tab-mail'
-                  : 'inquiry-tab-line'
-                : undefined
-            }
-            className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/90 to-white p-6 text-center shadow-sm"
-          >
-            <p className="text-sm font-black text-navy-secondary">{p.contact_gate_title}</p>
-            <p className="mt-3 whitespace-pre-line text-left text-xs font-medium leading-relaxed text-slate-600">
-              {p.contact_auth_modal_body}
-            </p>
-            <button
-              type="button"
-              onClick={() => onRequireAuth?.()}
-              className="mt-5 w-full min-h-11 rounded-xl bg-navy-primary py-3 text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
+          inquiryChannel === 'whatsapp' && hasWhatsApp && whatsAppHref ? (
+            <div
+              id="inquiry-panel-whatsapp"
+              role={needsChannelTabs ? 'tabpanel' : undefined}
+              aria-labelledby={needsChannelTabs ? 'inquiry-tab-whatsapp' : undefined}
+              className="rounded-2xl border border-[#25D366]/35 bg-[#dcf8ef]/45 p-4 shadow-sm"
             >
-              {p.contact_gate_cta}
-            </button>
-          </div>
+              <a
+                href={whatsAppHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#25D366] px-4 py-3.5 text-sm font-black text-white shadow-md shadow-[#25D366]/25 transition hover:bg-[#20bd5c] active:scale-[0.99]"
+              >
+                <WhatsAppIcon className="h-5 w-5 shrink-0 text-white" aria-hidden />
+                <span>{p.whatsapp_inquiry_btn ?? 'WhatsApp'}</span>
+              </a>
+              <p className="mt-2 whitespace-pre-line text-center text-[10px] leading-relaxed text-slate-500">
+                {p.whatsapp_inquiry_hint ??
+                  'WhatsApp が新しいタブで開きます。サイトへのログインは不要です。'}
+              </p>
+            </div>
+          ) : (
+            <div
+              id={
+                needsChannelTabs
+                  ? inquiryChannel === 'mail'
+                    ? 'inquiry-panel-mail'
+                    : inquiryChannel === 'line'
+                      ? 'inquiry-panel-line'
+                      : undefined
+                  : undefined
+              }
+              role={needsChannelTabs ? 'tabpanel' : undefined}
+              aria-labelledby={
+                needsChannelTabs
+                  ? inquiryChannel === 'mail'
+                    ? 'inquiry-tab-mail'
+                    : inquiryChannel === 'line'
+                      ? 'inquiry-tab-line'
+                      : undefined
+                  : undefined
+              }
+              className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/90 to-white p-6 text-center shadow-sm"
+            >
+              <p className="text-sm font-black text-navy-secondary">{p.contact_gate_title}</p>
+              <p className="mt-3 whitespace-pre-line text-left text-xs font-medium leading-relaxed text-slate-600">
+                {p.contact_auth_modal_body}
+              </p>
+              <button
+                type="button"
+                onClick={() => onRequireAuth?.()}
+                className="mt-5 w-full min-h-11 rounded-xl bg-navy-primary py-3 text-sm font-black text-white shadow-md transition hover:bg-navy-secondary"
+              >
+                {p.contact_gate_cta}
+              </button>
+            </div>
+          )
         ) : null}
 
-        {(!hasOfficialLine || inquiryChannel === 'mail') && isLoggedIn ? (
+        {(!needsChannelTabs || inquiryChannel === 'mail') && isLoggedIn ? (
           <form
-            id={hasOfficialLine ? 'inquiry-panel-mail' : undefined}
-            role={hasOfficialLine ? 'tabpanel' : undefined}
-            aria-labelledby={hasOfficialLine ? 'inquiry-tab-mail' : undefined}
+            id={needsChannelTabs ? 'inquiry-panel-mail' : undefined}
+            role={needsChannelTabs ? 'tabpanel' : undefined}
+            aria-labelledby={needsChannelTabs ? 'inquiry-tab-mail' : undefined}
             onSubmit={handleSubmit}
             className="space-y-4"
           >
@@ -685,6 +731,29 @@ export default function InquiryForm({
               {dict.property.inquiry_footer_note}
             </p>
           </form>
+        ) : null}
+
+        {hasWhatsApp && inquiryChannel === 'whatsapp' && isLoggedIn ? (
+          <div
+            id="inquiry-panel-whatsapp"
+            role={needsChannelTabs ? 'tabpanel' : undefined}
+            aria-labelledby={needsChannelTabs ? 'inquiry-tab-whatsapp' : undefined}
+            className="rounded-2xl border border-[#25D366]/35 bg-[#dcf8ef]/45 p-4 shadow-sm"
+          >
+            <a
+              href={whatsAppHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-3 rounded-xl bg-[#25D366] px-4 py-3.5 text-sm font-black text-white shadow-md shadow-[#25D366]/25 transition hover:bg-[#20bd5c] active:scale-[0.99]"
+            >
+              <WhatsAppIcon className="h-5 w-5 shrink-0 text-white" aria-hidden />
+              <span>{p.whatsapp_inquiry_btn ?? 'WhatsApp'}</span>
+            </a>
+            <p className="mt-2 whitespace-pre-line text-center text-[10px] leading-relaxed text-slate-500">
+              {p.whatsapp_inquiry_hint ??
+                'WhatsApp が新しいタブで開きます。サイトへのログインは不要です。'}
+            </p>
+          </div>
         ) : null}
 
         {hasOfficialLine && inquiryChannel === 'line' && isLoggedIn ? (

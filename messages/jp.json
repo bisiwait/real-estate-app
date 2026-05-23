@@ -516,6 +516,8 @@
         "whatsapp_inquiry_btn": "WhatsAppで問い合わせ",
         "whatsapp_inquiry_hint": "サイトへのログインは不要です。新しいタブで WhatsApp が開きます。",
         "whatsapp_inquiry_prefill_template": "物件について問い合わせします。\n{propertyName}\n{propertyUrl}",
+        "inquiry_channel_tab_whatsapp": "WhatsApp",
+        "whatsapp_tab_hint": "掲載者の電話番号がある場合にご利用いただけます。",
         "inquiry_channel_tab_mail": "メール",
         "inquiry_channel_tab_line": "LINE",
         "inquiry_channel_line_badge": "おすすめ",

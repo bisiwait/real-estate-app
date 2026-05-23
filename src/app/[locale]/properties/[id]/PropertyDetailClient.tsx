@@ -267,12 +267,11 @@ export default function PropertyDetailClient({
         property,
     ])
 
-    /** 電話公開設定済みエージェントのみ。ログイン不要で wa.me から直接連絡可能 */
+    /** `profiles.phone` を wa.me に解釈できる場合（tel 表示のオンオフとは独立） */
     const whatsAppInquiryUrl = useMemo(() => {
         const phoneTrimmed =
             typeof agent?.phone === 'string' && agent.phone.trim().length > 0 ? agent.phone.trim() : ''
-        const allowed = phoneTrimmed && agent?.show_phone_in_inquiry !== false
-        if (!allowed || !dict) return null
+        if (!phoneTrimmed || !dict) return null
         const pageUrl =
             (clientPageHref && clientPageHref.trim()) ||
             (propertyDetailPageUrl && propertyDetailPageUrl.trim()) ||

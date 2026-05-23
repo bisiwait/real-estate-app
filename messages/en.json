@@ -464,6 +464,8 @@
         "whatsapp_inquiry_btn": "Contact via WhatsApp",
         "whatsapp_inquiry_hint": "No login required. WhatsApp opens in a new tab to message the listing agent.",
         "whatsapp_inquiry_prefill_template": "I would like to ask about this property.\n{propertyName}\n{propertyUrl}",
+        "inquiry_channel_tab_whatsapp": "WhatsApp",
+        "whatsapp_tab_hint": "Shown when the agent has a reachable phone number for WhatsApp.",
         "inquiry_channel_tab_mail": "Email",
         "inquiry_channel_tab_line": "LINE",
         "inquiry_channel_line_badge": "Recommended",
