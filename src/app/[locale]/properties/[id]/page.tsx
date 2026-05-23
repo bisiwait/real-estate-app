@@ -214,13 +214,18 @@ export default async function Page({
 
     /** サイト既定の公式 LINE には誘導しない。オーナーが line_basic_id / line_id を設定している場合のみ組み立てる */
     let officialLineAddFriendUrl = ''
+    let initialListingOwnerPhone: string | undefined
     if (propertyForClient.user_id) {
         const supabase = createStaticClientForHostname(hostname)
         const { data: ownerProfile } = await supabase
             .from('profiles')
-            .select('line_basic_id, line_id, show_line_in_inquiry')
+            .select('line_basic_id, line_id, show_line_in_inquiry, phone')
             .eq('id', propertyForClient.user_id as string)
             .maybeSingle()
+        initialListingOwnerPhone =
+            typeof ownerProfile?.phone === 'string' && ownerProfile.phone.trim().length > 0
+                ? ownerProfile.phone.trim()
+                : undefined
         const raw = getPropertyOwnerLineInquiryRawInput(ownerProfile)
         if (raw) {
             officialLineAddFriendUrl = await buildPropertyLineInquiryUrlServer(
@@ -245,6 +250,7 @@ export default async function Page({
                 initialProperty={propertyForClient}
                 officialLineAddFriendUrl={officialLineAddFriendUrl}
                 propertyDetailPageUrl={propertyDetailPageUrl}
+                initialListingOwnerPhone={initialListingOwnerPhone}
             />
         </Suspense>
     )

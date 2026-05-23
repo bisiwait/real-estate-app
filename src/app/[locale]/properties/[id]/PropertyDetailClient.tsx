@@ -69,12 +69,15 @@ interface PropertyDetailClientProps {
     officialLineAddFriendUrl: string
     /** 物件詳細の正規 URL（サーバー推定）。クライアントでは window.location.href で上書き */
     propertyDetailPageUrl: string
+    /** サーバー側で一覧した掲載者の電話（クライアントの profiles 取得成功前のフォールバック） */
+    initialListingOwnerPhone?: string
 }
 
 export default function PropertyDetailClient({
     initialProperty,
     officialLineAddFriendUrl,
     propertyDetailPageUrl,
+    initialListingOwnerPhone,
 }: PropertyDetailClientProps) {
     const params = useParams()
     const pathname = usePathname()
@@ -269,8 +272,13 @@ export default function PropertyDetailClient({
 
     /** `profiles.phone` を wa.me に解釈できる場合（tel 表示のオンオフとは独立） */
     const whatsAppInquiryUrl = useMemo(() => {
-        const phoneTrimmed =
+        const fromAgent =
             typeof agent?.phone === 'string' && agent.phone.trim().length > 0 ? agent.phone.trim() : ''
+        const fallback =
+            typeof initialListingOwnerPhone === 'string' && initialListingOwnerPhone.trim().length > 0
+                ? initialListingOwnerPhone.trim()
+                : ''
+        const phoneTrimmed = fromAgent || fallback
         if (!phoneTrimmed || !dict) return null
         const pageUrl =
             (clientPageHref && clientPageHref.trim()) ||
@@ -283,7 +291,7 @@ export default function PropertyDetailClient({
             .replace(/\{propertyName\}/g, displayTitle.trim())
             .replace(/\{propertyUrl\}/g, pageUrl.trim())
         return buildWhatsAppWaMeUrl(phoneTrimmed, msg)
-    }, [agent, dict, clientPageHref, propertyDetailPageUrl, displayTitle])
+    }, [agent, dict, clientPageHref, propertyDetailPageUrl, displayTitle, initialListingOwnerPhone])
 
     const mapSearchHint = useMemo(() => {
         if (!property) return null
