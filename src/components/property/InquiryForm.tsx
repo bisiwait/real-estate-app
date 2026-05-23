@@ -470,7 +470,7 @@ export default function InquiryForm({
             <p className="text-sm font-black text-navy-secondary">{p.contact_gate_title}</p>
             <p className="mt-3 whitespace-pre-line text-left text-xs font-medium leading-relaxed text-slate-600">
               {p.contact_auth_modal_body_logged_in_required ??
-                'メール・LINE・電話・WhatsApp いずれのお問い合わせにもログインが必要です。'}
+                'メール・LINE・WhatsApp・電話 いずれのお問い合わせにもログインが必要です。'}
             </p>
             <button
               type="button"
@@ -530,29 +530,6 @@ export default function InquiryForm({
                 <button
                   type="button"
                   role="tab"
-                  id="inquiry-tab-phone"
-                  aria-selected={inquiryChannel === 'phone'}
-                  aria-controls="inquiry-panel-phone"
-                  tabIndex={inquiryChannel === 'phone' && hasTel ? 0 : -1}
-                  title={hasTel ? undefined : p.inquiry_channel_disabled_hint}
-                  disabled={!hasTel}
-                  onClick={() => hasTel && setInquiryChannel('phone')}
-                  className={clsx(
-                    'relative flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1.5 text-center transition-all sm:flex-row sm:gap-1 sm:px-1',
-                    inquiryChannel === 'phone' && hasTel
-                      ? 'bg-white text-navy-secondary shadow-md shadow-slate-200/80 ring-1 ring-slate-200/60'
-                      : 'text-slate-500 hover:bg-white/50 hover:text-slate-700',
-                    !hasTel && 'opacity-40 cursor-not-allowed hover:bg-transparent'
-                  )}
-                >
-                  <Phone className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
-                  <span className="max-w-full truncate text-[9px] font-black leading-tight sm:text-[11px]">
-                    {p.inquiry_channel_tab_phone ?? dict.common.call_btn ?? '電話'}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  role="tab"
                   id="inquiry-tab-whatsapp"
                   aria-selected={inquiryChannel === 'whatsapp'}
                   aria-controls="inquiry-panel-whatsapp"
@@ -571,6 +548,29 @@ export default function InquiryForm({
                   <WhatsAppIcon className="h-3.5 w-3.5 shrink-0 text-[#25D366] sm:h-4 sm:w-4" aria-hidden />
                   <span className="max-w-full truncate text-[9px] font-black leading-tight sm:text-[11px]">
                     {p.inquiry_channel_tab_whatsapp ?? dict.common?.whatsapp_btn_short ?? 'WA'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  id="inquiry-tab-phone"
+                  aria-selected={inquiryChannel === 'phone'}
+                  aria-controls="inquiry-panel-phone"
+                  tabIndex={inquiryChannel === 'phone' && hasTel ? 0 : -1}
+                  title={hasTel ? undefined : p.inquiry_channel_disabled_hint}
+                  disabled={!hasTel}
+                  onClick={() => hasTel && setInquiryChannel('phone')}
+                  className={clsx(
+                    'relative flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1.5 text-center transition-all sm:flex-row sm:gap-1 sm:px-1',
+                    inquiryChannel === 'phone' && hasTel
+                      ? 'bg-white text-navy-secondary shadow-md shadow-slate-200/80 ring-1 ring-slate-200/60'
+                      : 'text-slate-500 hover:bg-white/50 hover:text-slate-700',
+                    !hasTel && 'opacity-40 cursor-not-allowed hover:bg-transparent'
+                  )}
+                >
+                  <Phone className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                  <span className="max-w-full truncate text-[9px] font-black leading-tight sm:text-[11px]">
+                    {p.inquiry_channel_tab_phone ?? dict.common.call_btn ?? '電話'}
                   </span>
                 </button>
               </div>

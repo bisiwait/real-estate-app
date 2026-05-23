@@ -522,7 +522,7 @@
         "inquiry_channel_tab_phone": "電話",
         "inquiry_phone_call_btn": "電話する",
         "inquiry_phone_hint": "ご利用の端末の電話アプリから掲載エージェントへ発信します（通話料はお客様負担になります）。",
-        "contact_auth_modal_body_logged_in_required": "お問い合わせ（メール・LINE・電話・WhatsApp）は、すべてログイン後にご利用いただけます。\n\nログインまたは無料登録のうえ、右のお問い合わせボックスからチャネルをお選びください。",
+        "contact_auth_modal_body_logged_in_required": "お問い合わせ（メール・LINE・WhatsApp・電話）は、すべてログイン後にご利用いただけます。\n\nログインまたは無料登録のうえ、右のお問い合わせボックスからチャネルをお選びください。",
         "inquiry_channel_tab_mail": "メール",
         "inquiry_channel_tab_line": "LINE",
         "inquiry_channel_line_badge": "おすすめ",

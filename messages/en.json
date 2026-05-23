@@ -470,7 +470,7 @@
         "inquiry_channel_tab_phone": "Call",
         "inquiry_phone_call_btn": "Call now",
         "inquiry_phone_hint": "Opens your device's phone app to call the listing agent (carrier charges may apply).",
-        "contact_auth_modal_body_logged_in_required": "Email, LINE, phone, and WhatsApp inquiry options require you to sign in.\n\nPlease log in or create a free account, then choose a tab in the inquiry box.",
+        "contact_auth_modal_body_logged_in_required": "Email, LINE, WhatsApp, and phone inquiry options require you to sign in.\n\nPlease log in or create a free account, then choose a tab in the inquiry box.",
         "inquiry_channel_tab_mail": "Email",
         "inquiry_channel_tab_line": "LINE",
         "inquiry_channel_line_badge": "Recommended",

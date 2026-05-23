@@ -469,7 +469,7 @@
         "inquiry_channel_tab_phone": "โทร",
         "inquiry_phone_call_btn": "โทรออก",
         "inquiry_phone_hint": "เปิดแอปโทรศัพท์ของอุปกรณ์เพื่อโทรหาเอเจนต์ (ค่าบริการตามเครือข่าย)",
-        "contact_auth_modal_body_logged_in_required": "การสอบถามทางอีเมล LINE โทรศัพท์ และ WhatsApp ต้องเข้าสู่ระบบก่อนทั้งหมด\n\nกรุณาเข้าสู่ระบบหรือลงทะเบียนฟรี แล้วเลือกแท็บในช่องสอบถาม",
+        "contact_auth_modal_body_logged_in_required": "การสอบถามทางอีเมล LINE WhatsApp และโทรศัพท์ ต้องเข้าสู่ระบบก่อนทั้งหมด\n\nกรุณาเข้าสู่ระบบหรือลงทะเบียนฟรี แล้วเลือกแท็บในช่องสอบถาม",
         "inquiry_channel_tab_mail": "อีเมล",
         "inquiry_channel_tab_line": "LINE",
         "inquiry_channel_line_badge": "แนะนำ",
