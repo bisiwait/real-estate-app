@@ -28,30 +28,16 @@ type RegionProfile = {
 }
 
 const CENTRAL_VALUE = 'シラチャ中心部'
-const CENTRAL_RGB: readonly [number, number, number] = [157, 215, 216]
-const CENTRAL_TOLERANCE = 32
 
-/**
- * シラチャ中心部（青）— 海と同色に近いためポリゴンで陸地範囲を限定（%）
- */
+/** シラチャ中心部の濃い青オーバーレイ範囲（%・780×752 相当の実測） */
 const CENTRAL_LAND_POLYGON: readonly [number, number][] = [
-    [22, 27],
-    [31, 26.5],
-    [31.5, 35],
-    [30.5, 39],
-    [38, 41],
-    [43, 43],
-    [40, 45],
-    [24, 45],
-    [22, 38],
-]
-
-/** 左の開放水域 [y%, x%] — 中心部の海を選択対象から除外 */
-const OPEN_WATER_COASTLINE: readonly [number, number][] = [
-    [26, 20],
-    [32, 22],
-    [38, 24],
-    [45, 26],
+    [30, 25.5],
+    [37.5, 26],
+    [37.5, 38],
+    [36, 42.5],
+    [32, 43],
+    [30, 40],
+    [29.5, 32],
 ]
 
 /** 塗り色で判定するエリア（中心部以外・境界の誤判定を減らす優先順） */
@@ -87,26 +73,19 @@ function pointInPolygon(x: number, y: number, polygon: readonly [number, number]
     return inside
 }
 
-function coastlineXAtY(yPercent: number): number {
-    for (let i = 0; i < OPEN_WATER_COASTLINE.length - 1; i++) {
-        const [y1, x1] = OPEN_WATER_COASTLINE[i]
-        const [y2, x2] = OPEN_WATER_COASTLINE[i + 1]
-        if (yPercent < y1 || yPercent > y2) continue
-        const t = (yPercent - y1) / (y2 - y1 + Number.EPSILON)
-        return x1 + (x2 - x1) * t
-    }
-    return OPEN_WATER_COASTLINE[OPEN_WATER_COASTLINE.length - 1]?.[1] ?? 0
+/** 海・沿岸の薄いシアン（濃い青オーバーレイと誤判定しない） */
+function isSeaLikeCyan(r: number, g: number, b: number): boolean {
+    return r > 110 && g > 185 && b > 195
 }
 
-function isOpenWater(xPercent: number, yPercent: number, r: number, g: number, b: number): boolean {
-    if (colorDistance(r, g, b, CENTRAL_RGB) > CENTRAL_TOLERANCE) return false
-    return xPercent < coastlineXAtY(yPercent)
+function isCentralOverlayColor(r: number, g: number, b: number): boolean {
+    if (isSeaLikeCyan(r, g, b)) return false
+    return b > 150 && b > r + 40 && g > 120 && g < 220 && r < 90
 }
 
 function isCentralLand(xPercent: number, yPercent: number, r: number, g: number, b: number): boolean {
-    if (isOpenWater(xPercent, yPercent, r, g, b)) return false
     if (!pointInPolygon(xPercent, yPercent, CENTRAL_LAND_POLYGON)) return false
-    return colorDistance(r, g, b, CENTRAL_RGB) <= CENTRAL_TOLERANCE
+    return isCentralOverlayColor(r, g, b)
 }
 
 function classifyPixel(r: number, g: number, b: number, x: number, y: number): string | null {
