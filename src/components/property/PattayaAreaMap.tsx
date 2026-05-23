@@ -17,8 +17,8 @@ type PattayaAreaMapProps = {
 }
 
 /** public/images/pattaya-area-map.png の実ピクセル寸法 */
-const MAP_WIDTH = 780
-const MAP_HEIGHT = 752
+const MAP_WIDTH = 1024
+const MAP_HEIGHT = 986
 const MAP_SRC = '/images/pattaya-area-map.png'
 
 type RegionProfile = {
@@ -27,62 +27,38 @@ type RegionProfile = {
     tolerance: number
 }
 
-/** 画像の塗り色に合わせたエリア判定 */
+/** 画像の塗り色に合わせたエリア判定（赤＝ナクルア・ウォンアマット） */
 const REGION_PROFILES: RegionProfile[] = [
     {
-        value: 'Central Pattaya',
-        rgb: [238, 162, 68],
-        tolerance: 32,
+        value: 'North Pattaya / Wongamat',
+        rgb: [212, 88, 88],
+        tolerance: 45,
     },
     {
-        value: 'Pratumnak',
-        rgb: [96, 169, 96],
-        tolerance: 42,
+        value: 'Central Pattaya',
+        rgb: [240, 165, 75],
+        tolerance: 40,
     },
     {
         value: 'South Pattaya',
-        rgb: [241, 231, 82],
-        tolerance: 28,
+        rgb: [240, 225, 90],
+        tolerance: 35,
+    },
+    {
+        value: 'Pratumnak',
+        rgb: [90, 165, 90],
+        tolerance: 45,
     },
     {
         value: 'Jomtien',
-        rgb: [231, 156, 187],
-        tolerance: 34,
+        rgb: [225, 150, 180],
+        tolerance: 40,
     },
     {
         value: 'East Pattaya',
         rgb: [145, 106, 163],
-        tolerance: 24,
+        tolerance: 35,
     },
-]
-
-const NAKLUA_VALUE = 'North Pattaya / Wongamat'
-const NAKLUA_RGB: readonly [number, number, number] = [148, 201, 233]
-const NAKLUA_TOLERANCE = 18
-
-/** ナクルア・ウォンアマットの陸地（% は幅・高さに対する比率） */
-const NAKLUA_LAND_POLYGON: readonly [number, number][] = [
-    [17, 3.8],
-    [26, 3.2],
-    [39, 3.5],
-    [51, 4.2],
-    [61.5, 5.2],
-    [62.5, 11],
-    [61, 18.5],
-    [50, 19.8],
-    [30, 20.2],
-    [14, 18.5],
-    [11, 14],
-    [13, 8],
-]
-
-/** 左側の開放水域。ナクルアと同色の海を選択対象から除外する */
-const OPEN_WATER_COASTLINE: readonly [number, number][] = [
-    [3, 18],
-    [8, 13],
-    [14, 11],
-    [20, 10],
-    [25, 9],
 ]
 
 const HIGHLIGHT_RGBA: readonly [number, number, number, number] = [15, 23, 42, 95]
@@ -98,43 +74,14 @@ function colorDistance(
     return Math.sqrt((r - tr) ** 2 + (g - tg) ** 2 + (b - tb) ** 2)
 }
 
-function pointInPolygon(x: number, y: number, polygon: readonly [number, number][]): boolean {
-    let inside = false
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const [xi, yi] = polygon[i]
-        const [xj, yj] = polygon[j]
-        const intersects =
-            yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + Number.EPSILON) + xi
-        if (intersects) inside = !inside
-    }
-    return inside
+/** 海（薄いシアン）を選択対象から除外 */
+function isSeaLike(r: number, g: number, b: number): boolean {
+    return r > 130 && g > 180 && b > 210
 }
 
-function coastlineXAtY(yPercent: number): number {
-    for (let i = 0; i < OPEN_WATER_COASTLINE.length - 1; i++) {
-        const [y1, x1] = OPEN_WATER_COASTLINE[i]
-        const [y2, x2] = OPEN_WATER_COASTLINE[i + 1]
-        if (yPercent < y1 || yPercent > y2) continue
-        const t = (yPercent - y1) / (y2 - y1 + Number.EPSILON)
-        return x1 + (x2 - x1) * t
-    }
-    return OPEN_WATER_COASTLINE[OPEN_WATER_COASTLINE.length - 1]?.[1] ?? 0
-}
+function classifyPixel(r: number, g: number, b: number): string | null {
+    if (isSeaLike(r, g, b)) return null
 
-function isOpenWater(xPercent: number, yPercent: number, r: number, g: number, b: number): boolean {
-    if (colorDistance(r, g, b, NAKLUA_RGB) > NAKLUA_TOLERANCE) return false
-    return xPercent < coastlineXAtY(yPercent)
-}
-
-function isNakluaLand(xPercent: number, yPercent: number, r: number, g: number, b: number): boolean {
-    if (isOpenWater(xPercent, yPercent, r, g, b)) return false
-    if (!pointInPolygon(xPercent, yPercent, NAKLUA_LAND_POLYGON)) return false
-    return colorDistance(r, g, b, NAKLUA_RGB) <= NAKLUA_TOLERANCE
-}
-
-function classifyPixel(r: number, g: number, b: number, x: number, y: number): string | null {
-    const xPercent = (x / MAP_WIDTH) * 100
-    const yPercent = (y / MAP_HEIGHT) * 100
     let best: { value: string; distance: number } | null = null
 
     for (const profile of REGION_PROFILES) {
@@ -145,13 +92,10 @@ function classifyPixel(r: number, g: number, b: number, x: number, y: number): s
         }
     }
 
-    if (best) return best.value
-    if (isNakluaLand(xPercent, yPercent, r, g, b)) return NAKLUA_VALUE
-    return null
+    return best?.value ?? null
 }
 
 function regionIndexForValue(value: string): number {
-    if (value === NAKLUA_VALUE) return REGION_PROFILES.length + 1
     const index = REGION_PROFILES.findIndex((profile) => profile.value === value)
     return index >= 0 ? index + 1 : 0
 }
@@ -163,7 +107,7 @@ function buildRegionMap(imageData: ImageData): Uint8Array {
     for (let y = 0; y < MAP_HEIGHT; y++) {
         for (let x = 0; x < MAP_WIDTH; x++) {
             const offset = (y * MAP_WIDTH + x) * 4
-            const region = classifyPixel(data[offset], data[offset + 1], data[offset + 2], x, y)
+            const region = classifyPixel(data[offset], data[offset + 1], data[offset + 2])
             regionMap[y * MAP_WIDTH + x] = region ? regionIndexForValue(region) : 0
         }
     }
@@ -234,9 +178,7 @@ export default function PattayaAreaMap({
 
         ctx.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
         paintRegionOverlay(ctx, regionMap, hoveredIndex, HOVER_RGBA)
-        if (selectedIndex > 0 && selectedIndex !== hoveredIndex) {
-            paintRegionOverlay(ctx, regionMap, selectedIndex, HIGHLIGHT_RGBA)
-        } else if (selectedIndex > 0) {
+        if (selectedIndex > 0) {
             paintRegionOverlay(ctx, regionMap, selectedIndex, HIGHLIGHT_RGBA)
         }
     }, [hoveredIndex, selectedIndex])
@@ -281,11 +223,7 @@ export default function PattayaAreaMap({
         const regionIndex = regionMap[pixel.y * MAP_WIDTH + pixel.x]
         if (regionIndex <= 0) return null
 
-        return regionIndex > 0
-            ? regionIndex === REGION_PROFILES.length + 1
-                ? NAKLUA_VALUE
-                : REGION_PROFILES[regionIndex - 1]?.value ?? null
-            : null
+        return REGION_PROFILES[regionIndex - 1]?.value ?? null
     }, [])
 
     const handlePointerMove = useCallback(
