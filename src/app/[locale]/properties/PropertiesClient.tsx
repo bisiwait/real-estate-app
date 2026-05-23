@@ -9,6 +9,7 @@ import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Do
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
 import PattayaAreaMap from '@/components/property/PattayaAreaMap'
+import SrirachaAreaMap from '@/components/property/SrirachaAreaMap'
 import {
     executePropertyListQuery,
     formatPropertyListRows,
@@ -591,7 +592,7 @@ export default function PropertiesClient({
                         <Filter className="w-3 h-3 mr-2 shrink-0" />
                         {dict.property.area}
                     </h3>
-                    {draft.region === 'Pattaya' && (
+                    {(draft.region === 'Pattaya' || draft.region === 'Sriracha') && (
                         <button
                             type="button"
                             onClick={() => setIsAreaMapOpen((open) => !open)}
@@ -628,6 +629,15 @@ export default function PropertiesClient({
                     <div id="filter-area-map-panel" className="mt-3">
                         <PattayaAreaMap
                             areas={AREAS_BY_CITY.Pattaya}
+                            selectedArea={draft.area}
+                            onSelectArea={(value) => setDraft((d) => ({ ...d, area: value }))}
+                        />
+                    </div>
+                )}
+                {isAreaMapOpen && draft.region === 'Sriracha' && (
+                    <div id="filter-area-map-panel" className="mt-3">
+                        <SrirachaAreaMap
+                            areas={AREAS_BY_CITY.Sriracha.filter((a) => a.value !== 'その他')}
                             selectedArea={draft.area}
                             onSelectArea={(value) => setDraft((d) => ({ ...d, area: value }))}
                         />
