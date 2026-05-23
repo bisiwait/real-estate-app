@@ -29,16 +29,21 @@ type RegionProfile = {
 
 const CENTRAL_VALUE = 'シラチャ中心部'
 
-/** シラチャ中心部の濃い青オーバーレイ範囲（%・780×752 相当の実測） */
+/**
+ * シラチャ中心部（濃い青）の描画範囲（%）。
+ * 塗りは地図と合成されシアン系になるため、ポリゴン内は色より先に中心部とみなす。
+ */
 const CENTRAL_LAND_POLYGON: readonly [number, number][] = [
-    [30, 25.5],
-    [37.5, 26],
-    [37.5, 38],
-    [36, 42.5],
-    [32, 43],
-    [30, 40],
-    [29.5, 32],
+    [29, 26.5],
+    [36.5, 27],
+    [37, 39.5],
+    [34, 42],
+    [29, 41.5],
+    [27.5, 35],
 ]
+
+/** ポリゴン内で他エリア色と明確に一致するときのみ除外 */
+const CENTRAL_OTHER_REGION_MAX_DIST = 35
 
 /** 塗り色で判定するエリア（中心部以外・境界の誤判定を減らす優先順） */
 const REGION_PROFILES: RegionProfile[] = [
@@ -73,24 +78,25 @@ function pointInPolygon(x: number, y: number, polygon: readonly [number, number]
     return inside
 }
 
-/** 海・沿岸の薄いシアン（濃い青オーバーレイと誤判定しない） */
-function isSeaLikeCyan(r: number, g: number, b: number): boolean {
-    return r > 110 && g > 185 && b > 195
-}
-
-function isCentralOverlayColor(r: number, g: number, b: number): boolean {
-    if (isSeaLikeCyan(r, g, b)) return false
-    return b > 150 && b > r + 40 && g > 120 && g < 220 && r < 90
-}
-
-function isCentralLand(xPercent: number, yPercent: number, r: number, g: number, b: number): boolean {
-    if (!pointInPolygon(xPercent, yPercent, CENTRAL_LAND_POLYGON)) return false
-    return isCentralOverlayColor(r, g, b)
+function isStrongOtherRegionColor(r: number, g: number, b: number): boolean {
+    for (const profile of REGION_PROFILES) {
+        if (colorDistance(r, g, b, profile.rgb) <= CENTRAL_OTHER_REGION_MAX_DIST) {
+            return true
+        }
+    }
+    return false
 }
 
 function classifyPixel(r: number, g: number, b: number, x: number, y: number): string | null {
     const xPercent = (x / MAP_WIDTH) * 100
     const yPercent = (y / MAP_HEIGHT) * 100
+
+    if (
+        pointInPolygon(xPercent, yPercent, CENTRAL_LAND_POLYGON) &&
+        !isStrongOtherRegionColor(r, g, b)
+    ) {
+        return CENTRAL_VALUE
+    }
 
     for (const profile of REGION_PROFILES) {
         if (colorDistance(r, g, b, profile.rgb) <= profile.tolerance) {
@@ -98,7 +104,6 @@ function classifyPixel(r: number, g: number, b: number, x: number, y: number): s
         }
     }
 
-    if (isCentralLand(xPercent, yPercent, r, g, b)) return CENTRAL_VALUE
     return null
 }
 
