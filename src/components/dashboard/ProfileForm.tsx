@@ -33,6 +33,7 @@ import Link from 'next/link'
 import { clsx } from 'clsx'
 import { resolveAvatarUrl } from '@/lib/property-image-url'
 import { isPremiumActive } from '@/lib/utils/plan'
+import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon'
 interface ProfileData {
     full_name: string
     company_name: string
@@ -50,6 +51,7 @@ interface ProfileData {
     show_phone_in_inquiry: boolean
     /** 物件ページ等でLINE導線を出すか（DB: show_line_in_inquiry） */
     show_line_in_inquiry: boolean
+    show_whatsapp_in_inquiry: boolean
 }
 
 export default function ProfileForm() {
@@ -71,9 +73,11 @@ export default function ProfileForm() {
         is_admin: false,
         show_phone_in_inquiry: true,
         show_line_in_inquiry: true,
+        show_whatsapp_in_inquiry: true,
     })
     const [togglingPhoneVisibility, setTogglingPhoneVisibility] = useState(false)
     const [togglingLineVisibility, setTogglingLineVisibility] = useState(false)
+    const [togglingWhatsAppVisibility, setTogglingWhatsAppVisibility] = useState(false)
     /** LINE連携ページで保存した友だち追加URL等（表示のみ・このフォームでは編集しない） */
     const [lineConnectStoredValue, setLineConnectStoredValue] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -115,6 +119,7 @@ export default function ProfileForm() {
                     is_admin: data.is_admin === true,
                     show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
                     show_line_in_inquiry: data.show_line_in_inquiry !== false,
+                    show_whatsapp_in_inquiry: data.show_whatsapp_in_inquiry !== false,
                 })
                 const lineBasic = (data as { line_basic_id?: string | null }).line_basic_id?.trim() ?? ''
                 const lineLegacy =
@@ -184,6 +189,7 @@ export default function ProfileForm() {
     const persistInquiryVisibility = async (patch: {
         show_phone_in_inquiry?: boolean
         show_line_in_inquiry?: boolean
+        show_whatsapp_in_inquiry?: boolean
     }) => {
         setError(null)
         setSuccess(null)
@@ -230,6 +236,23 @@ export default function ProfileForm() {
             setError(getErrorMessage(err))
         } finally {
             setTogglingLineVisibility(false)
+        }
+    }
+
+    const toggleShowWhatsAppInInquiry = async () => {
+        if (togglingWhatsAppVisibility) return
+        const next = !formData.show_whatsapp_in_inquiry
+        const prev = formData.show_whatsapp_in_inquiry
+        setFormData((f) => ({ ...f, show_whatsapp_in_inquiry: next }))
+        setTogglingWhatsAppVisibility(true)
+        try {
+            await persistInquiryVisibility({ show_whatsapp_in_inquiry: next })
+            setSuccess('物件ページのWhatsApp表示を更新しました。')
+        } catch (err: unknown) {
+            setFormData((f) => ({ ...f, show_whatsapp_in_inquiry: prev }))
+            setError(getErrorMessage(err))
+        } finally {
+            setTogglingWhatsAppVisibility(false)
         }
     }
 
@@ -637,7 +660,7 @@ export default function ProfileForm() {
                                     <span className="min-w-0 flex-1">
                                         <span className="block text-sm font-black text-navy-secondary">電話番号を物件ページに表示</span>
                                         <span className="mt-1 block text-[11px] font-medium leading-relaxed text-slate-500">
-                                            OFFにすると、物件ページ下部の「電話」ボタンが出なくなります。電話番号を未登録のときは、ONでも表示されません。
+                                            OFFにすると、お問い合わせの電話タブが出なくなります。電話番号を未登録のときは、ONでも発信できません。
                                         </span>
                                     </span>
                                     <span className="relative flex shrink-0 items-center gap-2 pt-0.5">
@@ -675,7 +698,7 @@ export default function ProfileForm() {
                                     <span className="min-w-0 flex-1">
                                         <span className="block text-sm font-black text-navy-secondary">LINEを物件ページに表示</span>
                                         <span className="mt-1 block text-[11px] font-medium leading-relaxed text-slate-500">
-                                            OFFにすると、問い合わせのLINEタブ・ボタンが出なくなります。LINE連携を未設定のときは、ONでも表示されません。
+                                            OFFにすると、お問い合わせのLINEタブが出なくなります。LINE連携を未設定のときは、ONでも表示されません。
                                         </span>
                                     </span>
                                     <span className="relative flex shrink-0 items-center gap-2 pt-0.5">
@@ -704,6 +727,47 @@ export default function ProfileForm() {
                                             />
                                         </span>
                                         {togglingLineVisibility ? (
+                                            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-navy-primary" aria-hidden />
+                                        ) : null}
+                                    </span>
+                                </label>
+
+                                <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+                                    <span className="min-w-0 flex-1">
+                                        <span className="flex items-center gap-2 text-sm font-black text-navy-secondary">
+                                            <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#25D366]" aria-hidden />
+                                            WhatsApp を物件ページに表示
+                                        </span>
+                                        <span className="mt-1 block text-[11px] font-medium leading-relaxed text-slate-500">
+                                            OFFにすると、お問い合わせのWhatsAppタブが出なくなります。電話が未設定や形式によっては、ONでもタブが無効のままのことがあります。
+                                        </span>
+                                    </span>
+                                    <span className="relative flex shrink-0 items-center gap-2 pt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            role="switch"
+                                            className="sr-only"
+                                            checked={formData.show_whatsapp_in_inquiry}
+                                            disabled={togglingWhatsAppVisibility}
+                                            onChange={() => void toggleShowWhatsAppInInquiry()}
+                                            aria-label="WhatsAppを物件ページに表示"
+                                        />
+                                        <span
+                                            className={clsx(
+                                                'flex h-7 w-12 items-center rounded-full p-0.5 transition',
+                                                formData.show_whatsapp_in_inquiry ? 'bg-emerald-500' : 'bg-slate-300',
+                                                togglingWhatsAppVisibility && 'opacity-50'
+                                            )}
+                                            aria-hidden
+                                        >
+                                            <span
+                                                className={clsx(
+                                                    'block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200',
+                                                    formData.show_whatsapp_in_inquiry ? 'translate-x-[1.25rem]' : 'translate-x-0'
+                                                )}
+                                            />
+                                        </span>
+                                        {togglingWhatsAppVisibility ? (
                                             <Loader2 className="h-4 w-4 shrink-0 animate-spin text-navy-primary" aria-hidden />
                                         ) : null}
                                     </span>

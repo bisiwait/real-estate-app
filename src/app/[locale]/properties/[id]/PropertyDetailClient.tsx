@@ -71,6 +71,8 @@ interface PropertyDetailClientProps {
     propertyDetailPageUrl: string
     /** サーバー側で一覧した掲載者の電話（クライアントの profiles 取得成功前のフォールバック） */
     initialListingOwnerPhone?: string
+    /** 掲載者の WhatsApp 表示設定（profiles.show_whatsapp_in_inquiry、`agent` 取得前フォールバック） */
+    initialListingOwnerShowWhatsapp?: boolean
 }
 
 export default function PropertyDetailClient({
@@ -78,6 +80,7 @@ export default function PropertyDetailClient({
     officialLineAddFriendUrl,
     propertyDetailPageUrl,
     initialListingOwnerPhone,
+    initialListingOwnerShowWhatsapp = true,
 }: PropertyDetailClientProps) {
     const params = useParams()
     const pathname = usePathname()
@@ -147,7 +150,7 @@ export default function PropertyDetailClient({
                     const { data: aData } = await supabase
                         .from('profiles')
                         .select(
-                            'phone, full_name, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, plan, plan_type, current_period_end, is_admin'
+                            'phone, full_name, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, show_whatsapp_in_inquiry, plan, plan_type, current_period_end, is_admin'
                         )
                         .eq('id', initialProperty.user_id)
                         .maybeSingle()
@@ -270,7 +273,12 @@ export default function PropertyDetailClient({
         property,
     ])
 
-    /** `profiles.phone` を wa.me に解釈できる場合（tel 表示のオンオフとは独立） */
+    const showWhatsappEffective =
+        agent?.show_whatsapp_in_inquiry !== undefined
+            ? agent.show_whatsapp_in_inquiry !== false
+            : initialListingOwnerShowWhatsapp !== false
+
+    /** `profiles.phone` を wa.me に解釈できる場合 × WhatsApp ON */
     const whatsAppInquiryUrl = useMemo(() => {
         const fromAgent =
             typeof agent?.phone === 'string' && agent.phone.trim().length > 0 ? agent.phone.trim() : ''
@@ -279,7 +287,7 @@ export default function PropertyDetailClient({
                 ? initialListingOwnerPhone.trim()
                 : ''
         const phoneTrimmed = fromAgent || fallback
-        if (!phoneTrimmed || !dict) return null
+        if (!phoneTrimmed || !dict || !showWhatsappEffective) return null
         const pageUrl =
             (clientPageHref && clientPageHref.trim()) ||
             (propertyDetailPageUrl && propertyDetailPageUrl.trim()) ||
@@ -291,7 +299,15 @@ export default function PropertyDetailClient({
             .replace(/\{propertyName\}/g, displayTitle.trim())
             .replace(/\{propertyUrl\}/g, pageUrl.trim())
         return buildWhatsAppWaMeUrl(phoneTrimmed, msg)
-    }, [agent, dict, clientPageHref, propertyDetailPageUrl, displayTitle, initialListingOwnerPhone])
+    }, [
+        agent,
+        dict,
+        clientPageHref,
+        propertyDetailPageUrl,
+        displayTitle,
+        initialListingOwnerPhone,
+        showWhatsappEffective,
+    ])
 
     const mapSearchHint = useMemo(() => {
         if (!property) return null
@@ -437,6 +453,7 @@ export default function PropertyDetailClient({
                                 contactPrefill={contactPrefill}
                                 officialLineAddFriendUrl={resolvedLineInquiryUrl}
                                 propertyPageUrl={clientPageHref ?? propertyDetailPageUrl}
+                                listingPhoneForTel={stickyPhone}
                                 whatsAppInquiryUrl={whatsAppInquiryUrl ?? undefined}
                             />
                         </div>
@@ -449,8 +466,6 @@ export default function PropertyDetailClient({
                 </div>
             </div>
             <StickyContactBar
-                phoneNumber={stickyPhone}
-                whatsAppUrl={whatsAppInquiryUrl ?? undefined}
                 dict={dict}
                 isLoggedIn={!!user}
                 onRequireAuth={() => setContactAuthOpen(true)}
