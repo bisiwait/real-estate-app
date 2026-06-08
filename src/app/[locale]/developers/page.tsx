@@ -1,4 +1,4 @@
-import { createStaticClient } from '@/lib/supabase/static'
+import { createStaticServiceClient } from '@/lib/supabase/static'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ChevronRight, Building2, Globe, Award } from 'lucide-react'
@@ -6,7 +6,7 @@ import { ChevronRight, Building2, Globe, Award } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 export default async function DevelopersPage() {
-    const supabase = createStaticClient()
+    const supabase = createStaticServiceClient()
 
     const { data: developers, error } = await supabase
         .from('developers')

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Building2, ChevronRight, ShieldCheck, User } from 'lucide-react'
-import { createStaticClient } from '@/lib/supabase/static'
+import { createStaticServiceClient } from '@/lib/supabase/static'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { resolveAvatarUrl } from '@/lib/property-image-url'
@@ -56,7 +56,7 @@ export default async function AgentsDirectoryPage({ params }: { params: Promise<
     const { locale } = await params
     const dict = await getDictionary(locale)
     const p = dict.agents_page as AgentsPageDict
-    const supabase = createStaticClient()
+    const supabase = createStaticServiceClient()
 
     const { data: published, error: pubError } = await supabase
         .from('properties')

@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
-import { createStaticClient, createStaticClientForHostname } from '@/lib/supabase/static'
+import { createStaticServiceClient, createStaticServiceClientForHostname } from '@/lib/supabase/static'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry-url'
@@ -24,7 +24,7 @@ export const dynamicParams = true
  */
 export async function generateStaticParams(): Promise<{ id: string }[]> {
     try {
-        const supabase = createStaticClient()
+        const supabase = createStaticServiceClient()
         const { data, error } = await supabase
             .from('properties')
             .select('id')
@@ -45,7 +45,7 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
 }
 
 async function fetchProperty(id: string, hostname: string | null) {
-    const supabase = createStaticClientForHostname(hostname)
+    const supabase = createStaticServiceClientForHostname(hostname)
     const embedded = await supabase
         .from('properties')
         .select('*, area:areas(name, slug, region:regions(name)), project:projects(*, developers(name)), developers(name)')
@@ -217,7 +217,7 @@ export default async function Page({
     let initialListingOwnerPhone: string | undefined
     let initialListingOwnerShowWhatsapp = true
     if (propertyForClient.user_id) {
-        const supabase = createStaticClientForHostname(hostname)
+        const supabase = createStaticServiceClientForHostname(hostname)
         const { data: ownerProfile } = await supabase
             .from('profiles')
             .select('line_basic_id, line_id, show_line_in_inquiry, phone, show_whatsapp_in_inquiry')

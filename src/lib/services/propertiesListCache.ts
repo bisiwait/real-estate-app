@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache'
-import { createStaticClient } from '@/lib/supabase/static'
+import { createStaticServiceClient } from '@/lib/supabase/static'
 import {
     executePropertyListQuery,
     formatPropertyListRows,
@@ -35,7 +35,7 @@ export async function getCachedPropertiesListFirstPage(
 
     const run = unstable_cache(
         async () => {
-            const supabase = createStaticClient()
+            const supabase = createStaticServiceClient()
             const { data, error, count } = await executePropertyListQuery(supabase, filters, 0)
             if (error) {
                 console.error('[getCachedPropertiesListFirstPage]', error)

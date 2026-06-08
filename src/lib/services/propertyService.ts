@@ -1,4 +1,4 @@
-import { createStaticClient } from '@/lib/supabase/static';
+import { createStaticServiceClient } from '@/lib/supabase/static';
 
 export interface Property {
   id: string;
@@ -34,7 +34,7 @@ export interface PresaleProject {
 }
 
 export async function getRecommendedPresales(limit = 3) {
-  const supabase = createStaticClient();
+  const supabase = createStaticServiceClient();
 
   // Fetch all properties with is_presale = true to debug
   // Removing all filters and joins to see if data exists at all
@@ -66,7 +66,7 @@ export async function getRecommendedPresales(limit = 3) {
 }
 
 export async function getRecommendedRentals(limit = 4) {
-  const supabase = createStaticClient();
+  const supabase = createStaticServiceClient();
 
   const { data, error } = await supabase
     .from('properties')
@@ -99,7 +99,7 @@ export async function getRecommendedRentals(limit = 4) {
 }
 
 export async function getRecommendedSales(limit = 4) {
-  const supabase = createStaticClient();
+  const supabase = createStaticServiceClient();
 
   const { data, error } = await supabase
     .from('properties')

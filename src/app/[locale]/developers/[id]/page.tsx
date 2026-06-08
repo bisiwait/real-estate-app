@@ -1,4 +1,4 @@
-import { createStaticClient } from '@/lib/supabase/static'
+import { createStaticServiceClient } from '@/lib/supabase/static'
 export const dynamic = 'force-dynamic';
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -8,7 +8,7 @@ import { Building2, Globe, Award, MapPin, ChevronRight, Projector as Project } f
 
 export default async function DeveloperDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const supabase = createStaticClient()
+    const supabase = createStaticServiceClient()
 
     // Fetch developer info
     const { data: developer, error: devError } = await supabase
