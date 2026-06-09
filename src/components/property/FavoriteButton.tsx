@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Heart, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +25,6 @@ export default function FavoriteButton({
     const [loading, setLoading] = useState(false);
     const [isRestricted, setIsRestricted] = useState(false);
     const [showToast, setShowToast] = useState(false);
-    const supabase = createClient();
     const { user, userData, isLoading } = useAuth();
 
     useEffect(() => {
@@ -39,20 +37,21 @@ export default function FavoriteButton({
                 return;
             }
 
-            const { data } = await supabase
-                .from("favorites")
-                .select("id")
-                .eq("user_id", user.id)
-                .eq("property_id", propertyId)
-                .single();
+            const { data } = await fetch(
+                `/api/favorites?propertyId=${encodeURIComponent(propertyId)}`,
+                { credentials: 'same-origin' }
+            ).then(async (res) => {
+                if (!res.ok) return { data: null }
+                return res.json() as Promise<{ isFavorite?: boolean }>
+            })
 
-            if (data) setIsFavorite(true);
+            if (data?.isFavorite) setIsFavorite(true)
         }
 
         if (!isLoading) {
             checkStatus();
         }
-    }, [propertyId, supabase, initialIsFavorite, user, userData, isLoading]);
+    }, [propertyId, initialIsFavorite, user, userData, isLoading]);
 
     if (isRestricted || isLoading) return null;
 
@@ -69,22 +68,19 @@ export default function FavoriteButton({
         setLoading(true);
         try {
             if (isFavorite) {
-                const { error } = await supabase
-                    .from("favorites")
-                    .delete()
-                    .eq("user_id", user.id)
-                    .eq("property_id", propertyId);
-
-                if (!error) setIsFavorite(false);
+                const res = await fetch(
+                    `/api/favorites?propertyId=${encodeURIComponent(propertyId)}`,
+                    { method: 'DELETE', credentials: 'same-origin' }
+                );
+                if (res.ok) setIsFavorite(false);
             } else {
-                const { error } = await supabase
-                    .from("favorites")
-                    .insert({
-                        user_id: user.id,
-                        property_id: propertyId,
-                    });
-
-                if (!error) setIsFavorite(true);
+                const res = await fetch('/api/favorites', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ propertyId }),
+                });
+                if (res.ok) setIsFavorite(true);
             }
         } catch (error) {
             console.error("Favorite toggle error:", error);

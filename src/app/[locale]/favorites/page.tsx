@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { Heart, Home, ArrowLeft } from 'lucide-react'
@@ -36,7 +36,8 @@ export default async function FavoritesPage({ params }: { params: { locale: stri
         redirect(`/${locale}/dashboard`)
     }
 
-    const { data: favorites, error } = await supabase
+    const admin = await createAdminClient()
+    const { data: favorites, error } = await admin
         .from('favorites')
         .select(`
             property:properties (

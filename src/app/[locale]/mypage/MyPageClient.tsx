@@ -40,7 +40,7 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
             // Parallel data fetching
             const [profileRes, favoritesRes, searchesRes] = await Promise.all([
                 supabase.from("profiles").select("*").eq("id", user.id).single(),
-                supabase.from("favorites").select("*, properties(*, areas(name))").eq("user_id", user.id),
+                fetch("/api/favorites", { credentials: "same-origin" }),
                 supabase.from("saved_searches").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
             ]);
 
@@ -56,15 +56,9 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
                 }
             }
 
-            if (favoritesRes.data) {
-                // Flatten the data for easier use in PropertyCard
-                const betterFlattened = favoritesRes.data
-                    .filter(f => f.properties)
-                    .map(f => {
-                        const p = Array.isArray(f.properties) ? f.properties[0] : f.properties;
-                        return { ...p, is_favorite: true };
-                    });
-                setFavorites(betterFlattened);
+            if (favoritesRes.ok) {
+                const body = (await favoritesRes.json()) as { favorites?: unknown[] };
+                setFavorites((body.favorites as any[]) ?? []);
             }
 
             if (searchesRes.data) setSearches(searchesRes.data);

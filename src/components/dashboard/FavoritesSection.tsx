@@ -71,13 +71,12 @@ export default function FavoritesSection({ favorites: initialFavorites, dict, lo
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { error } = await supabase
-            .from("favorites")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("property_id", propertyId);
+        const res = await fetch(
+            `/api/favorites?propertyId=${encodeURIComponent(propertyId)}`,
+            { method: "DELETE", credentials: "same-origin" }
+        );
 
-        if (!error) {
+        if (res.ok) {
             setFavorites(prev => prev.filter(f => f.id !== propertyId));
             setCompareIds((prev) => prev.filter((id) => id !== propertyId));
         }
