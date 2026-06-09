@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { assertAgentOwnsProperties } from '@/lib/supabase/assert-agent-property-access'
 import { revalidatePropertyListPages } from '@/lib/services/revalidatePropertyList'
+import { listingExpiryIsoFromNow } from '@/lib/services/listingExpiry'
 
-/** 掲載更新（last_confirmed_at / updated_at）— 単体・一括 */
+/** 掲載更新（last_confirmed_at / updated_at / expiry_date）— 公開中のみ・単体・一括 */
 export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient()
@@ -33,9 +34,11 @@ export async function POST(request: NextRequest) {
             .update({
                 last_confirmed_at: now,
                 updated_at: now,
+                expiry_date: listingExpiryIsoFromNow(),
             })
             .in('id', owned.ids)
             .eq('user_id', user.id)
+            .eq('status', 'published')
             .select('id')
 
         if (updateError) {
@@ -44,7 +47,10 @@ export async function POST(request: NextRequest) {
         }
 
         if (!updated?.length) {
-            return NextResponse.json({ error: 'Update failed' }, { status: 500 })
+            return NextResponse.json(
+                { error: '公開中の物件のみ掲載更新できます' },
+                { status: 400 }
+            )
         }
 
         revalidatePropertyListPages()

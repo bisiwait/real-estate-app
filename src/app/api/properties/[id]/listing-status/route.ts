@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { revalidatePropertyListPages } from '@/lib/services/revalidatePropertyList'
+import { listingExpiryIsoFromNow } from '@/lib/services/listingExpiry'
 
 type ListingStatusAction = 'end' | 'republish'
 
@@ -66,9 +67,17 @@ export async function PATCH(
         }
 
         const admin = await createAdminClient()
+        const now = new Date().toISOString()
+        const patch: Record<string, string> = { status: nextStatus }
+        if (nextStatus === 'published') {
+            patch.expiry_date = listingExpiryIsoFromNow()
+            patch.last_confirmed_at = now
+            patch.updated_at = now
+        }
+
         const { data: updated, error: updateError } = await admin
             .from('properties')
-            .update({ status: nextStatus })
+            .update(patch)
             .eq('id', propertyId)
             .eq('user_id', user.id)
             .select('id, status')

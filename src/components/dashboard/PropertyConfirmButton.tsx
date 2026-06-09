@@ -6,14 +6,22 @@ import { useRouter } from 'next/navigation'
 
 interface PropertyConfirmButtonProps {
     propertyId: string
+    currentStatus: string
     title: string
     dict: any
 }
 
-export default function PropertyConfirmButton({ propertyId, title, dict }: PropertyConfirmButtonProps) {
+export default function PropertyConfirmButton({
+    propertyId,
+    currentStatus,
+    title,
+    dict,
+}: PropertyConfirmButtonProps) {
     const [loading, setLoading] = useState(false)
     const [confirmed, setConfirmed] = useState(false)
     const router = useRouter()
+
+    if (currentStatus !== 'published') return null
 
     const handleConfirm = async (e: React.MouseEvent) => {
         e.preventDefault()
