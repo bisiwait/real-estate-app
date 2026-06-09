@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getDictionary } from "@/lib/i18n/get-dictionary";
 import ProfileEditClient from "./ProfileEditClient";
@@ -16,7 +16,8 @@ export default async function ProfileEditPage({ params }: { params: Promise<{ lo
         redirect(`/${locale}/login?next=${encodeURIComponent(`/${locale}/profile/edit`)}`);
     }
 
-    const { data: profile, error } = await supabase
+    const admin = await createAdminClient();
+    const { data: profile, error } = await admin
         .from("profiles")
         .select("full_name, phone, user_role, is_admin")
         .eq("id", user.id)
@@ -39,7 +40,6 @@ export default async function ProfileEditPage({ params }: { params: Promise<{ lo
         <ProfileEditClient
             locale={locale}
             dict={dict}
-            userId={user.id}
             userEmail={user.email ?? ""}
             initial={{
                 full_name: profile.full_name ?? "",

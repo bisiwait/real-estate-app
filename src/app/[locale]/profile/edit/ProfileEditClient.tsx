@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { ChevronLeft, Loader2, User, Phone } from "lucide-react";
 
@@ -18,17 +17,14 @@ function norm(s: string | null | undefined) {
 export default function ProfileEditClient({
     locale,
     dict,
-    userId,
     userEmail,
     initial,
 }: {
     locale: string;
     dict: any;
-    userId: string;
     userEmail: string;
     initial: InitialProfile;
 }) {
-    const supabase = useMemo(() => createClient(), []);
     const l = dict.labels;
 
     const snapshot = useMemo(
@@ -67,10 +63,19 @@ export default function ProfileEditClient({
 
         setSaving(true);
         try {
-            const { error } = await supabase.from("profiles").update(updates).eq("id", userId);
+            const res = await fetch("/api/user/profile", {
+                method: "PATCH",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    full_name: next.full_name,
+                    phone: next.phone,
+                }),
+            });
 
-            if (error) {
-                console.error(error);
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string };
+                console.error("[profile edit]", res.status, body.error);
                 toast.error(l.profile_update_error);
                 return;
             }

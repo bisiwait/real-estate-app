@@ -39,20 +39,25 @@ export default function MyPageClient({ dict, locale }: { dict: any, locale: stri
 
             // Parallel data fetching
             const [profileRes, favoritesRes, searchesRes] = await Promise.all([
-                supabase.from("profiles").select("*").eq("id", user.id).single(),
+                fetch("/api/user/profile", { credentials: "same-origin" }),
                 fetch("/api/favorites", { credentials: "same-origin" }),
                 supabase.from("saved_searches").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
             ]);
 
-            if (profileRes.data) {
-                const profile = profileRes.data;
-                setProfile(profile);
+            if (profileRes.ok) {
+                const body = (await profileRes.json()) as { profile?: Record<string, unknown> };
+                const profile = body.profile;
+                if (profile) {
+                    setProfile(profile);
 
-                // Redirect Admins and Agents to dashboard
-                const isAgent = profile.user_role === 'agent' || profile.user_role === 'admin' || profile.is_admin;
-                if (isAgent) {
-                    router.push(`/${locale}/dashboard`);
-                    return;
+                    const isAgent =
+                        profile.user_role === "agent" ||
+                        profile.user_role === "admin" ||
+                        profile.is_admin === true;
+                    if (isAgent) {
+                        router.push(`/${locale}/dashboard`);
+                        return;
+                    }
                 }
             }
 
