@@ -3,7 +3,6 @@
 import { useState, useEffect, useLayoutEffect, useRef, useTransition, useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
-import { createClient } from '@/lib/supabase/client'
 import { useSearchCount } from '@/contexts/SearchCountContext'
 import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves, Map } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
@@ -11,11 +10,9 @@ import SaveSearchButton from '@/components/property/SaveSearchButton'
 import PattayaAreaMap from '@/components/property/PattayaAreaMap'
 import SrirachaAreaMap from '@/components/property/SrirachaAreaMap'
 import {
-    executePropertyListQuery,
     formatPropertyListRows,
     isPropertyListPriceSortAllowed,
     normalizeLegacyAreaFilter,
-    parsePropertyListFiltersFromURLSearchParams,
     parsePropertyListSort,
     PROPERTY_LIST_PAGE_SIZE,
     type PropertyListSort,
@@ -131,7 +128,6 @@ export default function PropertiesClient({
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
-    const supabase = createClient()
     const { setPropertiesHitCount } = useSearchCount()
 
     const [draft, setDraft] = useState<FilterDraft>(() =>
@@ -320,42 +316,53 @@ export default function PropertiesClient({
             const currentPage = isLoadMore ? page + 1 : 0
             const from = currentPage * PROPERTY_LIST_PAGE_SIZE
 
-            const filters = parsePropertyListFiltersFromURLSearchParams(
-                new URLSearchParams(searchParams.toString())
-            )
+            const params = new URLSearchParams(searchParams.toString())
+            params.set('page', String(currentPage))
 
-            const { data, error, count } = await executePropertyListQuery(supabase, filters, currentPage)
+            const res = await fetch(`/api/properties/list?${params.toString()}`, {
+                credentials: 'same-origin',
+            })
 
             if (myGen !== fetchGenRef.current) return
 
-            if (error) {
-                console.error('Supabase Error Details:', error)
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                console.error('Property list API error:', res.status, body.error ?? res.statusText)
+                return
             }
+
+            const body = (await res.json()) as {
+                properties?: unknown[]
+                count?: number
+                hasMore?: boolean
+            }
+
+            const formatted = formatPropertyListRows((body.properties as any[]) ?? [])
+            const count = body.count ?? null
 
             if (count !== null) setTotalCount(count)
 
-            if (data) {
-                const formatted = formatPropertyListRows(data)
+            if (isLoadMore) {
+                setDbProperties((prev) => [...prev, ...formatted])
+                setPage(currentPage)
 
-                if (isLoadMore) {
-                    setDbProperties((prev) => [...prev, ...formatted])
-                    setPage(currentPage)
-
-                    setTimeout(() => {
-                        if (savedScrollYRef.current !== null) {
-                            window.scrollTo({ top: savedScrollYRef.current, behavior: 'instant' })
-                            savedScrollYRef.current = null
-                        }
-                    }, 50)
-                } else {
-                    setDbProperties(formatted)
-                }
-
-                const hasMoreData = count
-                    ? from + formatted.length < count
-                    : formatted.length === PROPERTY_LIST_PAGE_SIZE
-                setHasMore(hasMoreData)
+                setTimeout(() => {
+                    if (savedScrollYRef.current !== null) {
+                        window.scrollTo({ top: savedScrollYRef.current, behavior: 'instant' })
+                        savedScrollYRef.current = null
+                    }
+                }, 50)
+            } else {
+                setDbProperties(formatted)
             }
+
+            const hasMoreData =
+                typeof body.hasMore === 'boolean'
+                    ? body.hasMore
+                    : count
+                      ? from + formatted.length < count
+                      : formatted.length === PROPERTY_LIST_PAGE_SIZE
+            setHasMore(hasMoreData)
         } catch (err: any) {
             if (myGen !== fetchGenRef.current) return
             console.error('Fetch Runtime Error:', err)
