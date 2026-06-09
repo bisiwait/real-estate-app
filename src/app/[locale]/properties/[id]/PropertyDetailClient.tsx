@@ -25,6 +25,7 @@ import {
 import { buildWhatsAppWaMeUrl } from '@/lib/whatsapp-wa-me-url'
 import { isPremium } from '@/lib/utils/plan'
 import type { PublicListingOwnerProfile } from '@/lib/supabase/fetch-property-detail'
+import type { PropertyInquiryContactPayload } from '@/lib/property-inquiry-contact'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -76,6 +77,8 @@ interface PropertyDetailClientProps {
     initialListingOwnerPhone?: string
     /** 掲載者の WhatsApp 表示設定（profiles.show_whatsapp_in_inquiry、`agent` 取得前フォールバック） */
     initialListingOwnerShowWhatsapp?: boolean
+    /** 掲載者の電話表示設定（profiles.show_phone_in_inquiry、`agent` 取得前フォールバック） */
+    initialListingOwnerShowPhone?: boolean
 }
 
 export default function PropertyDetailClient({
@@ -87,6 +90,7 @@ export default function PropertyDetailClient({
     propertyDetailPageUrl,
     initialListingOwnerPhone,
     initialListingOwnerShowWhatsapp = true,
+    initialListingOwnerShowPhone = true,
 }: PropertyDetailClientProps) {
     const params = useParams()
     const pathname = usePathname()
@@ -105,6 +109,7 @@ export default function PropertyDetailClient({
     // サーバーから受け取った初期データを使用
     const [property, setProperty] = useState<any>(initialProperty)
     const [agent, setAgent] = useState<any>(initialListingOwner)
+    const [liveInquiry, setLiveInquiry] = useState<PropertyInquiryContactPayload | null>(null)
     const [dict, setDict] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [activeLang, setActiveLang] = useState<'jp' | 'en' | 'th'>(locale as any || 'jp')
@@ -117,12 +122,14 @@ export default function PropertyDetailClient({
 
     /** サーバー URL とクライアント取得の profiles を突き合わせ、連携オフ／未設定ならボタンを出さない */
     const effectiveLineInquiryUrl = useMemo(() => {
+        const live = liveInquiry?.officialLineAddFriendUrl?.trim() ?? ''
+        if (live) return live
         const trimmed = officialLineAddFriendUrl?.trim() ?? ''
         if (!trimmed) return ''
         if (!agent) return trimmed
         const raw = getPropertyOwnerLineInquiryRawInput(agent)
         return raw ? trimmed : ''
-    }, [agent, officialLineAddFriendUrl])
+    }, [agent, officialLineAddFriendUrl, liveInquiry?.officialLineAddFriendUrl])
 
     const [clientPageHref, setClientPageHref] = useState<string | null>(null)
     useEffect(() => {
@@ -147,6 +154,30 @@ export default function PropertyDetailClient({
     useEffect(() => {
         setAgent(initialListingOwner)
     }, [initialListingOwner])
+
+    useEffect(() => {
+        if (!id) return
+        const ac = new AbortController()
+        const run = async () => {
+            try {
+                const res = await fetch(
+                    `/api/properties/${encodeURIComponent(id)}/inquiry-contact?locale=${encodeURIComponent(locale)}`,
+                    { signal: ac.signal, credentials: 'same-origin' }
+                )
+                if (!res.ok) return
+                const data = (await res.json()) as PropertyInquiryContactPayload
+                if (ac.signal.aborted) return
+                setLiveInquiry(data)
+                if (data.listingOwner) setAgent(data.listingOwner)
+            } catch (e) {
+                if ((e as { name?: string })?.name !== 'AbortError') {
+                    console.warn('[PropertyDetail] inquiry-contact fetch failed', e)
+                }
+            }
+        }
+        void run()
+        return () => ac.abort()
+    }, [id, locale])
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -269,12 +300,22 @@ export default function PropertyDetailClient({
     ])
 
     const showWhatsappEffective =
-        agent?.show_whatsapp_in_inquiry !== undefined
-            ? agent.show_whatsapp_in_inquiry !== false
-            : initialListingOwnerShowWhatsapp !== false
+        liveInquiry?.listingOwner?.show_whatsapp_in_inquiry !== undefined
+            ? liveInquiry.listingOwner.show_whatsapp_in_inquiry !== false
+            : agent?.show_whatsapp_in_inquiry !== undefined
+              ? agent.show_whatsapp_in_inquiry !== false
+              : initialListingOwnerShowWhatsapp !== false
+
+    const showPhoneEffective =
+        liveInquiry?.listingOwner?.show_phone_in_inquiry !== undefined
+            ? liveInquiry.listingOwner.show_phone_in_inquiry !== false
+            : agent?.show_phone_in_inquiry !== undefined
+              ? agent.show_phone_in_inquiry !== false
+              : initialListingOwnerShowPhone !== false
 
     /** `profiles.phone` を wa.me に解釈できる場合 × WhatsApp ON */
     const whatsAppInquiryUrl = useMemo(() => {
+        if (liveInquiry?.whatsAppInquiryUrl) return liveInquiry.whatsAppInquiryUrl
         const fromAgent =
             typeof agent?.phone === 'string' && agent.phone.trim().length > 0 ? agent.phone.trim() : ''
         const fallback =
@@ -302,6 +343,7 @@ export default function PropertyDetailClient({
         displayTitle,
         initialListingOwnerPhone,
         showWhatsappEffective,
+        liveInquiry?.whatsAppInquiryUrl,
     ])
 
     const mapSearchHint = useMemo(() => {
@@ -329,14 +371,22 @@ export default function PropertyDetailClient({
         ]
     )
 
+    const phoneForDisplay = useMemo(() => {
+        if (liveInquiry?.listingPhoneForTel) return liveInquiry.listingPhoneForTel.trim()
+        const fromAgent = typeof agent?.phone === 'string' ? agent.phone.trim() : ''
+        const fallback =
+            typeof initialListingOwnerPhone === 'string' ? initialListingOwnerPhone.trim() : ''
+        return fromAgent || fallback
+    }, [agent, initialListingOwnerPhone, liveInquiry?.listingPhoneForTel])
+
+    const stickyPhone =
+        phoneForDisplay && showPhoneEffective ? phoneForDisplay : undefined
+
     if (loading || !dict || !property) {
         return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
     }
 
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
-    const phoneTrimmed = typeof agent?.phone === 'string' ? agent.phone.trim() : ''
-    const stickyPhone =
-        phoneTrimmed && agent?.show_phone_in_inquiry !== false ? phoneTrimmed : undefined
     const translateTag = (tag: string) => (dict.property?.tags as any)?.[tag] || tag;
     const translateArea = (areaName: string) => (dict.property?.db_locations as any)?.[areaName] || areaName;
 

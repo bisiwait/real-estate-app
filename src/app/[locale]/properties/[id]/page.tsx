@@ -12,12 +12,11 @@ import {
 } from '@/lib/supabase/fetch-property-detail'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
-import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry-url'
-import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
 import { buildPropertyDetailAbsoluteUrl } from '@/lib/property-page-canonical-url'
 import { hostHeaderFromHeaders } from '@/lib/env/deployment-target'
 import { resolvePropertyImageUrl, PROPERTY_PLACEHOLDER_IMAGE } from '@/lib/property-image-url'
 import { getSupabasePublicConfig } from '@/lib/env/supabase-data-plane'
+import { buildPropertyInquiryContactPayload } from '@/lib/property-inquiry-contact'
 
 /** ISR: 1時間ごとに静的ページを再検証（Edge からキャッシュ HTML を返しやすくする） */
 export const revalidate = 3600
@@ -228,27 +227,17 @@ export default async function Page({
     let initialListingOwnerPhone: string | undefined
     let initialListingOwnerShowWhatsapp = true
 
-    if (propertyForClient.user_id) {
-        listingOwner = await fetchPublicListingOwnerProfile(
-            supabase,
-            propertyForClient.user_id as string
-        )
-        initialListingOwnerPhone =
-            typeof listingOwner?.phone === 'string' && listingOwner.phone.trim().length > 0
-                ? listingOwner.phone.trim()
-                : undefined
-        initialListingOwnerShowWhatsapp = listingOwner?.show_whatsapp_in_inquiry !== false
-        const raw = getPropertyOwnerLineInquiryRawInput(listingOwner)
-        if (raw) {
-            officialLineAddFriendUrl = await buildPropertyLineInquiryUrlServer(
-                raw,
-                propertyForClient,
-                locale,
-                hostname,
-                propertyDetailPageUrl
-            )
-        }
-    }
+    const inquiryContact = await buildPropertyInquiryContactPayload(
+        supabase,
+        propertyForClient as Record<string, unknown>,
+        locale,
+        hostname,
+        propertyDetailPageUrl
+    )
+    listingOwner = inquiryContact.listingOwner
+    officialLineAddFriendUrl = inquiryContact.officialLineAddFriendUrl
+    initialListingOwnerPhone = inquiryContact.listingPhoneForTel
+    initialListingOwnerShowWhatsapp = listingOwner?.show_whatsapp_in_inquiry !== false
 
     const [relatedProperties, agentOtherProperties] = await Promise.all([
         fetchRelatedPropertiesForDetail(
@@ -295,6 +284,7 @@ export default async function Page({
                 propertyDetailPageUrl={propertyDetailPageUrl}
                 initialListingOwnerPhone={initialListingOwnerPhone}
                 initialListingOwnerShowWhatsapp={initialListingOwnerShowWhatsapp}
+                initialListingOwnerShowPhone={listingOwner?.show_phone_in_inquiry !== false}
             />
         </Suspense>
     )

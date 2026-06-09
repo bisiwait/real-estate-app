@@ -19,18 +19,30 @@ export type PublicListingOwnerProfile = {
     email?: string | null
 }
 
-const LISTING_OWNER_SELECT =
-    'id, full_name, avatar_url, bio, phone, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, show_whatsapp_in_inquiry, plan, plan_type, current_period_end, is_admin, deleted_at, status, user_role'
+const LISTING_OWNER_SELECT_BASE =
+    'id, full_name, avatar_url, bio, phone, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, plan, plan_type, current_period_end, is_admin, deleted_at, status, user_role'
+
+const LISTING_OWNER_SELECT = `${LISTING_OWNER_SELECT_BASE}, show_whatsapp_in_inquiry`
 
 export async function fetchPublicListingOwnerProfile(
     supabase: SupabaseClient,
     userId: string
 ): Promise<PublicListingOwnerProfile | null> {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
         .from('profiles')
         .select(LISTING_OWNER_SELECT)
         .eq('id', userId)
         .maybeSingle()
+
+    if (error && /show_whatsapp_in_inquiry/i.test(error.message)) {
+        const retry = await supabase
+            .from('profiles')
+            .select(LISTING_OWNER_SELECT_BASE)
+            .eq('id', userId)
+            .maybeSingle()
+        data = retry.data
+        error = retry.error
+    }
 
     if (error || !data) {
         if (error) console.warn('[fetchPublicListingOwnerProfile]', error.message)
@@ -51,7 +63,10 @@ export async function fetchPublicListingOwnerProfile(
         line_basic_id: (data.line_basic_id as string | null) ?? null,
         show_line_in_inquiry: data.show_line_in_inquiry as boolean | null,
         show_phone_in_inquiry: data.show_phone_in_inquiry as boolean | null,
-        show_whatsapp_in_inquiry: data.show_whatsapp_in_inquiry as boolean | null,
+        show_whatsapp_in_inquiry:
+            'show_whatsapp_in_inquiry' in data
+                ? (data.show_whatsapp_in_inquiry as boolean | null)
+                : true,
         plan: (data.plan as string | null) ?? null,
         plan_type: (data.plan_type as string | null) ?? null,
         current_period_end: (data.current_period_end as string | null) ?? null,

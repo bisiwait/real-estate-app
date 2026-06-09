@@ -2,8 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { revalidateAgentPublicPages } from '@/lib/services/revalidateAgentPages'
 
-const AGENT_PROFILE_SELECT =
-    'full_name, company_name, phone, bio, website, avatar_url, plan, plan_type, current_period_end, auto_renew, is_admin, user_role, show_phone_in_inquiry, show_line_in_inquiry, show_whatsapp_in_inquiry, line_basic_id, line_id'
+const AGENT_PROFILE_SELECT_BASE =
+    'full_name, company_name, phone, bio, website, avatar_url, plan, plan_type, current_period_end, auto_renew, is_admin, user_role, show_phone_in_inquiry, show_line_in_inquiry, line_basic_id, line_id'
+
+const AGENT_PROFILE_SELECT = `${AGENT_PROFILE_SELECT_BASE}, show_whatsapp_in_inquiry`
+
+async function loadAgentProfile(admin: Awaited<ReturnType<typeof createAdminClient>>, userId: string) {
+    let result = await admin
+        .from('profiles')
+        .select(`id, ${AGENT_PROFILE_SELECT}`)
+        .eq('id', userId)
+        .maybeSingle()
+
+    if (result.error && /show_whatsapp_in_inquiry/i.test(result.error.message)) {
+        result = await admin
+            .from('profiles')
+            .select(`id, ${AGENT_PROFILE_SELECT_BASE}`)
+            .eq('id', userId)
+            .maybeSingle()
+        if (result.data && !('show_whatsapp_in_inquiry' in result.data)) {
+            result.data = { ...result.data, show_whatsapp_in_inquiry: true }
+        }
+    }
+
+    return result
+}
 
 type AgentProfileRow = {
     user_role?: string | null
@@ -29,11 +52,7 @@ async function requireAgentSession() {
     }
 
     const admin = await createAdminClient()
-    const { data: profile, error } = await admin
-        .from('profiles')
-        .select(`id, ${AGENT_PROFILE_SELECT}`)
-        .eq('id', user.id)
-        .maybeSingle()
+    const { data: profile, error } = await loadAgentProfile(admin, user.id)
 
     if (error) {
         console.error('[api/agent/profile] load', error)
@@ -139,12 +158,25 @@ export async function PATCH(request: NextRequest) {
 
         updates.updated_at = new Date().toISOString()
 
-        const { data, error } = await admin!
+        let { data, error } = await admin!
             .from('profiles')
             .update(updates)
             .eq('id', user!.id)
             .select(AGENT_PROFILE_SELECT)
             .single()
+
+        if (error && /show_whatsapp_in_inquiry/i.test(error.message) && 'show_whatsapp_in_inquiry' in updates) {
+            const { show_whatsapp_in_inquiry: _drop, ...rest } = updates
+            ;({ data, error } = await admin!
+                .from('profiles')
+                .update(rest)
+                .eq('id', user!.id)
+                .select(AGENT_PROFILE_SELECT_BASE)
+                .single())
+            if (data && !('show_whatsapp_in_inquiry' in data)) {
+                data = { ...data, show_whatsapp_in_inquiry: true }
+            }
+        }
 
         if (error) {
             console.error('[api/agent/profile] PATCH', error)
