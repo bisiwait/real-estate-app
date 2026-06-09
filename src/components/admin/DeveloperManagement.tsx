@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { escapeIlikePattern, maxPageForCount } from '@/lib/admin-list-url'
+import { maxPageForCount } from '@/lib/admin-list-url'
 import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
 import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import {
@@ -64,24 +63,26 @@ export default function AdminDeveloperManagement() {
         website_url: ''
     })
 
-    const supabase = createClient()
-
     const fetchDevelopersPage = useCallback(async () => {
         setLoading(true)
         setErrorMessage(null)
         try {
-            let q = supabase.from('developers').select('*', { count: 'exact', head: false }).order('name')
-            const trimmed = debouncedSearch.trim().replace(/,/g, '')
-            if (trimmed) {
-                q = q.ilike('name', `%${escapeIlikePattern(trimmed)}%`)
+            const params = new URLSearchParams({
+                page: String(page),
+                limit: String(limit),
+            })
+            if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim())
+
+            const res = await fetch(`/api/admin/developers?${params}`)
+            const data = (await res.json().catch(() => ({}))) as {
+                developers?: Developer[]
+                totalCount?: number
+                error?: string
             }
-            const from = (page - 1) * limit
-            const to = from + limit - 1
-            const { data, error, count } = await q.range(from, to)
-            if (error) throw error
-            setDevelopers(data || [])
-            setTotalCount(typeof count === 'number' ? count : (data?.length ?? 0))
-        } catch (err: any) {
+            if (!res.ok) throw new Error(data.error || '一覧の取得に失敗しました')
+            setDevelopers(data.developers || [])
+            setTotalCount(typeof data.totalCount === 'number' ? data.totalCount : 0)
+        } catch (err: unknown) {
             console.error('Fetch error:', err)
             setErrorMessage(getErrorMessage(err))
             setDevelopers([])
@@ -89,7 +90,7 @@ export default function AdminDeveloperManagement() {
         } finally {
             setLoading(false)
         }
-    }, [supabase, debouncedSearch, page, limit])
+    }, [debouncedSearch, page, limit])
 
     useEffect(() => {
         void fetchDevelopersPage()
@@ -129,22 +130,28 @@ export default function AdminDeveloperManagement() {
         setErrorMessage(null)
 
         try {
+            const payload = {
+                name: formData.name,
+                logo_url: formData.logo_url,
+                description: formData.description,
+                website_url: formData.website_url,
+            }
             if (editingId) {
-                const { error } = await supabase
-                    .from('developers')
-                    .update({
-                        name: formData.name,
-                        logo_url: formData.logo_url,
-                        description: formData.description,
-                        website_url: formData.website_url
-                    })
-                    .eq('id', editingId)
-                if (error) throw error
+                const res = await fetch(`/api/admin/developers/${editingId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                })
+                const data = (await res.json().catch(() => ({}))) as { error?: string }
+                if (!res.ok) throw new Error(data.error || '更新に失敗しました')
             } else {
-                const { error } = await supabase
-                    .from('developers')
-                    .insert([formData])
-                if (error) throw error
+                const res = await fetch('/api/admin/developers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                })
+                const data = (await res.json().catch(() => ({}))) as { error?: string }
+                if (!res.ok) throw new Error(data.error || '登録に失敗しました')
             }
 
             handleCancel()
@@ -161,13 +168,11 @@ export default function AdminDeveloperManagement() {
         if (!confirm('削除しますか？')) return
         setLoading(true)
         try {
-            const { error } = await supabase
-                .from('developers')
-                .delete()
-                .eq('id', id)
-            if (error) throw error
+            const res = await fetch(`/api/admin/developers/${id}`, { method: 'DELETE' })
+            const data = (await res.json().catch(() => ({}))) as { error?: string }
+            if (!res.ok) throw new Error(data.error || '削除に失敗しました')
             await fetchDevelopersPage()
-        } catch (err: any) {
+        } catch {
             setErrorMessage('削除できませんでした。このデベロッパーに紐づくプロジェクトが存在する可能性があります。')
         } finally {
             setLoading(false)

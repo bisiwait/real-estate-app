@@ -1,5 +1,4 @@
 "use client";
-import { createClient } from '@/lib/supabase/client'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
@@ -32,14 +31,6 @@ export default function AdminAnalyticsPage() {
         const fetchData = async () => {
             setFetchError(null)
             try {
-                const supabase = createClient()
-                const { data: { user } } = await supabase.auth.getUser()
-
-                if (!user) {
-                    router.push(`/${locale}/login`)
-                    return
-                }
-
                 const profileRes = await fetch('/api/user/profile', { credentials: 'include' })
                 if (!profileRes.ok) {
                     router.push(`/${locale}/login`)
@@ -55,63 +46,26 @@ export default function AdminAnalyticsPage() {
                     return
                 }
 
-                // ネスト select は agent_id → profiles の複数 FK で壊れやすいため、一覧は * のみ＋別クエリで結合する
-                const { data: leadRows, error: logsError } = await supabase.from('inquiry_logs').select('*')
+                const res = await fetch('/api/admin/analytics')
+                const data = (await res.json().catch(() => ({}))) as {
+                    totalLeads?: number
+                    lineLeads?: number
+                    phoneLeads?: number
+                    topProperties?: { name: string; count: number }[]
+                    topAgents?: { name: string; count: number }[]
+                    error?: string
+                }
 
-                if (logsError) {
-                    console.error('[admin analytics] inquiry_logs', logsError)
-                    setFetchError(logsError.message)
+                if (!res.ok) {
+                    setFetchError(data.error || 'データの取得に失敗しました')
                     return
                 }
 
-                const leads = leadRows ?? []
-                const propertyIds = [...new Set(leads.map((l) => l.property_id).filter(Boolean))] as string[]
-                const agentIds = [...new Set(leads.map((l) => l.agent_id).filter(Boolean))] as string[]
-
-                const { data: props, error: propErr } =
-                    propertyIds.length > 0
-                        ? await supabase.from('properties').select('id, title').in('id', propertyIds)
-                        : { data: [], error: null }
-                if (propErr) console.error('[admin analytics] properties', propErr)
-
-                const { data: agents, error: agentErr } =
-                    agentIds.length > 0
-                        ? await supabase.from('profiles').select('id, full_name').in('id', agentIds)
-                        : { data: [], error: null }
-                if (agentErr) console.error('[admin analytics] profiles (agents)', agentErr)
-
-                const propMap = new Map((props ?? []).map((p) => [p.id as string, (p.title as string) || 'Unknown']))
-                const agentMap = new Map(
-                    (agents ?? []).map((a) => [a.id as string, ((a.full_name as string) || 'Unknown Agent') as string])
-                )
-
-                setTotalLeads(leads.length)
-                setLineLeads(leads.filter((l) => l.inquiry_type === 'line').length)
-                setPhoneLeads(leads.filter((l) => l.inquiry_type === 'phone').length)
-
-                const propertyCounts: Record<string, number> = {}
-                leads.forEach((l) => {
-                    const title = propMap.get(l.property_id) ?? 'Unknown'
-                    propertyCounts[title] = (propertyCounts[title] || 0) + 1
-                })
-                setTopProperties(
-                    Object.entries(propertyCounts)
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 5)
-                        .map(([name, count]) => ({ name, count }))
-                )
-
-                const agentCounts: Record<string, number> = {}
-                leads.forEach((l) => {
-                    const name = agentMap.get(l.agent_id) ?? 'Unknown Agent'
-                    agentCounts[name] = (agentCounts[name] || 0) + 1
-                })
-                setTopAgents(
-                    Object.entries(agentCounts)
-                        .sort((a, b) => b[1] - a[1])
-                        .slice(0, 5)
-                        .map(([name, count]) => ({ name, count }))
-                )
+                setTotalLeads(data.totalLeads ?? 0)
+                setLineLeads(data.lineLeads ?? 0)
+                setPhoneLeads(data.phoneLeads ?? 0)
+                setTopProperties(data.topProperties ?? [])
+                setTopAgents(data.topAgents ?? [])
             } catch (e) {
                 console.error('[admin analytics]', e)
                 setFetchError(e instanceof Error ? e.message : 'データの取得に失敗しました')
@@ -119,7 +73,7 @@ export default function AdminAnalyticsPage() {
                 setLoading(false)
             }
         }
-        fetchData()
+        void fetchData()
     }, [router, locale])
 
     if (loading) {
@@ -171,7 +125,6 @@ export default function AdminAnalyticsPage() {
                 </button>
             </div>
 
-            {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 relative overflow-hidden group">
                     <div className="absolute -right-4 -top-4 w-24 h-24 bg-navy-primary/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
@@ -209,7 +162,6 @@ export default function AdminAnalyticsPage() {
                 </div>
             </div>
 
-            {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
                     <div className="flex items-center justify-between mb-8">

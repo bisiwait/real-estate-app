@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import {
     Send,
     Search,
@@ -47,27 +46,25 @@ export default function BroadcastManager() {
     const [showConfirm, setShowConfirm] = useState(false)
     const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit')
 
-    const supabase = createClient()
-
     useEffect(() => {
-        fetchRecentProperties()
+        void fetchRecentProperties()
     }, [])
 
     const fetchRecentProperties = async () => {
         setLoading(true)
-        const { data, error } = await supabase
-            .from('properties')
-            .select('*, area:areas(name)')
-            .eq('status', 'published')
-            .order('created_at', { ascending: false })
-            .limit(20)
-
-        if (error) {
-            setErrorMessage(getErrorMessage(error))
-        } else {
-            setProperties(data || [])
+        try {
+            const res = await fetch('/api/admin/broadcast/properties')
+            const data = (await res.json().catch(() => ({}))) as { properties?: unknown[]; error?: string }
+            if (!res.ok) {
+                setErrorMessage(data.error || '物件一覧の取得に失敗しました')
+            } else {
+                setProperties(data.properties || [])
+            }
+        } catch (err) {
+            setErrorMessage(getErrorMessage(err))
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const toggleProperty = (id: string) => {
@@ -91,48 +88,29 @@ export default function BroadcastManager() {
         setSuccessMessage(null)
 
         try {
-            // 1. Create Log Entry
-            console.log('Step 1: Creating broadcast log entry...')
-            const { data: log, error: logError } = await supabase
-                .from('broadcast_logs')
-                .insert([{
+            const res = await fetch('/api/admin/broadcast', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     property_ids: selectedPropertyIds,
                     title,
                     content,
                     segment_type: segmentType,
                     segment_value: segmentValue,
-                    status: 'pending'
-                }])
-                .select()
-                .single()
+                }),
+            })
+            const data = (await res.json().catch(() => ({}))) as { error?: string; warning?: string; ok?: boolean }
 
-            if (logError) {
-                console.error('Log creation error:', logError)
-                throw logError
+            if (!res.ok && res.status !== 202) {
+                throw new Error(data.error || '配信の登録に失敗しました')
             }
-            console.log('Log created successfully. ID:', log.id)
 
-            console.log('Step 2: Updating UI and triggering function...')
             setSuccessMessage(`${selectedPropertyIds.length}件の物件情報を配信プロセスに登録しました。`)
             setShowConfirm(false)
+            if (data.warning) {
+                setErrorMessage(data.warning)
+            }
 
-            // 2. Trigger Edge Function (Background processing - do not await to avoid UI hang)
-            console.log('Step 3: Background triggering broadcast function for ID:', log.id)
-            supabase.functions.invoke('process-broadcast', {
-                body: { broadcastId: log.id }
-            }).then(({ data, error }) => {
-                if (error) {
-                    console.error('Background trigger error returned:', error)
-                    setErrorMessage(`関数呼び出しエラー: ${error.message}`)
-                } else {
-                    console.log('Background trigger success response:', data)
-                }
-            }).catch(e => {
-                console.error('Background trigger exception caught:', e)
-                setErrorMessage(`システム例外: ${e.message}`)
-            })
-
-            // Reset form
             setSelectedPropertyIds([])
             setTitle('')
             setContent('')

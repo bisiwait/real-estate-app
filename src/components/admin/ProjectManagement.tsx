@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { escapeIlikePattern, maxPageForCount } from '@/lib/admin-list-url'
+import { maxPageForCount } from '@/lib/admin-list-url'
 import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
 import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import {
@@ -59,6 +58,20 @@ interface Project {
     average_price_sqm?: number | null
     total_units?: number | null
     facilities?: string[]
+}
+
+function sortAreas(mappedAreas: Area[]) {
+    mappedAreas.sort((a: Area, b: Area) => {
+        const regionA = a.region?.name || ''
+        const regionB = b.region?.name || ''
+        if (regionA === 'Pattaya' && regionB !== 'Pattaya') return -1
+        if (regionA !== 'Pattaya' && regionB === 'Pattaya') return 1
+        if (regionA === 'Sriracha' && regionB !== 'Sriracha') return -1
+        if (regionA !== 'Sriracha' && regionB === 'Sriracha') return 1
+        if (regionA !== regionB) return regionA.localeCompare(regionB)
+        return a.name.localeCompare(b.name)
+    })
+    return mappedAreas
 }
 
 export default function AdminProjectManagement() {
@@ -118,84 +131,45 @@ export default function AdminProjectManagement() {
         facilities: []
     })
 
-    const supabase = createClient()
-
-    const sortAreas = (mappedAreas: Area[]) => {
-        mappedAreas.sort((a: Area, b: Area) => {
-            const regionA = a.region?.name || ''
-            const regionB = b.region?.name || ''
-
-            if (regionA === 'Pattaya' && regionB !== 'Pattaya') return -1
-            if (regionA !== 'Pattaya' && regionB === 'Pattaya') return 1
-
-            if (regionA === 'Sriracha' && regionB !== 'Sriracha') return -1
-            if (regionA !== 'Sriracha' && regionB === 'Sriracha') return 1
-
-            if (regionA !== regionB) return regionA.localeCompare(regionB)
-            return a.name.localeCompare(b.name)
-        })
-        return mappedAreas
-    }
-
     const fetchMeta = useCallback(async () => {
         setErrorMessage(null)
         try {
-            const [areasRes, developersRes] = await Promise.all([
-                supabase.from('areas').select('id, name, region:regions(name)').order('name'),
-                supabase.from('developers').select('id, name').order('name'),
-            ])
-
-            if (areasRes.error) throw areasRes.error
-
-            setDevelopers(developersRes.data || [])
-            if (areasRes.data) {
-                const mappedAreas = areasRes.data.map((item: any) => ({
-                    id: item.id,
-                    name: item.name,
-                    region: item.region || { name: '' },
-                }))
-                setAreas(sortAreas(mappedAreas))
-            } else {
-                setAreas([])
+            const res = await fetch('/api/admin/projects?meta=1')
+            const data = (await res.json().catch(() => ({}))) as {
+                areas?: Area[]
+                developers?: { id: string; name: string }[]
+                error?: string
             }
-        } catch (err: any) {
+            if (!res.ok) throw new Error(data.error || 'メタ情報の取得に失敗しました')
+            setDevelopers(data.developers || [])
+            setAreas(sortAreas(data.areas || []))
+        } catch (err: unknown) {
             console.error('Fetch meta error:', err)
             setErrorMessage(getErrorMessage(err))
         }
-    }, [supabase])
+    }, [])
 
     const fetchProjectsPage = useCallback(async () => {
         setLoading(true)
         setErrorMessage(null)
         try {
-            let q = supabase.from('projects').select('*', { count: 'exact', head: false }).order('name')
-            if (filterMissingInfo) {
-                q = q.or('year_built.is.null,total_floors.is.null')
+            const params = new URLSearchParams({
+                page: String(page),
+                limit: String(limit),
+            })
+            if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim())
+            if (filterMissingInfo) params.set('missing', '1')
+
+            const res = await fetch(`/api/admin/projects?${params}`)
+            const data = (await res.json().catch(() => ({}))) as {
+                projects?: Project[]
+                totalCount?: number
+                error?: string
             }
-            const rawSearch = debouncedSearch.trim().replace(/,/g, '')
-            if (rawSearch) {
-                const pattern = `%${escapeIlikePattern(rawSearch)}%`
-                const qLower = rawSearch.toLowerCase()
-                const parts = [`name.ilike.${pattern}`, `name_jp.ilike.${pattern}`]
-                const areaMatchIds = areas
-                    .filter((a) => {
-                        const n = (a.name || '').toLowerCase()
-                        const r = (a.region?.name || '').toLowerCase()
-                        return n.includes(qLower) || r.includes(qLower)
-                    })
-                    .map((a) => a.id)
-                if (areaMatchIds.length > 0) {
-                    parts.push(`area_id.in.(${areaMatchIds.join(',')})`)
-                }
-                q = q.or(parts.join(','))
-            }
-            const from = (page - 1) * limit
-            const to = from + limit - 1
-            const { data, error, count } = await q.range(from, to)
-            if (error) throw error
-            setProjects((data as Project[]) || [])
-            setTotalCount(typeof count === 'number' ? count : (data?.length ?? 0))
-        } catch (err: any) {
+            if (!res.ok) throw new Error(data.error || 'プロジェクト一覧の取得に失敗しました')
+            setProjects(data.projects || [])
+            setTotalCount(typeof data.totalCount === 'number' ? data.totalCount : 0)
+        } catch (err: unknown) {
             console.error('Fetch projects error:', err)
             setErrorMessage(getErrorMessage(err))
             setProjects([])
@@ -203,7 +177,7 @@ export default function AdminProjectManagement() {
         } finally {
             setLoading(false)
         }
-    }, [supabase, areas, debouncedSearch, filterMissingInfo, page, limit])
+    }, [debouncedSearch, filterMissingInfo, page, limit])
 
     useEffect(() => {
         void fetchMeta()
@@ -337,18 +311,21 @@ export default function AdminProjectManagement() {
             }
 
             if (editingId) {
-                const { error } = await supabase
-                    .from('projects')
-                    .update(projectData)
-                    .eq('id', editingId)
-
-                if (error) throw error
+                const res = await fetch(`/api/admin/projects/${editingId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(projectData),
+                })
+                const data = (await res.json().catch(() => ({}))) as { error?: string }
+                if (!res.ok) throw new Error(data.error || '更新に失敗しました')
             } else {
-                const { error } = await supabase
-                    .from('projects')
-                    .insert([projectData])
-
-                if (error) throw error
+                const res = await fetch('/api/admin/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(projectData),
+                })
+                const data = (await res.json().catch(() => ({}))) as { error?: string }
+                if (!res.ok) throw new Error(data.error || '登録に失敗しました')
             }
 
             handleCancel()
@@ -366,14 +343,11 @@ export default function AdminProjectManagement() {
 
         setLoading(true)
         try {
-            const { error } = await supabase
-                .from('projects')
-                .delete()
-                .eq('id', id)
-
-            if (error) throw error
+            const res = await fetch(`/api/admin/projects/${id}`, { method: 'DELETE' })
+            const data = (await res.json().catch(() => ({}))) as { error?: string }
+            if (!res.ok) throw new Error(data.error || '削除に失敗しました')
             await fetchProjectsPage()
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Delete error:', err)
             setErrorMessage('削除できませんでした。このプロジェクトに紐づく物件が既に存在している可能性があります。')
         } finally {

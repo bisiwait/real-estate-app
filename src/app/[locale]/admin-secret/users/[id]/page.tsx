@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { UserCircle, ArrowLeft, Mail, Phone, Calendar, Hash, MessageCircle, Heart, Search, ExternalLink } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { buildLineContactUrl } from "@/lib/line-contact-url";
 
 function savedSearchPropertiesHref(locale: string, filters: unknown): string {
@@ -30,7 +30,7 @@ export default async function AdminUserDetailPage({
         redirect(`/${locale}`);
     }
 
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
 
     if (error || !profile) {

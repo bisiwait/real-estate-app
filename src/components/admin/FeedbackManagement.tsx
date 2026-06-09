@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 import { 
     Lightbulb, 
     Clock, 
@@ -32,32 +31,29 @@ export default function AdminFeedbackManagement({
     const [loading, setLoading] = useState(true)
     const [expandedId, setExpandedId] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<string>('all')
-    const supabase = createClient()
 
     useEffect(() => {
-        fetchFeedbacks()
+        void fetchFeedbacks()
     }, [statusFilter])
 
     const fetchFeedbacks = async () => {
         setLoading(true)
-
-        let query = supabase
-            .from('feedback')
-            .select('*, profile:profiles(full_name, email)')
-            .order('created_at', { ascending: false })
-
-        if (statusFilter !== 'all') {
-            // 'new' フィルタが選択されている場合、DB上の 'new' を検索
-            query = query.eq('status', statusFilter)
+        try {
+            const qs = statusFilter !== 'all' ? `?status=${encodeURIComponent(statusFilter)}` : ''
+            const res = await fetch(`/api/admin/feedback${qs}`)
+            const data = (await res.json().catch(() => ({}))) as { feedbacks?: unknown[]; error?: string }
+            if (!res.ok) {
+                console.error('Error fetching feedbacks:', data.error)
+                setFeedbacks([])
+            } else {
+                setFeedbacks(data.feedbacks || [])
+            }
+        } catch (e) {
+            console.error('Error fetching feedbacks:', e)
+            setFeedbacks([])
+        } finally {
+            setLoading(false)
         }
-
-        const { data, error } = await query
-        if (error) {
-            console.error('Error fetching feedbacks:', error)
-        } else {
-            setFeedbacks(data || [])
-        }
-        setLoading(false)
     }
 
     const updateStatus = async (id: string, newStatus: string) => {
