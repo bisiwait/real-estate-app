@@ -30,8 +30,13 @@ import { Globe } from 'lucide-react'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import { finiteCoord } from '@/lib/google-maps-url'
 import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
-import { checkPropertySaveDuplicates } from '@/lib/supabase/property-save-duplicate-guard'
 import { fetchListingFormMeta } from '@/lib/listing-form/fetch-listing-form-meta'
+import {
+    createProjectViaApi,
+    createPropertyViaApi,
+    fetchAgentPlanProfile,
+    updatePropertyViaApi,
+} from '@/lib/properties/save-property-client'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -417,18 +422,17 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
     useEffect(() => {
         async function checkAdmin() {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('is_admin')
-                    .eq('id', user.id)
-                    .single()
-                setIsAdmin(!!data?.is_admin)
+            try {
+                const profile = await fetchAgentPlanProfile()
+                setIsAdmin(
+                    profile?.is_admin === true || profile?.user_role === 'admin'
+                )
+            } catch (err) {
+                console.warn('[PresaleListingForm] plan profile fetch failed', err)
             }
         }
-        checkAdmin()
-    }, [supabase])
+        void checkAdmin()
+    }, [])
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -517,14 +521,6 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             const { data: { user }, error: authError } = await supabase.auth.getUser()
             if (authError || !user) throw new Error('Unauthorized')
 
-            const dup = await checkPropertySaveDuplicates(supabase, {
-                title: formData.title,
-                excludePropertyId: mode === 'edit' ? initialData?.id ?? null : null,
-                description: formData.description,
-                checkDescriptionPrefix: true,
-            })
-            if (!dup.ok) throw new Error(dup.message)
-
             const targetStatus =
                 mode === 'edit'
                     ? (initialData?.status || (isAdmin ? 'published' : 'pending'))
@@ -545,29 +541,25 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 if (!projectForm.name || !formData.area_id) {
                     throw new Error(ui.requiredProjectAndArea)
                 }
-                const { data: newProject, error: projectError } = await supabase
-                    .from('projects')
-                    .insert({
-                        name: projectForm.name,
-                        area_id: formData.area_id || null,
-                        address: projectForm.address,
-                        property_type: projectForm.property_type,
-                        year_built: projectForm.year_built,
-                        total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
-                        total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
-                        total_buildings: projectForm.total_buildings ? parseInt(projectForm.total_buildings as string) : null,
-                        developer: projectForm.developer,
-                        developer_id: projectForm.developer_id || null,
-                        latitude: projectForm.latitude,
-                        longitude: projectForm.longitude,
-                        google_place_id: projectForm.google_place_id?.trim() || null,
-                        google_maps_share_url: projectForm.google_maps_share_url?.trim() || null,
-                        facilities: formData.project_facilities
-                    })
-                    .select()
-                    .single()
-                if (projectError) throw projectError
-                finalProjectId = newProject.id
+                finalProjectId = await createProjectViaApi({
+                    name: projectForm.name,
+                    area_id: formData.area_id || null,
+                    address: projectForm.address,
+                    property_type: projectForm.property_type,
+                    year_built: projectForm.year_built,
+                    total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
+                    total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
+                    total_buildings: projectForm.total_buildings
+                        ? parseInt(projectForm.total_buildings as string)
+                        : null,
+                    developer: projectForm.developer,
+                    developer_id: projectForm.developer_id || null,
+                    latitude: projectForm.latitude,
+                    longitude: projectForm.longitude,
+                    google_place_id: projectForm.google_place_id?.trim() || null,
+                    google_maps_share_url: projectForm.google_maps_share_url?.trim() || null,
+                    facilities: formData.project_facilities,
+                })
             }
 
             if (!formData.sale_price) {
@@ -575,132 +567,82 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
             }
 
             let propertyId = initialData?.id
-            if (mode === 'create') {
-                const { data: newProperty, error: insertError } = await supabase
-                    .from('properties')
-                    .insert({
-                        user_id: user.id,
-                        title: formData.title,
-                        description: formData.description,
-                        is_for_rent: false,
-                        is_for_sale: true,
-                        sale_price: parseFloat(formData.sale_price),
-                        area_id: formData.area_id || null,
-                        project_id: finalProjectId || null,
-                        developer_id: effectiveDeveloperId,
-                        building_name: formData.building_name,
-                        project_name: formData.project_name,
-                        images: [],
-                        tags: formData.tags,
-                        status: targetStatus,
-                        is_approved: targetApproved,
-                        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                        property_type: formData.property_type,
-                        sqm: formData.sqm ? parseFloat(formData.sqm) : null,
-                        floor: formData.floor,
-                        bedrooms: parseInt(formData.bedrooms),
-                        bathrooms: parseInt(formData.bathrooms),
-                        year_built: formData.year_built,
-                        total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                        ownership_type: formData.ownership_type,
-                        is_presale: true,
-                        completion_date: formData.completion_date,
-                        payment_plan: formData.payment_plan,
-                        construction_status: formData.construction_status,
-                        land_area: formData.land_area,
-                        total_units: formData.total_units ? parseInt(formData.total_units) : null,
-                        total_buildings: formData.total_buildings ? parseInt(formData.total_buildings) : null,
-                        has_bathtub: formData.has_bathtub,
-                        has_washlet: formData.has_washlet,
-                        allows_pets: formData.allows_pets,
-                        has_japanese_tv: formData.has_japanese_tv,
-                        has_ev_charger: formData.has_ev_charger,
-                        description_en: formData.description_en,
-                        description_th: formData.description_th,
-                        showroom_map_url: formData.showroom_map_url || null,
-                    })
-                    .select()
-                    .single()
-
-                if (insertError) throw insertError
-                propertyId = newProperty.id
+            const presaleBase = {
+                title: formData.title,
+                description: formData.description,
+                is_for_rent: false,
+                is_for_sale: true,
+                sale_price: parseFloat(formData.sale_price),
+                area_id: formData.area_id || null,
+                project_id: finalProjectId || null,
+                developer_id: effectiveDeveloperId,
+                building_name: formData.building_name,
+                project_name: formData.project_name,
+                tags: formData.tags,
+                status: targetStatus,
+                is_approved: targetApproved,
+                property_type: formData.property_type,
+                sqm: formData.sqm ? parseFloat(formData.sqm) : null,
+                floor: formData.floor,
+                bedrooms: parseInt(formData.bedrooms),
+                bathrooms: parseInt(formData.bathrooms),
+                year_built: formData.year_built,
+                total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
+                ownership_type: formData.ownership_type,
+                is_presale: true,
+                completion_date: formData.completion_date,
+                payment_plan: formData.payment_plan,
+                construction_status: formData.construction_status,
+                land_area: formData.land_area,
+                total_units: formData.total_units ? parseInt(formData.total_units) : null,
+                total_buildings: formData.total_buildings ? parseInt(formData.total_buildings) : null,
+                developer: formData.developer,
+                has_bathtub: formData.has_bathtub,
+                has_washlet: formData.has_washlet,
+                allows_pets: formData.allows_pets,
+                has_japanese_tv: formData.has_japanese_tv,
+                has_ev_charger: formData.has_ev_charger,
+                description_en: formData.description_en,
+                description_th: formData.description_th,
+                showroom_map_url: formData.showroom_map_url || null,
+                checkDescriptionPrefix: true,
             }
 
-            const newImageUrls = await uploadImages(propertyId)
+            if (mode === 'create') {
+                propertyId = await createPropertyViaApi({
+                    ...presaleBase,
+                    images: [],
+                })
+            }
+
+            const newImageUrls = await uploadImages(propertyId!)
             const finalImages = [...existingImages, ...newImageUrls]
 
             if (finalImages.length === 0) {
                 throw new Error(ui.requiredAtLeastOneImage)
             }
 
-            const { error: updateError } = await supabase
-                .from('properties')
-                .update({
-                    title: formData.title,
-                    description: formData.description,
-                    is_for_rent: false,
-                    is_for_sale: true,
-                    sale_price: parseFloat(formData.sale_price),
-                    area_id: formData.area_id || null,
-                    project_id: finalProjectId || null,
-                    developer_id: effectiveDeveloperId,
-                    building_name: formData.building_name,
-                    project_name: formData.project_name,
-                    images: finalImages,
-                    tags: formData.tags,
-                    status: targetStatus,
-                    is_approved: targetApproved,
-                    updated_at: new Date().toISOString(),
-                    property_type: formData.property_type,
-                    sqm: formData.sqm ? parseFloat(formData.sqm) : null,
-                    floor: formData.floor,
-                    bedrooms: parseInt(formData.bedrooms),
-                    bathrooms: parseInt(formData.bathrooms),
-                    year_built: formData.year_built,
-                    total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                    ownership_type: formData.ownership_type,
-                    is_presale: true,
-                    completion_date: formData.completion_date,
-                    payment_plan: formData.payment_plan,
-                    construction_status: formData.construction_status,
-                    land_area: formData.land_area,
-                    total_units: formData.total_units ? parseInt(formData.total_units) : null,
-                    total_buildings: formData.total_buildings ? parseInt(formData.total_buildings) : null,
-                    developer: formData.developer,
-                    has_bathtub: formData.has_bathtub,
-                    has_washlet: formData.has_washlet,
-                    allows_pets: formData.allows_pets,
-                    has_japanese_tv: formData.has_japanese_tv,
-                    has_ev_charger: formData.has_ev_charger,
-                    description_en: formData.description_en,
-                    description_th: formData.description_th,
-                    showroom_map_url: formData.showroom_map_url || null,
-                })
-                .eq('id', propertyId)
-                .eq('user_id', user.id)
-
-            if (updateError) throw updateError
+            const patchPayload: Record<string, unknown> = {
+                ...presaleBase,
+                images: finalImages,
+            }
 
             if (!showNewProjectForm && formData.project_id && isAdmin && linkedProjectMap) {
-                const { error: projectSyncError } = await supabase
-                    .from('projects')
-                    .update({
-                        property_type: formData.property_type,
-                        year_built: formData.year_built,
-                        total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
-                        total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
-                        developer: formData.developer,
-                        google_place_id: linkedProjectMap.google_place_id?.trim() || null,
-                        google_maps_share_url: linkedProjectMap.google_maps_share_url?.trim() || null,
-                        latitude: linkedProjectMap.latitude,
-                        longitude: linkedProjectMap.longitude,
-                    })
-                    .eq('id', formData.project_id)
-
-                if (projectSyncError) {
-                    console.warn('Failed to sync project data:', projectSyncError)
+                patchPayload.projectSync = {
+                    projectId: formData.project_id,
+                    property_type: formData.property_type,
+                    year_built: formData.year_built,
+                    total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
+                    total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
+                    developer: formData.developer,
+                    google_place_id: linkedProjectMap.google_place_id?.trim() || null,
+                    google_maps_share_url: linkedProjectMap.google_maps_share_url?.trim() || null,
+                    latitude: linkedProjectMap.latitude,
+                    longitude: linkedProjectMap.longitude,
                 }
             }
+
+            await updatePropertyViaApi(propertyId!, patchPayload)
 
             setSuccess(true)
             setTimeout(() => router.push('/dashboard'), 2000)

@@ -46,8 +46,13 @@ const CoordinatePicker = dynamic(() => import('./CoordinatePicker'), {
 })
 
 import { getErrorMessage } from '@/lib/utils/errors'
-import { checkPropertySaveDuplicates } from '@/lib/supabase/property-save-duplicate-guard'
 import { fetchListingFormMeta } from '@/lib/listing-form/fetch-listing-form-meta'
+import {
+    createProjectViaApi,
+    createPropertyViaApi,
+    fetchAgentPlanProfile,
+    updatePropertyViaApi,
+} from '@/lib/properties/save-property-client'
 import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkField'
 import { finiteCoord } from '@/lib/google-maps-url'
 import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
@@ -395,19 +400,18 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
 
     useEffect(() => {
         async function checkUserData() {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single()
-                setIsAdmin(data?.is_admin || false)
-                setCurrentUserProfile(data)
+            try {
+                const profile = await fetchAgentPlanProfile()
+                setIsAdmin(
+                    profile?.is_admin === true || profile?.user_role === 'admin'
+                )
+                setCurrentUserProfile(profile)
+            } catch (err) {
+                console.warn('[ListingForm] plan profile fetch failed', err)
             }
         }
-        checkUserData()
-    }, [supabase])
+        void checkUserData()
+    }, [])
 
     useEffect(() => {
         setActiveTab(descriptionTabForLocale(locale))
@@ -581,14 +585,6 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
             if (authError) throw authError
             if (!user) throw new Error('Unauthorized')
 
-            const dup = await checkPropertySaveDuplicates(supabase, {
-                title: formData.title,
-                excludePropertyId: mode === 'edit' ? initialData?.id ?? null : null,
-                description: formData.description,
-                checkDescriptionPrefix: true,
-            })
-            if (!dup.ok) throw new Error(dup.message)
-
             let finalProjectId = formData.project_id
             const linkedProject = !showNewProjectForm
                 ? projects.find((p) => p.id === finalProjectId)
@@ -601,29 +597,22 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     throw new Error('プロジェクト名とエリアは必須です。')
                 }
 
-                const { data: newProject, error: projectError } = await supabase
-                    .from('projects')
-                    .insert({
-                        name: projectForm.name,
-                        area_id: projectForm.area_id || null,
-                        address: projectForm.address,
-                        image_url: projectForm.image_url,
-                        property_type: projectForm.property_type,
-                        year_built: projectForm.year_built,
-                        total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
-                        total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
-                        developer_id: projectForm.developer_id || null,
-                        latitude: projectForm.latitude,
-                        longitude: projectForm.longitude,
-                        google_place_id: projectForm.google_place_id?.trim() || null,
-                        google_maps_share_url: projectForm.google_maps_share_url?.trim() || null,
-                        facilities: formData.project_facilities
-                    })
-                    .select()
-                    .single()
-
-                if (projectError) throw projectError
-                finalProjectId = newProject.id
+                finalProjectId = await createProjectViaApi({
+                    name: projectForm.name,
+                    area_id: projectForm.area_id || null,
+                    address: projectForm.address,
+                    image_url: projectForm.image_url,
+                    property_type: projectForm.property_type,
+                    year_built: projectForm.year_built,
+                    total_floors: projectForm.total_floors ? parseInt(projectForm.total_floors as string) : null,
+                    total_units: projectForm.total_units ? parseInt(projectForm.total_units as string) : null,
+                    developer_id: projectForm.developer_id || null,
+                    latitude: projectForm.latitude,
+                    longitude: projectForm.longitude,
+                    google_place_id: projectForm.google_place_id?.trim() || null,
+                    google_maps_share_url: projectForm.google_maps_share_url?.trim() || null,
+                    facilities: formData.project_facilities,
+                })
             }
 
             let propertyId = initialData?.id
@@ -632,70 +621,7 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     throw new Error('「賃貸」または「売買」の少なくとも一方は選択してください。')
                 }
 
-                const { data: newProperty, error: insertError } = await supabase
-                    .from('properties')
-                    .insert({
-                        user_id: user.id,
-                        title: formData.title,
-                        description: formData.description,
-                        is_for_rent: formData.is_for_rent,
-                        is_for_sale: formData.is_for_sale,
-                        rent_price: formData.is_for_rent ? parseFloat(formData.rent_price) : null,
-                        sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
-                        area_id: formData.area_id || null,
-                        project_id: finalProjectId || null,
-                        developer_id: effectiveDeveloperId,
-                        building_name: formData.building_name,
-                        project_name: formData.project_name,
-                        images: [],
-                        tags: formData.tags,
-                        status: finalStatus,
-                        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                        has_bathtub: formData.has_bathtub,
-                        has_washlet: formData.has_washlet,
-                        water_heater_type: formData.water_heater_type,
-                        electricity_bill_type: formData.electricity_bill_type,
-                        water_bill_desc: formData.water_bill_desc,
-                        internet_desc: formData.internet_desc,
-                        distance_to_supermarket: formData.distance_to_supermarket,
-                        noise_level: formData.noise_level,
-                        transportation_desc: formData.transportation_desc,
-                        allows_pets: formData.allows_pets,
-                        has_japanese_tv: formData.has_japanese_tv,
-                        has_ev_charger: formData.has_ev_charger,
-                        admin_memo: formData.admin_memo,
-                        property_type: formData.property_type,
-                        sqm: formData.sqm ? parseFloat(formData.sqm) : null,
-                        floor: formData.floor,
-                        bedrooms: parseInt(formData.bedrooms),
-                        bathrooms: parseInt(formData.bathrooms),
-                        year_built: formData.year_built,
-                        total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
-                        total_units: formData.total_units ? parseInt(formData.total_units) : null,
-                        developer: formData.developer,
-                        ownership_type: formData.is_for_sale ? formData.ownership_type : null,
-                        is_presale: formData.is_presale,
-                        description_en: formData.description_en,
-                        description_th: formData.description_th,
-                        ...publishFields,
-                    })
-                    .select()
-                    .single()
-
-                if (insertError) throw insertError
-                propertyId = newProperty.id
-            }
-
-            const newImageUrls = await uploadImages(propertyId)
-            const finalImages = [...existingImages, ...newImageUrls]
-
-            if (finalImages.length === 0) {
-                throw new Error('少なくとも1枚の画像をアップロードしてください。')
-            }
-
-            const { error: updateError } = await supabase
-                .from('properties')
-                .update({
+                propertyId = await createPropertyViaApi({
                     title: formData.title,
                     description: formData.description,
                     is_for_rent: formData.is_for_rent,
@@ -707,10 +633,9 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     developer_id: effectiveDeveloperId,
                     building_name: formData.building_name,
                     project_name: formData.project_name,
-                    images: finalImages,
+                    images: [],
                     tags: formData.tags,
                     status: finalStatus,
-                    updated_at: new Date().toISOString(),
                     has_bathtub: formData.has_bathtub,
                     has_washlet: formData.has_washlet,
                     water_heater_type: formData.water_heater_type,
@@ -732,38 +657,83 @@ export default function ListingForm({ initialData, mode = 'create' }: ListingFor
                     year_built: formData.year_built,
                     total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
                     total_units: formData.total_units ? parseInt(formData.total_units) : null,
+                    developer: formData.developer,
                     ownership_type: formData.is_for_sale ? formData.ownership_type : null,
                     is_presale: formData.is_presale,
                     description_en: formData.description_en,
                     description_th: formData.description_th,
+                    checkDescriptionPrefix: true,
                     ...publishFields,
                 })
-                .eq('id', propertyId)
-                .eq('user_id', user.id)
+            }
 
-            if (updateError) throw updateError
+            const newImageUrls = await uploadImages(propertyId!)
+            const finalImages = [...existingImages, ...newImageUrls]
 
-            // Sync project data if admin edited an existing project
+            if (finalImages.length === 0) {
+                throw new Error('少なくとも1枚の画像をアップロードしてください。')
+            }
+
+            const patchPayload: Record<string, unknown> = {
+                title: formData.title,
+                description: formData.description,
+                is_for_rent: formData.is_for_rent,
+                is_for_sale: formData.is_for_sale,
+                rent_price: formData.is_for_rent ? parseFloat(formData.rent_price) : null,
+                sale_price: formData.is_for_sale ? parseFloat(formData.sale_price) : null,
+                area_id: formData.area_id || null,
+                project_id: finalProjectId || null,
+                developer_id: effectiveDeveloperId,
+                building_name: formData.building_name,
+                project_name: formData.project_name,
+                images: finalImages,
+                tags: formData.tags,
+                status: finalStatus,
+                has_bathtub: formData.has_bathtub,
+                has_washlet: formData.has_washlet,
+                water_heater_type: formData.water_heater_type,
+                electricity_bill_type: formData.electricity_bill_type,
+                water_bill_desc: formData.water_bill_desc,
+                internet_desc: formData.internet_desc,
+                distance_to_supermarket: formData.distance_to_supermarket,
+                noise_level: formData.noise_level,
+                transportation_desc: formData.transportation_desc,
+                allows_pets: formData.allows_pets,
+                has_japanese_tv: formData.has_japanese_tv,
+                has_ev_charger: formData.has_ev_charger,
+                admin_memo: formData.admin_memo,
+                property_type: formData.property_type,
+                sqm: formData.sqm ? parseFloat(formData.sqm) : null,
+                floor: formData.floor,
+                bedrooms: parseInt(formData.bedrooms),
+                bathrooms: parseInt(formData.bathrooms),
+                year_built: formData.year_built,
+                total_floors: formData.total_floors ? parseInt(formData.total_floors) : null,
+                total_units: formData.total_units ? parseInt(formData.total_units) : null,
+                ownership_type: formData.is_for_sale ? formData.ownership_type : null,
+                is_presale: formData.is_presale,
+                description_en: formData.description_en,
+                description_th: formData.description_th,
+                checkDescriptionPrefix: true,
+                ...publishFields,
+            }
+
             if (!showNewProjectForm && formData.project_id && isAdmin && linkedProjectMap) {
-                const { error: projectSyncError } = await supabase
-                    .from('projects')
-                    .update({
-                        property_type: formData.property_type,
-                        year_built: formData.year_built,
-                        total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
-                        total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
-                        developer: formData.developer,
-                        google_place_id: linkedProjectMap.google_place_id?.trim() || null,
-                        google_maps_share_url: linkedProjectMap.google_maps_share_url?.trim() || null,
-                        latitude: linkedProjectMap.latitude,
-                        longitude: linkedProjectMap.longitude,
-                    })
-                    .eq('id', formData.project_id)
-
-                if (projectSyncError) {
-                    console.warn('Failed to sync project data:', projectSyncError)
+                patchPayload.projectSync = {
+                    projectId: formData.project_id,
+                    property_type: formData.property_type,
+                    year_built: formData.year_built,
+                    total_floors: formData.total_floors ? parseInt(formData.total_floors as string) : null,
+                    total_units: formData.total_units ? parseInt(formData.total_units as string) : null,
+                    developer: formData.developer,
+                    google_place_id: linkedProjectMap.google_place_id?.trim() || null,
+                    google_maps_share_url: linkedProjectMap.google_maps_share_url?.trim() || null,
+                    latitude: linkedProjectMap.latitude,
+                    longitude: linkedProjectMap.longitude,
                 }
             }
+
+            await updatePropertyViaApi(propertyId!, patchPayload)
 
             setSuccess(true)
             setTimeout(() => {
