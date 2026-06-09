@@ -177,8 +177,11 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
                 setLoading(false)
                 return
             }
-            const { data } = await supabase.from('profiles').select('line_basic_id').eq('id', user.id).maybeSingle()
-            setLineFriendAddUrl((data as { line_basic_id?: string | null } | null)?.line_basic_id?.trim() || '')
+            const res = await fetch('/api/agent/profile')
+            const json = (await res.json().catch(() => ({}))) as {
+                profile?: { line_basic_id?: string | null }
+            }
+            setLineFriendAddUrl(json.profile?.line_basic_id?.trim() || '')
             setLoading(false)
         }
         void run()
@@ -207,14 +210,17 @@ export default function LineConnectClient({ locale, ui }: { locale: string; ui: 
                 return
             }
 
-            const { error: upErr } = await supabase
-                .from('profiles')
-                .update({
+            const res = await fetch('/api/agent/profile', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     line_basic_id: lineFriendAddUrl.trim() || null,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', user.id)
-            if (upErr) throw upErr
+                }),
+            })
+            const json = (await res.json().catch(() => ({}))) as { error?: string }
+            if (!res.ok) {
+                throw new Error(json.error || '保存に失敗しました。')
+            }
 
             setCelebrate(true)
         } catch (err: unknown) {

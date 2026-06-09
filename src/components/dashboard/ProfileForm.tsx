@@ -90,46 +90,66 @@ export default function ProfileForm() {
     const locale = params.locale as string
     const supabase = createClient()
 
+    const patchAgentProfile = async (patch: Record<string, unknown>) => {
+        const res = await fetch('/api/agent/profile', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch),
+        })
+        const json = (await res.json().catch(() => ({}))) as { error?: string }
+        if (!res.ok) {
+            throw new Error(json.error || 'プロフィールの更新に失敗しました。')
+        }
+    }
+
     useEffect(() => {
         const fetchProfile = async () => {
             const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
+            if (!user) {
+                setLoading(false)
+                return
+            }
 
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single()
-
-            if (error) {
-                console.error('Fetch profile error:', error)
-            } else if (data) {
-                setFormData({
-                    full_name: data.full_name || '',
-                    company_name: data.company_name || '',
-                    phone: data.phone || '',
-                    bio: data.bio || '',
-                    website: data.website || '',
-                    email: user.email || '',
-                    avatar_url: data.avatar_url || '',
-                    plan: data.plan || 'free',
-                    plan_type: data.plan_type || 'standard',
-                    current_period_end: data.current_period_end || null,
-                    auto_renew: data.auto_renew ?? true,
-                    is_admin: data.is_admin === true,
-                    show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
-                    show_line_in_inquiry: data.show_line_in_inquiry !== false,
-                    show_whatsapp_in_inquiry: data.show_whatsapp_in_inquiry !== false,
-                })
-                const lineBasic = (data as { line_basic_id?: string | null }).line_basic_id?.trim() ?? ''
-                const lineLegacy =
-                    (data as { line_id?: string | null }).line_id != null
-                        ? String((data as { line_id?: string | null }).line_id).trim()
-                        : ''
-                setLineConnectStoredValue(lineBasic || lineLegacy)
-                if (data.avatar_url) {
-                    setAvatarPreview(resolveAvatarUrl(data.avatar_url) ?? data.avatar_url)
+            try {
+                const res = await fetch('/api/agent/profile')
+                const json = (await res.json().catch(() => ({}))) as {
+                    error?: string
+                    profile?: Record<string, unknown>
                 }
+                if (!res.ok) {
+                    throw new Error(json.error || 'プロフィールの取得に失敗しました。')
+                }
+                const data = json.profile
+                if (data) {
+                    setFormData({
+                        full_name: (data.full_name as string) || '',
+                        company_name: (data.company_name as string) || '',
+                        phone: (data.phone as string) || '',
+                        bio: (data.bio as string) || '',
+                        website: (data.website as string) || '',
+                        email: (data.email as string) || user.email || '',
+                        avatar_url: (data.avatar_url as string) || '',
+                        plan: (data.plan as string) || 'free',
+                        plan_type: (data.plan_type as string) || 'standard',
+                        current_period_end: (data.current_period_end as string | null) || null,
+                        auto_renew: data.auto_renew !== false,
+                        is_admin: data.is_admin === true,
+                        show_phone_in_inquiry: data.show_phone_in_inquiry !== false,
+                        show_line_in_inquiry: data.show_line_in_inquiry !== false,
+                        show_whatsapp_in_inquiry: data.show_whatsapp_in_inquiry !== false,
+                    })
+                    const lineBasic =
+                        typeof data.line_basic_id === 'string' ? data.line_basic_id.trim() : ''
+                    const lineLegacy =
+                        data.line_id != null ? String(data.line_id).trim() : ''
+                    setLineConnectStoredValue(lineBasic || lineLegacy)
+                    if (typeof data.avatar_url === 'string' && data.avatar_url) {
+                        setAvatarPreview(resolveAvatarUrl(data.avatar_url) ?? data.avatar_url)
+                    }
+                }
+            } catch (err) {
+                console.error('Fetch profile error:', err)
+                setError(getErrorMessage(err))
             }
             setLoading(false)
         }
@@ -195,14 +215,7 @@ export default function ProfileForm() {
         setSuccess(null)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Authentication required')
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-                ...patch,
-                updated_at: new Date().toISOString(),
-            })
-            .eq('id', user.id)
-        if (updateError) throw updateError
+        await patchAgentProfile(patch)
     }
 
     const toggleShowPhoneInInquiry = async () => {
@@ -266,15 +279,7 @@ export default function ProfileForm() {
             if (!user) throw new Error('Authentication required')
 
             const nextAutoRenew = !formData.auto_renew
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({
-                    auto_renew: nextAutoRenew,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', user.id)
-
-            if (updateError) throw updateError
+            await patchAgentProfile({ auto_renew: nextAutoRenew })
 
             setFormData(prev => ({ ...prev, auto_renew: nextAutoRenew }))
             setSuccess(nextAutoRenew ? '次回の自動更新を有効にしました。' : '次回の自動更新をオフにしました。')
@@ -303,20 +308,14 @@ export default function ProfileForm() {
             }
 
             // 2. Update profile（電話/LINE の物件ページ表示は別トグルで即時保存）
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    full_name: formData.full_name,
-                    company_name: formData.company_name,
-                    phone: formData.phone,
-                    bio: formData.bio,
-                    website: formData.website,
-                    avatar_url: finalAvatarUrl,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', user.id)
-
-            if (error) throw error
+            await patchAgentProfile({
+                full_name: formData.full_name,
+                company_name: formData.company_name,
+                phone: formData.phone,
+                bio: formData.bio,
+                website: formData.website,
+                avatar_url: finalAvatarUrl,
+            })
 
             setSuccess('プロフィールを更新しました。')
             window.scrollTo({ top: 0, behavior: 'smooth' })
