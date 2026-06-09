@@ -1,5 +1,4 @@
 "use client";
-import { createClient } from '@/lib/supabase/client'
 import { useParams, usePathname } from 'next/navigation'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic'
@@ -25,6 +24,7 @@ import {
 } from '@/lib/line-oa-message-inquiry-url'
 import { buildWhatsAppWaMeUrl } from '@/lib/whatsapp-wa-me-url'
 import { isPremium } from '@/lib/utils/plan'
+import type { PublicListingOwnerProfile } from '@/lib/supabase/fetch-property-detail'
 import {
     MapPin, Building2, Bath, Layers, Maximize2, Check, Gem, Sparkles,
     Waves, Dumbbell, Car, Users, Baby, Tv, Wind, Utensils,
@@ -66,6 +66,9 @@ const getFeatureIcon = (featureName: string) => {
 
 interface PropertyDetailClientProps {
     initialProperty: any
+    initialListingOwner?: PublicListingOwnerProfile | null
+    initialRelatedProperties?: any[]
+    initialAgentOtherProperties?: any[]
     officialLineAddFriendUrl: string
     /** 物件詳細の正規 URL（サーバー推定）。クライアントでは window.location.href で上書き */
     propertyDetailPageUrl: string
@@ -77,6 +80,9 @@ interface PropertyDetailClientProps {
 
 export default function PropertyDetailClient({
     initialProperty,
+    initialListingOwner = null,
+    initialRelatedProperties = [],
+    initialAgentOtherProperties = [],
     officialLineAddFriendUrl,
     propertyDetailPageUrl,
     initialListingOwnerPhone,
@@ -98,7 +104,7 @@ export default function PropertyDetailClient({
     
     // サーバーから受け取った初期データを使用
     const [property, setProperty] = useState<any>(initialProperty)
-    const [agent, setAgent] = useState<any>(null)
+    const [agent, setAgent] = useState<any>(initialListingOwner)
     const [dict, setDict] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [activeLang, setActiveLang] = useState<'jp' | 'en' | 'th'>(locale as any || 'jp')
@@ -139,35 +145,24 @@ export default function PropertyDetailClient({
     }, [user, profile])
 
     useEffect(() => {
+        setAgent(initialListingOwner)
+    }, [initialListingOwner])
+
+    useEffect(() => {
         window.scrollTo(0, 0);
         const fetchClientData = async () => {
             try {
-                const supabase = createClient()
                 const d = await getDictionary(locale)
                 setDict(d)
 
-                if (initialProperty?.user_id) {
-                    const { data: aData } = await supabase
-                        .from('profiles')
-                        .select(
-                            'phone, full_name, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, show_whatsapp_in_inquiry, plan, plan_type, current_period_end, is_admin'
-                        )
-                        .eq('id', initialProperty.user_id)
-                        .maybeSingle()
-                    setAgent(aData)
-                }
-
                 if (user) {
-                    const { data: pData, error: profileErr } = await supabase
-                        .from('profiles')
-                        .select('plan, plan_type, full_name, phone, line_id, email, current_period_end, is_admin')
-                        .eq('id', user.id)
-                        .maybeSingle()
-                    if (profileErr) {
-                        console.warn('[PropertyDetail] profile fetch:', profileErr.message)
+                    const res = await fetch('/api/user/profile', { credentials: 'include' })
+                    if (!res.ok) {
+                        console.warn('[PropertyDetail] profile API failed', res.status)
                         setProfile(null)
                     } else {
-                        setProfile(pData ?? null)
+                        const body = (await res.json()) as { profile?: Record<string, unknown> | null }
+                        setProfile(body.profile ?? null)
                     }
                 } else {
                     setProfile(null)
@@ -184,8 +179,8 @@ export default function PropertyDetailClient({
                 setLoading(false)
             }
         }
-        fetchClientData()
-    }, [id, locale, user, initialProperty])
+        void fetchClientData()
+    }, [id, locale, user])
 
     useEffect(() => {
         const translateTitleOnDemand = async () => {
@@ -441,7 +436,12 @@ export default function PropertyDetailClient({
                     </div>
 
                     <div className="lg:col-span-4 space-y-6">
-                        <AgentProfileCard agentId={property.user_id} dict={dict} locale={locale} />
+                        <AgentProfileCard
+                            agentId={property.user_id}
+                            dict={dict}
+                            locale={locale}
+                            initialAgent={initialListingOwner}
+                        />
                         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-50 sticky top-24">
                             <InquiryForm
                                 propertyId={id}
@@ -461,8 +461,21 @@ export default function PropertyDetailClient({
                 </div>
 
                 <div className="mt-16 space-y-16">
-                    <RelatedProperties buildingName={property.building_name} projectName={property.project?.name} currentPropertyId={property.id} dict={dict} />
-                    <AgentOtherProperties agentId={property.user_id} currentPropertyId={property.id} agentName={agent?.full_name} locale={locale} dict={dict} />
+                    <RelatedProperties
+                        buildingName={property.building_name}
+                        projectName={property.project?.name}
+                        currentPropertyId={property.id}
+                        dict={dict}
+                        initialProperties={initialRelatedProperties}
+                    />
+                    <AgentOtherProperties
+                        agentId={property.user_id}
+                        currentPropertyId={property.id}
+                        agentName={agent?.full_name}
+                        locale={locale}
+                        dict={dict}
+                        initialProperties={initialAgentOtherProperties}
+                    />
                 </div>
             </div>
             <StickyContactBar

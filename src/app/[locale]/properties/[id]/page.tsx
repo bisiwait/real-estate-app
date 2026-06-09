@@ -4,6 +4,12 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
 import { createStaticServiceClient, createStaticServiceClientForHostname } from '@/lib/supabase/static'
+import {
+    enrichPropertyWithRelations,
+    fetchAgentOtherPropertiesForDetail,
+    fetchPublicListingOwnerProfile,
+    fetchRelatedPropertiesForDetail,
+} from '@/lib/supabase/fetch-property-detail'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { buildPropertyLineInquiryUrlServer } from '@/lib/line-oa-message-inquiry-url'
@@ -52,14 +58,17 @@ async function fetchProperty(id: string, hostname: string | null) {
         .eq('id', id)
         .maybeSingle()
 
-    if (embedded.data) return embedded.data
+    if (embedded.data) {
+        return enrichPropertyWithRelations(supabase, embedded.data as Record<string, unknown>)
+    }
 
     if (embedded.error && embedded.error.code !== 'PGRST116') {
         console.error('[fetchProperty] embedded select failed, retrying minimal', embedded.error)
     }
 
     const minimal = await supabase.from('properties').select('*').eq('id', id).maybeSingle()
-    return minimal.data ?? null
+    if (!minimal.data) return null
+    return enrichPropertyWithRelations(supabase, minimal.data as Record<string, unknown>)
 }
 
 function propertyDetailFallbackMetadata(
@@ -212,23 +221,24 @@ export default async function Page({
 
     const propertyDetailPageUrl = buildPropertyDetailAbsoluteUrl(hdrs, locale, id)
 
-    /** サイト既定の公式 LINE には誘導しない。オーナーが line_basic_id / line_id を設定している場合のみ組み立てる */
+    const supabase = createStaticServiceClientForHostname(hostname)
+
+    let listingOwner = null as Awaited<ReturnType<typeof fetchPublicListingOwnerProfile>>
     let officialLineAddFriendUrl = ''
     let initialListingOwnerPhone: string | undefined
     let initialListingOwnerShowWhatsapp = true
+
     if (propertyForClient.user_id) {
-        const supabase = createStaticServiceClientForHostname(hostname)
-        const { data: ownerProfile } = await supabase
-            .from('profiles')
-            .select('line_basic_id, line_id, show_line_in_inquiry, phone, show_whatsapp_in_inquiry')
-            .eq('id', propertyForClient.user_id as string)
-            .maybeSingle()
+        listingOwner = await fetchPublicListingOwnerProfile(
+            supabase,
+            propertyForClient.user_id as string
+        )
         initialListingOwnerPhone =
-            typeof ownerProfile?.phone === 'string' && ownerProfile.phone.trim().length > 0
-                ? ownerProfile.phone.trim()
+            typeof listingOwner?.phone === 'string' && listingOwner.phone.trim().length > 0
+                ? listingOwner.phone.trim()
                 : undefined
-        initialListingOwnerShowWhatsapp = ownerProfile?.show_whatsapp_in_inquiry !== false
-        const raw = getPropertyOwnerLineInquiryRawInput(ownerProfile)
+        initialListingOwnerShowWhatsapp = listingOwner?.show_whatsapp_in_inquiry !== false
+        const raw = getPropertyOwnerLineInquiryRawInput(listingOwner)
         if (raw) {
             officialLineAddFriendUrl = await buildPropertyLineInquiryUrlServer(
                 raw,
@@ -240,6 +250,34 @@ export default async function Page({
         }
     }
 
+    const [relatedProperties, agentOtherProperties] = await Promise.all([
+        fetchRelatedPropertiesForDetail(
+            supabase,
+            id,
+            propertyForClient.building_name as string | null | undefined,
+            (propertyForClient.project as { name?: string } | null)?.name ??
+                (propertyForClient.project_name as string | null | undefined)
+        ),
+        propertyForClient.user_id
+            ? fetchAgentOtherPropertiesForDetail(
+                  supabase,
+                  propertyForClient.user_id as string,
+                  id
+              )
+            : Promise.resolve([]),
+    ])
+
+    const mapPropertyImages = (rows: Record<string, unknown>[]) =>
+        rows.map((row) => {
+            const imagesRaw = row.images
+            return {
+                ...row,
+                images: Array.isArray(imagesRaw)
+                    ? imagesRaw.map((img: unknown) => resolvePropertyImageUrl(img, supabasePublicUrl))
+                    : imagesRaw,
+            }
+        })
+
     return (
         <Suspense
             fallback={
@@ -250,6 +288,9 @@ export default async function Page({
         >
             <PropertyDetailClient
                 initialProperty={propertyForClient}
+                initialListingOwner={listingOwner}
+                initialRelatedProperties={mapPropertyImages(relatedProperties as Record<string, unknown>[])}
+                initialAgentOtherProperties={mapPropertyImages(agentOtherProperties as Record<string, unknown>[])}
                 officialLineAddFriendUrl={officialLineAddFriendUrl}
                 propertyDetailPageUrl={propertyDetailPageUrl}
                 initialListingOwnerPhone={initialListingOwnerPhone}

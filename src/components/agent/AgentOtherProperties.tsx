@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import PropertyCard from '../property/PropertyCard'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation } from 'swiper/modules'
@@ -16,42 +15,46 @@ interface AgentOtherPropertiesProps {
     agentName?: string
     dict: any
     locale: string
+    initialProperties?: any[]
 }
 
-export default function AgentOtherProperties({ agentId, currentPropertyId, agentName, dict, locale }: AgentOtherPropertiesProps) {
-    const [properties, setProperties] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const supabase = createClient()
+export default function AgentOtherProperties({
+    agentId,
+    currentPropertyId,
+    agentName,
+    dict,
+    locale,
+    initialProperties,
+}: AgentOtherPropertiesProps) {
+    const [properties, setProperties] = useState<any[]>(initialProperties ?? [])
+    const [loading, setLoading] = useState(initialProperties === undefined)
 
     useEffect(() => {
-        async function fetchAgentProperties() {
-            setLoading(true)
-            const { data, error } = await supabase
-                .from('properties')
-                .select(`
-                    *,
-                    area:areas(
-                        name,
-                        region:regions(name)
-                    ),
-                    project:projects(*)
-                `)
-                .eq('user_id', agentId)
-                .eq('status', 'published')
-                .neq('id', currentPropertyId)
-                .order('updated_at', { ascending: false })
-                .limit(8)
-
-            if (error) {
-                console.error('Error fetching agent properties:', error)
-            } else {
-                setProperties(data || [])
-            }
+        if (initialProperties !== undefined) {
+            setProperties(initialProperties)
             setLoading(false)
+            return
         }
 
-        fetchAgentProperties()
-    }, [agentId, currentPropertyId, supabase])
+        async function fetchAgentProperties() {
+            setLoading(true)
+            try {
+                const params = new URLSearchParams({
+                    agentId,
+                    exclude: currentPropertyId,
+                })
+                const res = await fetch(`/api/properties/agent-listings?${params}`)
+                const data = (await res.json().catch(() => ({}))) as { properties?: unknown[] }
+                setProperties(data.properties ?? [])
+            } catch (error) {
+                console.error('Error fetching agent properties:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        void fetchAgentProperties()
+    }, [agentId, currentPropertyId, initialProperties])
 
     if (loading) {
         return (

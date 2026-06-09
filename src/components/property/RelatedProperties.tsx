@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import PropertyCard from './PropertyCard'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination } from 'swiper/modules'
@@ -16,60 +15,48 @@ interface RelatedPropertiesProps {
     buildingName: string | null
     projectName: string | null
     dict: any
+    initialProperties?: any[]
 }
 
-export default function RelatedProperties({ currentPropertyId, buildingName, projectName, dict }: RelatedPropertiesProps) {
-    const [properties, setProperties] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const supabase = createClient()
+export default function RelatedProperties({
+    currentPropertyId,
+    buildingName,
+    projectName,
+    dict,
+    initialProperties,
+}: RelatedPropertiesProps) {
+    const [properties, setProperties] = useState<any[]>(initialProperties ?? [])
+    const [loading, setLoading] = useState(initialProperties === undefined)
 
     useEffect(() => {
+        if (initialProperties !== undefined) {
+            setProperties(initialProperties)
+            setLoading(false)
+            return
+        }
+
         async function fetchRelatedProperties() {
             if (!buildingName && !projectName) {
                 setLoading(false)
                 return
             }
 
-            // Fetch other units in the same building/project
-            let query = supabase
-                .from('properties')
-                .select(`
-                    *,
-                    area:areas(
-                        name,
-                        region:regions(name)
-                    )
-                `)
-                .neq('id', currentPropertyId)
-                .eq('status', 'published')
-                .limit(6)
-
-            // Match by building_name or project_name
-            const filters = []
-            if (buildingName) filters.push(`building_name.eq."${buildingName}"`)
-            if (projectName) filters.push(`project_name.eq."${projectName}"`)
-
-            if (filters.length > 0) {
-                query = query.or(filters.join(','))
-            } else {
-                setLoading(false)
-                return
-            }
-
-            query = query.order('updated_at', { ascending: false })
-
-            const { data, error } = await query
-
-            if (error) {
+            try {
+                const params = new URLSearchParams({ exclude: currentPropertyId })
+                if (buildingName) params.set('building', buildingName)
+                if (projectName) params.set('project', projectName)
+                const res = await fetch(`/api/properties/related?${params}`)
+                const data = (await res.json().catch(() => ({}))) as { properties?: unknown[] }
+                setProperties(data.properties ?? [])
+            } catch (error) {
                 console.error('Error fetching related properties:', error)
-            } else {
-                setProperties(data || [])
+            } finally {
+                setLoading(false)
             }
-            setLoading(false)
         }
 
-        fetchRelatedProperties()
-    }, [currentPropertyId, buildingName, projectName, supabase])
+        void fetchRelatedProperties()
+    }, [currentPropertyId, buildingName, projectName, initialProperties])
 
     if (loading) {
         return (

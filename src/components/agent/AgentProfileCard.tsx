@@ -1,25 +1,49 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
 import { Phone, MessageCircle, User, ChevronRight, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { resolveAvatarUrl } from '@/lib/property-image-url'
+import type { PublicListingOwnerProfile } from '@/lib/supabase/fetch-property-detail'
 
-export default function AgentProfileCard({ agentId, dict, locale }: { agentId: string, dict: any, locale: string }) {
-    const [agent, setAgent] = useState<any>(null)
-    const [loading, setLoading] = useState(true)
+export default function AgentProfileCard({
+    agentId,
+    dict,
+    locale,
+    initialAgent = null,
+}: {
+    agentId: string
+    dict: any
+    locale: string
+    initialAgent?: PublicListingOwnerProfile | null
+}) {
+    const [agent, setAgent] = useState<any>(initialAgent)
+    const [loading, setLoading] = useState(!initialAgent)
 
     useEffect(() => {
-        const fetchAgent = async () => {
-            const supabase = createClient()
-            const { data } = await supabase.from('profiles').select('*').eq('id', agentId).single()
-            if (data) setAgent(data)
+        if (initialAgent) {
+            setAgent(initialAgent)
             setLoading(false)
+            return
         }
-        if (agentId) fetchAgent()
-    }, [agentId])
+        if (!agentId) {
+            setLoading(false)
+            return
+        }
+        const fetchAgent = async () => {
+            try {
+                const res = await fetch(`/api/agents/${encodeURIComponent(agentId)}/public`)
+                const data = (await res.json().catch(() => ({}))) as { agent?: Record<string, unknown> | null }
+                if (res.ok && data.agent) setAgent(data.agent)
+            } catch (e) {
+                console.warn('[AgentProfileCard] fetch failed', e)
+            } finally {
+                setLoading(false)
+            }
+        }
+        void fetchAgent()
+    }, [agentId, initialAgent])
 
     if (loading) return <div className="bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 flex items-center justify-center h-40"><Loader2 className="animate-spin text-navy-primary" /></div>
     if (!agent) return null
