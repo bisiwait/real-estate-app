@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
 import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
 import {
@@ -23,6 +22,7 @@ import {
     LogIn,
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils/errors'
+import { createClient } from '@/lib/supabase/client'
 import { adminResetPassword } from '@/app/actions/adminAuth'
 import { useAuth } from '@/contexts/AuthContext'
 import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
@@ -86,7 +86,6 @@ export default function AdminUserManagement({
     const [impersonateBusy, setImpersonateBusy] = useState<string | null>(null)
 
     const { userData, refreshUser } = useAuth()
-    const router = useRouter()
     const isAdminUser = userData.isAdmin || userData.role === 'admin'
     const impersonationCopy = impersonation ?? DEFAULT_IMPERSONATION_COPY
 
@@ -218,6 +217,7 @@ export default function AdminUserManagement({
                 alert(res.error)
                 return
             }
+            const supabase = createClient()
             const { error } = await supabase.auth.verifyOtp({
                 type: 'magiclink',
                 token_hash: res.token_hash,
@@ -232,8 +232,7 @@ export default function AdminUserManagement({
                 return
             }
             await refreshUser()
-            router.refresh()
-            router.push(`/${locale}/dashboard`)
+            window.location.assign(`/${locale}/dashboard`)
         } catch (e) {
             console.error(e)
             alert(getErrorMessage(e))
