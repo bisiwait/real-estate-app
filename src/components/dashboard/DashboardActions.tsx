@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Edit3, Trash2, Loader2, Share2, ExternalLink, FileText } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import { isPremium } from '@/lib/utils/plan'
 const SocialShareDialog = dynamic(() => import('./SocialShareDialog'), {
@@ -40,7 +39,6 @@ export default function DashboardActions({
     const [isShareModalOpen, setIsShareModalOpen] = useState(false)
     const router = useRouter()
     const params = useParams()
-    const supabase = createClient()
     const hasPremium = isPremium(profile)
 
     const handleDelete = async () => {
@@ -50,18 +48,20 @@ export default function DashboardActions({
 
         setLoading(true)
         try {
-            const { error } = await supabase
-                .from('properties')
-                .delete()
-                .eq('id', propertyId)
+            const res = await fetch(`/api/properties/${propertyId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            })
 
-            if (error) {
-                alert(`${dict.delete_failed}: ${error.message}`)
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                alert(`${dict.delete_failed}: ${body.error ?? res.statusText}`)
             } else {
                 router.refresh()
             }
-        } catch (err: any) {
-            alert(`${dict.error_occurred}: ${err.message}`)
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err)
+            alert(`${dict.error_occurred}: ${msg}`)
         } finally {
             setLoading(false)
         }

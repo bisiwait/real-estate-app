@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { CheckCircle2, RefreshCw, Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 interface BulkConfirmButtonProps {
@@ -10,10 +9,20 @@ interface BulkConfirmButtonProps {
     dict: any
 }
 
+async function refreshListings(propertyIds: string[]) {
+    const res = await fetch('/api/properties/refresh-listing', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ propertyIds }),
+    })
+    const body = (await res.json().catch(() => ({}))) as { error?: string }
+    return { ok: res.ok, error: body.error ?? res.statusText }
+}
+
 export default function BulkConfirmButton({ propertyIds, dict }: BulkConfirmButtonProps) {
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
-    const supabase = createClient()
     const router = useRouter()
 
     if (propertyIds.length === 0) return null
@@ -30,16 +39,10 @@ export default function BulkConfirmButton({ propertyIds, dict }: BulkConfirmButt
         setStatus('loading')
 
         try {
-            const { error } = await supabase
-                .from('properties')
-                .update({
-                    last_confirmed_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                })
-                .in('id', propertyIds)
+            const { ok, error } = await refreshListings(propertyIds)
 
-            if (error) {
-                alert(`${dict.update_failed}: ${error.message}`)
+            if (!ok) {
+                alert(`${dict.update_failed ?? '更新に失敗しました'}: ${error}`)
                 setStatus('idle')
             } else {
                 setStatus('success')
@@ -48,8 +51,9 @@ export default function BulkConfirmButton({ propertyIds, dict }: BulkConfirmButt
                     setStatus('idle')
                 }, 2000)
             }
-        } catch (err: any) {
-            alert(`${dict.error_occurred}: ${err.message}`)
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err)
+            alert(`${dict.error_occurred ?? 'エラーが発生しました'}: ${msg}`)
             setStatus('idle')
         } finally {
             setLoading(false)

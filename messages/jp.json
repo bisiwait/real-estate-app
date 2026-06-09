@@ -1096,6 +1096,7 @@
         ,"profile_contacts_send_note": "※送信するとお客様にメールで届き、返信履歴にも保存されます。"
         ,"profile_contacts_mark_handled": "手動で「対応済み」として記録する（返信とは別に整理用）"
         ,"property_refresh_label": "掲載更新",
+        "update_failed": "更新に失敗しました",
         "bulk_refresh_button": "全ての公開物件を掲載更新",
         "bulk_refresh_done": "すべて更新完了",
         "updating": "更新中...",

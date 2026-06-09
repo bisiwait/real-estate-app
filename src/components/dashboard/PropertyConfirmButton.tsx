@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { CheckCircle2, RefreshCw, Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 interface PropertyConfirmButtonProps {
@@ -14,7 +13,6 @@ interface PropertyConfirmButtonProps {
 export default function PropertyConfirmButton({ propertyId, title, dict }: PropertyConfirmButtonProps) {
     const [loading, setLoading] = useState(false)
     const [confirmed, setConfirmed] = useState(false)
-    const supabase = createClient()
     const router = useRouter()
 
     const handleConfirm = async (e: React.MouseEvent) => {
@@ -22,28 +20,27 @@ export default function PropertyConfirmButton({ propertyId, title, dict }: Prope
         e.stopPropagation()
 
         setLoading(true)
-        // Optimistic UI
         setConfirmed(true)
 
         try {
-            const { error } = await supabase
-                .from('properties')
-                .update({
-                    last_confirmed_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', propertyId)
+            const res = await fetch('/api/properties/refresh-listing', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ propertyIds: [propertyId] }),
+            })
 
-            if (error) {
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
                 setConfirmed(false)
-                alert(`${dict.update_failed}: ${error.message}`)
+                alert(`${dict.update_failed ?? '更新に失敗しました'}: ${body.error ?? res.statusText}`)
             } else {
-                // Background refresh
                 router.refresh()
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setConfirmed(false)
-            alert(`${dict.error_occurred}: ${err.message}`)
+            const msg = err instanceof Error ? err.message : String(err)
+            alert(`${dict.error_occurred ?? 'エラーが発生しました'}: ${msg}`)
         } finally {
             setLoading(false)
         }
