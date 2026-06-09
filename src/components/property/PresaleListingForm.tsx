@@ -31,6 +31,7 @@ import GoogleMapsShareLinkField from '@/components/property/GoogleMapsShareLinkF
 import { finiteCoord } from '@/lib/google-maps-url'
 import { getPropertyTypeFieldLabel, getPropertyTypeOptionLabel } from '@/lib/property-type-i18n'
 import { checkPropertySaveDuplicates } from '@/lib/supabase/property-save-duplicate-guard'
+import { fetchListingFormMeta } from '@/lib/listing-form/fetch-listing-form-meta'
 
 const ImageUploader = dynamic(() => import('./ImageUploader'), {
     loading: () => <div className="border-2 border-dashed rounded-3xl p-10 text-center border-slate-100 bg-slate-50 animate-pulse h-[300px]" />,
@@ -267,6 +268,8 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
         setMounted(true)
     }, [])
     const [areas, setAreas] = useState<Area[]>([])
+    const [metaLoading, setMetaLoading] = useState(true)
+    const [metaLoadError, setMetaLoadError] = useState<string | null>(null)
     const [projects, setProjects] = useState<Project[]>([])
     const [developers, setDevelopers] = useState<{ id: string, name: string }[]>([])
     const [isAdmin, setIsAdmin] = useState(false)
@@ -429,35 +432,24 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
 
     useEffect(() => {
         const fetchInitialData = async () => {
-            const [areasRes, projectsRes, developersRes] = await Promise.all([
-                supabase.from('areas').select('id, name, region:regions(name)').order('name'),
-                supabase.from('projects').select('*, developers(name)').order('name'),
-                supabase.from('developers').select('id, name').order('name')
-            ])
-
-            if (areasRes.data) {
-                const mappedAreas = areasRes.data.map((item: any) => ({
-                    id: item.id,
-                    name: item.name,
-                    region: item.region || { name: '' }
-                }))
-                mappedAreas.sort((a: Area, b: Area) => {
-                    const regionA = a.region?.name || ''
-                    const regionB = b.region?.name || ''
-                    if (regionA === 'Pattaya' && regionB !== 'Pattaya') return -1
-                    if (regionA !== 'Pattaya' && regionB === 'Pattaya') return 1
-                    if (regionA === 'Sriracha' && regionB !== 'Sriracha') return -1
-                    if (regionA !== 'Sriracha' && regionB === 'Sriracha') return 1
-                    if (regionA !== regionB) return regionA.localeCompare(regionB)
-                    return a.name.localeCompare(b.name)
-                })
-                setAreas(mappedAreas)
+            setMetaLoading(true)
+            setMetaLoadError(null)
+            try {
+                const meta = await fetchListingFormMeta()
+                setAreas(meta.areas)
+                setProjects(meta.projects as Project[])
+                setDevelopers(meta.developers)
+            } catch (err) {
+                console.error('[PresaleListingForm] meta fetch failed', err)
+                setMetaLoadError(
+                    err instanceof Error ? err.message : 'エリア一覧の取得に失敗しました。'
+                )
+            } finally {
+                setMetaLoading(false)
             }
-            if (projectsRes.data) setProjects(projectsRes.data)
-            if (developersRes.data) setDevelopers(developersRes.data)
         }
-        fetchInitialData()
-    }, [supabase])
+        void fetchInitialData()
+    }, [])
 
     useEffect(() => {
         if (!formData.project_id || showNewProjectForm || formData.project_id === 'new') {
@@ -805,22 +797,39 @@ export default function PresaleListingForm({ initialData, mode = 'create' }: Pre
                 <div className="grid grid-cols-1 gap-6">
                     <div>
                         <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">{ui.areaLabel} <span className="text-red-500">*</span></label>
+                        {metaLoadError ? (
+                            <div className="mb-2 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
+                                {metaLoadError}
+                            </div>
+                        ) : null}
                         <select
                             value={formData.area_id}
+                            disabled={metaLoading || areas.length === 0}
                             onChange={e => {
                                 const val = e.target.value
                                 setFormData({ ...formData, area_id: val, project_id: '' })
                                 setShowNewProjectForm(false)
                             }}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none"
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-navy-primary outline-none transition-all font-bold text-navy-secondary appearance-none disabled:opacity-60"
                         >
-                            <option value="">{ui.selectAreaFirst}</option>
+                            <option value="">
+                                {metaLoading
+                                    ? 'エリアを読み込み中…'
+                                    : areas.length === 0
+                                      ? 'エリアを取得できません'
+                                      : ui.selectAreaFirst}
+                            </option>
                             <optgroup label="Pattaya">
                                 {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                             </optgroup>
                             <optgroup label="Sriracha">
                                 {areas.filter(a => a.region?.name === 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                             </optgroup>
+                            {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 && (
+                                <optgroup label="Other">
+                                    {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                </optgroup>
+                            )}
                         </select>
                     </div>
 
