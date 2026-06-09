@@ -106,6 +106,7 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
         )
         .eq('status', 'published')
         .eq('is_approved', true)
+        .or(`expiry_date.is.null,expiry_date.gt.${new Date().toISOString()}`)
 
     if (selectedCity) {
         query = query.eq('area.region.name', selectedCity)

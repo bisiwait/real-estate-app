@@ -7,6 +7,7 @@ import {
     PROPERTY_LIST_PAGE_SIZE,
     type PropertyListFilters,
 } from '@/lib/services/propertyListQuery'
+import { propertyListCacheTagForFilters } from '@/lib/services/propertyListCacheTags'
 
 /** unstable_cache のキーにフィルターを含める（キー固定だと全 URL が同じキャッシュを共有し空表示になる） */
 function filtersToCacheKeyParts(f: PropertyListFilters): string[] {
@@ -49,7 +50,7 @@ export async function getCachedPropertiesListFirstPage(
             }
         },
         keyParts,
-        { revalidate: 3600 }
+        { revalidate: 3600, tags: propertyListCacheTagForFilters(keyParts) }
     )
 
     return run()

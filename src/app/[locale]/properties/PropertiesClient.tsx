@@ -300,13 +300,14 @@ export default function PropertiesClient({
         [draft, pathname, router, searchParams, startFilterNavTransition]
     )
 
-    const fetchProperties = async (isLoadMore = false) => {
+    const fetchProperties = async (isLoadMore = false, options?: { silent?: boolean }) => {
+        const silent = options?.silent === true
         const myGen = ++fetchGenRef.current
 
         if (isLoadMore) {
             savedScrollYRef.current = window.scrollY
             setLoadingMore(true)
-        } else {
+        } else if (!silent) {
             setLoading(true)
             setLoadingMore(false)
             setPage(0)
@@ -456,6 +457,13 @@ export default function PropertiesClient({
         }
         fetchProperties()
     }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, listingType, bathtubFilter, petsFilter, listSort])
+
+    /** SSR/ISR の初回データのあと、バックグラウンドで最新一覧を取得（掲載終了の反映遅延を防ぐ） */
+    useEffect(() => {
+        if (!skipInitialClientFetch) return
+        fetchProperties(false, { silent: true })
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- マウント時1回のみ
+    }, [])
 
     const filteredProperties = dbProperties
 

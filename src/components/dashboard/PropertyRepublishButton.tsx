@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Loader2, RotateCw } from 'lucide-react'
 
 interface PropertyRepublishButtonProps {
@@ -23,7 +22,6 @@ export default function PropertyRepublishButton({
 }: PropertyRepublishButtonProps) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
-    const supabase = createClient()
 
     if (currentStatus !== 'draft') return null
 
@@ -36,15 +34,19 @@ export default function PropertyRepublishButton({
 
         setLoading(true)
         try {
-            const { error } = await supabase
-                .from('properties')
-                .update({ status: nextStatus })
-                .eq('id', propertyId)
+            const res = await fetch(`/api/properties/${propertyId}/listing-status`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'republish' }),
+            })
 
-            if (error) {
-                alert('再公開の更新に失敗しました: ' + error.message)
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                alert('再公開の更新に失敗しました: ' + (body.error ?? res.statusText))
             } else {
-                onRepublished?.(propertyId, nextStatus)
+                const data = (await res.json()) as { property?: { status?: string } }
+                onRepublished?.(propertyId, data.property?.status ?? nextStatus)
                 router.refresh()
             }
         } catch (err: unknown) {

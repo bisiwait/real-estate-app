@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Loader2, CircleStop } from 'lucide-react'
 
 interface PropertyEndListingButtonProps {
@@ -23,7 +22,6 @@ export default function PropertyEndListingButton({
 }: PropertyEndListingButtonProps) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
-    const supabase = createClient()
 
     const canEnd = currentStatus === 'published'
     if (!canEnd) return null
@@ -38,13 +36,16 @@ export default function PropertyEndListingButton({
         }
         setLoading(true)
         try {
-            const { error } = await supabase
-                .from('properties')
-                .update({ status: 'draft' })
-                .eq('id', propertyId)
+            const res = await fetch(`/api/properties/${propertyId}/listing-status`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'end' }),
+            })
 
-            if (error) {
-                alert(`${dict.end_listing_failed}: ${error.message}`)
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                alert(`${dict.end_listing_failed}: ${body.error ?? res.statusText}`)
             } else {
                 onEnded?.(propertyId)
                 router.refresh()
