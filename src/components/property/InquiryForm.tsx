@@ -28,39 +28,6 @@ import { replaceLineInquiryUrlPrefill } from '@/lib/line-oa-message-inquiry-url'
 import { copyTextToClipboard } from '@/lib/clipboard-copy'
 import { WhatsAppIcon } from '@/components/icons/WhatsAppIcon'
 
-async function requestInquiryConfirmationEmail(
-  supabase: ReturnType<typeof createClient>,
-  payload: {
-    property_id: string
-    locale: string
-    inquirer_email: string
-    inquirer_name: string
-    message: string
-  }
-) {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (session?.access_token) {
-      headers.Authorization = `Bearer ${session.access_token}`
-    }
-    const res = await fetch('/api/inquiries/confirm-email', {
-      method: 'POST',
-      credentials: 'include',
-      headers,
-      body: JSON.stringify(payload),
-    })
-    if (!res.ok) {
-      const j = (await res.json().catch(() => ({}))) as { error?: string }
-      console.warn('[InquiryForm] confirm-email failed', res.status, j.error || res.statusText)
-    }
-  } catch (e) {
-    console.warn('[InquiryForm] confirm-email', e)
-  }
-}
-
 function inquiryDebugAlert(stage: string, message: string) {
   if (typeof window === 'undefined') return
   try {
@@ -338,23 +305,34 @@ export default function InquiryForm({
       const emailTrim = formData.email.trim()
       const nameTrim = formData.name.trim()
       const messageTrim = formData.message.trim()
-      const { error: submitError } = await supabase.from('inquiries').insert([
-        {
-          property_id: propertyId,
-          inquirer_name: nameTrim,
-          inquirer_email: emailTrim,
-          email: emailTrim,
-          inquirer_phone: null,
-          message: messageTrim,
-          preferred_reply_channel: 'email',
-          line_user_id: null,
-        },
-      ])
 
-      if (submitError) {
-        const formatted = formatInquirySubmitError(submitError)
-        console.error('Inquiries insert failed', submitError)
-        inquiryDebugAlert('DB保存（inquiries）', formatted)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`
+      }
+
+      const res = await fetch('/api/inquiries/submit', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({
+          property_id: propertyId,
+          locale,
+          inquirer_email: emailTrim,
+          inquirer_name: nameTrim,
+          message: messageTrim,
+        }),
+      })
+
+      const data = (await res.json().catch(() => ({}))) as { error?: string; success?: boolean }
+
+      if (!res.ok) {
+        const formatted = data.error || res.statusText || '送信に失敗しました。'
+        console.error('Inquiries submit failed', res.status, formatted)
+        inquiryDebugAlert('送信（API）', formatted)
         setError(formatted)
         setSubmitPhase('idle')
         clearConfirmTimer()
@@ -362,13 +340,6 @@ export default function InquiryForm({
       }
 
       localStorage.setItem(`last_inquiry_${propertyId}`, Date.now().toString())
-      void requestInquiryConfirmationEmail(supabase, {
-        property_id: propertyId,
-        locale,
-        inquirer_email: emailTrim,
-        inquirer_name: nameTrim,
-        message: messageTrim,
-      })
       setSuccess(true)
     } catch (err: unknown) {
       const formatted = formatInquirySubmitError(err)
