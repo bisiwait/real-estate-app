@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createRouteHandlerSupabaseClient } from '@/lib/supabase/server'
+import { createRouteHandlerSupabaseClient, createAdminClient } from '@/lib/supabase/server'
 import { syncAgentProfileFromAuthUser } from '@/lib/auth/syncAgentProfile'
 import { safeNextPath } from '@/lib/auth/safe-next-path'
 import { AUTH_RETURN_TO_COOKIE } from '@/lib/auth/auth-return-cookie'
+import { profileAccessFromRow } from '@/lib/supabase/fetch-profile-access'
 
 const LOCALES = ['jp', 'en', 'th'] as const
 
@@ -45,21 +46,23 @@ export async function GET(request: NextRequest) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error && data.user) {
             await syncAgentProfileFromAuthUser(data.user)
-            const { data: prof } = await supabase
+            const admin = await createAdminClient()
+            const { data: prof } = await admin
                 .from('profiles')
-                .select('user_role, status, deleted_at')
+                .select('user_role, is_admin, status, deleted_at')
                 .eq('id', data.user.id)
                 .maybeSingle()
-            if (
-                prof?.user_role === 'agent' &&
-                (prof.deleted_at != null || prof.status === 'suspended')
-            ) {
+            const { isAdmin, isAgent, agentBlocked } = profileAccessFromRow(prof)
+            if (isAgent && agentBlocked) {
                 await supabase.auth.signOut()
                 const blocked = NextResponse.redirect(
                     `${url.origin}/${locale}/login?error=account_unavailable`
                 )
                 redirectOk.cookies.getAll().forEach((c) => blocked.cookies.set(c))
                 return blocked
+            }
+            if (isAdmin && next === `/${locale}/dashboard`) {
+                return NextResponse.redirect(`${url.origin}/${locale}/admin-secret`)
             }
             return redirectOk
         }

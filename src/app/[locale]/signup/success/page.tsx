@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { SIGNUP_WELCOME_COOKIE_NAME } from '@/lib/auth/signupWelcomeCookie'
+import { getSessionProfileAccess } from '@/lib/admin'
 import Link from 'next/link'
 import { Gift, Sparkles, Heart } from 'lucide-react'
 
@@ -34,14 +35,7 @@ export default async function SignupSuccessPage({
         redirect(`/${locale}`)
     }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_role, is_admin')
-        .eq('id', user.id)
-        .single()
-
-    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
-    const isAgent = profile?.user_role === 'agent'
+    const { isAdmin, isAgent } = await getSessionProfileAccess()
 
     if (isAdmin) {
         redirect(`/${locale}/admin-secret`)

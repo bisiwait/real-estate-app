@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { Heart, Home, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { getSessionProfileAccess } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,15 +20,7 @@ export default async function FavoritesPage({ params }: { params: { locale: stri
         redirect(`/${locale}/login`)
     }
 
-    // Role check for admins and agents
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_role, is_admin')
-        .eq('id', user.id)
-        .single()
-
-    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
-    const isAgent = profile?.user_role === 'agent'
+    const { isAdmin, isAgent } = await getSessionProfileAccess()
 
     if (isAdmin) {
         redirect(`/${locale}/admin-secret`)

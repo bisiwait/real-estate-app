@@ -121,20 +121,18 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
                         credentials: 'same-origin',
                     }).catch(() => {})
 
-                    let { data: profile, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('user_role, is_admin, status, deleted_at')
-                        .eq('id', user.id)
-                        .single()
-
-                    if (profileError) {
-                        const { data: fallbackProfile } = await supabase
-                            .from('profiles')
-                            .select('is_admin, user_role, status, deleted_at')
-                            .eq('id', user.id)
-                            .single()
-                        profile = fallbackProfile as any
-                    }
+                    const profileRes = await fetch('/api/user/profile', { credentials: 'include' })
+                    const profileBody = profileRes.ok
+                        ? ((await profileRes.json()) as {
+                              profile?: {
+                                  user_role?: string | null
+                                  is_admin?: boolean | null
+                                  status?: string | null
+                                  deleted_at?: string | null
+                              }
+                          })
+                        : { profile: undefined }
+                    const profile = profileBody.profile
 
                     if (
                         profile?.user_role === 'agent' &&
@@ -148,10 +146,11 @@ export default function LoginContent({ dict, locale }: LoginContentProps) {
 
                     router.refresh()
 
-                    const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin'
+                    const isAdminUser =
+                        profile?.is_admin === true || profile?.user_role === 'admin'
                     const isAgent = profile?.user_role === 'agent'
 
-                    if (isAdmin) {
+                    if (isAdminUser) {
                         router.push(`/${locale}/admin-secret`)
                     } else if (isAgent) {
                         router.push(`/${locale}/dashboard`)

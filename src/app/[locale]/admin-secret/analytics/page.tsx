@@ -40,8 +40,17 @@ export default function AdminAnalyticsPage() {
                     return
                 }
 
-                const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-                if (!profile?.is_admin) {
+                const profileRes = await fetch('/api/user/profile', { credentials: 'include' })
+                if (!profileRes.ok) {
+                    router.push(`/${locale}/login`)
+                    return
+                }
+                const { profile } = (await profileRes.json()) as {
+                    profile?: { is_admin?: boolean | null; user_role?: string | null }
+                }
+                const isAdminUser =
+                    profile?.is_admin === true || profile?.user_role === 'admin'
+                if (!isAdminUser) {
                     router.push(`/${locale}/dashboard`)
                     return
                 }

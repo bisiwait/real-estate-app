@@ -2,12 +2,17 @@ import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin'
 import BroadcastManager from '@/components/admin/BroadcastManager'
 
-export default async function AdminBroadcastPage() {
+export default async function AdminBroadcastPage({
+    params,
+}: {
+    params: Promise<{ locale: string }>
+}) {
+    const { locale } = await params
     const isUserAdmin = await isAdmin()
 
     // Strict redirect for non-admins
     if (!isUserAdmin) {
-        redirect('/')
+        redirect(`/${locale}`)
     }
 
     return (

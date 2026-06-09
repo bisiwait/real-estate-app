@@ -26,7 +26,7 @@ export default async function AdminSecretDashboard({
     const isUserAdmin = await isAdmin()
 
     if (!isUserAdmin) {
-        redirect('/')
+        redirect(`/${locale}`)
     }
 
     const dict = await getDictionary(locale)
