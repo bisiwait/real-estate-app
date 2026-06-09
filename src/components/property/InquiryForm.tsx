@@ -78,6 +78,12 @@ interface InquiryFormProps {
   /** ログイン済みのみ。電話タブからの発信番号（掲載者が電話表示ONかつ電話がある場合） */
   listingPhoneForTel?: string
   whatsAppInquiryUrl?: string
+  /** タブが無効な理由（掲載者側の未登録など） */
+  channelDisabledHints?: {
+    line?: string
+    phone?: string
+    whatsapp?: string
+  }
 }
 
 export default function InquiryForm({
@@ -92,6 +98,7 @@ export default function InquiryForm({
   propertyPageUrl,
   whatsAppInquiryUrl,
   listingPhoneForTel,
+  channelDisabledHints,
 }: InquiryFormProps) {
   const routeParams = useParams()
   const locale = (routeParams?.locale as string) || 'jp'
@@ -546,6 +553,17 @@ export default function InquiryForm({
                 </button>
               </div>
             </div>
+            {(!hasOfficialLine && channelDisabledHints?.line) ||
+            (!hasTel && channelDisabledHints?.phone) ||
+            (!hasWhatsApp && channelDisabledHints?.whatsapp) ? (
+              <div className="mb-4 space-y-1 rounded-xl border border-amber-100 bg-amber-50/90 px-3 py-2.5 text-[11px] font-medium leading-relaxed text-amber-900">
+                {!hasOfficialLine && channelDisabledHints?.line ? <p>{channelDisabledHints.line}</p> : null}
+                {!hasTel && channelDisabledHints?.phone ? <p>{channelDisabledHints.phone}</p> : null}
+                {!hasWhatsApp && channelDisabledHints?.whatsapp ? (
+                  <p>{channelDisabledHints.whatsapp}</p>
+                ) : null}
+              </div>
+            ) : null}
 
             {inquiryChannel === 'mail' ? (
           <form

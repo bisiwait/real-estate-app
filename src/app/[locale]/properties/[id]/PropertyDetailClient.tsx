@@ -382,6 +382,36 @@ export default function PropertyDetailClient({
     const stickyPhone =
         phoneForDisplay && showPhoneEffective ? phoneForDisplay : undefined
 
+    const inquiryChannelHints = useMemo(() => {
+        const owner = liveInquiry?.listingOwner ?? agent ?? initialListingOwner
+        if (!owner) return undefined
+        const hints: { line?: string; phone?: string; whatsapp?: string } = {}
+        const lineReady = Boolean(
+            (liveInquiry?.officialLineAddFriendUrl || effectiveLineInquiryUrl || '').trim()
+        )
+        if (!lineReady && owner.show_line_in_inquiry !== false) {
+            hints.line =
+                '掲載者がLINE連携を未設定のため、LINEタブは利用できません。'
+        }
+        if (!phoneForDisplay && showPhoneEffective) {
+            hints.phone = '掲載者の電話番号が未登録のため、電話タブは利用できません。'
+        }
+        if (!whatsAppInquiryUrl && showWhatsappEffective) {
+            hints.whatsapp =
+                '掲載者の電話番号（WhatsApp利用可能な番号）が未登録のため、WhatsAppタブは利用できません。'
+        }
+        return hints
+    }, [
+        liveInquiry,
+        agent,
+        initialListingOwner,
+        effectiveLineInquiryUrl,
+        phoneForDisplay,
+        showPhoneEffective,
+        showWhatsappEffective,
+        whatsAppInquiryUrl,
+    ])
+
     if (loading || !dict || !property) {
         return <div className="p-20 flex justify-center"><RefreshCw className="animate-spin text-navy-primary w-10 h-10" /></div>
     }
@@ -505,6 +535,7 @@ export default function PropertyDetailClient({
                                 propertyPageUrl={clientPageHref ?? propertyDetailPageUrl}
                                 listingPhoneForTel={stickyPhone}
                                 whatsAppInquiryUrl={whatsAppInquiryUrl ?? undefined}
+                                channelDisabledHints={inquiryChannelHints}
                             />
                         </div>
                     </div>

@@ -78,6 +78,7 @@ export default function ProfileForm() {
     const [togglingPhoneVisibility, setTogglingPhoneVisibility] = useState(false)
     const [togglingLineVisibility, setTogglingLineVisibility] = useState(false)
     const [togglingWhatsAppVisibility, setTogglingWhatsAppVisibility] = useState(false)
+    const [savingPhoneField, setSavingPhoneField] = useState(false)
     /** LINE連携ページで保存した友だち追加URL等（表示のみ・このフォームでは編集しない） */
     const [lineConnectStoredValue, setLineConnectStoredValue] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -85,6 +86,7 @@ export default function ProfileForm() {
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const lastSavedPhoneRef = useRef('')
     const router = useRouter()
     const params = useParams()
     const locale = params.locale as string
@@ -96,10 +98,37 @@ export default function ProfileForm() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(patch),
         })
-        const json = (await res.json().catch(() => ({}))) as { error?: string }
+        const json = (await res.json().catch(() => ({}))) as {
+            error?: string
+            profile?: Record<string, unknown>
+        }
         if (!res.ok) {
             throw new Error(json.error || 'プロフィールの更新に失敗しました。')
         }
+        return json.profile ?? null
+    }
+
+    const mergeProfileFromApi = (profile: Record<string, unknown> | null) => {
+        if (!profile) return
+        setFormData((prev) => ({
+            ...prev,
+            full_name: (profile.full_name as string) || prev.full_name,
+            company_name: (profile.company_name as string) || prev.company_name,
+            phone: (profile.phone as string) || '',
+            bio: (profile.bio as string) || prev.bio,
+            website: (profile.website as string) || prev.website,
+            avatar_url: (profile.avatar_url as string) || prev.avatar_url,
+            auto_renew: profile.auto_renew !== false,
+            show_phone_in_inquiry: profile.show_phone_in_inquiry !== false,
+            show_line_in_inquiry: profile.show_line_in_inquiry !== false,
+            show_whatsapp_in_inquiry: profile.show_whatsapp_in_inquiry !== false,
+        }))
+        const lineBasic =
+            typeof profile.line_basic_id === 'string' ? profile.line_basic_id.trim() : ''
+        const lineLegacy = profile.line_id != null ? String(profile.line_id).trim() : ''
+        setLineConnectStoredValue(lineBasic || lineLegacy)
+        lastSavedPhoneRef.current =
+            typeof profile.phone === 'string' ? profile.phone.trim() : ''
     }
 
     useEffect(() => {
@@ -143,6 +172,8 @@ export default function ProfileForm() {
                     const lineLegacy =
                         data.line_id != null ? String(data.line_id).trim() : ''
                     setLineConnectStoredValue(lineBasic || lineLegacy)
+                    lastSavedPhoneRef.current =
+                        typeof data.phone === 'string' ? data.phone.trim() : ''
                     if (typeof data.avatar_url === 'string' && data.avatar_url) {
                         setAvatarPreview(resolveAvatarUrl(data.avatar_url) ?? data.avatar_url)
                     }
@@ -210,23 +241,53 @@ export default function ProfileForm() {
         show_phone_in_inquiry?: boolean
         show_line_in_inquiry?: boolean
         show_whatsapp_in_inquiry?: boolean
+        phone?: string
     }) => {
         setError(null)
         setSuccess(null)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Authentication required')
-        await patchAgentProfile(patch)
+        const updated = await patchAgentProfile(patch)
+        mergeProfileFromApi(updated)
+    }
+
+    const savePhoneField = async (phoneRaw: string) => {
+        const phone = phoneRaw.trim()
+        setSavingPhoneField(true)
+        setError(null)
+        try {
+            const updated = await patchAgentProfile({ phone: phone || null })
+            mergeProfileFromApi(updated)
+            lastSavedPhoneRef.current = phone
+            setSuccess(phone ? '電話番号を保存しました。' : '電話番号を削除しました。')
+        } catch (err: unknown) {
+            setError(getErrorMessage(err))
+        } finally {
+            setSavingPhoneField(false)
+        }
     }
 
     const toggleShowPhoneInInquiry = async () => {
         if (togglingPhoneVisibility) return
         const next = !formData.show_phone_in_inquiry
         const prev = formData.show_phone_in_inquiry
+        const phoneTrimmed = formData.phone.trim()
+        if (next && !phoneTrimmed) {
+            setError('電話タブを有効にするには、上の「電話番号」欄に番号を入力してから再度 ON にしてください。')
+            return
+        }
         setFormData((f) => ({ ...f, show_phone_in_inquiry: next }))
         setTogglingPhoneVisibility(true)
         try {
-            await persistInquiryVisibility({ show_phone_in_inquiry: next })
-            setSuccess('物件ページの電話表示を更新しました。')
+            await persistInquiryVisibility({
+                show_phone_in_inquiry: next,
+                ...(phoneTrimmed ? { phone: phoneTrimmed } : {}),
+            })
+            setSuccess(
+                next
+                    ? '物件ページの電話表示を有効にしました。'
+                    : '物件ページの電話表示をオフにしました。'
+            )
         } catch (err: unknown) {
             setFormData((f) => ({ ...f, show_phone_in_inquiry: prev }))
             setError(getErrorMessage(err))
@@ -239,11 +300,22 @@ export default function ProfileForm() {
         if (togglingLineVisibility) return
         const next = !formData.show_line_in_inquiry
         const prev = formData.show_line_in_inquiry
+        const lineReady = lineConnectStoredValue.trim().length > 0
+        if (next && !lineReady) {
+            setError(
+                'LINEタブを有効にするには、先に「LINE連携の設定」ページで友だち追加URLを保存してください。'
+            )
+            return
+        }
         setFormData((f) => ({ ...f, show_line_in_inquiry: next }))
         setTogglingLineVisibility(true)
         try {
             await persistInquiryVisibility({ show_line_in_inquiry: next })
-            setSuccess('物件ページのLINE表示を更新しました。')
+            setSuccess(
+                next
+                    ? '物件ページのLINE表示を有効にしました。'
+                    : '物件ページのLINE表示をオフにしました。'
+            )
         } catch (err: unknown) {
             setFormData((f) => ({ ...f, show_line_in_inquiry: prev }))
             setError(getErrorMessage(err))
@@ -256,11 +328,25 @@ export default function ProfileForm() {
         if (togglingWhatsAppVisibility) return
         const next = !formData.show_whatsapp_in_inquiry
         const prev = formData.show_whatsapp_in_inquiry
+        const phoneTrimmed = formData.phone.trim()
+        if (next && !phoneTrimmed) {
+            setError(
+                'WhatsAppタブを有効にするには、上の「電話番号」欄に番号（WhatsApp利用可能な番号）を入力してください。'
+            )
+            return
+        }
         setFormData((f) => ({ ...f, show_whatsapp_in_inquiry: next }))
         setTogglingWhatsAppVisibility(true)
         try {
-            await persistInquiryVisibility({ show_whatsapp_in_inquiry: next })
-            setSuccess('物件ページのWhatsApp表示を更新しました。')
+            await persistInquiryVisibility({
+                show_whatsapp_in_inquiry: next,
+                ...(phoneTrimmed ? { phone: phoneTrimmed } : {}),
+            })
+            setSuccess(
+                next
+                    ? '物件ページのWhatsApp表示を有効にしました。'
+                    : '物件ページのWhatsApp表示をオフにしました。'
+            )
         } catch (err: unknown) {
             setFormData((f) => ({ ...f, show_whatsapp_in_inquiry: prev }))
             setError(getErrorMessage(err))
@@ -301,14 +387,21 @@ export default function ProfileForm() {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Authentication required')
 
-            // 1. Upload avatar if changed
+            // 1. Upload avatar if changed（失敗しても電話番号など他項目は保存する）
             let finalAvatarUrl = formData.avatar_url
             if (avatarFile) {
-                finalAvatarUrl = await uploadAvatar(user.id)
+                try {
+                    finalAvatarUrl = await uploadAvatar(user.id)
+                } catch (avatarErr) {
+                    console.error('Avatar upload error:', avatarErr)
+                    setError(
+                        '画像のアップロードに失敗しました。電話番号など他の項目は保存します。'
+                    )
+                }
             }
 
             // 2. Update profile（電話/LINE の物件ページ表示は別トグルで即時保存）
-            await patchAgentProfile({
+            const updated = await patchAgentProfile({
                 full_name: formData.full_name,
                 company_name: formData.company_name,
                 phone: formData.phone,
@@ -316,6 +409,8 @@ export default function ProfileForm() {
                 website: formData.website,
                 avatar_url: finalAvatarUrl,
             })
+            mergeProfileFromApi(updated)
+            setAvatarFile(null)
 
             setSuccess('プロフィールを更新しました。')
             window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -341,6 +436,12 @@ export default function ProfileForm() {
         current_period_end: formData.current_period_end,
         is_admin: formData.is_admin,
     })
+
+    const phoneTrimmedForStatus = formData.phone.trim()
+    const lineReadyForPublish = lineConnectStoredValue.trim().length > 0
+    const phonePublishBlocked = formData.show_phone_in_inquiry && !phoneTrimmedForStatus
+    const linePublishBlocked = formData.show_line_in_inquiry && !lineReadyForPublish
+    const whatsAppPublishBlocked = formData.show_whatsapp_in_inquiry && !phoneTrimmedForStatus
 
     return (
         <div className="space-y-12">
@@ -613,11 +714,23 @@ export default function ProfileForm() {
                                     type="tel"
                                     value={formData.phone}
                                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                    onBlur={(e) => {
+                                        const next = e.target.value.trim()
+                                        if (next !== lastSavedPhoneRef.current) {
+                                            void savePhoneField(e.target.value)
+                                        }
+                                    }}
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-navy-primary outline-none transition-all pl-10"
-                                    placeholder="090-0000-0000"
+                                    placeholder="090-0000-0000 または +66812345678"
                                 />
                                 <Phone className="w-4 h-4 text-slate-300 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                {savingPhoneField ? (
+                                    <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-navy-primary" />
+                                ) : null}
                             </div>
+                            <p className="text-[10px] text-slate-400 mt-1 ml-1">
+                                入力後にフォーカスを外すと自動保存されます。電話・WhatsAppタブに必要です。
+                            </p>
                         </div>
 
                         <div className="rounded-xl border border-[#06C755]/25 bg-gradient-to-br from-[#06C755]/6 to-white p-4 shadow-sm">
@@ -653,7 +766,25 @@ export default function ProfileForm() {
                             </h4>
                             <p className="mt-2 text-xs font-medium leading-relaxed text-slate-600">
                                 メールでの問い合わせフォームは<strong className="text-navy-secondary">常に表示</strong>されます（非表示にできません）。
+                                電話・LINE・WhatsApp は<strong className="text-navy-secondary">番号／LINE連携の登録</strong>と<strong className="text-navy-secondary">表示ON</strong>の両方が必要です。
                             </p>
+                            {(phonePublishBlocked || linePublishBlocked || whatsAppPublishBlocked) && (
+                                <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-relaxed text-amber-900">
+                                    {phonePublishBlocked && (
+                                        <p>⚠ 電話表示は ON ですが、電話番号が未登録のため物件ページでは電話タブが無効です。</p>
+                                    )}
+                                    {whatsAppPublishBlocked && (
+                                        <p className={phonePublishBlocked ? 'mt-1' : ''}>
+                                            ⚠ WhatsApp表示は ON ですが、電話番号が未登録のため物件ページでは無効です。
+                                        </p>
+                                    )}
+                                    {linePublishBlocked && (
+                                        <p className={phonePublishBlocked || whatsAppPublishBlocked ? 'mt-1' : ''}>
+                                            ⚠ LINE表示は ON ですが、LINE連携が未設定のため物件ページでは無効です。
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                             <div className="mt-4 space-y-3">
                                 <label className="flex cursor-pointer items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
                                     <span className="min-w-0 flex-1">
