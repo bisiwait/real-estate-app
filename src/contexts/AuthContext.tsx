@@ -41,34 +41,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     const [isLoading, setIsLoading] = useState(true)
 
-    const fetchUserData = async (userId: string) => {
-        let { data, error } = await supabase
-            .from('profiles')
-            .select('is_admin, full_name, user_role')
-            .eq('id', userId)
-            .single()
+    const fetchUserData = async (_userId: string) => {
+        try {
+            const res = await fetch('/api/user/profile', { credentials: 'include' })
+            if (!res.ok) {
+                console.warn('AuthProvider: profile API failed', res.status)
+                setUserData({ isAdmin: false, fullName: null, role: 'general' })
+                return
+            }
 
-        if (error) {
-            console.warn('AuthProvider: Fetch with role failed, falling back:', error)
-            const { data: fallbackData, error: fallbackError } = await supabase
-                .from('profiles')
-                .select('is_admin, full_name')
-                .eq('id', userId)
-                .single()
-            data = fallbackData as any
-            error = fallbackError
-        }
+            const body = (await res.json()) as {
+                profile?: {
+                    full_name?: string | null
+                    user_role?: string | null
+                    is_admin?: boolean | null
+                }
+            }
+            const profile = body.profile
+            if (!profile) {
+                setUserData({ isAdmin: false, fullName: null, role: 'general' })
+                return
+            }
 
-        if (!error && data) {
-            const is_admin = data.is_admin === true || (data as any).user_role === 'admin'
-            const is_agent = (data as any).user_role === 'agent'
+            const is_admin = profile.is_admin === true || profile.user_role === 'admin'
+            const is_agent = profile.user_role === 'agent'
 
             setUserData({
                 isAdmin: is_admin,
-                fullName: data.full_name || null,
-                role: is_admin ? 'admin' : (is_agent ? 'agent' : 'general')
+                fullName: profile.full_name || null,
+                role: is_admin ? 'admin' : is_agent ? 'agent' : 'general',
             })
-        } else {
+        } catch (error) {
+            console.warn('AuthProvider: profile API error', error)
             setUserData({ isAdmin: false, fullName: null, role: 'general' })
         }
     }
