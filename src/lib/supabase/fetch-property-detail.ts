@@ -5,6 +5,7 @@ export type PublicListingOwnerProfile = {
     id: string
     full_name: string | null
     avatar_url: string | null
+    bio: string | null
     phone: string | null
     line_id: string | null
     line_basic_id: string | null
@@ -19,7 +20,7 @@ export type PublicListingOwnerProfile = {
 }
 
 const LISTING_OWNER_SELECT =
-    'id, full_name, avatar_url, phone, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, show_whatsapp_in_inquiry, plan, plan_type, current_period_end, is_admin, deleted_at, status, user_role'
+    'id, full_name, avatar_url, bio, phone, line_id, line_basic_id, show_line_in_inquiry, show_phone_in_inquiry, show_whatsapp_in_inquiry, plan, plan_type, current_period_end, is_admin, deleted_at, status, user_role'
 
 export async function fetchPublicListingOwnerProfile(
     supabase: SupabaseClient,
@@ -44,6 +45,7 @@ export async function fetchPublicListingOwnerProfile(
         id: data.id as string,
         full_name: (data.full_name as string | null) ?? null,
         avatar_url: (data.avatar_url as string | null) ?? null,
+        bio: (data.bio as string | null) ?? null,
         phone: (data.phone as string | null) ?? null,
         line_id: (data.line_id as string | null) ?? null,
         line_basic_id: (data.line_basic_id as string | null) ?? null,
@@ -151,4 +153,43 @@ export async function fetchAgentOtherPropertiesForDetail(
         return []
     }
     return data ?? []
+}
+
+export async function fetchAgentPublishedProperties(
+    supabase: SupabaseClient,
+    agentId: string,
+    limit = 4
+) {
+    const { data, error } = await supabase
+        .from('properties')
+        .select(PROPERTY_CARD_SELECT)
+        .eq('user_id', agentId)
+        .eq('status', 'published')
+        .eq('is_approved', true)
+        .order('updated_at', { ascending: false })
+        .limit(limit)
+
+    if (error) {
+        console.warn('[fetchAgentPublishedProperties]', error.message)
+        return []
+    }
+    return data ?? []
+}
+
+export async function countAgentPublishedProperties(
+    supabase: SupabaseClient,
+    agentId: string
+): Promise<number> {
+    const { count, error } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', agentId)
+        .eq('status', 'published')
+        .eq('is_approved', true)
+
+    if (error) {
+        console.warn('[countAgentPublishedProperties]', error.message)
+        return 0
+    }
+    return count ?? 0
 }

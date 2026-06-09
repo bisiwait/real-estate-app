@@ -1,5 +1,4 @@
 "use client";
-import { createClient } from '@/lib/supabase/client'
 import { notFound, useParams, usePathname } from 'next/navigation'
 import { useState, useEffect, type ComponentType } from 'react'
 import Image from 'next/image'
@@ -44,39 +43,35 @@ export default function AgentProfilePage() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const supabase = createClient()
-            
-            // Fetch Agent Profile
-            const { data: aData } = await supabase.from('profiles').select('*').eq('id', agentId).single()
-            if (aData) {
-                if (aData.deleted_at != null || aData.status === 'suspended') {
+            try {
+                const res = await fetch(`/api/agents/${encodeURIComponent(agentId)}?limit=4`)
+                if (res.status === 404) {
                     setHideAgent(true)
-                    setLoading(false)
                     return
                 }
-                setAgent(aData)
-                
-                // Fetch Properties
-                const { data: pData } = await supabase
-                    .from('properties')
-                    .select('*, area:areas(name, region:regions(name))')
-                    .eq('user_id', agentId)
-                    .eq('status', 'published')
-                    .order('updated_at', { ascending: false })
-                    .limit(4)
-                setProperties(pData || [])
-
-                // Count
-                const { count } = await supabase
-                    .from('properties')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('user_id', agentId)
-                    .eq('status', 'published')
-                setTotalListings(count || 0)
+                if (!res.ok) {
+                    console.error('[AgentProfilePage] fetch failed', res.status)
+                    return
+                }
+                const data = (await res.json()) as {
+                    agent?: Record<string, unknown>
+                    properties?: unknown[]
+                    totalListings?: number
+                }
+                if (!data.agent) {
+                    setHideAgent(true)
+                    return
+                }
+                setAgent(data.agent)
+                setProperties(data.properties ?? [])
+                setTotalListings(data.totalListings ?? 0)
+            } catch (e) {
+                console.error('[AgentProfilePage] fetch error', e)
+            } finally {
+                setLoading(false)
             }
-            setLoading(false)
         }
-        if (agentId) fetchData()
+        if (agentId) void fetchData()
     }, [agentId])
 
     useEffect(() => {
