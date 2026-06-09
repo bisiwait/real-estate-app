@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import PropertyThumbnail from "@/components/property/PropertyThumbnail";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Loader2, X } from "lucide-react";
 import ContactAuthRequiredModal from "@/components/property/ContactAuthRequiredModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,8 +79,7 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const supabase = createClient();
-    const { user } = useAuth();
+    const { user, userData, isLoading: authLoading } = useAuth();
 
     const [ids, setIds] = useState<string[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
@@ -141,28 +139,17 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
     }, [searchParams, syncStorage, replaceUrlIds]);
 
     useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser();
-            if (!user) {
-                router.replace(`/${locale}/login?next=${encodeURIComponent(`/${locale}/compare`)}`);
-                return;
-            }
-            const { data: profile } = await supabase.from("profiles").select("user_role,is_admin").eq("id", user.id).single();
-            const isAgent =
-                profile?.user_role === "agent" || profile?.user_role === "admin" || profile?.is_admin === true;
-            if (isAgent) {
-                router.replace(`/${locale}/dashboard`);
-                return;
-            }
-            if (!cancelled) setAuthChecked(true);
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [supabase, router, locale]);
+        if (authLoading) return;
+        if (!user) {
+            router.replace(`/${locale}/login?next=${encodeURIComponent(`/${locale}/compare`)}`);
+            return;
+        }
+        if (userData.role === "admin" || userData.role === "agent") {
+            router.replace(`/${locale}/dashboard`);
+            return;
+        }
+        setAuthChecked(true);
+    }, [authLoading, user, userData.role, router, locale]);
 
     useEffect(() => {
         if (!authChecked) return;
@@ -176,39 +163,29 @@ export default function CompareClient({ locale, dict }: { locale: string; dict: 
             }
 
             setLoading(true);
-            const { data, error } = await supabase
-                .from("properties")
-                .select(
-                    `
-          *,
-          area:areas(name, region:regions(name)),
-          project:projects(facilities),
-          developers(name)
-        `
-                )
-                .in("id", ids)
-                .eq("status", "published");
+            const res = await fetch(
+                `/api/properties/compare?ids=${encodeURIComponent(ids.join(","))}`,
+                { credentials: "same-origin" }
+            );
 
             if (cancelled) return;
 
-            if (error || !data) {
-                console.error(error);
+            if (!res.ok) {
+                console.error("[compare] fetch failed", res.status);
                 setProperties([]);
                 setLoading(false);
                 return;
             }
 
-            const orderMap = new Map(ids.map((id, i) => [id, i]));
-            const sorted = [...data].sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0));
-
-            setProperties(sorted);
+            const body = (await res.json()) as { properties?: unknown[] };
+            setProperties((body.properties as any[]) ?? []);
             setLoading(false);
         })();
 
         return () => {
             cancelled = true;
         };
-    }, [authChecked, ids.join(","), supabase]);
+    }, [authChecked, ids.join(",")]);
 
     const removeId = (id: string) => {
         const next = ids.filter((x) => x !== id);
