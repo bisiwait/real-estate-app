@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import { AlertTriangle, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -14,7 +13,6 @@ export default function PresalePropertyPage() {
     const [isPremium, setIsPremium] = useState<boolean | null>(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
-    const supabase = createClient()
     const [dict, setDict] = useState<any>(null)
 
     useEffect(() => {
@@ -26,25 +24,32 @@ export default function PresalePropertyPage() {
 
     useEffect(() => {
         async function checkAccess() {
-            const { data: { user } } = await supabase.auth.getUser()
-
-            if (!user) {
+            const res = await fetch('/api/agent/plan', { credentials: 'include' })
+            if (res.status === 401) {
                 router.push('/login')
                 return
             }
+            if (!res.ok) {
+                setIsPremium(false)
+                setLoading(false)
+                return
+            }
 
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('plan, plan_type, current_period_end, is_admin')
-                .eq('id', user.id)
-                .single()
+            const { profile } = (await res.json()) as {
+                profile?: {
+                    plan?: string | null
+                    plan_type?: string | null
+                    current_period_end?: string | null
+                    is_admin?: boolean | null
+                }
+            }
 
             setIsPremium(isPremiumActive(profile))
             setLoading(false)
         }
 
         checkAccess()
-    }, [supabase, router])
+    }, [router])
 
     if (loading) {
         return (

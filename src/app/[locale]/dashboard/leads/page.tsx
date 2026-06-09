@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Search, Users } from 'lucide-react'
 import LeadsView from '@/components/dashboard/LeadsView'
@@ -13,13 +13,14 @@ export default async function AgentLeadsPage({
 }) {
     const { locale } = await params
     const supabase = await createClient()
+    const supabaseAdmin = await createAdminClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
         redirect('/login')
     }
 
-    const { leads, error } = await fetchAgentInquiryLeads(supabase, user.id)
+    const { leads, error } = await fetchAgentInquiryLeads(supabaseAdmin, user.id)
     if (error) {
         console.error('Error fetching leads:', error)
     }

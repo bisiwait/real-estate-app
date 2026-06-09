@@ -36,14 +36,15 @@ export default async function DashboardPage({
     const d = dict.dashboard
     const { tab = 'properties', profile_updated, filter = 'all', status = 'all' } = await searchParams
     const supabase = await createClient()
+    const supabaseAdmin = await createAdminClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
         redirect('/login')
     }
 
-    // Fetch Profile (plan / subscription fields)
-    const { data: profile } = await supabase
+    // Fetch Profile (plan / subscription fields) — RLS 回避のため service role
+    const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('plan, plan_type, full_name, phone, current_period_end, auto_renew, is_admin')
         .eq('id', user.id)
@@ -52,14 +53,14 @@ export default async function DashboardPage({
     const activePlan = getEffectivePlan(profile)
 
     // Fetch Properties
-    const { data: properties } = await supabase
+    const { data: properties } = await supabaseAdmin
         .from('properties')
         .select('*, area:areas(name), project:projects(*, developers(name))')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false })
 
     // Fetch Inquiries
-    const { data: rawInquiries, error: inquiriesError } = await supabase
+    const { data: rawInquiries, error: inquiriesError } = await supabaseAdmin
         .from('inquiries')
         .select('*, property:properties(title)')
         .eq('owner_id', user.id)
@@ -73,7 +74,7 @@ export default async function DashboardPage({
     let inquiries = rawInquiries || []
     if (inquiries.length > 0) {
         const inquiryIds = inquiries.map(i => i.id)
-        const { data: allReplies, error: repliesError } = await supabase
+        const { data: allReplies, error: repliesError } = await supabaseAdmin
             .from('inquiry_replies')
             .select('*')
             .in('inquiry_id', inquiryIds)
@@ -90,13 +91,13 @@ export default async function DashboardPage({
     }
 
 
-    const { leads, error: leadsError } = await fetchAgentInquiryLeads(supabase, user.id)
+    const { leads, error: leadsError } = await fetchAgentInquiryLeads(supabaseAdmin, user.id)
     if (leadsError) {
         console.error('Error fetching inquiry_logs (leads):', leadsError)
     }
 
     const { rows: profileContacts, error: profileContactsErr } = await fetchAgentProfileContacts(
-        supabase,
+        supabaseAdmin,
         user.id
     )
     if (profileContactsErr) {
@@ -108,7 +109,6 @@ export default async function DashboardPage({
     const monthStartJst = startOfCurrentMonthJstIso()
     let lineInquiryLogsThisMonth = 0
     const lineInquiryCountsByPropertyThisMonth: Record<string, number> = {}
-    const supabaseAdmin = await createAdminClient()
     const { data: lineCountRows, error: lineInquiryCountErr } = await supabaseAdmin
         .from('line_inquiry_counts')
         .select('property_id')

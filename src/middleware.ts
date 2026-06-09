@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { hostHeaderFromRequest } from '@/lib/env/deployment-target'
+import { fetchProfileAccessForUser } from '@/lib/supabase/fetch-profile-access'
 
 const locales = ['jp', 'en', 'th']
 const defaultLocale = 'jp'
@@ -81,6 +83,10 @@ function redirectOAuthPkceCodeToAuthCallback(request: NextRequest): NextResponse
     return NextResponse.redirect(url)
 }
 
+async function resolveProfileAccess(request: NextRequest, userId: string) {
+    return fetchProfileAccessForUser(userId, hostHeaderFromRequest(request))
+}
+
 export default async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname
 
@@ -152,26 +158,7 @@ export default async function middleware(request: NextRequest) {
 
         // /admin-secret または /dashboard へのアクセスをチェック
         if (pathWithoutLocale.startsWith('/admin-secret') || pathWithoutLocale.startsWith('/dashboard')) {
-            let { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('user_role, is_admin, status, deleted_at')
-                .eq('id', user.id)
-                .single()
-
-            if (profileError) {
-                const { data: fallbackProfile } = await supabase
-                    .from('profiles')
-                    .select('is_admin, user_role, status, deleted_at')
-                    .eq('id', user.id)
-                    .single()
-                profile = fallbackProfile as any
-            }
-
-            const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin';
-            const isAgent = profile?.user_role === 'agent';
-            const agentBlocked =
-                isAgent &&
-                (profile?.status === 'suspended' || profile?.deleted_at != null);
+            const { isAdmin, isAgent, agentBlocked } = await resolveProfileAccess(request, user.id)
 
             if (pathWithoutLocale.startsWith('/admin-secret') && !isAdmin) {
                 return NextResponse.redirect(new URL(`/${currentLocale}`, request.url))
@@ -202,26 +189,7 @@ export default async function middleware(request: NextRequest) {
                 }
             }
         } else if (pathWithoutLocale.startsWith('/mypage') || pathWithoutLocale.startsWith('/favorites')) {
-            let { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('user_role, is_admin, status, deleted_at')
-                .eq('id', user.id)
-                .single()
-
-            if (profileError) {
-                const { data: fallbackProfile } = await supabase
-                    .from('profiles')
-                    .select('is_admin, user_role, status, deleted_at')
-                    .eq('id', user.id)
-                    .single()
-                profile = fallbackProfile as any
-            }
-
-            const isAdmin = profile?.is_admin === true || profile?.user_role === 'admin';
-            const isAgent = profile?.user_role === 'agent';
-            const agentBlocked =
-                isAgent &&
-                (profile?.status === 'suspended' || profile?.deleted_at != null);
+            const { isAdmin, isAgent, agentBlocked } = await resolveProfileAccess(request, user.id)
 
             if (isAdmin) {
                 return NextResponse.redirect(new URL(`/${currentLocale}/admin-secret`, request.url))
