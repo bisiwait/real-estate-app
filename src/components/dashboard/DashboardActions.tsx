@@ -39,6 +39,7 @@ export default function DashboardActions({
     const [isShareModalOpen, setIsShareModalOpen] = useState(false)
     const router = useRouter()
     const params = useParams()
+    const locale = (params.locale as string) || 'jp'
     const hasPremium = isPremium(profile)
 
     const handleDelete = async () => {
@@ -97,7 +98,7 @@ export default function DashboardActions({
             {/* Mobile layout: 詳細, 編集, SNS, PDF, 削除 を均等に配置 */}
             <div className="sm:hidden flex items-stretch w-full divide-x divide-slate-100">
                 <Link
-                    href={`/properties/${propertyId}`}
+                    href={`/${locale}/properties/${propertyId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-slate-500 active:bg-slate-50 active:scale-[0.95] transition-all"
@@ -107,7 +108,7 @@ export default function DashboardActions({
                 </Link>
 
                 <button
-                    onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
+                    onClick={() => router.push(`/${locale}/dashboard/edit/${propertyId}`)}
                     className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-[9px] font-black text-navy-primary active:bg-navy-primary/5 active:scale-[0.95] transition-all"
                 >
                     <Edit3 className="w-3.5 h-3.5" />
@@ -144,7 +145,7 @@ export default function DashboardActions({
             {/* Desktop layout: icon buttons */}
             <div className="hidden sm:flex items-center space-x-1 lg:space-x-2">
                 <Link 
-                    href={`/properties/${propertyId}`} 
+                    href={`/${locale}/properties/${propertyId}`} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="p-1.5 lg:p-2.5 rounded-lg lg:rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all border border-slate-100 shadow-sm flex items-center gap-1 lg:gap-1.5 px-2 lg:px-4 whitespace-nowrap"
@@ -168,7 +169,7 @@ export default function DashboardActions({
                     </button>
                 )}
                 <button
-                    onClick={() => router.push(`/dashboard/edit/${propertyId}`)}
+                    onClick={() => router.push(`/${locale}/dashboard/edit/${propertyId}`)}
                     className="p-1.5 lg:p-2.5 rounded-lg lg:rounded-xl bg-slate-50 text-navy-primary hover:bg-navy-primary hover:text-white transition-all border border-slate-100 shadow-sm"
                     title={dict.edit_action}
                 >

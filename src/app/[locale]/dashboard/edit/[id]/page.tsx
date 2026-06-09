@@ -1,32 +1,40 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import ListingForm from '@/components/property/ListingForm'
 import PresaleListingForm from '@/components/property/PresaleListingForm'
 import { ChevronLeft, Edit3 } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function EditPropertyPage({ params }: { params: { id: string } }) {
-    const { id } = await params
+export default async function EditPropertyPage({
+    params,
+}: {
+    params: Promise<{ locale: string; id: string }>
+}) {
+    const { id, locale } = await params
     const supabase = await createClient()
 
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) redirect(`/${locale}/login`)
 
-    // Fetch property details
-    const { data: property, error } = await supabase
+    const admin = await createAdminClient()
+    const { data: property, error } = await admin
         .from('properties')
         .select('*')
         .eq('id', id)
-        .single()
+        .maybeSingle()
 
-    if (error || !property) {
+    if (error) {
+        console.error('[dashboard/edit] property load', error)
+        notFound()
+    }
+    if (!property) {
         notFound()
     }
 
-    // Security check: Only owner can edit
     if (property.user_id !== user.id) {
-        redirect('/dashboard')
+        redirect(`/${locale}/dashboard`)
     }
 
     return (
@@ -34,7 +42,7 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
             <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
                     <Link
-                        href="/dashboard"
+                        href={`/${locale}/dashboard`}
                         className="inline-flex items-center space-x-2 text-slate-400 hover:text-navy-primary font-bold mb-8 transition-colors group"
                     >
                         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -47,8 +55,12 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
                                 <Edit3 className="w-8 h-8 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-3xl font-black text-navy-secondary mb-1">{property.is_presale ? 'プレセール情報を編集' : '物件情報を編集'}</h1>
-                                <p className="text-slate-500 font-medium">#{property.id.slice(0, 8)} - {property.title}</p>
+                                <h1 className="text-3xl font-black text-navy-secondary mb-1">
+                                    {property.is_presale ? 'プレセール情報を編集' : '物件情報を編集'}
+                                </h1>
+                                <p className="text-slate-500 font-medium">
+                                    #{property.id.slice(0, 8)} - {property.title}
+                                </p>
                             </div>
                         </div>
                     </div>
