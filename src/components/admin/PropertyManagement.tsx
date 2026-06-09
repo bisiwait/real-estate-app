@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { maxPageForCount } from '@/lib/admin-list-url'
 import {
     ADMIN_PROP_AREA,
@@ -19,7 +18,6 @@ import {
 } from '@/lib/admin-property-list-url'
 import {
     ADMIN_PROPERTY_TYPE_VALUES,
-    fetchAdminPropertiesPage,
     resolveAdminPropertyAreaFilter,
 } from '@/lib/supabase/admin-properties-list-query'
 import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
@@ -58,7 +56,6 @@ import {
     shouldRecommendDeveloperForProperty,
 } from '@/lib/admin/property-quality'
 import { shouldAuditStorageImageUrl, verifyPublicImageUrlReachable } from '@/lib/admin/verify-property-image-url'
-import { fetchAdminDuplicateTitlesOnPage } from '@/lib/supabase/admin-duplicate-titles'
 import { cn } from '@/lib/utils'
 
 
@@ -92,7 +89,6 @@ export default function AdminPropertyManagement() {
     const [duplicateTitleSet, setDuplicateTitleSet] = useState<Set<string>>(() => new Set())
     /** メイン画像 URL が Supabase Storage 上で参照不能（404 等）と判定された物件 id */
     const [brokenStorageImageIds, setBrokenStorageImageIds] = useState<Set<string>>(() => new Set())
-    const supabase = createClient()
     const { limit, page, setPage, setLimit, replaceQuery } = useAdminTablePagination()
 
     const filter = useMemo(
@@ -208,37 +204,37 @@ export default function AdminPropertyManagement() {
     }, [replaceQuery])
 
     const fetchAgentProfiles = useCallback(async () => {
-        const { data: profilesData, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, full_name, email')
-            .eq('user_role', 'agent')
-            .is('deleted_at', null)
-            .order('full_name')
-
-        if (!profilesError && profilesData) {
-            setUsers(profilesData)
+        const res = await fetch('/api/admin/properties/meta', { credentials: 'include' })
+        if (!res.ok) return
+        const body = (await res.json()) as {
+            agents?: { id: string; full_name: string | null; email: string | null }[]
+            areas?: AreaRow[]
+            developers?: { id: string; name: string }[]
+            qualityStats?: AdminQualityStatsRow | null
         }
-    }, [supabase])
+        if (body.agents) setUsers(body.agents)
+        if (body.areas) setAreas(body.areas)
+        if (body.developers) setDevelopers(body.developers)
+        if (body.qualityStats) setQualityStats(body.qualityStats)
+    }, [])
 
     const refreshQualityStats = useCallback(async () => {
-        const { data, error } = await supabase.rpc('admin_property_quality_stats')
-        if (error) {
-            console.warn('[admin properties] quality stats', error.message)
-            return
-        }
-        if (data && typeof data === 'object' && !Array.isArray(data)) {
-            setQualityStats(data as AdminQualityStatsRow)
-        }
-    }, [supabase])
+        const res = await fetch('/api/admin/properties/meta', { credentials: 'include' })
+        if (!res.ok) return
+        const body = (await res.json()) as { qualityStats?: AdminQualityStatsRow | null }
+        if (body.qualityStats) setQualityStats(body.qualityStats)
+    }, [])
 
     const fetchAreasAndDevelopers = useCallback(async () => {
-        const [{ data: areaRows, error: areaErr }, { data: devRows, error: devErr }] = await Promise.all([
-            supabase.from('areas').select('id, name, slug').order('name'),
-            supabase.from('developers').select('id, name').order('name'),
-        ])
-        if (!areaErr && areaRows) setAreas(areaRows as AreaRow[])
-        if (!devErr && devRows) setDevelopers(devRows as { id: string; name: string }[])
-    }, [supabase])
+        const res = await fetch('/api/admin/properties/meta', { credentials: 'include' })
+        if (!res.ok) return
+        const body = (await res.json()) as {
+            areas?: AreaRow[]
+            developers?: { id: string; name: string }[]
+        }
+        if (body.areas) setAreas(body.areas)
+        if (body.developers) setDevelopers(body.developers)
+    }, [])
 
     const fetchPropertiesPage = useCallback(async () => {
         if (areaResolved.kind === 'wait_areas' && areaSlug.trim()) {
@@ -250,37 +246,40 @@ export default function AdminPropertyManagement() {
         setListFetchBusy(true)
         setErrorMessage(null)
         try {
-            const { rows, count, error } = await fetchAdminPropertiesPage(supabase, {
-                listFilter: filter,
-                urlSearch,
-                area: areaResolved,
-                propertyTypeParam,
-                developerIdParam,
-                minPriceUrl,
-                maxPriceUrl,
-                page,
-                limit,
+            const qs = new URLSearchParams()
+            qs.set('page', String(page))
+            qs.set('limit', String(limit))
+            if (filter !== 'all') qs.set(ADMIN_PROP_LIST_FILTER, filter)
+            if (urlSearch) qs.set(ADMIN_PROP_SEARCH, urlSearch)
+            if (areaSlug) qs.set(ADMIN_PROP_AREA, areaSlug)
+            if (propertyTypeParam) qs.set(ADMIN_PROP_PROPERTY_TYPE, propertyTypeParam)
+            if (developerIdParam) qs.set(ADMIN_PROP_DEVELOPER_ID, developerIdParam)
+            if (minPriceUrl != null) qs.set(ADMIN_PROP_MIN_PRICE, String(Math.floor(minPriceUrl)))
+            if (maxPriceUrl != null) qs.set(ADMIN_PROP_MAX_PRICE, String(Math.floor(maxPriceUrl)))
+
+            const res = await fetch(`/api/admin/properties/list?${qs.toString()}`, {
+                credentials: 'include',
             })
 
             if (reqId !== listRequestIdRef.current) return
 
-            if (error) {
-                console.error('Fetch properties error:', error)
-                setErrorMessage(getErrorMessage(error))
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                setErrorMessage(body.error ?? res.statusText)
                 setProperties([])
                 setTotalCount(0)
                 return
             }
 
-            setProperties(rows as any[])
-            setTotalCount(count ?? 0)
+            const body = (await res.json()) as { rows?: unknown[]; count?: number | null }
+            setProperties((body.rows as any[]) ?? [])
+            setTotalCount(body.count ?? 0)
         } finally {
             if (reqId === listRequestIdRef.current) {
                 setListFetchBusy(false)
             }
         }
     }, [
-        supabase,
         filter,
         urlSearch,
         page,
@@ -317,13 +316,20 @@ export default function AdminPropertyManagement() {
         let cancelled = false
         const titles = properties.map((p: { title?: string }) => String(p.title ?? ''))
         void (async () => {
-            const dup = await fetchAdminDuplicateTitlesOnPage(supabase, titles)
-            if (!cancelled) setDuplicateTitleSet(dup)
+            const res = await fetch('/api/admin/properties/duplicate-titles', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titles }),
+            })
+            if (cancelled || !res.ok) return
+            const body = (await res.json()) as { duplicates?: string[] }
+            if (!cancelled) setDuplicateTitleSet(new Set(body.duplicates ?? []))
         })()
         return () => {
             cancelled = true
         }
-    }, [listFetchBusy, properties, supabase])
+    }, [listFetchBusy, properties])
 
     useEffect(() => {
         if (listFetchBusy || properties.length === 0) {
@@ -363,20 +369,19 @@ export default function AdminPropertyManagement() {
 
         setMutationBusy(true)
         try {
-            if (action === 'approve') {
-                await supabase.from('properties').update({ is_approved: true, status: 'published' }).eq('id', id)
-            } else if (action === 'restore') {
-                // "Restore" action: set back to published and ensure approved
-                await supabase.from('properties').update({ is_approved: true, status: 'published' }).eq('id', id)
-            } else if (action === 'reject') {
-                // "Hide" action: set to draft and unapprove
-                await supabase.from('properties').update({ is_approved: false, status: 'draft' }).eq('id', id)
-            } else if (action === 'delete') {
-                await supabase.from('properties').delete().eq('id', id)
+            const res = await fetch(`/api/admin/properties/${id}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action }),
+            })
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                throw new Error(body.error ?? res.statusText)
             }
             await fetchPropertiesPage()
             await refreshQualityStats()
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Admin action error:', err)
             setErrorMessage(getErrorMessage(err))
         } finally {
@@ -389,8 +394,16 @@ export default function AdminPropertyManagement() {
 
         setMutationBusy(true)
         try {
-            const { error } = await supabase.from('properties').update({ user_id: newUserId || null }).eq('id', id)
-            if (error) throw error
+            const res = await fetch(`/api/admin/properties/${id}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'assign_user', userId: newUserId || null }),
+            })
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                throw new Error(body.error ?? res.statusText)
+            }
             await fetchPropertiesPage()
             await refreshQualityStats()
             setSelectedUsers(prev => {
@@ -398,7 +411,7 @@ export default function AdminPropertyManagement() {
                 delete next[id]
                 return next
             })
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Assign user error:', err)
             setErrorMessage(getErrorMessage(err))
         } finally {
@@ -409,14 +422,16 @@ export default function AdminPropertyManagement() {
     const handleStatusChange = async (id: string, newStatus: string) => {
         setMutationBusy(true)
         try {
-            const updates: any = { status: newStatus }
-            if (newStatus === 'published') {
-                updates.is_approved = true
-            } else if (newStatus === 'draft') {
-                updates.is_approved = false
+            const res = await fetch(`/api/admin/properties/${id}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'status', status: newStatus }),
+            })
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                throw new Error(body.error ?? res.statusText)
             }
-            const { error } = await supabase.from('properties').update(updates).eq('id', id)
-            if (error) throw error
             await fetchPropertiesPage()
             await refreshQualityStats()
             setSelectedStatuses((prev: Record<string, string>) => {
@@ -424,7 +439,7 @@ export default function AdminPropertyManagement() {
                 delete next[id]
                 return next
             })
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Status change error:', err)
             setErrorMessage(getErrorMessage(err))
         } finally {

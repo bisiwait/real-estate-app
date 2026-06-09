@@ -13,7 +13,6 @@ import {
     Edit3,
     Loader2,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { adminAgentLifecycle } from '@/app/actions/adminAgentLifecycle'
 import { getErrorMessage } from '@/lib/utils/errors'
 
@@ -33,10 +32,9 @@ const mockChartData = [
     { name: '2/15', views: 520, inquiries: 55 },
     { name: '2/16', views: 480, inquiries: 30 },
     { name: '2/17', views: 600, inquiries: 70 },
-];
+]
 
 export default function AgentInsights({ agentId }: { agentId: string }) {
-    const supabase = createClient()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [agentData, setAgentData] = useState<any>(null)
@@ -60,82 +58,58 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
         const fetchData = async () => {
             setLoading(true)
             try {
-                // 1. Fetch Agent Profile
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', agentId)
-                    .single()
+                const res = await fetch(`/api/admin/agents/${agentId}`, { credentials: 'include' })
+                if (!res.ok) {
+                    const body = (await res.json().catch(() => ({}))) as { error?: string }
+                    throw new Error(body.error ?? res.statusText)
+                }
+                const body = (await res.json()) as {
+                    profile?: Record<string, unknown>
+                    staleProperties?: unknown[]
+                    stats?: {
+                        totalViews: number
+                        activeListings: number
+                        conversions: number
+                        avgResponseTime: number
+                    }
+                    chartData?: { date: string; views: number; inquiries: number }[]
+                }
 
-                if (profileError) throw profileError
+                const profile = body.profile
+                if (!profile) throw new Error('Agent not found')
 
                 setAgentData(profile)
-                setIsVerified(profile.is_verified || false)
+                setIsVerified(Boolean(profile.is_verified))
                 setIsSuspended(
                     profile.is_suspended === true || profile.status === 'suspended'
                 )
-                setAdminNote(profile.admin_notes || '')
+                setAdminNote(String(profile.admin_notes ?? ''))
+                setStaleProperties(body.staleProperties ?? [])
+                if (body.stats) setStats(body.stats)
 
-                // 2. Fetch Stale Properties (updated > 30 days ago)
-                const thirtyDaysAgo = new Date()
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-                const { data: stale, error: staleError } = await supabase
-                    .from('properties')
-                    .select('id, title, updated_at')
-                    .eq('user_id', agentId)
-                    .lt('updated_at', thirtyDaysAgo.toISOString())
-                    .limit(10)
-
-                if (staleError) throw staleError
-                setStaleProperties(stale || [])
-
-                // 3. Fetch KPI Stats (derived from property counts and views)
-                const { data: props, error: propsError } = await supabase
-                    .from('properties')
-                    .select('id, status, total_views')
-                    .eq('user_id', agentId)
-
-                if (propsError) throw propsError
-
-                const totalViews = props?.reduce((acc: number, p: any) => acc + (p.total_views || 0), 0) || 0
-                const activeListings = props?.filter((p: any) => p.status === 'published').length || 0
-
-                setStats({
-                    totalViews,
-                    activeListings,
-                    conversions: 8.4, // Placeholder until inquiry stats are mature
-                    avgResponseTime: 1.8 // Placeholder
-                })
-
-                // 4. Fetch Chart Data (from property_stats)
-                if (props && props.length > 0) {
-                    const propIds = props.map((p: any) => p.id)
-                    const { data: trendData, error: trendError } = await supabase
-                        .from('property_stats')
-                        .select('date, views, inquiries')
-                        .in('property_id', propIds)
-                        .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
-                        .order('date', { ascending: true })
-
-                    if (trendError) throw trendError
-
-                    // Aggregate by date
-                    const aggregated: { [key: string]: { name: string, views: number, inquiries: number } } = {}
-                    trendData?.forEach(item => {
-                        const dateStr = new Date(item.date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })
+                const trendData = body.chartData ?? []
+                if (trendData.length > 0) {
+                    const aggregated: {
+                        [key: string]: { name: string; views: number; inquiries: number }
+                    } = {}
+                    trendData.forEach((item) => {
+                        const dateStr = new Date(item.date).toLocaleDateString('ja-JP', {
+                            month: 'numeric',
+                            day: 'numeric',
+                        })
                         if (!aggregated[dateStr]) {
                             aggregated[dateStr] = { name: dateStr, views: 0, inquiries: 0 }
                         }
                         aggregated[dateStr].views += item.views || 0
                         aggregated[dateStr].inquiries += item.inquiries || 0
                     })
-
                     setChartData(Object.values(aggregated))
+                } else {
+                    setChartData(mockChartData)
                 }
-
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error('Error fetching agent insights:', error)
+                alert(getErrorMessage(error))
             } finally {
                 setLoading(false)
             }
@@ -169,18 +143,19 @@ export default function AgentInsights({ agentId }: { agentId: string }) {
                 }
             }
 
-            const { error } = await supabase
-                .from('profiles')
-                .update({
+            const res = await fetch(`/api/admin/agents/${agentId}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     is_verified: isVerified,
                     is_suspended: isSuspended,
-                    status: isSuspended ? 'suspended' : 'active',
                     admin_notes: adminNote,
-                })
-                .eq('id', agentId)
-
-            if (error) {
-                throw error
+                }),
+            })
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                throw new Error(body.error ?? res.statusText)
             }
 
             setAgentData((prev: any) =>

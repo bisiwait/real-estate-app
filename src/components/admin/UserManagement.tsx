@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAdminTablePagination } from '@/hooks/useAdminTablePagination'
 import AdminRowsPerPageSelect from '@/components/admin/AdminRowsPerPageSelect'
-import { createClient } from '@/lib/supabase/client'
 import {
     Users,
     Loader2,
@@ -86,7 +85,6 @@ export default function AdminUserManagement({
     const [resumeRestoringUi, setResumeRestoringUi] = useState(false)
     const [impersonateBusy, setImpersonateBusy] = useState<string | null>(null)
 
-    const supabase = createClient()
     const { userData, refreshUser } = useAuth()
     const router = useRouter()
     const isAdminUser = userData.isAdmin || userData.role === 'admin'
@@ -96,26 +94,19 @@ export default function AdminUserManagement({
         setLoading(true)
         setErrorMessage(null)
 
-        // Profilesを取得
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('updated_at', { ascending: false })
-
-        if (error) {
-            console.error('Fetch users error:', error)
-            setErrorMessage(getErrorMessage(error))
-        } else if (data) {
-            // 物件数を取得してマッピング
-            const usersWithStats = await Promise.all(data.map(async (user) => {
-                const { count } = await supabase
-                    .from('properties')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('user_id', user.id)
-
-                return { ...user, property_count: count || 0 }
-            }))
-            setUsers(usersWithStats)
+        try {
+            const res = await fetch('/api/admin/users', { credentials: 'include' })
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                setErrorMessage(body.error ?? res.statusText)
+                setUsers([])
+            } else {
+                const body = (await res.json()) as { users?: unknown[] }
+                setUsers(body.users ?? [])
+            }
+        } catch (err: unknown) {
+            console.error('Fetch users error:', err)
+            setErrorMessage(getErrorMessage(err))
         }
         setLoading(false)
     }
@@ -127,26 +118,19 @@ export default function AdminUserManagement({
     const handlePlanChange = async (userId: string, newPlan: string) => {
         setLoading(true)
         try {
-            const patch: Record<string, string | null> = {
-                plan: newPlan,
-                plan_type: newPlan,
+            const res = await fetch(`/api/admin/users/${userId}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan: newPlan, plan_type: newPlan }),
+            })
+            if (!res.ok) {
+                const body = (await res.json().catch(() => ({}))) as { error?: string }
+                throw new Error(body.error ?? res.statusText)
             }
-            if (newPlan === 'premium') {
-                // 手動でプレミアム復帰させる場合、期限切れ日時をクリアして即時有効化する
-                patch.current_period_end = null
-            }
-            const { error } = await supabase
-                .from('profiles')
-                .update(patch)
-                .eq('id', userId)
-
-            if (!error) {
-                await fetchUsers()
-                alert('プランを変更しました。')
-            } else {
-                throw error
-            }
-        } catch (err: any) {
+            await fetchUsers()
+            alert('プランを変更しました。')
+        } catch (err: unknown) {
             console.error('Plan update error:', err)
             alert(getErrorMessage(err))
         } finally {
