@@ -356,6 +356,7 @@
             "q": "フリーワード",
             "bathtub": "バスタブ",
             "pets": "ペット可",
+            "bedrooms": "ベッド数",
             "tags": "こだわり"
         }
     },
@@ -377,6 +378,13 @@
         "all_areas": "すべてのエリア",
         "property_type": "物件種別",
         "all_types": "すべての種別",
+        "bedrooms_filter": "ベッド数",
+        "all_bedrooms": "指定なし",
+        "bedroom_studio": "スタジオ",
+        "bedroom_1": "1ベッド",
+        "bedroom_2": "2ベッド",
+        "bedroom_3": "3ベッド",
+        "bedroom_4plus": "それ以上",
         "condo": "コンドミニアム",
         "house": "ヴィラ・一軒家",
         "townhouse": "タウンハウス",

@@ -4,7 +4,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useTransition, useMemo, u
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import PropertyCard from '@/components/property/PropertyCard'
 import { useSearchCount } from '@/contexts/SearchCountContext'
-import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves, Map } from 'lucide-react'
+import { ArrowDownWideNarrow, Filter, X, ChevronRight, Loader2, MapPin, Bath, Dog, SlidersHorizontal, Waves, Map, BedDouble } from 'lucide-react'
 import PriceRangeSlider from '@/components/ui/PriceRangeSlider'
 import SaveSearchButton from '@/components/property/SaveSearchButton'
 import PattayaAreaMap from '@/components/property/PattayaAreaMap'
@@ -16,6 +16,8 @@ import {
     parsePropertyListSort,
     PROPERTY_LIST_PAGE_SIZE,
     type PropertyListSort,
+    type BedroomFilterValue,
+    parseBedroomFilter,
 } from '@/lib/services/propertyListQuery'
 import { cn } from '@/lib/utils'
 
@@ -45,6 +47,7 @@ type FilterDraft = {
     type: string
     bathtub: boolean
     pets: boolean
+    bedrooms: BedroomFilterValue
 }
 
 /** トップヒーロー等は type=buy、一覧タブは sell で統一（大文字小文字も正規化） */
@@ -67,6 +70,7 @@ function draftFromSearchParams(sp: URLSearchParams): FilterDraft {
         type: normalizeListingTypeFromUrl(sp.get('type')),
         bathtub: sp.get('bathtub') === 'true',
         pets: sp.get('pets') === 'true',
+        bedrooms: parseBedroomFilter(sp.get('bedrooms')),
     }
 }
 
@@ -88,6 +92,7 @@ function buildSearchParamsFromDraft(d: FilterDraft, sortSource: URLSearchParams 
     if (d.type && d.type !== 'all') p.set('type', d.type)
     if (d.bathtub) p.set('bathtub', 'true')
     if (d.pets) p.set('pets', 'true')
+    if (d.bedrooms) p.set('bedrooms', d.bedrooms)
     if (sortSource) {
         const s = sortSource.get('sort')
         if (s === 'oldest' || s === 'price_asc' || s === 'price_desc') {
@@ -106,6 +111,7 @@ const EMPTY_DRAFT: FilterDraft = {
     type: 'all',
     bathtub: false,
     pets: false,
+    bedrooms: '',
 }
 
 type PropertiesClientProps = {
@@ -226,6 +232,7 @@ export default function PropertiesClient({
     const listingType = searchParams.get('type') || 'all'
     const bathtubFilter = searchParams.get('bathtub') === 'true'
     const petsFilter = searchParams.get('pets') === 'true'
+    const selectedBedrooms = parseBedroomFilter(searchParams.get('bedrooms'))
     const selectedPropertyType = searchParams.get('property_type') || ''
     const listSort = parsePropertyListSort(searchParams.get('sort'))
     const priceSortEnabled = isPropertyListPriceSortAllowed(listingType)
@@ -456,7 +463,7 @@ export default function PropertiesClient({
             return
         }
         fetchProperties()
-    }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, listingType, bathtubFilter, petsFilter, listSort])
+    }, [selectedCity, selectedArea, selectedPropertyType, selectedPrice, tagsRaw, listingType, bathtubFilter, petsFilter, selectedBedrooms, listSort])
 
     /** SSR/ISR の初回データのあと、バックグラウンドで最新一覧を取得（掲載終了の反映遅延を防ぐ） */
     useEffect(() => {
@@ -478,6 +485,7 @@ export default function PropertiesClient({
         draft.area,
         draft.property_type,
         draft.price,
+        draft.bedrooms,
         draft.bathtub,
         draft.pets,
         draft.tags.length > 0,
@@ -682,6 +690,32 @@ export default function PropertiesClient({
                 </select>
             </div>
 
+            <div>
+                <h3 className="text-xs font-bold text-navy-primary uppercase tracking-widest mb-4 flex items-center">
+                    <BedDouble className="w-3 h-3 mr-2" />
+                    {dict.property.bedrooms_filter}
+                </h3>
+                <select
+                    id="filter-bedrooms-select"
+                    aria-label={dict.property.bedrooms_filter}
+                    className={selectFieldClass}
+                    value={draft.bedrooms}
+                    onChange={(e) =>
+                        setDraft((d) => ({
+                            ...d,
+                            bedrooms: parseBedroomFilter(e.target.value),
+                        }))
+                    }
+                >
+                    <option value="">{dict.property.all_bedrooms}</option>
+                    <option value="0">{dict.property.bedroom_studio}</option>
+                    <option value="1">{dict.property.bedroom_1}</option>
+                    <option value="2">{dict.property.bedroom_2}</option>
+                    <option value="3">{dict.property.bedroom_3}</option>
+                    <option value="4plus">{dict.property.bedroom_4plus}</option>
+                </select>
+            </div>
+
             {draft.type !== 'all' && (
                 <div>
                     <div className="flex items-center justify-between mb-4">
@@ -730,6 +764,7 @@ export default function PropertiesClient({
             {(draft.area ||
                 draft.property_type ||
                 draft.price ||
+                draft.bedrooms ||
                 draft.tags.length > 0 ||
                 draft.bathtub ||
                 draft.pets) && (

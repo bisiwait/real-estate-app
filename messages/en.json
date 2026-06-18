@@ -304,6 +304,7 @@
             "q": "Search",
             "bathtub": "Bathtub",
             "pets": "Pets",
+            "bedrooms": "Bedrooms",
             "tags": "Features"
         }
     },
@@ -325,6 +326,13 @@
         "all_areas": "All Areas",
         "property_type": "Property Type",
         "all_types": "All Types",
+        "bedrooms_filter": "Bedrooms",
+        "all_bedrooms": "Any",
+        "bedroom_studio": "Studio",
+        "bedroom_1": "1 bed",
+        "bedroom_2": "2 beds",
+        "bedroom_3": "3 beds",
+        "bedroom_4plus": "4+ beds",
         "condo": "Condominium",
         "house": "Villa / House",
         "townhouse": "Townhouse",

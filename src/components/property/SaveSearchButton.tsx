@@ -37,7 +37,7 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
     const currentFilters = useMemo(() => {
         const filters: Record<string, string> = {};
         // Use a stable set of keys for search criteria
-        const essentialKeys = ["region", "area", "price", "type", "property_type", "tags", "bathtub", "pets", "sort"];
+        const essentialKeys = ["region", "area", "price", "type", "property_type", "bedrooms", "tags", "bathtub", "pets", "sort"];
         essentialKeys.sort().forEach(key => {
             const value = searchParams.get(key);
             if (value && value !== "all") {
@@ -124,6 +124,7 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
         const tagsParam = searchParams.get("tags");
         const bathtub = searchParams.get("bathtub");
         const pets = searchParams.get("pets");
+        const bedrooms = searchParams.get("bedrooms");
 
         if (region) filters.push({ label: dict.labels.filters.region, value: region });
         if (area) filters.push({ label: dict.labels.filters.area, value: area });
@@ -155,6 +156,19 @@ export default function SaveSearchButton({ dict, variant = "default", fullWidth 
         }
         if (pets === "true") {
             filters.push({ label: dict.labels.filters.pets, value: dict.property.pets });
+        }
+        if (bedrooms) {
+            const bedroomLabels: Record<string, string> = {
+                "0": dict.property.bedroom_studio,
+                "1": dict.property.bedroom_1,
+                "2": dict.property.bedroom_2,
+                "3": dict.property.bedroom_3,
+                "4plus": dict.property.bedroom_4plus,
+            };
+            filters.push({
+                label: dict.labels.filters.bedrooms,
+                value: bedroomLabels[bedrooms] || bedrooms,
+            });
         }
         if (tagsParam) {
             tagsParam.split(",").filter(Boolean).forEach((tag) => {

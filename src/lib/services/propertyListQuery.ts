@@ -19,7 +19,17 @@ export type PropertyListFilters = {
     listingType: string
     bathtubFilter: boolean
     petsFilter: boolean
+    selectedBedrooms: BedroomFilterValue
     sort: PropertyListSort
+}
+
+/** URL `bedrooms` パラメータ（0=スタジオ, 4plus=4ベッド以上） */
+export type BedroomFilterValue = '' | '0' | '1' | '2' | '3' | '4plus'
+
+export function parseBedroomFilter(raw: string | null | undefined): BedroomFilterValue {
+    const t = (raw ?? '').trim()
+    if (t === '0' || t === '1' || t === '2' || t === '3' || t === '4plus') return t
+    return ''
 }
 
 function firstParam(v: string | string[] | undefined): string {
@@ -55,6 +65,7 @@ export function parsePropertyListFiltersFromSearchParams(
         listingType: firstParam(sp.type) || 'all',
         bathtubFilter: firstParam(sp.bathtub) === 'true',
         petsFilter: firstParam(sp.pets) === 'true',
+        selectedBedrooms: parseBedroomFilter(firstParam(sp.bedrooms)),
         sort: parsePropertyListSort(firstParam(sp.sort)),
     }
 }
@@ -71,6 +82,7 @@ export function parsePropertyListFiltersFromURLSearchParams(searchParams: URLSea
         listingType: searchParams.get('type') || 'all',
         bathtubFilter: searchParams.get('bathtub') === 'true',
         petsFilter: searchParams.get('pets') === 'true',
+        selectedBedrooms: parseBedroomFilter(searchParams.get('bedrooms')),
         sort: parsePropertyListSort(searchParams.get('sort')),
     }
 }
@@ -88,6 +100,7 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
         listingType,
         bathtubFilter,
         petsFilter,
+        selectedBedrooms,
     } = filters
 
     let query = supabase
@@ -120,6 +133,18 @@ export function buildFilteredPropertiesQuery(supabase: SupabaseClient, filters: 
 
     if (bathtubFilter) query = query.eq('has_bathtub', true)
     if (petsFilter) query = query.eq('allows_pets', true)
+
+    if (selectedBedrooms === '0') {
+        query = query.eq('bedrooms', 0)
+    } else if (selectedBedrooms === '1') {
+        query = query.eq('bedrooms', 1)
+    } else if (selectedBedrooms === '2') {
+        query = query.eq('bedrooms', 2)
+    } else if (selectedBedrooms === '3') {
+        query = query.eq('bedrooms', 3)
+    } else if (selectedBedrooms === '4plus') {
+        query = query.gte('bedrooms', 4)
+    }
 
     if (listingType === 'rent') {
         query = query.eq('is_for_rent', true).eq('is_presale', false)
