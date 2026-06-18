@@ -473,6 +473,8 @@
         "sale_price_label": "Sale Price",
         "property_type_label": "Property Type",
         "area_size_label": "Size",
+        "price_per_sqm_label": "Price per sqm",
+        "price_per_sqm_rent_suffix": "/ mo",
         "floor_layout_label": "Floor/Layout",
         "bathrooms_label": "Bathrooms",
         "bedrooms_label": "Bedrooms",

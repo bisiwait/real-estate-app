@@ -472,6 +472,8 @@
         "sale_price_label": "ราคาขาย",
         "property_type_label": "ประเภทอสังหาฯ",
         "area_size_label": "ขนาดพื้นที่",
+        "price_per_sqm_label": "ราคาต่อ ตร.ม.",
+        "price_per_sqm_rent_suffix": "/ เดือน",
         "floor_layout_label": "ชั้น / รูปแบบห้อง",
         "bathrooms_label": "ห้องน้ำ",
         "bedrooms_label": "ห้องนอน",

@@ -1,6 +1,6 @@
 "use client";
 import { useParams, usePathname } from 'next/navigation'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { useAuth } from '@/contexts/AuthContext'
@@ -430,6 +430,31 @@ export default function PropertyDetailClient({
         (f: string) => typeof f === 'string' && f.trim().length > 0
     )
 
+    const sqmNum = Number(property.sqm)
+    const hasSqm = Number.isFinite(sqmNum) && sqmNum > 0
+    const rentPerSqm =
+        hasSqm && property.is_for_rent && property.rent_price != null
+            ? Math.round(Number(property.rent_price) / sqmNum)
+            : null
+    const salePerSqm =
+        hasSqm && property.is_for_sale && property.sale_price != null
+            ? Math.round(Number(property.sale_price) / sqmNum)
+            : null
+    const pricePerSqmValue =
+        rentPerSqm == null && salePerSqm == null ? (
+            '-'
+        ) : (
+            <span className="flex flex-col gap-0.5">
+                {rentPerSqm != null ? (
+                    <span>
+                        {rentPerSqm.toLocaleString()} ฿/㎡{' '}
+                        <span className="text-[10px] text-slate-400">{dict.property.price_per_sqm_rent_suffix}</span>
+                    </span>
+                ) : null}
+                {salePerSqm != null ? <span>{salePerSqm.toLocaleString()} ฿/㎡</span> : null}
+            </span>
+        )
+
     return (
         <div className="bg-slate-50 min-h-screen pb-20 font-sans tracking-normal">
             <ContactAuthRequiredModal
@@ -503,9 +528,10 @@ export default function PropertyDetailClient({
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                                 <DetailBox label={dict.property.property_type_label} value={property.property_type} icon={Building2} />
                                 <DetailBox label={dict.property.area_size_label} value={`${property.sqm} ㎡`} icon={Maximize2} />
+                                <DetailBox label={dict.property.price_per_sqm_label} value={pricePerSqmValue} icon={CircleDollarSign} />
                                 <DetailBox label={dict.property.floor_layout_label} value={`${property.floor}F / ${property.bedrooms}BR`} icon={Layers} />
                                 <DetailBox label={dict.property.bathrooms_label} value={property.bathrooms || '1'} icon={Bath} />
                             </div>
@@ -612,7 +638,7 @@ export default function PropertyDetailClient({
     )
 }
 
-function DetailBox({ label, value, icon: Icon }: any) {
+function DetailBox({ label, value, icon: Icon }: { label: string; value: ReactNode; icon: any }) {
     return (
         <div className="bg-[#F8FAFF] rounded-2xl p-5 flex flex-col gap-2 border border-blue-100/50">
             <span className="text-[10px] font-normal text-slate-400 uppercase tracking-widest">{label}</span>
