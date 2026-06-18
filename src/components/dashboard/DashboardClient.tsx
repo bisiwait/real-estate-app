@@ -228,33 +228,36 @@ export default function DashboardClient({
                     />
                 ) : tab === 'properties' ? (
                     <>
-                        <div className="p-4 sm:p-8 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex flex-col gap-2">
-                                <h3 className="text-lg sm:text-xl font-black text-navy-secondary">{dict.property_list_title}</h3>
-                                <BulkConfirmButton
-                                    dict={dict}
-                                    propertyIds={liveFiltered
-                                        .filter((p) => p.status === 'published')
-                                        .map((p) => p.id)}
-                                />
+                        <div className="border-b border-slate-200 p-4 sm:p-8">
+                            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="min-w-0 flex flex-col gap-2">
+                                    <h3 className="text-lg sm:text-xl font-black text-navy-secondary">{dict.property_list_title}</h3>
+                                    <BulkConfirmButton
+                                        dict={dict}
+                                        propertyIds={liveFiltered
+                                            .filter((p) => p.status === 'published')
+                                            .map((p) => p.id)}
+                                    />
+                                </div>
+                                <p className="shrink-0 text-xs font-bold text-slate-400 sm:pt-1">
+                                    {dict.display_count
+                                        .replace('{shown}', String(filteredProperties.length))
+                                        .replace('{total}', String(stats.total))}
+                                </p>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                <div className="grid grid-cols-4 sm:flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-full sm:w-auto">
-                                    <button onClick={() => setFilter('all')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'all' ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'}`}>{dict.filter_all}</button>
-                                    <button onClick={() => setFilter('rent')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'rent' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>{dict.filter_rent}</button>
-                                    <button onClick={() => setFilter('sale')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'sale' ? 'bg-white shadow-sm text-orange-600' : 'text-slate-500 hover:text-orange-600'}`}>{dict.filter_sale}</button>
-                                    <button onClick={() => setFilter('presale')} className={`whitespace-nowrap px-2 sm:px-6 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'presale' ? 'bg-amber-500 shadow-sm text-white' : 'text-slate-500 hover:text-amber-600'}`}>{dict.filter_presale}</button>
+
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch lg:justify-between">
+                                <div className="grid min-w-0 w-full grid-cols-4 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 lg:max-w-xl lg:flex-1">
+                                    <button onClick={() => setFilter('all')} className={`whitespace-nowrap px-2 sm:px-4 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'all' ? 'bg-white shadow-sm text-navy-primary' : 'text-slate-500 hover:text-navy-primary'}`}>{dict.filter_all}</button>
+                                    <button onClick={() => setFilter('rent')} className={`whitespace-nowrap px-2 sm:px-4 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'rent' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-indigo-600'}`}>{dict.filter_rent}</button>
+                                    <button onClick={() => setFilter('sale')} className={`whitespace-nowrap px-2 sm:px-4 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'sale' ? 'bg-white shadow-sm text-orange-600' : 'text-slate-500 hover:text-orange-600'}`}>{dict.filter_sale}</button>
+                                    <button onClick={() => setFilter('presale')} className={`whitespace-nowrap px-2 sm:px-4 py-2 text-[10px] sm:text-xs font-bold rounded-lg transition-all flex items-center justify-center ${filter === 'presale' ? 'bg-amber-500 shadow-sm text-white' : 'text-slate-500 hover:text-amber-600'}`}>{dict.filter_presale}</button>
                                 </div>
 
-                                <div className="w-full sm:w-36">
+                                <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:shrink-0 lg:grid-cols-[9.5rem_11.5rem]">
                                     <StatusFilter filter={filter} status={status} onChange={(newStatus: string) => setStatus(newStatus)} dict={dict} />
-                                </div>
-
-                                <div className="w-full sm:w-44">
-                                    <label htmlFor="dashboard-property-sort" className="sr-only">
-                                        {dict.sort_label}
-                                    </label>
-                                    <div className="relative">
+                                    <label htmlFor="dashboard-property-sort" className="relative block min-w-0 w-full">
+                                        <span className="sr-only">{dict.sort_label}</span>
                                         <ArrowDownWideNarrow
                                             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
                                             aria-hidden
@@ -263,7 +266,7 @@ export default function DashboardClient({
                                             id="dashboard-property-sort"
                                             value={sort}
                                             onChange={(e) => setSort(e.target.value as AgentDashboardPropertySort)}
-                                            className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs font-bold text-navy-secondary shadow-sm focus:border-navy-primary focus:outline-none focus:ring-2 focus:ring-navy-primary/20"
+                                            className="w-full min-w-0 appearance-none truncate rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs font-bold text-navy-secondary shadow-sm focus:border-navy-primary focus:outline-none focus:ring-2 focus:ring-navy-primary/20"
                                             aria-label={dict.sort_label}
                                         >
                                             <option value="newest">{dict.sort_newest}</option>
@@ -275,10 +278,14 @@ export default function DashboardClient({
                                                 {dict.sort_price_desc}
                                             </option>
                                         </select>
-                                    </div>
+                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                                            <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden>
+                                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                            </svg>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
-                            <span className="text-xs font-bold text-slate-400 whitespace-nowrap">{dict.display_count.replace('{shown}', String(filteredProperties.length)).replace('{total}', String(stats.total))}</span>
                         </div>
 
                         {filteredProperties.length > 0 ? (
