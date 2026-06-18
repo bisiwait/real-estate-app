@@ -12,6 +12,7 @@ const AgentOtherProperties = dynamic(() => import('@/components/agent/AgentOther
 const InquiryForm = dynamic(() => import('@/components/property/InquiryForm'), { ssr: false })
 
 import PropertyDescription from '@/components/property/PropertyDescription'
+import MortgageSimulator from '@/components/property/MortgageSimulator'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
@@ -417,6 +418,10 @@ export default function PropertyDetailClient({
     }
 
     const priceValue = property.is_for_rent ? property.rent_price : property.sale_price;
+    const showSaleMortgageSimulator =
+        property.is_for_sale === true &&
+        !property.is_presale &&
+        Number(property.sale_price) > 0
     const translateTag = (tag: string) => (dict.property?.tags as any)?.[tag] || tag;
     const translateArea = (areaName: string) => (dict.property?.db_locations as any)?.[areaName] || areaName;
 
@@ -457,12 +462,43 @@ export default function PropertyDetailClient({
                                             <div className="flex items-center gap-2"><RefreshCw className="w-4 h-4 text-slate-300" /> {dict.property.listing_date_label}: {new Date(property.created_at).toLocaleDateString('ja-JP')}</div>
                                         </div>
                                     </div>
-                                    <div className="lg:text-right flex flex-col lg:items-end shrink-0">
-                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">{dict.property.rent_label} / 月</span>
-                                        <div className="flex items-baseline gap-1.5">
-                                            <span className="text-[36px] font-normal text-[#1A2B56] tabular-nums leading-none tracking-tight">{priceValue?.toLocaleString()}</span>
-                                            <span className="text-sm font-normal text-slate-400 uppercase">THB</span>
-                                        </div>
+                                    <div className="lg:text-right flex flex-col lg:items-end shrink-0 gap-4">
+                                        {property.is_for_rent && property.rent_price != null ? (
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 block">
+                                                    {dict.property.rent_label}
+                                                </span>
+                                                <div className="flex items-baseline gap-1.5 justify-end">
+                                                    <span className="text-[36px] font-normal text-[#1A2B56] tabular-nums leading-none tracking-tight">
+                                                        {Number(property.rent_price).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-sm font-normal text-slate-400 uppercase">{dict.property.per_month}</span>
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                        {property.is_for_sale && property.sale_price != null ? (
+                                            <div>
+                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5 block">
+                                                    {dict.property.sale_label}
+                                                </span>
+                                                <div className="flex items-baseline gap-1.5 justify-end">
+                                                    <span className="text-[36px] font-normal text-[#1A2B56] tabular-nums leading-none tracking-tight">
+                                                        {Number(property.sale_price).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-sm font-normal text-slate-400 uppercase">THB</span>
+                                                </div>
+                                            </div>
+                                        ) : null}
+                                        {!property.is_for_rent && !property.is_for_sale && priceValue != null ? (
+                                            <div>
+                                                <div className="flex items-baseline gap-1.5 justify-end">
+                                                    <span className="text-[36px] font-normal text-[#1A2B56] tabular-nums leading-none tracking-tight">
+                                                        {Number(priceValue).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-sm font-normal text-slate-400 uppercase">THB</span>
+                                                </div>
+                                            </div>
+                                        ) : null}
                                     </div>
                                 </div>
                             </div>
@@ -474,7 +510,15 @@ export default function PropertyDetailClient({
                                 <DetailBox label={dict.property.bathrooms_label} value={property.bathrooms || '1'} icon={Bath} />
                             </div>
                         </div>
- 
+
+                        {showSaleMortgageSimulator ? (
+                            <MortgageSimulator
+                                salePrice={Number(property.sale_price)}
+                                dict={dict.property}
+                                locale={locale}
+                            />
+                        ) : null}
+
                         <PropertyDescription description={property.description} descriptionEn={property.description_en} descriptionTh={property.description_th} dict={dict} activeLang={activeLang} setActiveLang={setActiveLang} isPremium={viewerHasPremium} />
 
                         {amenityTags.length > 0 ? (
