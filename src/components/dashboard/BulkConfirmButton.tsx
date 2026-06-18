@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 interface BulkConfirmButtonProps {
     propertyIds: string[]
     dict: any
+    className?: string
 }
 
 async function refreshListings(propertyIds: string[]) {
@@ -20,7 +21,7 @@ async function refreshListings(propertyIds: string[]) {
     return { ok: res.ok, error: body.error ?? res.statusText }
 }
 
-export default function BulkConfirmButton({ propertyIds, dict }: BulkConfirmButtonProps) {
+export default function BulkConfirmButton({ propertyIds, dict, className }: BulkConfirmButtonProps) {
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
     const router = useRouter()
@@ -64,10 +65,10 @@ export default function BulkConfirmButton({ propertyIds, dict }: BulkConfirmButt
         <button
             onClick={handleBulkConfirm}
             disabled={loading || status === 'success'}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-black text-xs transition-all shadow-lg hover:shadow-xl active:scale-95 ${status === 'success'
+            className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-black text-xs transition-all shadow-lg hover:shadow-xl active:scale-95 ${status === 'success'
                 ? 'bg-emerald-500 text-white'
                 : 'bg-navy-primary text-white hover:bg-navy-secondary'
-                }`}
+                } ${className ?? ''}`}
         >
             {status === 'loading' ? (
                 <Loader2 size={14} className="animate-spin" />

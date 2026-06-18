@@ -229,17 +229,20 @@ export default function DashboardClient({
                 ) : tab === 'properties' ? (
                     <>
                         <div className="border-b border-slate-200 p-4 sm:p-8">
-                            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="min-w-0 flex flex-col gap-2">
-                                    <h3 className="text-lg sm:text-xl font-black text-navy-secondary">{dict.property_list_title}</h3>
+                            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:gap-4">
+                                    <h3 className="shrink-0 text-lg sm:text-xl font-black text-navy-secondary">
+                                        {dict.property_list_title}
+                                    </h3>
                                     <BulkConfirmButton
                                         dict={dict}
+                                        className="shrink-0"
                                         propertyIds={liveFiltered
                                             .filter((p) => p.status === 'published')
                                             .map((p) => p.id)}
                                     />
                                 </div>
-                                <p className="shrink-0 text-xs font-bold text-slate-400 sm:pt-1">
+                                <p className="shrink-0 text-xs font-bold text-slate-400">
                                     {dict.display_count
                                         .replace('{shown}', String(filteredProperties.length))
                                         .replace('{total}', String(stats.total))}
