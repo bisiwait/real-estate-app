@@ -511,14 +511,6 @@ export default function PropertyDetailClient({
                             </div>
                         </div>
 
-                        {showSaleMortgageSimulator ? (
-                            <MortgageSimulator
-                                salePrice={Number(property.sale_price)}
-                                dict={dict.property}
-                                locale={locale}
-                            />
-                        ) : null}
-
                         <PropertyDescription description={property.description} descriptionEn={property.description_en} descriptionTh={property.description_th} dict={dict} activeLang={activeLang} setActiveLang={setActiveLang} isPremium={viewerHasPremium} />
 
                         {amenityTags.length > 0 ? (
@@ -557,6 +549,14 @@ export default function PropertyDetailClient({
                                 <MapPin className="h-4 w-4" /> {dict.property.view_on_google_maps}
                             </a>
                         </div>
+
+                        {showSaleMortgageSimulator ? (
+                            <MortgageSimulator
+                                salePrice={Number(property.sale_price)}
+                                dict={dict.property}
+                                locale={locale}
+                            />
+                        ) : null}
                     </div>
 
                     <div className="lg:col-span-4 space-y-6">
