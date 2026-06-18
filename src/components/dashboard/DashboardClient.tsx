@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, Fragment } from 'react'
-import { Building2, Mail, Users, PlusCircle, UserCircle } from 'lucide-react'
+import React, { useState, useEffect, useCallback, Fragment, useMemo } from 'react'
+import { Building2, Mail, Users, PlusCircle, UserCircle, ArrowDownWideNarrow } from 'lucide-react'
 import Link from 'next/link'
 import LeadsView from '@/components/dashboard/LeadsView'
 import BulkConfirmButton from '@/components/dashboard/BulkConfirmButton'
@@ -13,6 +13,11 @@ import {
     DashboardMobilePropertyRow,
     DashboardDesktopPropertyRow,
 } from '@/components/dashboard/DashboardPropertyRows'
+import {
+    isAgentDashboardPriceSortAllowed,
+    sortAgentDashboardProperties,
+    type AgentDashboardPropertySort,
+} from '@/lib/dashboard/sort-agent-properties'
 
 const SITE_VISIBLE_STATUSES = ['published'] as const
 
@@ -55,6 +60,7 @@ export default function DashboardClient({
     const [tab, setTab] = useState(initialTab)
     const [filter, setFilter] = useState(initialFilter)
     const [status, setStatus] = useState(initialStatus)
+    const [sort, setSort] = useState<AgentDashboardPropertySort>('newest')
     const [properties, setProperties] = useState(initialProperties)
     const [inquiries] = useState(initialInquiries)
     const [leads] = useState(initialLeads || [])
@@ -67,24 +73,30 @@ export default function DashboardClient({
         setProperties((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
     }, [])
 
-    // フィルタリング処理（クライアント側で行う）
-    const getFilteredProperties = () => {
+    const priceSortEnabled = isAgentDashboardPriceSortAllowed(filter)
+
+    useEffect(() => {
+        if (!priceSortEnabled && (sort === 'price_asc' || sort === 'price_desc')) {
+            setSort('newest')
+        }
+    }, [priceSortEnabled, sort])
+
+    const filteredProperties = useMemo(() => {
         let filtered = properties || []
         if (filter === 'rent') {
-            filtered = filtered.filter(p => p.is_for_rent && !p.is_presale)
+            filtered = filtered.filter((p) => p.is_for_rent && !p.is_presale)
         } else if (filter === 'sale') {
-            filtered = filtered.filter(p => p.is_for_sale && !p.is_presale)
+            filtered = filtered.filter((p) => p.is_for_sale && !p.is_presale)
         } else if (filter === 'presale') {
-            filtered = filtered.filter(p => p.is_presale)
+            filtered = filtered.filter((p) => p.is_presale)
         }
 
         if (status !== 'all') {
-            filtered = filtered.filter(p => p.status === status)
+            filtered = filtered.filter((p) => p.status === status)
         }
-        return filtered
-    }
 
-    const filteredProperties = getFilteredProperties()
+        return sortAgentDashboardProperties(filtered, sort, filter)
+    }, [properties, filter, status, sort])
     const liveFiltered = filteredProperties.filter((p) =>
         SITE_VISIBLE_STATUSES.includes(p.status as (typeof SITE_VISIBLE_STATUSES)[number])
     )
@@ -236,6 +248,34 @@ export default function DashboardClient({
 
                                 <div className="w-full sm:w-36">
                                     <StatusFilter filter={filter} status={status} onChange={(newStatus: string) => setStatus(newStatus)} dict={dict} />
+                                </div>
+
+                                <div className="w-full sm:w-44">
+                                    <label htmlFor="dashboard-property-sort" className="sr-only">
+                                        {dict.sort_label}
+                                    </label>
+                                    <div className="relative">
+                                        <ArrowDownWideNarrow
+                                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                                            aria-hidden
+                                        />
+                                        <select
+                                            id="dashboard-property-sort"
+                                            value={sort}
+                                            onChange={(e) => setSort(e.target.value as AgentDashboardPropertySort)}
+                                            className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs font-bold text-navy-secondary shadow-sm focus:border-navy-primary focus:outline-none focus:ring-2 focus:ring-navy-primary/20"
+                                            aria-label={dict.sort_label}
+                                        >
+                                            <option value="newest">{dict.sort_newest}</option>
+                                            <option value="oldest">{dict.sort_oldest}</option>
+                                            <option value="price_asc" disabled={!priceSortEnabled}>
+                                                {dict.sort_price_asc}
+                                            </option>
+                                            <option value="price_desc" disabled={!priceSortEnabled}>
+                                                {dict.sort_price_desc}
+                                            </option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <span className="text-xs font-bold text-slate-400 whitespace-nowrap">{dict.display_count.replace('{shown}', String(filteredProperties.length)).replace('{total}', String(stats.total))}</span>
