@@ -5,6 +5,11 @@ import {
     resolveProjectCoords,
     type PropertyMapPoint,
 } from '@/lib/property-map-coords'
+import {
+    hasCompleteParsedCoords,
+    normalizeStoredMapsShareUrl,
+    parseResolvedGoogleMapsUrl,
+} from '@/lib/google-maps-parse'
 
 /** 物件詳細の掲載者（エージェント）公開プロフィール */
 export type PublicListingOwnerProfile = {
@@ -173,7 +178,7 @@ export async function fetchNearbyPropertiesForMap(
 
     const { data: projects, error: projectError } = await supabase
         .from('projects')
-        .select('id, latitude, longitude')
+        .select('id, latitude, longitude, google_maps_share_url')
         .gte('latitude', minLat)
         .lte('latitude', maxLat)
         .gte('longitude', minLng)
@@ -188,7 +193,18 @@ export async function fetchNearbyPropertiesForMap(
 
     const projectCoords = new Map<string, { lat: number; lng: number }>()
     for (const row of projects ?? []) {
-        const coords = resolveProjectCoords(row)
+        let coords = resolveProjectCoords(row)
+        if (!coords) {
+            const share = normalizeStoredMapsShareUrl(
+                typeof row.google_maps_share_url === 'string' ? row.google_maps_share_url : null
+            )
+            if (share) {
+                const parsed = parseResolvedGoogleMapsUrl(share)
+                if (hasCompleteParsedCoords(parsed)) {
+                    coords = { lat: parsed.latitude!, lng: parsed.longitude! }
+                }
+            }
+        }
         if (!coords) continue
         if (haversineDistanceKm(centerLat, centerLng, coords.lat, coords.lng) > radiusKm) continue
         projectCoords.set(row.id as string, coords)

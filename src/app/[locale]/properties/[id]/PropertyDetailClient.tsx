@@ -10,7 +10,12 @@ const PropertyGallery = dynamic(() => import('@/components/property/PropertyGall
 const RelatedProperties = dynamic(() => import('@/components/property/RelatedProperties'), { ssr: false })
 const AgentOtherProperties = dynamic(() => import('@/components/agent/AgentOtherProperties'), { ssr: false })
 const InquiryForm = dynamic(() => import('@/components/property/InquiryForm'), { ssr: false })
-const PropertyNearbyMap = dynamic(() => import('@/components/property/PropertyNearbyMap'), { ssr: false })
+const PropertyNearbyMap = dynamic(() => import('@/components/property/PropertyNearbyMap'), {
+    ssr: false,
+    loading: () => (
+        <div className="h-[320px] w-full animate-pulse rounded-2xl bg-slate-100 md:h-[420px]" />
+    ),
+})
 
 import PropertyDescription from '@/components/property/PropertyDescription'
 import MortgageSimulator from '@/components/property/MortgageSimulator'
@@ -74,6 +79,7 @@ interface PropertyDetailClientProps {
     initialRelatedProperties?: any[]
     initialAgentOtherProperties?: any[]
     initialNearbyMapProperties?: PropertyMapPoint[]
+    initialMapCenter?: PropertyMapPoint | null
     officialLineAddFriendUrl: string
     /** 物件詳細の正規 URL（サーバー推定）。クライアントでは window.location.href で上書き */
     propertyDetailPageUrl: string
@@ -91,6 +97,7 @@ export default function PropertyDetailClient({
     initialRelatedProperties = [],
     initialAgentOtherProperties = [],
     initialNearbyMapProperties = [],
+    initialMapCenter = null,
     officialLineAddFriendUrl,
     propertyDetailPageUrl,
     initialListingOwnerPhone,
@@ -376,10 +383,10 @@ export default function PropertyDetailClient({
         ]
     )
 
-    const mapCenter = useMemo(
-        () => (property ? toPropertyMapPoint(property, locale) : null),
-        [property, locale]
-    )
+    const mapCenter = useMemo(() => {
+        if (initialMapCenter) return initialMapCenter
+        return property ? toPropertyMapPoint(property, locale) : null
+    }, [initialMapCenter, property, locale])
 
     const phoneForDisplay = useMemo(() => {
         if (liveInquiry?.listingPhoneForTel) return liveInquiry.listingPhoneForTel.trim()

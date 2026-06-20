@@ -20,6 +20,7 @@ function FitMapBounds({ points }: { points: [number, number][] }) {
 
     useEffect(() => {
         if (points.length === 0) return
+        map.invalidateSize()
         if (points.length === 1) {
             map.setView(points[0], 15)
             return
@@ -56,12 +57,16 @@ export default function PropertyNearbyMap({
     )
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
+        <div
+            className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
+            style={{ height: '320px', width: '100%' }}
+        >
             <MapContainer
                 center={[center.lat, center.lng]}
                 zoom={15}
                 scrollWheelZoom={false}
-                className="h-[320px] w-full md:h-[420px] z-0"
+                style={{ height: '100%', width: '100%' }}
+                className="z-0"
             >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
