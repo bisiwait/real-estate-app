@@ -104,7 +104,7 @@ export default function PropertyNearbyMap({
     addTileLayer(map, locale)
 
     L.marker([center.lat, center.lng], {
-      icon: createMarkerIcon('#2A4076', 32),
+      icon: createMarkerIcon('#DC2626', 32),
       zIndexOffset: 1000,
     })
       .addTo(map)
