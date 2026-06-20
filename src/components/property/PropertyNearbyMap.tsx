@@ -1,12 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import L from 'leaflet'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useEffect, useRef, useState } from 'react'
+import { ensureGoogleMapsScript } from '@/lib/google-maps-browser-loader'
 import { resolvePropertyMapTitle, type PropertyMapPoint } from '@/lib/property-map-coords'
-import { getPropertyMapTileLayer } from '@/lib/property-map-tiles'
 
 type PropertyNearbyMapProps = {
     center: PropertyMapPoint
@@ -15,6 +11,8 @@ type PropertyNearbyMapProps = {
     currentLabel: string
     viewDetailLabel: string
 }
+
+const PROPERTY_CENTER_ZOOM = 16
 
 function isValidCoord(lat: unknown, lng: unknown): lat is number {
     return (
@@ -29,30 +27,20 @@ function isValidCoord(lat: unknown, lng: unknown): lat is number {
     )
 }
 
-function FitMapBounds({ points }: { points: [number, number][] }) {
-    const map = useMap()
-
-    useEffect(() => {
-        if (points.length === 0) return
-        map.invalidateSize()
-        if (points.length === 1) {
-            map.setView(points[0], 15)
-            return
-        }
-        map.fitBounds(L.latLngBounds(points), { padding: [48, 48], maxZoom: 16 })
-    }, [map, points])
-
-    return null
+function markerSymbol(color: string, scale: number): google.maps.Symbol {
+    return {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+        scale,
+    }
 }
 
-function createMarkerIcon(fill: string, size = 28) {
-    return L.divIcon({
-        className: '',
-        html: `<div style="width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;background:${fill};border:2px solid #fff;box-shadow:0 4px 12px rgba(15,23,42,0.35);transform:rotate(-45deg);"></div>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size],
-        popupAnchor: [0, -size + 4],
-    })
+function focusMapOnProperty(map: google.maps.Map, lat: number, lng: number) {
+    map.setCenter({ lat, lng })
+    map.setZoom(PROPERTY_CENTER_ZOOM)
 }
 
 export default function PropertyNearbyMap({
@@ -62,28 +50,126 @@ export default function PropertyNearbyMap({
     currentLabel,
     viewDetailLabel,
 }: PropertyNearbyMapProps) {
-    const [mounted, setMounted] = useState(false)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [loadError, setLoadError] = useState(false)
 
     useEffect(() => {
-        setMounted(true)
-    }, [])
+        if (!isValidCoord(center.lat, center.lng) || !containerRef.current) return
 
-    const currentMarkerIcon = useMemo(() => createMarkerIcon('#2A4076', 32), [])
-    const nearbyMarkerIcon = useMemo(() => createMarkerIcon('#64748B', 24), [])
+        let cancelled = false
+        const markers: google.maps.Marker[] = []
+        const infoWindows: google.maps.InfoWindow[] = []
+        let map: google.maps.Map | null = null
+        let resizeObserver: ResizeObserver | null = null
 
-    const allPoints = useMemo<[number, number][]>(
-        () => [[center.lat, center.lng], ...nearby.map((item) => [item.lat, item.lng] as [number, number])],
-        [center.lat, center.lng, nearby]
-    )
+        const run = async () => {
+            try {
+                await ensureGoogleMapsScript(locale)
+                if (cancelled || !containerRef.current) return
 
-    const tileLayer = useMemo(() => getPropertyMapTileLayer(locale), [locale])
+                map = new google.maps.Map(containerRef.current, {
+                    center: { lat: center.lat, lng: center.lng },
+                    zoom: PROPERTY_CENTER_ZOOM,
+                    scrollwheel: false,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: true,
+                })
 
-    if (!mounted || !isValidCoord(center.lat, center.lng)) {
+                const recenter = () => {
+                    if (!map) return
+                    focusMapOnProperty(map, center.lat, center.lng)
+                }
+
+                recenter()
+                google.maps.event.addListenerOnce(map, 'idle', recenter)
+
+                if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+                    resizeObserver = new ResizeObserver(() => recenter())
+                    resizeObserver.observe(containerRef.current)
+                }
+
+                const currentMarker = new google.maps.Marker({
+                    map,
+                    position: { lat: center.lat, lng: center.lng },
+                    title: center.title,
+                    zIndex: 1000,
+                    icon: markerSymbol('#2A4076', 11),
+                })
+                markers.push(currentMarker)
+
+                const currentInfo = new google.maps.InfoWindow({
+                    content: `<div style="font-family:sans-serif;font-size:13px;line-height:1.4;padding:2px 0;">
+                        <div style="font-weight:600;color:#1A2B56;">${escapeHtml(center.title)}</div>
+                        <div style="font-size:11px;color:#64748b;margin-top:4px;">${escapeHtml(currentLabel)}</div>
+                    </div>`,
+                })
+                infoWindows.push(currentInfo)
+                currentMarker.addListener('click', () => {
+                    currentInfo.open({ map, anchor: currentMarker })
+                })
+
+                for (const item of nearby) {
+                    if (!isValidCoord(item.lat, item.lng)) continue
+                    const title = resolvePropertyMapTitle(item, locale)
+                    const marker = new google.maps.Marker({
+                        map,
+                        position: { lat: item.lat, lng: item.lng },
+                        title,
+                        zIndex: 100,
+                        icon: markerSymbol('#64748B', 8),
+                    })
+                    markers.push(marker)
+
+                    const href = `/${locale}/properties/${item.id}`
+                    const info = new google.maps.InfoWindow({
+                        content: `<div style="font-family:sans-serif;font-size:13px;line-height:1.4;padding:2px 0;">
+                            <div style="font-weight:600;color:#1A2B56;margin-bottom:6px;">${escapeHtml(title)}</div>
+                            <a href="${href}" style="font-size:11px;font-weight:600;color:#2A4076;text-decoration:none;">${escapeHtml(viewDetailLabel)}</a>
+                        </div>`,
+                    })
+                    infoWindows.push(info)
+                    marker.addListener('click', () => {
+                        info.open({ map, anchor: marker })
+                    })
+                }
+
+                if (!cancelled) setLoadError(false)
+            } catch (error) {
+                console.warn('[PropertyNearbyMap] Google Maps init failed', error)
+                if (!cancelled) setLoadError(true)
+            }
+        }
+
+        void run()
+
+        return () => {
+            cancelled = true
+            resizeObserver?.disconnect()
+            infoWindows.forEach((info) => info.close())
+            markers.forEach((marker) => marker.setMap(null))
+            map = null
+        }
+    }, [
+        center.id,
+        center.lat,
+        center.lng,
+        center.title,
+        nearby,
+        locale,
+        currentLabel,
+        viewDetailLabel,
+    ])
+
+    if (!isValidCoord(center.lat, center.lng)) {
+        return null
+    }
+
+    if (loadError) {
         return (
-            <div
-                className="h-[320px] w-full animate-pulse rounded-2xl bg-slate-100 md:h-[420px]"
-                aria-hidden
-            />
+            <div className="flex h-[320px] items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-sm text-slate-500 md:h-[420px]">
+                地図を読み込めませんでした
+            </div>
         )
     }
 
@@ -92,49 +178,16 @@ export default function PropertyNearbyMap({
             className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
             style={{ height: '320px', width: '100%' }}
         >
-            <MapContainer
-                center={[center.lat, center.lng]}
-                zoom={15}
-                scrollWheelZoom={false}
-                style={{ height: '100%', width: '100%' }}
-                className="z-0"
-            >
-                <TileLayer
-                    key={locale}
-                    attribution={tileLayer.attribution}
-                    url={tileLayer.url}
-                    {...(tileLayer.subdomains ? { subdomains: tileLayer.subdomains } : {})}
-                    maxZoom={tileLayer.maxZoom}
-                />
-                <FitMapBounds points={allPoints} />
-                <Marker position={[center.lat, center.lng]} icon={currentMarkerIcon}>
-                    <Popup>
-                        <div className="space-y-1 text-sm">
-                            <p className="font-semibold text-[#1A2B56]">{center.title}</p>
-                            <p className="text-xs text-slate-500">{currentLabel}</p>
-                        </div>
-                    </Popup>
-                </Marker>
-                {nearby
-                    .filter((item) => isValidCoord(item.lat, item.lng))
-                    .map((item) => (
-                        <Marker key={item.id} position={[item.lat, item.lng]} icon={nearbyMarkerIcon}>
-                            <Popup>
-                                <div className="space-y-2 text-sm">
-                                    <p className="font-semibold text-[#1A2B56]">
-                                        {resolvePropertyMapTitle(item, locale)}
-                                    </p>
-                                    <Link
-                                        href={`/${locale}/properties/${item.id}`}
-                                        className="inline-flex text-xs font-semibold text-[#2A4076] hover:underline"
-                                    >
-                                        {viewDetailLabel}
-                                    </Link>
-                                </div>
-                            </Popup>
-                        </Marker>
-                    ))}
-            </MapContainer>
+            <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
         </div>
     )
+}
+
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
 }
