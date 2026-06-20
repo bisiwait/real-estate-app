@@ -18,7 +18,6 @@ const PropertyNearbyMap = dynamic(() => import('@/components/property/PropertyNe
 })
 
 import PropertyDescription from '@/components/property/PropertyDescription'
-import { PropertyMapErrorBoundary } from '@/components/property/PropertyMapErrorBoundary'
 import MortgageSimulator from '@/components/property/MortgageSimulator'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
@@ -598,15 +597,13 @@ export default function PropertyDetailClient({
                                 <h3 className="text-sm font-semibold text-[#1A2B56]">
                                     {dict.property.location_label}
                                 </h3>
-                                <PropertyMapErrorBoundary>
-                                    <PropertyNearbyMap
-                                        center={mapCenter}
-                                        nearby={initialNearbyMapProperties}
-                                        locale={locale}
-                                        currentLabel={dict.property.nearby_map_current_label}
-                                        viewDetailLabel={dict.property.nearby_map_view_detail}
-                                    />
-                                </PropertyMapErrorBoundary>
+                                <PropertyNearbyMap
+                                    center={mapCenter}
+                                    nearby={initialNearbyMapProperties}
+                                    locale={locale}
+                                    currentLabel={dict.property.nearby_map_current_label}
+                                    viewDetailLabel={dict.property.nearby_map_view_detail}
+                                />
                             </div>
                         ) : null}
 

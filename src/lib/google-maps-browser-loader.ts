@@ -1,5 +1,10 @@
 import { Loader } from '@googlemaps/js-api-loader'
-import { resolveGoogleMapsLocale } from '@/lib/google-maps-locale'
+
+function resolveGoogleMapsLocale(locale: string): { language: string; region?: string } {
+  if (locale === 'jp') return { language: 'ja', region: 'JP' }
+  if (locale === 'th') return { language: 'th', region: 'TH' }
+  return { language: 'en', region: 'US' }
+}
 
 const loaders = new Map<string, Loader>()
 
