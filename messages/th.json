@@ -558,6 +558,8 @@
         "developer_label": "ผู้พัฒนาโครงการ",
         "location_label": "แผนที่ตำแหน่ง",
         "view_on_google_maps": "ดูบน Google Maps",
+        "nearby_map_current_label": "ทรัพย์สินนี้",
+        "nearby_map_view_detail": "ดูรายละเอียด",
         "shared_facilities_label": "สิ่งอำนวยความสะดวก",
         "apartment": "อพาร์ทเมนท์",
         "land": "ที่ดิน",

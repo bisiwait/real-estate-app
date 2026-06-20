@@ -559,6 +559,8 @@
         "developer_label": "Developer",
         "location_label": "Location Map",
         "view_on_google_maps": "View on Google Maps",
+        "nearby_map_current_label": "This property",
+        "nearby_map_view_detail": "View details",
         "shared_facilities_label": "Shared Facilities",
         "apartment": "Apartment",
         "land": "Land",

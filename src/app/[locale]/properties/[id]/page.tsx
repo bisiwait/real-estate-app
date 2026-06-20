@@ -7,9 +7,11 @@ import { createStaticServiceClient, createStaticServiceClientForHostname } from 
 import {
     enrichPropertyWithRelations,
     fetchAgentOtherPropertiesForDetail,
+    fetchNearbyPropertiesForMap,
     fetchPublicListingOwnerProfile,
     fetchRelatedPropertiesForDetail,
 } from '@/lib/supabase/fetch-property-detail'
+import { resolveProjectCoords } from '@/lib/property-map-coords'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
 import { buildPropertyDetailAbsoluteUrl } from '@/lib/property-page-canonical-url'
@@ -239,7 +241,7 @@ export default async function Page({
     initialListingOwnerPhone = inquiryContact.listingPhoneForTel
     initialListingOwnerShowWhatsapp = listingOwner?.show_whatsapp_in_inquiry !== false
 
-    const [relatedProperties, agentOtherProperties] = await Promise.all([
+    const [relatedProperties, agentOtherProperties, nearbyMapProperties] = await Promise.all([
         fetchRelatedPropertiesForDetail(
             supabase,
             id,
@@ -254,6 +256,18 @@ export default async function Page({
                   id
               )
             : Promise.resolve([]),
+        (() => {
+            const centerCoords = resolveProjectCoords(
+                propertyForClient.project as { latitude?: unknown; longitude?: unknown } | null
+            )
+            if (!centerCoords) return Promise.resolve([])
+            return fetchNearbyPropertiesForMap(
+                supabase,
+                id,
+                centerCoords.lat,
+                centerCoords.lng
+            )
+        })(),
     ])
 
     const mapPropertyImages = (rows: Record<string, unknown>[]) =>
@@ -280,6 +294,7 @@ export default async function Page({
                 initialListingOwner={listingOwner}
                 initialRelatedProperties={mapPropertyImages(relatedProperties as Record<string, unknown>[])}
                 initialAgentOtherProperties={mapPropertyImages(agentOtherProperties as Record<string, unknown>[])}
+                initialNearbyMapProperties={nearbyMapProperties}
                 officialLineAddFriendUrl={officialLineAddFriendUrl}
                 propertyDetailPageUrl={propertyDetailPageUrl}
                 initialListingOwnerPhone={initialListingOwnerPhone}

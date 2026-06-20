@@ -10,6 +10,7 @@ const PropertyGallery = dynamic(() => import('@/components/property/PropertyGall
 const RelatedProperties = dynamic(() => import('@/components/property/RelatedProperties'), { ssr: false })
 const AgentOtherProperties = dynamic(() => import('@/components/agent/AgentOtherProperties'), { ssr: false })
 const InquiryForm = dynamic(() => import('@/components/property/InquiryForm'), { ssr: false })
+const PropertyNearbyMap = dynamic(() => import('@/components/property/PropertyNearbyMap'), { ssr: false })
 
 import PropertyDescription from '@/components/property/PropertyDescription'
 import MortgageSimulator from '@/components/property/MortgageSimulator'
@@ -17,6 +18,7 @@ import AgentProfileCard from '@/components/agent/AgentProfileCard'
 import StickyContactBar from '@/components/property/StickyContactBar'
 import ContactAuthRequiredModal from '@/components/property/ContactAuthRequiredModal'
 import { propertyProjectOpenMapsUrl } from '@/lib/google-maps-url'
+import { toPropertyMapPoint, type PropertyMapPoint } from '@/lib/property-map-coords'
 import { getPropertyOwnerLineInquiryRawInput } from '@/lib/property-owner-line-inquiry'
 import {
     buildPropertyLineInquiryPrefillMessageForParts,
@@ -71,6 +73,7 @@ interface PropertyDetailClientProps {
     initialListingOwner?: PublicListingOwnerProfile | null
     initialRelatedProperties?: any[]
     initialAgentOtherProperties?: any[]
+    initialNearbyMapProperties?: PropertyMapPoint[]
     officialLineAddFriendUrl: string
     /** 物件詳細の正規 URL（サーバー推定）。クライアントでは window.location.href で上書き */
     propertyDetailPageUrl: string
@@ -87,6 +90,7 @@ export default function PropertyDetailClient({
     initialListingOwner = null,
     initialRelatedProperties = [],
     initialAgentOtherProperties = [],
+    initialNearbyMapProperties = [],
     officialLineAddFriendUrl,
     propertyDetailPageUrl,
     initialListingOwnerPhone,
@@ -372,6 +376,11 @@ export default function PropertyDetailClient({
         ]
     )
 
+    const mapCenter = useMemo(
+        () => (property ? toPropertyMapPoint(property, locale) : null),
+        [property, locale]
+    )
+
     const phoneForDisplay = useMemo(() => {
         if (liveInquiry?.listingPhoneForTel) return liveInquiry.listingPhoneForTel.trim()
         const fromAgent = typeof agent?.phone === 'string' ? agent.phone.trim() : ''
@@ -575,6 +584,21 @@ export default function PropertyDetailClient({
                                 <MapPin className="h-4 w-4" /> {dict.property.view_on_google_maps}
                             </a>
                         </div>
+
+                        {mapCenter ? (
+                            <div className="space-y-3 pt-4">
+                                <h3 className="text-sm font-semibold text-[#1A2B56]">
+                                    {dict.property.location_label}
+                                </h3>
+                                <PropertyNearbyMap
+                                    center={mapCenter}
+                                    nearby={initialNearbyMapProperties}
+                                    locale={locale}
+                                    currentLabel={dict.property.nearby_map_current_label}
+                                    viewDetailLabel={dict.property.nearby_map_view_detail}
+                                />
+                            </div>
+                        ) : null}
 
                         {showSaleMortgageSimulator ? (
                             <MortgageSimulator

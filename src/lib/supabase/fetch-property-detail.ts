@@ -1,4 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+    boundingBoxDelta,
+    haversineDistanceKm,
+    resolveProjectCoords,
+    type PropertyMapPoint,
+} from '@/lib/property-map-coords'
 
 /** 物件詳細の掲載者（エージェント）公開プロフィール */
 export type PublicListingOwnerProfile = {
@@ -146,6 +152,91 @@ export async function fetchRelatedPropertiesForDetail(
         return []
     }
     return data ?? []
+}
+
+const NEARBY_MAP_RADIUS_KM = 2
+const NEARBY_MAP_LIMIT = 24
+
+export async function fetchNearbyPropertiesForMap(
+    supabase: SupabaseClient,
+    currentPropertyId: string,
+    centerLat: number,
+    centerLng: number,
+    radiusKm = NEARBY_MAP_RADIUS_KM,
+    limit = NEARBY_MAP_LIMIT
+): Promise<PropertyMapPoint[]> {
+    const { deltaLat, deltaLng } = boundingBoxDelta(radiusKm, centerLat)
+    const minLat = centerLat - deltaLat
+    const maxLat = centerLat + deltaLat
+    const minLng = centerLng - deltaLng
+    const maxLng = centerLng + deltaLng
+
+    const { data: projects, error: projectError } = await supabase
+        .from('projects')
+        .select('id, latitude, longitude')
+        .gte('latitude', minLat)
+        .lte('latitude', maxLat)
+        .gte('longitude', minLng)
+        .lte('longitude', maxLng)
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null)
+
+    if (projectError) {
+        console.warn('[fetchNearbyPropertiesForMap] projects', projectError.message)
+        return []
+    }
+
+    const projectCoords = new Map<string, { lat: number; lng: number }>()
+    for (const row of projects ?? []) {
+        const coords = resolveProjectCoords(row)
+        if (!coords) continue
+        if (haversineDistanceKm(centerLat, centerLng, coords.lat, coords.lng) > radiusKm) continue
+        projectCoords.set(row.id as string, coords)
+    }
+
+    const projectIds = [...projectCoords.keys()]
+    if (projectIds.length === 0) return []
+
+    const { data: properties, error } = await supabase
+        .from('properties')
+        .select(
+            'id, title, title_en, title_th, title_ja, building_name, project_id, project:projects(latitude, longitude)'
+        )
+        .in('project_id', projectIds)
+        .eq('status', 'published')
+        .eq('is_approved', true)
+        .neq('id', currentPropertyId)
+        .limit(limit * 3)
+
+    if (error) {
+        console.warn('[fetchNearbyPropertiesForMap] properties', error.message)
+        return []
+    }
+
+    const points: PropertyMapPoint[] = []
+    for (const row of properties ?? []) {
+        const projectId = row.project_id as string | null
+        const coords = projectId ? projectCoords.get(projectId) : null
+        if (!coords) continue
+        points.push({
+            id: row.id as string,
+            lat: coords.lat,
+            lng: coords.lng,
+            title: (row.title_ja as string | null) || (row.title as string | null) || (row.building_name as string | null) || 'Property',
+            title_en: row.title_en as string | null,
+            title_th: row.title_th as string | null,
+            title_ja: row.title_ja as string | null,
+            building_name: row.building_name as string | null,
+        })
+    }
+
+    return points
+        .sort(
+            (a, b) =>
+                haversineDistanceKm(centerLat, centerLng, a.lat, a.lng) -
+                haversineDistanceKm(centerLat, centerLng, b.lat, b.lng)
+        )
+        .slice(0, limit)
 }
 
 export async function fetchAgentOtherPropertiesForDetail(

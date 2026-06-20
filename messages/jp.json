@@ -611,6 +611,8 @@
         "developer_label": "デベロッパー",
         "location_label": "ロケーションマップ",
         "view_on_google_maps": "Google Mapsで見る",
+        "nearby_map_current_label": "この物件",
+        "nearby_map_view_detail": "詳細を見る",
         "shared_facilities_label": "共有施設",
         "apartment": "アパートメント",
         "land": "土地",
