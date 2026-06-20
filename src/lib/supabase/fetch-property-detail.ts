@@ -216,7 +216,7 @@ export async function fetchNearbyPropertiesForMap(
     const { data: properties, error } = await supabase
         .from('properties')
         .select(
-            'id, title, title_en, title_th, title_ja, building_name, project_id, project:projects(latitude, longitude)'
+            'id, title, title_en, title_th, building_name, project_id, project:projects(latitude, longitude)'
         )
         .in('project_id', projectIds)
         .eq('status', 'published')
@@ -238,10 +238,10 @@ export async function fetchNearbyPropertiesForMap(
             id: row.id as string,
             lat: coords.lat,
             lng: coords.lng,
-            title: (row.title_ja as string | null) || (row.title as string | null) || (row.building_name as string | null) || 'Property',
+            title: (row.title as string | null) || (row.building_name as string | null) || 'Property',
             title_en: row.title_en as string | null,
             title_th: row.title_th as string | null,
-            title_ja: row.title_ja as string | null,
+            title_ja: row.title as string | null,
             building_name: row.building_name as string | null,
         })
     }

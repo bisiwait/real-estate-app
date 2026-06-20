@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import L from 'leaflet'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
@@ -14,6 +14,19 @@ type PropertyNearbyMapProps = {
     locale: string
     currentLabel: string
     viewDetailLabel: string
+}
+
+function isValidCoord(lat: unknown, lng: unknown): lat is number {
+    return (
+        typeof lat === 'number' &&
+        typeof lng === 'number' &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng) &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180
+    )
 }
 
 function FitMapBounds({ points }: { points: [number, number][] }) {
@@ -42,9 +55,6 @@ function createMarkerIcon(fill: string, size = 28) {
     })
 }
 
-const currentMarkerIcon = createMarkerIcon('#2A4076', 32)
-const nearbyMarkerIcon = createMarkerIcon('#64748B', 24)
-
 export default function PropertyNearbyMap({
     center,
     nearby,
@@ -52,12 +62,30 @@ export default function PropertyNearbyMap({
     currentLabel,
     viewDetailLabel,
 }: PropertyNearbyMapProps) {
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    const currentMarkerIcon = useMemo(() => createMarkerIcon('#2A4076', 32), [])
+    const nearbyMarkerIcon = useMemo(() => createMarkerIcon('#64748B', 24), [])
+
     const allPoints = useMemo<[number, number][]>(
         () => [[center.lat, center.lng], ...nearby.map((item) => [item.lat, item.lng] as [number, number])],
         [center.lat, center.lng, nearby]
     )
 
     const tileLayer = useMemo(() => getPropertyMapTileLayer(locale), [locale])
+
+    if (!mounted || !isValidCoord(center.lat, center.lng)) {
+        return (
+            <div
+                className="h-[320px] w-full animate-pulse rounded-2xl bg-slate-100 md:h-[420px]"
+                aria-hidden
+            />
+        )
+    }
 
     return (
         <div
@@ -75,7 +103,7 @@ export default function PropertyNearbyMap({
                     key={locale}
                     attribution={tileLayer.attribution}
                     url={tileLayer.url}
-                    subdomains={tileLayer.subdomains}
+                    {...(tileLayer.subdomains ? { subdomains: tileLayer.subdomains } : {})}
                     maxZoom={tileLayer.maxZoom}
                 />
                 <FitMapBounds points={allPoints} />
@@ -87,23 +115,25 @@ export default function PropertyNearbyMap({
                         </div>
                     </Popup>
                 </Marker>
-                {nearby.map((item) => (
-                    <Marker key={item.id} position={[item.lat, item.lng]} icon={nearbyMarkerIcon}>
-                        <Popup>
-                            <div className="space-y-2 text-sm">
-                                <p className="font-semibold text-[#1A2B56]">
-                                    {resolvePropertyMapTitle(item, locale)}
-                                </p>
-                                <Link
-                                    href={`/${locale}/properties/${item.id}`}
-                                    className="inline-flex text-xs font-semibold text-[#2A4076] hover:underline"
-                                >
-                                    {viewDetailLabel}
-                                </Link>
-                            </div>
-                        </Popup>
-                    </Marker>
-                ))}
+                {nearby
+                    .filter((item) => isValidCoord(item.lat, item.lng))
+                    .map((item) => (
+                        <Marker key={item.id} position={[item.lat, item.lng]} icon={nearbyMarkerIcon}>
+                            <Popup>
+                                <div className="space-y-2 text-sm">
+                                    <p className="font-semibold text-[#1A2B56]">
+                                        {resolvePropertyMapTitle(item, locale)}
+                                    </p>
+                                    <Link
+                                        href={`/${locale}/properties/${item.id}`}
+                                        className="inline-flex text-xs font-semibold text-[#2A4076] hover:underline"
+                                    >
+                                        {viewDetailLabel}
+                                    </Link>
+                                </div>
+                            </Popup>
+                        </Marker>
+                    ))}
             </MapContainer>
         </div>
     )

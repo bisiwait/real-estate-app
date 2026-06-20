@@ -11,7 +11,7 @@ import {
     fetchPublicListingOwnerProfile,
     fetchRelatedPropertiesForDetail,
 } from '@/lib/supabase/fetch-property-detail'
-import { resolveProjectCoordsAsync, toPropertyMapPoint } from '@/lib/property-map-coords'
+import { resolveProjectCoords, toPropertyMapPoint } from '@/lib/property-map-coords'
 import type { PropertyMapPoint } from '@/lib/property-map-coords'
 import PropertyDetailClient from './PropertyDetailClient'
 import { getPublicSiteUrl } from '@/lib/site-url'
@@ -245,12 +245,20 @@ export default async function Page({
     const projectForMap = propertyForClient.project as
         | { latitude?: unknown; longitude?: unknown; google_maps_share_url?: unknown; google_place_id?: unknown }
         | null
-    const centerCoords = await resolveProjectCoordsAsync(projectForMap)
-    const initialMapCenter = centerCoords
-        ? toPropertyMapPoint(propertyForClient as Record<string, unknown>, locale, centerCoords)
-        : null
+    let centerCoords: { lat: number; lng: number } | null = null
+    let initialMapCenter: PropertyMapPoint | null = null
+    let nearbyMapProperties: PropertyMapPoint[] = []
 
-    const [relatedProperties, agentOtherProperties, nearbyMapProperties] = await Promise.all([
+    try {
+        centerCoords = resolveProjectCoords(projectForMap)
+        initialMapCenter = centerCoords
+            ? toPropertyMapPoint(propertyForClient as Record<string, unknown>, locale, centerCoords)
+            : null
+    } catch (error) {
+        console.warn('[properties/[id]] map center resolve failed', error)
+    }
+
+    const [relatedProperties, agentOtherProperties] = await Promise.all([
         fetchRelatedPropertiesForDetail(
             supabase,
             id,
@@ -265,15 +273,20 @@ export default async function Page({
                   id
               )
             : Promise.resolve([]),
-        centerCoords
-            ? fetchNearbyPropertiesForMap(
-                  supabase,
-                  id,
-                  centerCoords.lat,
-                  centerCoords.lng
-              )
-            : Promise.resolve([] as PropertyMapPoint[]),
     ])
+
+    if (centerCoords) {
+        try {
+            nearbyMapProperties = await fetchNearbyPropertiesForMap(
+                supabase,
+                id,
+                centerCoords.lat,
+                centerCoords.lng
+            )
+        } catch (error) {
+            console.warn('[properties/[id]] nearby map fetch failed', error)
+        }
+    }
 
     const mapPropertyImages = (rows: Record<string, unknown>[]) =>
         rows.map((row) => {
