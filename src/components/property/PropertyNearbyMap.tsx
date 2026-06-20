@@ -4,8 +4,10 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import {
+  createLeafletTileLayerOptions,
   getPropertyMapTileLayer,
-  getPropertyMapTileLayerFallback,
+  getPropertyMapTileLayerFallbacks,
+  normalizePropertyMapLocale,
 } from '@/lib/property-map-tiles'
 import { resolvePropertyMapTitle, type PropertyMapPoint } from '@/lib/property-map-coords'
 
@@ -57,26 +59,35 @@ function focusPropertyCenter(map: L.Map, lat: number, lng: number) {
 }
 
 function addTileLayer(map: L.Map, locale: string): L.TileLayer {
-  const primary = getPropertyMapTileLayer(locale)
-  const layer = L.tileLayer(primary.url, {
-    attribution: primary.attribution,
-    subdomains: primary.subdomains ?? '',
-    maxZoom: primary.maxZoom ?? 19,
-  })
+  const mapLocale = normalizePropertyMapLocale(locale)
+  const primary = getPropertyMapTileLayer(mapLocale)
+  const fallbacks = getPropertyMapTileLayerFallbacks(mapLocale)
+
+  let layer = L.tileLayer(primary.url, createLeafletTileLayerOptions(primary))
   layer.addTo(map)
 
-  let fallbackApplied = false
-  layer.on('tileerror', () => {
-    if (fallbackApplied) return
-    fallbackApplied = true
+  let fallbackIndex = 0
+  let errorCount = 0
+  const switchToNextLayer = () => {
+    if (fallbackIndex >= fallbacks.length) return
+    const next = fallbacks[fallbackIndex]
+    fallbackIndex += 1
     map.removeLayer(layer)
-    const fallback = getPropertyMapTileLayerFallback()
-    L.tileLayer(fallback.url, {
-      attribution: fallback.attribution,
-      subdomains: fallback.subdomains ?? 'abc',
-      maxZoom: fallback.maxZoom ?? 19,
-    }).addTo(map)
-  })
+    layer = L.tileLayer(next.url, createLeafletTileLayerOptions(next))
+    layer.addTo(map)
+    errorCount = 0
+    layer.on('tileerror', onTileError)
+  }
+
+  const onTileError = () => {
+    errorCount += 1
+    // 単発の欠損タイルでは切り替えず、連続失敗時のみフォールバック
+    if (errorCount >= 4) {
+      switchToNextLayer()
+    }
+  }
+
+  layer.on('tileerror', onTileError)
 
   return layer
 }
@@ -101,7 +112,7 @@ export default function PropertyNearbyMap({
       attributionControl: true,
     })
 
-    addTileLayer(map, locale)
+    addTileLayer(map, normalizePropertyMapLocale(locale))
 
     L.marker([center.lat, center.lng], {
       icon: createMarkerIcon('#DC2626', 32),
