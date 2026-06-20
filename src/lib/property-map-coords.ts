@@ -23,6 +23,8 @@ export type PropertyMapPoint = {
   title_th?: string | null
   title_ja?: string | null
   building_name?: string | null
+  project_name?: string | null
+  project_name_jp?: string | null
 }
 
 const EARTH_RADIUS_KM = 6371
@@ -97,6 +99,22 @@ export function boundingBoxDelta(radiusKm: number, centerLat: number) {
   return { deltaLat, deltaLng }
 }
 
+export function resolvePropertyMapProjectName(
+  point: Pick<
+    PropertyMapPoint,
+    'project_name' | 'project_name_jp' | 'building_name' | 'title'
+  >,
+  locale: string
+): string {
+  const name = point.project_name?.trim() || point.building_name?.trim() || ''
+  const nameJp = point.project_name_jp?.trim() || ''
+
+  if (locale === 'jp' && name && nameJp) return `${name} (${nameJp})`
+  if (locale === 'jp' && nameJp) return nameJp
+
+  return name || nameJp || point.title?.trim() || 'Property'
+}
+
 export function resolvePropertyMapTitle(
   property: Pick<PropertyMapPoint, 'title' | 'title_en' | 'title_th' | 'title_ja' | 'building_name'>,
   locale: string
@@ -118,6 +136,7 @@ export function toPropertyMapPoint(
 ): PropertyMapPoint | null {
   const resolved = coords ?? resolveProjectCoords(property.project as ProjectCoordFields)
   if (!resolved) return null
+  const project = property.project as { name?: string; name_jp?: string } | null | undefined
   return {
     id: String(property.id),
     lat: resolved.lat,
@@ -130,6 +149,8 @@ export function toPropertyMapPoint(
     title_th: property.title_th as string | null | undefined,
     title_ja: property.title_ja as string | null | undefined,
     building_name: property.building_name as string | null | undefined,
+    project_name: project?.name ?? (property.building_name as string | null | undefined) ?? null,
+    project_name_jp: project?.name_jp ?? null,
   }
 }
 

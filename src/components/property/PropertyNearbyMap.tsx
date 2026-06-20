@@ -9,7 +9,7 @@ import {
   getPropertyMapTileLayerFallbacks,
   normalizePropertyMapLocale,
 } from '@/lib/property-map-tiles'
-import { resolvePropertyMapTitle, type PropertyMapPoint } from '@/lib/property-map-coords'
+import { resolvePropertyMapProjectName, type PropertyMapPoint } from '@/lib/property-map-coords'
 
 export type PropertyNearbyMapProps = {
   center: PropertyMapPoint
@@ -114,6 +114,8 @@ export default function PropertyNearbyMap({
 
     addTileLayer(map, normalizePropertyMapLocale(locale))
 
+    const mapLocale = normalizePropertyMapLocale(locale)
+
     L.marker([center.lat, center.lng], {
       icon: createMarkerIcon('#DC2626', 32),
       zIndexOffset: 1000,
@@ -121,14 +123,14 @@ export default function PropertyNearbyMap({
       .addTo(map)
       .bindPopup(
         `<div style="font-family:sans-serif;font-size:13px;line-height:1.4;">
-          <div style="font-weight:600;color:#1A2B56;">${escapeHtml(center.title)}</div>
+          <div style="font-weight:600;color:#1A2B56;">${escapeHtml(resolvePropertyMapProjectName(center, mapLocale))}</div>
           <div style="font-size:11px;color:#64748b;margin-top:4px;">${escapeHtml(currentLabel)}</div>
         </div>`
       )
 
     for (const item of nearby) {
       if (!isValidCoord(item.lat, item.lng)) continue
-      const title = resolvePropertyMapTitle(item, locale)
+      const projectName = resolvePropertyMapProjectName(item, mapLocale)
       const href = `/${locale}/properties/${item.id}`
       L.marker([item.lat, item.lng], {
         icon: createMarkerIcon('#64748B', 24),
@@ -136,7 +138,7 @@ export default function PropertyNearbyMap({
         .addTo(map)
         .bindPopup(
           `<div style="font-family:sans-serif;font-size:13px;line-height:1.4;">
-            <div style="font-weight:600;color:#1A2B56;margin-bottom:6px;">${escapeHtml(title)}</div>
+            <div style="font-weight:600;color:#1A2B56;margin-bottom:6px;">${escapeHtml(projectName)}</div>
             <a href="${href}" style="font-size:11px;font-weight:600;color:#2A4076;text-decoration:none;">${escapeHtml(viewDetailLabel)}</a>
           </div>`
         )
@@ -161,6 +163,9 @@ export default function PropertyNearbyMap({
     center.id,
     center.lat,
     center.lng,
+    center.project_name,
+    center.project_name_jp,
+    center.building_name,
     center.title,
     nearby,
     locale,
