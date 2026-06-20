@@ -17,6 +17,7 @@ const PropertyNearbyMap = dynamic(() => import('@/components/property/PropertyNe
     ),
 })
 
+import PropertyDescription from '@/components/property/PropertyDescription'
 import { PropertyMapErrorBoundary } from '@/components/property/PropertyMapErrorBoundary'
 import MortgageSimulator from '@/components/property/MortgageSimulator'
 import AgentProfileCard from '@/components/agent/AgentProfileCard'
