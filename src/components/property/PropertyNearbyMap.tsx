@@ -6,6 +6,7 @@ import L from 'leaflet'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { resolvePropertyMapTitle, type PropertyMapPoint } from '@/lib/property-map-coords'
+import { getPropertyMapTileLayer } from '@/lib/property-map-tiles'
 
 type PropertyNearbyMapProps = {
     center: PropertyMapPoint
@@ -56,6 +57,8 @@ export default function PropertyNearbyMap({
         [center.lat, center.lng, nearby]
     )
 
+    const tileLayer = useMemo(() => getPropertyMapTileLayer(locale), [locale])
+
     return (
         <div
             className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm"
@@ -69,8 +72,11 @@ export default function PropertyNearbyMap({
                 className="z-0"
             >
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    key={locale}
+                    attribution={tileLayer.attribution}
+                    url={tileLayer.url}
+                    subdomains={tileLayer.subdomains}
+                    maxZoom={tileLayer.maxZoom}
                 />
                 <FitMapBounds points={allPoints} />
                 <Marker position={[center.lat, center.lng]} icon={currentMarkerIcon}>
