@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
     const limit = parseAdminListLimit(request.nextUrl.searchParams.get('limit'))
     const search = (request.nextUrl.searchParams.get('search') ?? '').trim().replace(/,/g, '')
     const filterMissingInfo = request.nextUrl.searchParams.get('missing') === '1'
+    const areaId = (request.nextUrl.searchParams.get('area_id') ?? '').trim()
 
     try {
         const admin = await createAdminClient()
@@ -80,6 +81,9 @@ export async function GET(request: NextRequest) {
         let q = admin.from('projects').select('*', { count: 'exact', head: false }).order('name')
         if (filterMissingInfo) {
             q = q.or('year_built.is.null,total_floors.is.null')
+        }
+        if (areaId) {
+            q = q.eq('area_id', areaId)
         }
         if (search) {
             const pattern = `%${escapeIlikePattern(search)}%`

@@ -74,6 +74,43 @@ function sortAreas(mappedAreas: Area[]) {
     return mappedAreas
 }
 
+function renderAreaSelectOptions(
+    areas: Area[],
+    srirachaAreaGroupLabel: string,
+    emptyOption?: { value: string; label: string }
+) {
+    return (
+        <>
+            {emptyOption ? <option value={emptyOption.value}>{emptyOption.label}</option> : null}
+            <optgroup label="Pattaya">
+                {areas.filter((a) => a.region?.name === 'Pattaya').map((a) => (
+                    <option key={a.id} value={a.id}>
+                        {a.name}
+                    </option>
+                ))}
+            </optgroup>
+            <optgroup label={srirachaAreaGroupLabel}>
+                {areas.filter((a) => a.region?.name === 'Sriracha').map((a) => (
+                    <option key={a.id} value={a.id}>
+                        {a.name}
+                    </option>
+                ))}
+            </optgroup>
+            {areas.filter((a) => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 ? (
+                <optgroup label="Other">
+                    {areas
+                        .filter((a) => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha')
+                        .map((a) => (
+                            <option key={a.id} value={a.id}>
+                                {a.name}
+                            </option>
+                        ))}
+                </optgroup>
+            ) : null}
+        </>
+    )
+}
+
 export default function AdminProjectManagement() {
     const params = useParams()
     const locale = typeof params?.locale === 'string' ? params.locale : 'jp'
@@ -89,6 +126,7 @@ export default function AdminProjectManagement() {
     const [searchQuery, setSearchQuery] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const [filterMissingInfo, setFilterMissingInfo] = useState(false)
+    const [filterAreaId, setFilterAreaId] = useState('')
     const [totalCount, setTotalCount] = useState<number | null>(null)
     const { limit, page, setPage, setLimit } = useAdminTablePagination()
 
@@ -112,6 +150,14 @@ export default function AdminProjectManagement() {
             if (page !== 1) setPage(1)
         }
     }, [filterMissingInfo, page, setPage])
+
+    const prevAreaRef = useRef(filterAreaId)
+    useEffect(() => {
+        if (prevAreaRef.current !== filterAreaId) {
+            prevAreaRef.current = filterAreaId
+            if (page !== 1) setPage(1)
+        }
+    }, [filterAreaId, page, setPage])
 
     const [formData, setFormData] = useState<Partial<Project>>({
         name: '',
@@ -159,6 +205,7 @@ export default function AdminProjectManagement() {
             })
             if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim())
             if (filterMissingInfo) params.set('missing', '1')
+            if (filterAreaId) params.set('area_id', filterAreaId)
 
             const res = await fetch(`/api/admin/projects?${params}`)
             const data = (await res.json().catch(() => ({}))) as {
@@ -177,7 +224,7 @@ export default function AdminProjectManagement() {
         } finally {
             setLoading(false)
         }
-    }, [debouncedSearch, filterMissingInfo, page, limit])
+    }, [debouncedSearch, filterMissingInfo, filterAreaId, page, limit])
 
     useEffect(() => {
         void fetchMeta()
@@ -379,6 +426,17 @@ export default function AdminProjectManagement() {
                             onChange={setLimit}
                             className="w-full shrink-0 justify-end md:w-auto"
                         />
+                        <select
+                            value={filterAreaId}
+                            onChange={(e) => setFilterAreaId(e.target.value)}
+                            className="w-full shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-navy-secondary transition-all focus:outline-none focus:ring-2 focus:ring-navy-primary/20 md:w-auto md:min-w-[160px] md:text-xs"
+                            aria-label="エリアで絞り込み"
+                        >
+                            {renderAreaSelectOptions(areas, srirachaAreaGroupLabel, {
+                                value: '',
+                                label: 'すべてのエリア',
+                            })}
+                        </select>
                         <button
                             onClick={() => setFilterMissingInfo(!filterMissingInfo)}
                             className={`flex shrink-0 items-center justify-center space-x-1 rounded-xl border px-3 py-2 text-[11px] font-bold transition-all md:space-x-2 md:px-4 md:text-xs ${filterMissingInfo
@@ -467,18 +525,10 @@ export default function AdminProjectManagement() {
                                         onChange={e => setFormData({ ...formData, area_id: e.target.value })}
                                         className="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl font-bold text-navy-secondary appearance-none"
                                     >
-                                        <option value="">エリアを選択</option>
-                                        <optgroup label="Pattaya">
-                                            {areas.filter(a => a.region?.name === 'Pattaya').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                                        </optgroup>
-                                        <optgroup label={srirachaAreaGroupLabel}>
-                                            {areas.filter(a => a.region?.name === 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                                        </optgroup>
-                                        {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').length > 0 && (
-                                            <optgroup label="Other">
-                                                {areas.filter(a => a.region?.name !== 'Pattaya' && a.region?.name !== 'Sriracha').map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                                            </optgroup>
-                                        )}
+                                        {renderAreaSelectOptions(areas, srirachaAreaGroupLabel, {
+                                            value: '',
+                                            label: 'エリアを選択',
+                                        })}
                                     </select>
                                 </div>
                             </div>
