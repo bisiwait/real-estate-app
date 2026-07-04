@@ -968,6 +968,7 @@
         "edit_action": "แก้ไข",
         "delete_action": "ลบ",
         "delete_confirm": "ลบ \"{title}\" หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+        "delete_success": "ลบแล้ว",
         "delete_failed": "ลบไม่สำเร็จ",
         "error_occurred": "เกิดข้อผิดพลาด",
         "inquiries_empty": "ไม่มีคำถาม",

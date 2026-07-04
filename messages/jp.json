@@ -1021,6 +1021,7 @@
         "edit_action": "編集する",
         "delete_action": "削除する",
         "delete_confirm": "「{title}」を削除しますか？この処理をすると戻せません。",
+        "delete_success": "削除しました",
         "delete_failed": "削除に失敗しました",
         "error_occurred": "エラーが発生しました",
         "inquiries_empty": "お問い合わせはありません",

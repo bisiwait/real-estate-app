@@ -5,6 +5,7 @@ import { Edit3, Trash2, Loader2, Share2, ExternalLink, FileText } from 'lucide-r
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { toast } from 'sonner'
 import { isPremium } from '@/lib/utils/plan'
 const SocialShareDialog = dynamic(() => import('./SocialShareDialog'), {
     ssr: false
@@ -58,6 +59,7 @@ export default function DashboardActions({
                 const body = (await res.json().catch(() => ({}))) as { error?: string }
                 alert(`${dict.delete_failed}: ${body.error ?? res.statusText}`)
             } else {
+                toast.success(dict.delete_success)
                 router.refresh()
             }
         } catch (err: unknown) {

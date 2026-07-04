@@ -969,6 +969,7 @@
         "edit_action": "Edit",
         "delete_action": "Delete",
         "delete_confirm": "Delete \"{title}\"? This action cannot be undone.",
+        "delete_success": "Deleted successfully",
         "delete_failed": "Failed to delete",
         "error_occurred": "An error occurred",
         "inquiries_empty": "No inquiries.",
