@@ -1076,6 +1076,8 @@
         ,"property_refresh_label": "Refresh Listing",
         "update_failed": "Update failed",
         "bulk_refresh_button": "Refresh all published listings",
+        "listing_expiry_notice_title": "Some listings have expired",
+        "listing_expiry_notice_body": "{count} published listing(s) are past the 30-day visibility period and are hidden from the public site. Use \"Refresh Listing\" to show them again.",
         "bulk_refresh_done": "All listings refreshed",
         "updating": "Updating...",
         "update_done": "Updated",

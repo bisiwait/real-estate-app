@@ -18,6 +18,8 @@ import {
     sortAgentDashboardProperties,
     type AgentDashboardPropertySort,
 } from '@/lib/dashboard/sort-agent-properties'
+import { isListingExpired } from '@/lib/services/listingExpiry'
+import ListingExpiryNotice from '@/components/dashboard/ListingExpiryNotice'
 
 const SITE_VISIBLE_STATUSES = ['published'] as const
 
@@ -99,6 +101,13 @@ export default function DashboardClient({
     }, [properties, filter, status, sort])
     const liveFiltered = filteredProperties.filter((p) =>
         SITE_VISIBLE_STATUSES.includes(p.status as (typeof SITE_VISIBLE_STATUSES)[number])
+    )
+    const expiredPublishedIds = useMemo(
+        () =>
+            (properties ?? [])
+                .filter((p) => p.status === 'published' && isListingExpired(p.expiry_date))
+                .map((p) => p.id as string),
+        [properties]
     )
     const otherFiltered = filteredProperties.filter(
         (p) => !SITE_VISIBLE_STATUSES.includes(p.status as (typeof SITE_VISIBLE_STATUSES)[number])
@@ -229,6 +238,10 @@ export default function DashboardClient({
                 ) : tab === 'properties' ? (
                     <>
                         <div className="border-b border-slate-200 p-4 sm:p-8">
+                            <ListingExpiryNotice
+                                expiredPublishedIds={expiredPublishedIds}
+                                dict={dict}
+                            />
                             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:gap-4">
                                     <h3 className="shrink-0 text-lg sm:text-xl font-black text-navy-secondary">

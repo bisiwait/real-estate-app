@@ -1128,6 +1128,8 @@
         ,"property_refresh_label": "掲載更新",
         "update_failed": "更新に失敗しました",
         "bulk_refresh_button": "全ての公開物件を掲載更新",
+        "listing_expiry_notice_title": "掲載期限切れの物件があります",
+        "listing_expiry_notice_body": "公開中の {count} 件が掲載期限（30日）を過ぎているため、サイトの物件一覧に表示されていません。「掲載更新」で再表示できます。",
         "bulk_refresh_done": "すべて更新完了",
         "updating": "更新中...",
         "update_done": "更新完了",
